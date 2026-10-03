@@ -49,25 +49,42 @@ Examples: choose a profession, increase population, migrate, explore, protect, b
 
 Oracles should not behave as guaranteed commands.
 
-### 4. Faith is the feedback loop between god and civilization
+An Oracle should normally enter the mortal world through an in-world receiver such as a Priest / First Listener, then propagate through interpretation, preaching, ritual, and social transmission rather than being broadcast as raw divine data to every believer.
 
-Followers and their degree of faith generate the player's ability to affect the world.
+### 4. Faith distinguishes receptivity from religion-specific devotion
+
+The religious feedback loop should not collapse all belief into one universal number.
 
 The current conceptual split is:
 
-- Personal Faith — how strongly an individual believes.
-- Devotion — aggregate religious contribution.
-- Divine Power — spendable capacity for miracles.
+- **Spiritual Receptivity** — an individual's openness or sensitivity to supernatural meaning, signs, awe, fear, ritual, or divine claims.
+- **Religion-specific Devotion** — the individual's commitment toward a particular religion / god identity.
+- **Follower** — a derived affiliation state, not a second independent source of truth.
+- **Aggregate Devotion** — the effective religious contribution produced by followers and their devotion.
+- **Divine Power** — shared spendable capacity for miracles.
+
+A raw extraordinary event may increase awe or receptivity without automatically proving which god caused it.
+
+Targeted devotion should be strengthened most reliably when an event is attributed through a trusted religious context, such as priestly interpretation, ritual, or a matching active Oracle.
 
 A large nominal religion should not automatically equal a powerful god if its believers are weakly devoted.
 
-### 5. Divine power scales with worship, but large religions become harder to control
+### 5. Divine power scales with worship, but intervention remains bounded
 
-More believers should enable larger miracles.
+More and stronger devotion should enable more divine intervention.
 
-At the same time, larger religions should introduce interpretation divergence, bureaucracy, political interests, corruption, schism, and competing doctrines.
+The preferred direction is a hybrid resource model:
 
-Growth therefore creates both power and complexity.
+- worship generates a shared **Divine Power** pool;
+- each Miracle has its own cooldown;
+- Faith/Devotion may accelerate cooldown recovery;
+- cooldown acceleration should be capped or sublinear so large religions cannot eliminate local action limits.
+
+Larger religions may also create communication, interpretation, institutional, and political complexity.
+
+Multiple top-level religions may compete for followers, including inside the same settlement.
+
+Persistent internal sect / schism / heresy branches within one religion are deferred for now.
 
 ### 6. Low-level miracles should usually work through nature
 

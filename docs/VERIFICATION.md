@@ -1,3 +1,13 @@
+# Pacing revision verification · 2026-10-03 UTC
+
+**Current result: 35 automated tests passed, 0 failed** (21 core, 9 pacing, 5 UI contracts), plus syntax checks and the offline build. The historical report below records the prior 25-test release, not the current total. Real-browser QA remains blocked/unverified; no mock DOM result is claimed as browser QA.
+
+Added coverage: exact UI defaults for all presets; two rains and rain+blessing; easy/normal/hard refill budgets; zero-faith 24s easy recovery and100 cap; repeated-click costs and non-witnessed rain; bounded/recoverable doubt and zero-faith clamp; old save compatibility;27 unattended 30-minute worlds and3 sustained 10-minute intervention loops. Detailed before/after measurements, rules and limits are in [PACING.md](PACING.md).
+
+The original difficulty-order test now measures40 ticks before the100-power cap (180 ticks saturated the faster modes); the autonomous drought test observes292 ticks instead of232 because corrected meal consumption delays scarcity. These are intentional measured changes, not removed assertions.
+
+---
+
 # First playable verification · 2026-10-02
 
 ## Result

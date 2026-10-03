@@ -69,7 +69,7 @@ test('batch stepping is equivalent to single stepping and rejects unbounded inpu
 
 test('difficulty changes divine power accumulation only', () => {
   const worlds = ['relaxed', 'standard', 'scarce'].map(difficulty => make({ difficulty }));
-  worlds.forEach(s => Core.step(s, 180));
+  worlds.forEach(s => Core.step(s, 40));
   assert.ok(worlds[0].power > worlds[1].power);
   assert.ok(worlds[1].power > worlds[2].power);
   worlds.forEach(s => { s.power = 0; s.config.difficulty = 'standard'; });
@@ -180,7 +180,7 @@ test('autonomous weather produces visible drought and food pressure without play
   Core.step(state, 72);
   assert.equal(state.weather.kind, 'drought');
   assert.ok(state.events.some(e => e.type === 'weather' && e.text.includes('乾旱')));
-  Core.step(state, 160);
+  Core.step(state, 220);
   assert.ok(state.events.some(e => e.type === 'scarcity'));
   assert.ok(Core.stats(state).food < 60);
   assert.ok(state.towns.some(t => t.harvested > 0));

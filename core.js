@@ -1,4 +1,4 @@
-/* World of God, ruleset 1. The simulation has no browser or wall-clock dependency. */
+/* World of God, ruleset 1-pacing (version-1 saves remain readable). The simulation has no browser or wall-clock dependency. */
 (function (root, factory) {
   'use strict';
   var api = factory();
@@ -11,7 +11,7 @@
   const WIDTH = 40, HEIGHT = 26, TICKS_PER_DAY = 12;
   const MAX_EVENTS = 80, MAX_ACTIONS = 120, MAX_POWER = 100;
   const COSTS = Object.freeze({ rain: 18, bless: 14, oracle: 10 });
-  const DIFFICULTY = Object.freeze({ relaxed: 1.65, standard: 1, scarce: 0.55 });
+  const DIFFICULTY = Object.freeze({ relaxed: 2.5, standard: 1, scarce: 0.55 });
   const presets = Object.freeze({
     valley: Object.freeze({ name: '河谷', title: '豐饒河谷', description: '河流穿過沃野，兩座聚落共享雨季，也一起面對乾旱。', moisture: 0.64, food: 80, belief: 0.48 }),
     dry: Object.freeze({ name: '旱原', title: '乾燥原野', description: '稀疏林地與乾燥土壤，讓每一次降雨都有分量。', moisture: 0.36, food: 64, belief: 0.42 }),
@@ -58,7 +58,7 @@
       belief: number(input.belief, defaults.belief, 0, 1)
     };
     const state = {
-      version: VERSION, ruleset: 'wog-1', seed: config.seed, rng: hash(config.seed), config,
+      version: VERSION, ruleset: 'wog-1-pacing', seed: config.seed, rng: hash(config.seed), config,
       tick: 0, day: 1, time: { tick: 0, day: 1, ticksPerDay: TICKS_PER_DAY },
       width: WIDTH, height: HEIGHT, tiles: [], towns: [], households: [], people: [],
       power: 38, weather: { kind: 'clear', remaining: 72, cycle: 0 },
@@ -122,8 +122,8 @@
     const followers = state.people.filter(p => p.faith >= 0.35).length;
     // Devotion is contribution, not a follower count or a spendable stock.
     const devotion = state.people.reduce((v, p) => v + p.faith * (p.task === 'praying' ? 1.5 : 0.35) * (0.5 + p.health * 0.5), 0);
-    const spark = 0.015;
-    const powerRate = (spark + devotion * 0.012) * DIFFICULTY[state.config.difficulty];
+    const spark = 0.15;
+    const powerRate = (spark + devotion * 0.045) * DIFFICULTY[state.config.difficulty];
     const land = state.tiles.filter(t => t.kind !== 'water');
     return { population: n, followers, devotion, power: state.power, maxPower: MAX_POWER, powerRate, spark,
       food: state.towns.reduce((v, t) => v + t.food, 0), averageFaith: n ? state.people.reduce((v, p) => v + p.faith, 0) / n : 0,
@@ -154,7 +154,7 @@
     if (type === 'oracle' && town.oracle && town.oracle.stage !== 'consequences')
       return { ok: false, message: '這座聚落仍在回應上一道神諭。', cost: 0 };
     const cost = COSTS[type];
-    if (state.power + 1e-9 < cost) return { ok: false, message: '神力不足；信仰與微弱的神性火種會逐步恢復神力。', cost: 0 };
+    if (state.power + 1e-9 < cost) return { ok: false, message: '神力不足；居民奉獻與神性火種會恢復神力，請看下方預估秒數。', cost: 0 };
     state.power = Math.max(0, state.power - cost);
     const action = { id: 'a' + (++state.actionSeq), tick: state.tick, type, target: type === 'rain' ? { x: point.x, y: point.y } : town.id, cost };
     state.actions.push(action);
@@ -289,12 +289,18 @@
     // Targets are coordinates only: no shared object references or state cycles in save files.
     if (person.target) person.target = { x: person.target.x, y: person.target.y };
   }
+  function changeFaith(person, delta) {
+    // Lasting evidence acts on conviction before temporary hardship doubt.
+    const conviction = clamp(person.faith + (person.hardshipDoubt || 0) + delta);
+    person.hardshipDoubt = Math.min(person.hardshipDoubt || 0, conviction);
+    person.faith = conviction - person.hardshipDoubt;
+  }
   function individualStep(state, person) {
     const town = state.towns.find(t => t.id === person.town);
     if (!town) return;
     person.hunger = clamp(person.hunger + 0.0065);
-    if (town.food >= 0.18 && person.hunger > 0.12) {
-      town.food -= 0.18; town.consumed += 0.18; person.hunger = clamp(person.hunger - 0.022);
+    if (town.food >= 0.12 && person.hunger > 0.12) {
+      town.food -= 0.12; town.consumed += 0.12; person.hunger = clamp(person.hunger - 0.022);
     }
     if (person.hunger > 0.75) person.health = clamp(person.health - 0.0017, 0.18, 1);
     else if (person.hunger < 0.3) person.health = clamp(person.health + 0.0013, 0.18, 1);
@@ -323,7 +329,7 @@
             const sign = town.signs.find(s => s.type === 'bless') || town.signs.find(s => s.type === 'rain');
             emit(state, 'harvest', town.name + '收穫了一批糧食。', { reason: '成熟作物經居民收割，成為糧倉中的食物。' + (sign ? '這片田地曾受到神蹟影響。' : ''), town: town.id, person: person.id, parents: sign ? [sign.id] : [], amount: yieldFood });
           }
-          if (town.blessing > 0) person.faith = clamp(person.faith + 0.018);
+          if (town.blessing > 0) changeFaith(person, 0.018);
         }
       }
     } else if (arrived && person.task === 'foraging') {
@@ -335,12 +341,18 @@
     // Personal faith is evaluated here from experienced evidence, never set by the divine actor.
     const lastSeenSign = person.lastSign ? Number(person.lastSign.slice(1)) : 0;
     const sign = town.signs.find(s => s.type === 'rain' && Number(s.id.slice(1)) > lastSeenSign);
-    if (sign && townStats(state, town).moisture > 0.3) { person.faith = clamp(person.faith + 0.025 * (1 - person.traits.independence * 0.5)); person.lastSign = sign.id; }
-    if (person.task === 'praying' && person.hunger < 0.5) person.faith = clamp(person.faith + 0.0006);
-    if (person.hunger > 0.55) person.faith = clamp(person.faith - 0.0009 * (0.5 + person.traits.independence));
+    if (sign && townStats(state, town).moisture > 0.3) { changeFaith(person, 0.025 * (1 - person.traits.independence * 0.5)); person.lastSign = sign.id; }
+    if (person.task === 'praying' && person.hunger < 0.5) changeFaith(person, 0.0006);
+    // Hardship creates bounded, reversible doubt, not a permanent per-tick tax.
+    // No prayer/miracle is required to recover this loss when everyday life improves.
+    const previousDoubt = person.hardshipDoubt || 0;
+    const conviction = clamp(person.faith + previousDoubt);
+    const nextDoubt = Math.min(conviction, clamp(previousDoubt + (person.hunger > 0.55 ? 0.0003 * (0.5 + person.traits.independence) : person.hunger < 0.4 ? -0.0006 : 0), 0, 0.06));
+    person.faith = conviction - nextDoubt;
+    person.hardshipDoubt = nextDoubt;
     if (town.oracle && town.oracle.stage === 'consequences' && person.lastOracle !== town.oracle.id) {
       const change = town.oracle.outcome === 'completed' ? 0.045 : town.oracle.outcome === 'failed' ? -0.032 : -0.005;
-      person.faith = clamp(person.faith + change * (1 - person.traits.independence * 0.4)); person.lastOracle = town.oracle.id;
+      changeFaith(person, change * (1 - person.traits.independence * 0.4)); person.lastOracle = town.oracle.id;
     }
   }
   function step(state, ticks = 1) {
@@ -348,6 +360,7 @@
     ticks = Math.floor(ticks);
     if (ticks > 100000) throw new RangeError('step is limited to 100000 ticks per call');
     for (let i = 0; i < ticks; i++) {
+      state.ruleset = 'wog-1-pacing';
       state.tick++; state.day = 1 + Math.floor(state.tick / TICKS_PER_DAY);
       state.time.tick = state.tick; state.time.day = state.day;
       weatherStep(state); ecologyStep(state);
@@ -373,7 +386,7 @@
     const list = (v, max) => Array.isArray(v) && v.length <= max;
     const s = input;
     if (!object(s)) return { ok: false, errors: ['存檔必須是物件。'] };
-    if (s.version !== VERSION || s.ruleset !== 'wog-1') fail('不支援的存檔版本。');
+    if (s.version !== VERSION || !['wog-1', 'wog-1-pacing'].includes(s.ruleset)) fail('不支援的存檔版本。');
     if (s.width !== WIDTH || s.height !== HEIGHT) fail('地圖尺寸不符。');
     if (!Number.isSafeInteger(s.tick) || s.tick < 0 || s.tick > 1e12 || s.day !== 1 + Math.floor(s.tick / TICKS_PER_DAY)) fail('世界時間無效。');
     if (!object(s.time) || s.time.tick !== s.tick || s.time.day !== s.day || s.time.ticksPerDay !== TICKS_PER_DAY) fail('時間快照無效。');
@@ -398,7 +411,7 @@
     }
     for (const h of households) if (!point(h) || !string(h.id, 80) || !string(h.name, 80) || !townIds.has(h.town) || !list(h.members, 3) || h.members.some(id => !personIds.has(id))) fail('家戶資料無效。');
     for (const p of people) {
-      if (!point(p) || !string(p.id, 80) || !string(p.name, 80) || !townIds.has(p.town) || !householdIds.has(p.household) || !TASKS.has(p.task) || !inRange(p.faith, 0, 1) || !inRange(p.hunger, 0, 1) || !inRange(p.energy, 0, 1) || !inRange(p.health, 0.18, 1) || !object(p.traits) || !inRange(p.traits.diligence, 0, 1) || !inRange(p.traits.independence, 0, 1) || !(p.target === null || point(p.target)) || !inRange(p.effort, 0, 1e12) || !finite(p.nextDecision) || !finite(p.taskSince) || !(p.lastSign === null || (string(p.lastSign, 80) && /^e[1-9]\d*$/.test(p.lastSign))) || !(p.lastOracle === null || string(p.lastOracle, 80)) || !string(p.reason)) { fail('個人資料無效。'); continue; }
+      if (!point(p) || !string(p.id, 80) || !string(p.name, 80) || !townIds.has(p.town) || !householdIds.has(p.household) || !TASKS.has(p.task) || !inRange(p.faith, 0, 1) || (p.hardshipDoubt !== undefined && (!inRange(p.hardshipDoubt, 0, 0.06) || p.faith + p.hardshipDoubt > 1 + 1e-9)) || !inRange(p.hunger, 0, 1) || !inRange(p.energy, 0, 1) || !inRange(p.health, 0.18, 1) || !object(p.traits) || !inRange(p.traits.diligence, 0, 1) || !inRange(p.traits.independence, 0, 1) || !(p.target === null || point(p.target)) || !inRange(p.effort, 0, 1e12) || !finite(p.nextDecision) || !finite(p.taskSince) || !(p.lastSign === null || (string(p.lastSign, 80) && /^e[1-9]\d*$/.test(p.lastSign))) || !(p.lastOracle === null || string(p.lastOracle, 80)) || !string(p.reason)) { fail('個人資料無效。'); continue; }
       const household = households.find(h => h && h.id === p.household);
       if (!household || household.town !== p.town || !Array.isArray(household.members) || !household.members.includes(p.id)) fail('個人與家戶歸屬不一致。');
     }

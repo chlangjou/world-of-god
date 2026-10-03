@@ -1,57 +1,86 @@
-# World of God
+# World of God · 河谷初光 · Web PoC
 
-An emergent civilization and god-simulation sandbox.
+**Web PoC / First playable 0.1：實驗性網頁原型，非正式產品實作，尚非完整 S0–S3 實作。**
 
-## Design thesis
+本版本獨立放在 `web-poc` 分支，用來驗證玩法與互動；不代表 `main` 的正式實作方向。
 
-The player is a god, not an RTS commander.
+一個以繁體中文呈現的 2D 俯視神明沙盒。玩家改變自然條件、傳遞意圖；居民按照需求與信仰自行回應。沒有網路依賴、帳號、遙測或付費功能。
 
-> **God expresses intent; world determines execution.**
+## 立刻開始
 
-The game is intended to generate history from interacting simulation rules: individuals, households, settlements, civilizations, religion, divine intervention, and the consequences between them.
+1. 解壓縮這個資料夾。
+2. 用 Chrome、Edge 或 Firefox 開啟 **`World-of-God.html`**。這個檔案本身就包含完整遊戲，不必安裝 Node 或下載素材。
+3. 選擇「豐饒河谷」，按「讓歷史開始」。第一次建議先保留預設值。
+4. 觀察聚落糧倉與田地；按「喚雨」後點選田地附近。也可以先傳下「糧食優先」神諭，觀看居民的回答。
 
-See [Core Principles](docs/CORE_PRINCIPLES.md).
+### 若瀏覽器阻止本機儲存
 
-## Design workflow
+畫面下方會顯示儲存狀態。使用「匯出」備份 JSON 存檔，之後可「匯入」。瀏覽器清除網站資料、無痕模式、不同路徑或不同瀏覽器都可能令原本的本機存檔無法取得。
 
-During the early design phase:
+若已安裝 Python，可在此資料夾開啟終端機：
 
-- unresolved directions are tracked as GitHub Issues;
-- each issue should converge on one coherent rule/system;
-- settled decisions are promoted into `docs/`;
-- commits may go directly to `main`;
-- Pull Requests are intentionally deferred until the project needs a review workflow.
-
-## Current design backlog
-
-1. [Core God–World gameplay loop](https://github.com/chlangjou/world-of-god/issues/1)
-2. [World simulation layers and causality](https://github.com/chlangjou/world-of-god/issues/2)
-3. [Population, family, and reproduction](https://github.com/chlangjou/world-of-god/issues/3)
-4. [Settlement economy and occupations](https://github.com/chlangjou/world-of-god/issues/4)
-5. [Faith, followers, devotion, and divine power](https://github.com/chlangjou/world-of-god/issues/5)
-6. [Oracle and divine calling](https://github.com/chlangjou/world-of-god/issues/6)
-7. [Miracles, cost model, and power scaling](https://github.com/chlangjou/world-of-god/issues/7)
-8. [Religion, priesthood, doctrine, and interpretation](https://github.com/chlangjou/world-of-god/issues/8)
-9. [Civilization, politics, diplomacy, and conflict](https://github.com/chlangjou/world-of-god/issues/9)
-10. [History, event provenance, and causal explanation](https://github.com/chlangjou/world-of-god/issues/10)
-11. [First playable vertical slice (S0–S3)](https://github.com/chlangjou/world-of-god/issues/11)
-
-## Current milestone direction
-
-The first meaningful playable path is expected to be:
-
-```text
-S0 Living World
-    ↓
-S1 Settlement
-    ↓
-S2 First God
-    ↓
-S3 Oracle
+```sh
+python -m http.server 8000
 ```
 
-Target experience:
+Windows 也可以使用 `py -m http.server 8000`，再開啟 `http://localhost:8000`。此處的 `index.html` 使用分離的原始檔；單檔版則是 `World-of-God.html`。
 
-> A small population survives, forms a settlement, begins to worship the player, generates limited divine power, receives a small miracle and an oracle, and responds through its own simulated behavior.
+## 第一段可以玩的歷史
 
-This milestone is deliberately provisional until Issue #11 is resolved.
+- **24 位具名居民 / 8 個家戶 / 2 個既有聚落**：自行在耕作、採集、休息、祈禱之間選擇。點人物可查看選擇理由、信仰和飢餓。
+- **三個可調整起點**：豐饒河谷、乾燥盆地、群島微光；可調種子、土壤濕度、糧食與信仰，儲存自訂設定。
+- **自然壓力**：作物成長、採收與消耗；乾旱在第 7 日到來，約開始後 36 秒（1×）。天氣週期是明確的原型規則，尚非完整氣候模擬。
+- **喚雨 / 豐收祝福**：先改變水分與生長。糧食須經實際勞動收穫，不會直接生成。
+- **神諭**：傳下 → 聽見 → 解讀 → 接受、暫緩或拒絕 → 嘗試 → 完成或失敗 → 後果。按當時信仰、食物需求與性格作決定；沒有保證服從。
+- **不同信仰數值**：個人信仰、信徒人數（門檻 35%）、奉獻與可用神力分開。難度只改變神力累積速度。
+- **不會 Game Over**：低神力仍有神性火種恢復；人口在本版不死亡，健康有下限。這是讓核心循環可反覆試玩的暫定簡化。
+
+建議試玩 5–10 分鐘：先觀察，再降雨，接著傳神諭，等待結果；切換另一座聚落看看相同意圖是否得到不同回應。左下「第一段歷史」四個提示只是導覽，不是勝利條件。
+
+## 操作
+
+| 操作 | 功能 |
+| --- | --- |
+| 點選地圖 / 居民 | 選聚落 / 查看個人 |
+| 空白鍵 | 暫停 / 繼續 |
+| 1 | 選擇喚雨，再點土地 |
+| 2 | 祝福目前聚落 |
+| 3 | 向目前聚落傳神諭 |
+| Esc | 取消喚雨目標 / 關閉對話框 |
+| 1× / 3× / 6× | 改變時間速度 |
+
+一日為 12 刻；1× 約每秒 2 刻。開啟指南、創世或歷史檔案時模擬暫停。讀取存檔後亦先暫停。
+
+## 存檔與歷史
+
+- 目前世界存於 `localStorage`；每 24 刻（1× 約 12 秒）自動儲存，可手動儲存。
+- 重要歷史事件寫入瀏覽器 IndexedDB；模擬 RAM 只保留最近 80 則，輸入紀錄最多 120 筆。
+- 歷史檔案畫面只讀最近 200 則，避免將全部過去載回 RAM；可匯出這 200 則。
+- 世界 JSON 匯出包含完整當前狀態與最近 80 則事件，**不包含整個 IndexedDB 長期歷史**。
+- 匯入會建立獨立歷史分支，不覆寫原分支的事件；匯入檔案限定 5 MB。
+- 同一規則版本中，相同種子、設定與同刻輸入可重現結果；JSON 存檔包含 RNG 狀態，能精確接續。**目前沒有完整回放播放器，超過 120 筆的輸入紀錄不能單獨重建全歷史**。
+
+## 開發與測試
+
+無 runtime 套件依賴。Node 18+：
+
+```sh
+npm test
+npm run build
+```
+
+- `core.js`：純模擬核心，可於 Node 與瀏覽器執行。
+- `app.js`：Canvas 呈現、UI、儲存。
+- `index.html` / `style.css`：介面。
+- `build.cjs`：將上述檔案打包成可離線執行的 `World-of-God.html`。
+- `tests/core.test.cjs`：決定性、神蹟、神諭、資料邊界與長期模擬。
+- `tests/ui.test.cjs`：模擬 DOM 的事件綁定 / UI 合約測試，**不等於真實瀏覽器測試**。
+- `docs/VERIFICATION.md`：實際驗證結果與限制。
+
+## 設計來源與範圍
+
+來源：[chlangjou/world-of-god](https://github.com/chlangjou/world-of-god)，基於 `main` 的 `87db381da137486ee2bbe10695418f182697e383`；原 README 保存在 `docs/ORIGINAL_README.md`，三份原設計文件亦保留。發布時的分支基底為最新 `main` 的 `9b3f5a3163761579363ae4625d599637a79fb109`，並原樣保留新增的 `docs/POPULATION_MODEL.md`；該文件定義的完整人口模型尚未在此 PoC 實作。請勿將本次平衡數值理解為已決定的最終規格。
+
+這版直接從既有家戶、聚落與少數信徒開始，以最快速度驗證「觀察 → 介入 → 自主回應 → 後果 → 再觀察」。家戶現在只有成員、住處與需求背景。**聚落形成、出生死亡、真實家庭關係、遷徙、地形編輯器、建築、經濟交換、制度宗教、政治戰爭與跨版本回放都還沒做。** 因此不應把它稱為全部 S0–S3 的完成版。
+
+本原型發布於 GitHub 的 `web-poc` 分支；未合併至 `main`，未建立 PR、部署或修改 Issues。

@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>World of God · 河谷初光</title><style>:root{--ink:#263e39;--muted:#73817a;--paper:#f5f4eb;--line:#dce0d3;--forest:#244c42;--gold:#b59854;--soft:#e8ecdf}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif}button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--ink);padding:7px 13px;transition:background .15s,transform .15s}button:hover{background:#e5e9db}button:active{transform:translateY(1px)}button:disabled{opacity:.4;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid #b29e64;outline-offset:3px}.mast{height:88px;max-width:1560px;padding:0 42px;display:flex;align-items:center;justify-content:space-between;margin:auto;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);letter-spacing:3px;font-family:Georgia,serif;font-size:21px}.sigil{font-size:45px;color:var(--gold)}.brand small{font:9px/1.7 sans-serif;letter-spacing:2.5px;display:block;color:var(--muted)}.top-actions{display:flex;gap:8px}.top-actions button{font-size:12px;border:0}main{max-width:1560px;margin:auto;padding:28px 42px}.world-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.eyebrow{font-size:10px;letter-spacing:2px;color:var(--muted)}h1{font-family:Georgia,"Noto Serif TC",serif;font-weight:500;margin:3px 0;font-size:30px;letter-spacing:2px}.metrics{display:flex;gap:32px;align-items:center}.metrics>div{min-width:48px}.metrics span{display:block;color:var(--muted);font-size:10px;letter-spacing:1px}.metrics strong{font-family:Georgia,serif;font-size:29px;font-weight:400}.metrics .power{border-left:1px solid var(--line);padding-left:30px;min-width:120px}.power strong{color:#9e8346}.power-track{height:3px;background:#e5ddc9;width:90px}.power-track i{display:block;background:#aa915b;height:100%;width:38%}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 312px;gap:24px;align-items:start}.land-panel{min-width:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fafaf3}.map-heading{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;font-size:11px}.map-heading>span{display:flex;align-items:center;gap:10px}.live-dot{width:6px;height:6px;background:#97ab6e;border-radius:50%}#weather{color:var(--muted);border-left:1px solid var(--line);padding-left:10px}.speed{display:flex;gap:4px}.speed button{font-size:10px;padding:4px 8px;border:0}.speed .active{background:var(--forest);color:#fff}.canvas-wrap{position:relative;background:#8aaa8e;line-height:0}canvas{display:block;width:100%;aspect-ratio:40/26;touch-action:none}.map-badge{position:absolute;left:16px;top:16px;border:1px solid #fff5;background:#f8f7e7e8;box-shadow:0 2px 10px #20393018;border-radius:5px;padding:8px 13px;line-height:1.4;font-size:11px;color:#556b5a;pointer-events:none}.map-badge>span:first-child{margin-right:6px;font-size:16px;color:#ad9155}.compass{position:absolute;right:20px;top:19px;color:#f4f1dbb0;line-height:1.2;text-align:center;font-family:Georgia,serif}.legend{position:absolute;bottom:14px;left:18px;font-size:9px;line-height:1.5;color:#f6f8e8;background:#34574a99;padding:5px 8px;border-radius:4px;pointer-events:none}.legend i{display:inline-block;width:6px;height:6px;margin:0 5px 0 9px;border-radius:2px}.legend .water{background:#8cc6c1}.legend .field{background:#ddc481}.legend .believer{background:#ffe5a0}.action-bar{display:flex;padding:16px 14px;gap:10px;align-items:center}.action-intro{flex:1;min-width:95px}.action-intro small{color:var(--gold);font-size:9px;letter-spacing:2px;display:block}.action-intro strong{font-size:11px;font-weight:500}.miracle{display:flex;align-items:center;gap:9px;padding:10px;border-color:#dfe4d7;background:#f4f5eb}.miracle>span{font:27px Georgia,serif;color:#7b936e}.miracle b{font-size:12px;font-weight:600}.miracle small{display:block;font-size:9px;color:var(--muted);white-space:nowrap}.miracle kbd{font-size:9px;color:#aab1a3;border:1px solid #dce0d3;padding:0 3px;border-radius:3px}.miracle.armed{background:#e5dfc1;border-color:#ac9358}.bottom-line{padding:0 15px 10px;display:flex;justify-content:space-between;gap:10px;font-size:9px;color:var(--muted)}aside{display:flex;flex-direction:column;gap:18px}.panel{border:1px solid var(--line);border-radius:9px;padding:18px;background:#fafaf3}.panel-label{display:flex;align-items:center;justify-content:space-between;font-size:9px;letter-spacing:1.5px;color:var(--muted)}.panel-label>span{color:var(--gold)}h2{font:26px/1.3 Georgia,"Noto Serif TC",serif;letter-spacing:2px;margin:13px 0 6px}.settlement>p{font-size:11px;margin:0 0 16px;color:var(--muted)}.town-stats{display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.town-stats small{font-size:9px;display:block;color:var(--muted)}.town-stats strong{font:22px/1.8 Georgia,serif}.residents-head{display:flex;justify-content:space-between;align-items:center;margin:16px 0 9px;font-size:10px}.residents-head small{font-size:8px;color:var(--muted)}.people{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.person{padding:5px 1px;border:1px solid transparent;font-size:10px;line-height:1.6;text-align:center}.person .dot{display:block;margin:auto;width:15px;height:15px;border-radius:50%;background:#8c9e80;border:3px solid #dbe2d0}.person.believer .dot{background:#b79d60;border-color:#e9dfbd}.person small{display:block;color:var(--muted);font-size:8px}.person.selected{border-color:#b7bc9f;background:#edf0e3}.person-detail{margin-top:8px;font-size:10px;color:#70806a;min-height:34px}.oracle-info{font-size:10px;border-left:2px solid var(--gold);background:#f0eee0;padding:9px 10px;margin-top:13px}.oracle-info:empty{display:none}.oracle-info strong{display:block}.oracle-steps{color:#8b967e;font-size:9px;margin-top:4px}.history{max-height:338px;overflow:auto}.history .panel-label button{padding:0;border:0;font-size:9px;color:#879675;letter-spacing:0}.event{padding:12px 0 11px 13px;border-bottom:1px solid #e9ecdf;position:relative}.event:before{content:'';position:absolute;top:19px;left:0;width:4px;height:4px;background:#b6aa7a;border-radius:50%}.event small{font-size:8px;color:#9aa28e;letter-spacing:1px}.event p{font-size:11px;line-height:1.6;margin:3px 0}.event details{font-size:9px;color:#849079}.event summary{cursor:pointer}.journey{display:flex;align-items:center;gap:22px;margin-top:22px;padding:0 2px;font-size:10px}.journey>p{margin-left:auto;color:#8a9380;font-size:9px}#goals{display:flex;gap:18px}.goal{color:#9ba48f}.goal.done{color:#526e52}.goal:before{content:'○ ';color:#b6baa7}.goal.done:before{content:'✓ ';color:#8b9c61}dialog{border:1px solid #d1d8c5;border-radius:14px;background:#f8f8ef;padding:30px;color:var(--ink);max-width:760px;width:calc(100% - 32px);box-shadow:0 30px 100px #162f4240;max-height:92vh}dialog::backdrop{background:#233e39b0;backdrop-filter:blur(5px)}.dialog-head{display:flex;justify-content:space-between;align-items:center}.close{border:0;font-size:25px;padding:0 6px;line-height:1}.dialog-head+h2{font-size:29px;margin:15px 0 12px}dialog p{font-size:12px;color:#75816c}.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:23px 0}.preset{text-align:left;background:#eef1e4;padding:18px 16px}.preset>span{font:36px Georgia,serif;display:block;line-height:1;color:#7f9778;margin-bottom:12px}.preset b{display:block;font-size:14px}.preset small{font-size:10px;color:#7f8b72}.preset.selected{border-color:#829875;background:#e2ead5;box-shadow:0 0 0 1px #829875}.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 25px}.config-grid label{display:block;font-size:10px;color:#637159}.config-grid input:not([type=range]),select{display:block;width:100%;margin-top:5px;padding:8px 10px;border:1px solid #d4dbc8;border-radius:4px;background:#fdfdf7;color:var(--ink);font-size:12px}.config-grid input[type=range]{width:100%;accent-color:#748d62}.config-grid output{float:right}.config-note{font-size:10px!important}.dialog-footer{display:flex;gap:10px;align-items:center;margin-top:25px}.dialog-footer button{font-size:11px}.primary{background:var(--forest);color:#fff;border-color:var(--forest);margin-left:auto;padding:11px 25px!important}.primary:hover{background:#376759}.fine{font-size:9px!important;margin-top:16px!important;color:#939b86!important}#toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%) translateY(30px);opacity:0;background:#29483f;color:#f9f8ec;padding:12px 24px;border-radius:7px;box-shadow:0 5px 25px #20362930;pointer-events:none;transition:.2s;z-index:9;max-width:90%;font-size:12px}#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}#infoBody h3{font-size:18px;font-weight:500}#infoBody li{font-size:13px;margin:10px 0}#infoBody p{line-height:1.8}.archive-list{max-height:60vh;overflow:auto}.archive-list .event{padding-left:15px}#infoBody a{color:#466f58}
+@media(min-width:1450px){.workspace{grid-template-columns:minmax(0,1fr) 340px}.panel{padding:22px}.people{gap:7px}.history{max-height:380px}.action-bar{padding:20px}.miracle{padding:12px 16px}}@media(max-width:1150px){main{padding:22px}.mast{padding:0 22px}.workspace{gap:16px;grid-template-columns:minmax(0,1fr) 280px}.action-intro{display:none}.miracle{flex:1}.miracle kbd{display:none}.metrics{gap:20px}.journey{flex-wrap:wrap;gap:10px}.journey>p{margin:0}.brand{font-size:18px}}@media(max-width:850px){.workspace{grid-template-columns:1fr}aside{display:grid;grid-template-columns:1fr 1fr}.history{max-height:460px}.world-bar{gap:15px}.metrics{gap:17px}.metrics .power{padding-left:15px;min-width:80px}h1{font-size:23px}.top-actions{gap:0}.top-actions button{padding:6px 8px;font-size:11px}.mast{height:77px}.brand{font-size:15px}.brand small{font-size:7px}.sigil{font-size:35px}.action-intro{display:block}}@media(max-width:600px){main{padding:18px 12px}.mast{height:auto;padding:14px 14px;flex-wrap:wrap;gap:10px}.top-actions{width:100%;justify-content:space-between}.world-bar{display:block;margin-bottom:14px}.metrics{margin-top:14px;justify-content:space-between}.metrics strong{font-size:24px}.metrics .power{min-width:110px}.metrics span{font-size:9px}.map-heading{padding:10px 8px}.map-heading>span{gap:6px}.speed button{padding:4px 6px}.map-badge{font-size:9px;padding:5px 8px;left:10px;top:10px}.compass{font-size:10px;right:12px;top:12px}.legend{font-size:8px;bottom:7px;left:7px}.action-bar{padding:10px 8px;gap:5px}.action-intro{display:none}.miracle{padding:8px 5px;gap:4px}.miracle>span{font-size:20px}.miracle b{font-size:10px}.miracle small{font-size:8px}.bottom-line{flex-direction:column;gap:1px;padding:0 10px 8px}aside{grid-template-columns:1fr}.history{max-height:260px}.people{grid-template-columns:repeat(6,1fr)}.journey{gap:8px}#goals{gap:10px;font-size:9px}dialog{padding:22px 17px}.dialog-head+h2{font-size:24px}.presets{gap:6px}.preset{padding:13px 8px}.preset b{font-size:11px}.preset small{font-size:8px}.config-grid{gap:12px}.dialog-footer{gap:5px;flex-wrap:wrap}.dialog-footer button{padding:7px 9px}.primary{padding:9px 15px!important}.config-grid input:not([type=range]),select{font-size:10px}}
+</style></head>
+<body>
+<header class="mast"><a class="brand" href="#" aria-label="World of God 首頁"><span class="sigil">✺</span><span>WORLD OF GOD<small>河谷初光 · FIRST PLAYABLE 0.1</small></span></a><div class="top-actions"><button id="guide">玩法</button><button id="save">儲存</button><button id="load">讀取</button><button id="export">匯出</button><button id="import">匯入</button><button id="genesis">創世</button></div></header>
+<main>
+<section class="world-bar"><div><span class="eyebrow">一個自己活著的世界</span><h1 id="worldTitle">靜待第一道神意</h1></div><div class="metrics"><div><span>居民</span><strong id="population">24</strong></div><div><span>信徒</span><strong id="followers">—</strong></div><div><span>奉獻</span><strong id="devotion">—</strong></div><div class="power"><span>可用神力</span><strong id="power">38</strong><div class="power-track"><i id="powerBar"></i></div></div></div></section>
+<div class="workspace"><section class="land-panel"><div class="map-heading"><span><i class="live-dot"></i><b id="day">第 1 日</b><span id="weather">晴朗</span></span><div class="speed"><button id="pause" aria-label="暫停或繼續">▶ 開始歷史</button><button data-speed="1" class="active">1×</button><button data-speed="3">3×</button><button data-speed="6">6×</button></div></div><div class="canvas-wrap"><canvas id="world" width="1200" height="780" tabindex="0" aria-label="河谷世界地圖。點選聚落查看居民；選擇降雨後點選土地施展神蹟。"></canvas><div class="map-badge"><span>✧</span> <span id="mapHint">點選聚落或居民，聆聽這個世界</span></div><div class="compass">N<br>↑</div><div class="legend"><i class="water"></i>河流 <i class="field"></i>農田 <i class="believer"></i>信徒</div></div><div class="action-bar"><div class="action-intro"><small>你的神意</small><strong>改變條件，讓人決定。</strong></div><button class="miracle" id="rain"><span>☂</span><div><b>喚雨</b><small>滋潤土地 · 18 神力</small></div><kbd>1</kbd></button><button class="miracle" id="bless"><span>✺</span><div><b>豐收祝福</b><small>促進生長 · 14 神力</small></div><kbd>2</kbd></button><button class="miracle" id="oracle"><span>◈</span><div><b>傳下神諭</b><small>糧食優先 · 10 神力</small></div><kbd>3</kbd></button></div><div class="bottom-line"><span id="status">準備好後，開始歷史。</span><span id="storage">正在檢查本機儲存…</span></div></section>
+<aside><section class="panel settlement"><div class="panel-label">觀察 / SETTLEMENT <span id="townIndex">01</span></div><h2 id="townName">葦岸</h2><p id="townSummary">人們在河邊安身，也正學著相信。</p><div class="town-stats"><div><small>共享糧倉</small><strong id="food">—</strong></div><div><small>土壤濕度</small><strong id="moisture">—</strong></div><div><small>平均信仰</small><strong id="faith">—</strong></div></div><div id="oracleInfo" class="oracle-info"></div><div class="residents-head"><b>居民的選擇</b><small>點選人物，查看原因</small></div><div id="people" class="people"></div><div id="personDetail" class="person-detail"></div></section><section class="panel history"><div class="panel-label">世界留下的痕跡 <button id="archive">歷史檔案 ↗</button></div><div id="events"></div></section></aside></div>
+<section class="journey"><span class="eyebrow">第一段歷史</span><div id="goals"></div><p>沒有傳統的勝負。神力耗盡時，神性火種仍會緩慢恢復。</p></section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<dialog id="genesisDialog"><form method="dialog" id="genesisForm"><div class="dialog-head"><span class="eyebrow">GENESIS / 創世</span><button type="button" class="close" id="closeGenesis" aria-label="關閉">×</button></div><h2>讓一個世界，開始生活。</h2><p>先從河谷開始。你能帶來雨，也能表達期望；人們會有自己的答案。</p><div class="presets"><button type="button" data-preset="valley" class="preset selected"><span>≋</span><b>豐饒河谷</b><small>水岸、森林與兩個聚落<br>溫和入門，觀察生活</small></button><button type="button" data-preset="dry" class="preset"><span>☀</span><b>乾燥盆地</b><small>稀少的水，迫切的飢餓<br>每一場雨都更有意義</small></button><button type="button" data-preset="islands" class="preset"><span>◌</span><b>群島微光</b><small>散落的陸地，各自生活<br>兩種信仰，兩種回應</small></button></div><div class="config-grid"><label>世界種子<input id="seed" maxlength="60" value="river-dawn-01"></label><label>神力累積<select id="difficulty"><option value="relaxed">悠閒 · 更容易嘗試神蹟</option><option value="standard">標準 · 適度等待</option><option value="scarce">節制 · 珍惜每次介入</option></select></label><label>初始土壤濕度 <output id="wetOut">65%</output><input id="wet" type="range" min="10" max="95" value="65"></label><label>每座聚落起始糧食 <output id="foodOut">80</output><input id="startFood" type="range" min="20" max="160" value="80"></label><label>起始信仰傾向 <output id="beliefOut">28%</output><input id="belief" type="range" min="5" max="75" value="28"></label><p class="config-note">難度只改變神力累積速度。相同種子、設定與介入，可重現同版本的世界。</p></div><div class="dialog-footer"><button type="button" id="saveConfig">儲存自訂設定</button><button type="button" id="loadConfig">讀取自訂設定</button><button id="begin" class="primary" type="submit">讓歷史開始 →</button></div><p class="fine">開啟新世界會替換目前進度，建議先匯出。原型：24 位居民、8 個家戶、2 個聚落；人口繁衍、政治、遷徙尚未實作。</p></form></dialog>
+<dialog id="infoDialog"><div class="dialog-head"><span class="eyebrow" id="infoLabel">遊玩指南</span><button class="close" id="closeInfo" aria-label="關閉">×</button></div><div id="infoBody"></div></dialog><input id="fileInput" type="file" accept="application/json,.json" hidden>
+<script>/* World of God, ruleset 1. The simulation has no browser or wall-clock dependency. */
+(function (root, factory) {
+  'use strict';
+  var api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  if (root) root.WoG = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  const VERSION = 1;
+  const WIDTH = 40, HEIGHT = 26, TICKS_PER_DAY = 12;
+  const MAX_EVENTS = 80, MAX_ACTIONS = 120, MAX_POWER = 100;
+  const COSTS = Object.freeze({ rain: 18, bless: 14, oracle: 10 });
+  const DIFFICULTY = Object.freeze({ relaxed: 1.65, standard: 1, scarce: 0.55 });
+  const presets = Object.freeze({
+    valley: Object.freeze({ name: '河谷', title: '豐饒河谷', description: '河流穿過沃野，兩座聚落共享雨季，也一起面對乾旱。', moisture: 0.64, food: 80, belief: 0.48 }),
+    dry: Object.freeze({ name: '旱原', title: '乾燥原野', description: '稀疏林地與乾燥土壤，讓每一次降雨都有分量。', moisture: 0.36, food: 64, belief: 0.42 }),
+    islands: Object.freeze({ name: '群島', title: '雙生群島', description: '隔水相望的聚落，各自解讀同一個神的意圖。', moisture: 0.7, food: 88, belief: 0.54 })
+  });
+  const NAMES = ['禾安', '青穗', '木川', '石澄', '阿岑', '雨生', '冬禾', '月琴', '田北', '小滿', '春溪', '柏平', '海棠', '松原', '雲舒', '若谷', '水鹿', '晨星', '穗寧', '山禾', '初陽', '杏白', '林舟', '阿苒'];
+  const FAMILY = ['禾家', '石家', '溪家', '柏家', '海家', '松家', '山家', '林家'];
+  const TERRAIN = new Set(['water', 'grass', 'forest', 'hill', 'field']);
+  const TASKS = new Set(['farming', 'foraging', 'praying', 'resting']);
+  const STAGES = new Set(['issued', 'heard', 'interpreted', 'accepted', 'deferred', 'refused', 'attempted', 'completed', 'failed', 'consequences']);
+  const clamp = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n));
+  const finite = (n) => typeof n === 'number' && Number.isFinite(n);
+  const number = (n, fallback, a, b) => finite(n) ? clamp(n, a, b) : fallback;
+  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const tileAt = (state, x, y) => state.tiles[y * state.width + x];
+  function hash(text) {
+    let n = 2166136261;
+    for (let i = 0; i < text.length; i++) { n ^= text.charCodeAt(i); n = Math.imul(n, 16777619); }
+    return n >>> 0;
+  }
+  function random(state) {
+    state.rng = (state.rng + 0x6D2B79F5) >>> 0;
+    let n = state.rng;
+    n = Math.imul(n ^ (n >>> 15), n | 1);
+    n ^= n + Math.imul(n ^ (n >>> 7), n | 61);
+    return ((n ^ (n >>> 14)) >>> 0) / 4294967296;
+  }
+  function emit(state, type, text, detail) {
+    const seq = ++state.eventSeq;
+    const event = Object.assign({ id: 'e' + seq, seq, tick: state.tick, day: state.day, type, text, reason: '', parents: [] }, detail || {});
+    state.events.push(event);
+    if (state.events.length > MAX_EVENTS) state.events.splice(0, state.events.length - MAX_EVENTS);
+    return event;
+  }
+  function create(input) {
+    input = input && typeof input === 'object' ? input : {};
+    const preset = Object.hasOwn(presets, input.preset) ? input.preset : 'valley';
+    const defaults = presets[preset];
+    const config = {
+      preset, seed: typeof input.seed === 'string' ? input.seed.slice(0, 120) : '第一縷曙光',
+      difficulty: Object.hasOwn(DIFFICULTY, input.difficulty) ? input.difficulty : 'standard',
+      moisture: number(input.moisture, defaults.moisture, 0, 1),
+      food: number(input.food, defaults.food, 0, 1000),
+      belief: number(input.belief, defaults.belief, 0, 1)
+    };
+    const state = {
+      version: VERSION, ruleset: 'wog-1', seed: config.seed, rng: hash(config.seed), config,
+      tick: 0, day: 1, time: { tick: 0, day: 1, ticksPerDay: TICKS_PER_DAY },
+      width: WIDTH, height: HEIGHT, tiles: [], towns: [], households: [], people: [],
+      power: 38, weather: { kind: 'clear', remaining: 72, cycle: 0 },
+      rainZones: [], events: [], eventSeq: 0, actions: [], actionSeq: 0
+    };
+    for (let y = 0; y < HEIGHT; y++) for (let x = 0; x < WIDTH; x++) {
+      const r = random(state), ripple = Math.sin(y * 0.42) * 1.6;
+      let water = Math.abs(x - (20 + ripple)) < 1.4;
+      if (preset === 'dry') water = (x < 4 && y > 17) || (x > 32 && y < 4);
+      if (preset === 'islands') {
+        const left = ((x - 10) / 9) ** 2 + ((y - 13) / 11) ** 2;
+        const right = ((x - 30) / 8) ** 2 + ((y - 12) / 10) ** 2;
+        water = Math.min(left, right) > 1;
+      }
+      const kind = water ? 'water' : r < (preset === 'dry' ? 0.13 : 0.24) ? 'forest' : r > 0.87 ? 'hill' : 'grass';
+      const moisture = water ? 1 : clamp(config.moisture + (random(state) - 0.5) * 0.2 + (Math.abs(x - 20) < 5 && preset === 'valley' ? 0.08 : 0));
+      state.tiles.push({ x, y, kind, moisture, growth: water ? 0 : 0.2 + random(state) * 0.5 });
+    }
+    for (let t = 0; t < 2; t++) {
+      const town = { id: 'town-' + (t + 1), name: t ? '松岸' : '禾谷', x: t ? 30 : 10, y: t ? 11 : 14,
+        food: config.food, blessing: 0, oracle: null, harvested: 0, foraged: 0, consumed: 0,
+        signs: [], scarcity: false, lastHarvestEvent: -30 };
+      state.towns.push(town);
+      // Curated inhabitable village footprints make every generated preset playable.
+      for (let dy = -3; dy <= 3; dy++) for (let dx = -4; dx <= 4; dx++) {
+        const tile = tileAt(state, town.x + dx, town.y + dy);
+        tile.kind = dy >= 1 && Math.abs(dx) >= 1 ? 'field' : (dy <= -2 && Math.abs(dx) >= 2 ? 'forest' : 'grass');
+        tile.moisture = clamp(config.moisture + (random(state) - 0.5) * 0.16);
+        tile.growth = tile.kind === 'field' ? 0.34 + random(state) * 0.44 : 0.3 + random(state) * 0.45;
+        tile.town = town.id;
+      }
+      for (let h = 0; h < 4; h++) {
+        const household = { id: 'house-' + (t * 4 + h + 1), name: FAMILY[t * 4 + h], town: town.id, members: [], x: town.x + (h % 2 ? 2 : -2), y: town.y - (h < 2 ? 1 : 0) };
+        state.households.push(household);
+        for (let m = 0; m < 3; m++) {
+          const index = t * 12 + h * 3 + m;
+          const person = { id: 'person-' + (index + 1), name: NAMES[index], town: town.id, household: household.id,
+            x: household.x, y: household.y, faith: clamp(config.belief + (random(state) - 0.5) * 0.38), hunger: 0.12 + random(state) * 0.15,
+            energy: 0.65 + random(state) * 0.3, health: 1, task: ['farming', 'foraging', 'praying', 'resting'][index % 4],
+            traits: { diligence: 0.35 + random(state) * 0.6, independence: random(state) },
+            target: null, effort: 0, taskSince: 0, nextDecision: index % 8, lastSign: null, lastOracle: null,
+            reason: '依照家戶與身體的需要安排今天。' };
+          household.members.push(person.id); state.people.push(person);
+        }
+      }
+    }
+    emit(state, 'genesis', '歷史開始：八個家戶，在禾谷與松岸點起炊煙。', { reason: '24 位居民帶著各自的信仰、飢餓與性格，開始自主生活。' });
+    emit(state, 'climate', '微風掠過田野；晴朗的日子不會永遠持續。', { reason: '土壤水分會隨天氣變動，作物必須生長並由居民收穫才能成為糧食。' });
+    return state;
+  }
+  function members(state, town) { return state.people.filter(p => p.town === town.id); }
+  function fields(state, town) { return state.tiles.filter(t => t.kind === 'field' && t.town === town.id); }
+  function townStats(state, town) {
+    const people = members(state, town), n = people.length || 1;
+    return { faith: people.reduce((v, p) => v + p.faith, 0) / n, hunger: people.reduce((v, p) => v + p.hunger, 0) / n,
+      independence: people.reduce((v, p) => v + p.traits.independence, 0) / n,
+      moisture: fields(state, town).reduce((v, t) => v + t.moisture, 0) / Math.max(1, fields(state, town).length), population: people.length };
+  }
+  function stats(state) {
+    const n = state.people.length;
+    const followers = state.people.filter(p => p.faith >= 0.35).length;
+    // Devotion is contribution, not a follower count or a spendable stock.
+    const devotion = state.people.reduce((v, p) => v + p.faith * (p.task === 'praying' ? 1.5 : 0.35) * (0.5 + p.health * 0.5), 0);
+    const spark = 0.015;
+    const powerRate = (spark + devotion * 0.012) * DIFFICULTY[state.config.difficulty];
+    const land = state.tiles.filter(t => t.kind !== 'water');
+    return { population: n, followers, devotion, power: state.power, maxPower: MAX_POWER, powerRate, spark,
+      food: state.towns.reduce((v, t) => v + t.food, 0), averageFaith: n ? state.people.reduce((v, p) => v + p.faith, 0) / n : 0,
+      averageHunger: n ? state.people.reduce((v, p) => v + p.hunger, 0) / n : 0,
+      moisture: land.reduce((v, t) => v + t.moisture, 0) / Math.max(1, land.length),
+      day: state.day, tick: state.tick, weather: state.weather.kind,
+      tasks: Object.fromEntries(Array.from(TASKS, task => [task, state.people.filter(p => p.task === task).length])) };
+  }
+  function resolveTown(state, target) {
+    if (typeof target === 'string') return state.towns.find(t => t.id === target);
+    if (target && typeof target === 'object') {
+      const id = target.town || target.townId || target.id;
+      if (typeof id === 'string') return state.towns.find(t => t.id === id);
+      if (finite(target.x) && finite(target.y) && target.x >= 0 && target.x < state.width && target.y >= 0 && target.y < state.height)
+        return state.towns.reduce((best, t) => !best || distance(t, target) < distance(best, target) ? t : best, null);
+    }
+    return undefined;
+  }
+  function act(state, type, target) {
+    if (type === 'blessing') type = 'bless';
+    if (!Object.hasOwn(COSTS, type)) return { ok: false, message: '這種神蹟尚不存在。', cost: 0 };
+    const town = resolveTown(state, target);
+    let point = town;
+    if (type === 'rain' && target && typeof target === 'object' && finite(target.x) && finite(target.y)) point = target;
+    if (!point || point.x < 0 || point.x >= state.width || point.y < 0 || point.y >= state.height)
+      return { ok: false, message: '請選擇世界中的位置或聚落。', cost: 0 };
+    if (type !== 'rain' && !town) return { ok: false, message: '請先選擇一座聚落。', cost: 0 };
+    if (type === 'oracle' && town.oracle && town.oracle.stage !== 'consequences')
+      return { ok: false, message: '這座聚落仍在回應上一道神諭。', cost: 0 };
+    const cost = COSTS[type];
+    if (state.power + 1e-9 < cost) return { ok: false, message: '神力不足；信仰與微弱的神性火種會逐步恢復神力。', cost: 0 };
+    state.power = Math.max(0, state.power - cost);
+    const action = { id: 'a' + (++state.actionSeq), tick: state.tick, type, target: type === 'rain' ? { x: point.x, y: point.y } : town.id, cost };
+    state.actions.push(action);
+    if (state.actions.length > MAX_ACTIONS) state.actions.splice(0, state.actions.length - MAX_ACTIONS);
+    let event;
+    if (type === 'rain') {
+      event = emit(state, 'miracle', '雨落下了；土壤開始重新吸收水分。', { reason: '降雨改善水分，之後的收穫仍取決於作物、天候與居民的勞動。', actionId: action.id, x: point.x, y: point.y });
+      state.rainZones.push({ id: action.id, x: point.x, y: point.y, radius: 7, remaining: 22, eventId: event.id });
+      if (state.rainZones.length > 12) state.rainZones.shift();
+      for (const tile of state.tiles) if (tile.kind !== 'water' && distance(tile, point) <= 7) tile.moisture = clamp(tile.moisture + 0.12);
+      for (const t of state.towns) if (distance(t, point) <= 9) addSign(t, { id: event.id, type: 'rain', tick: state.tick, until: state.tick + 25 });
+    } else if (type === 'bless') {
+      town.blessing = 72;
+      event = emit(state, 'miracle', town.name + '的田野受到祝福；幼苗的生長潛力提高。', { reason: '祝福加快濕潤田地的生長，不直接增加糧食，也無法取代雨水與收穫。', town: town.id, actionId: action.id });
+      addSign(town, { id: event.id, type: 'bless', tick: state.tick, until: state.tick + 72 });
+    } else {
+      event = emit(state, 'oracle', '一道神諭傳向' + town.name + '：「照料田野，為旱季積糧。」', { reason: '神表達意圖；聚落將根據信仰、食物與自身判斷回應。', town: town.id, actionId: action.id });
+      town.oracle = { id: action.id, title: '為旱季積糧', intent: 'prepare-harvest', stage: 'issued', reason: '神諭已發出，等待居民聽見。',
+        issuedAt: state.tick, stageAt: state.tick, nextAt: state.tick + 4, history: [{ stage: 'issued', tick: state.tick, reason: '神諭已發出，尚未取代任何人的工作選擇。', eventId: event.id }],
+        progress: 0, target: 12, initialHarvest: town.harvested, deferrals: 0, outcome: null, eventId: event.id };
+    }
+    return { ok: true, message: event.text, cost, eventId: event.id };
+  }
+  function addSign(town, sign) { town.signs.push(sign); if (town.signs.length > 12) town.signs.shift(); }
+  function changeStage(state, town, stage, reason, delay) {
+    const oracle = town.oracle;
+    const labels = { heard: '被聽見', interpreted: '獲得詮釋', accepted: '被接受', deferred: '被暫緩', refused: '被拒絕', attempted: '開始嘗試', completed: '完成', failed: '未能完成', consequences: '留下後果' };
+    const event = emit(state, 'oracle', town.name + '的神諭' + labels[stage] + '。', { reason, town: town.id, oracleId: oracle.id, stage, parents: [oracle.eventId] });
+    oracle.stage = stage; oracle.stageAt = state.tick; oracle.reason = reason; oracle.nextAt = state.tick + (delay || 8); oracle.eventId = event.id;
+    oracle.history.push({ stage, tick: state.tick, reason, eventId: event.id });
+  }
+  function updateOracle(state, town) {
+    const oracle = town.oracle;
+    if (!oracle || oracle.stage === 'consequences') return;
+    if (oracle.stage === 'attempted') oracle.progress = Math.max(0, town.harvested - oracle.initialHarvest);
+    if (state.tick < oracle.nextAt) return;
+    const s = townStats(state, town);
+    switch (oracle.stage) {
+      case 'issued': changeStage(state, town, 'heard', '居民在夜間談起相同的聲音；訊息進入家戶。', 8); break;
+      case 'heard': changeStage(state, town, 'interpreted', town.food < 25 ? '聚落把神諭理解為救荒：先保住眼前的食物。' : '聚落把神諭理解為備荒：願意的人多照料田地。', 10); break;
+      case 'interpreted': case 'deferred': {
+        const support = s.faith * 0.8 + (1 - s.independence) * 0.2;
+        if (s.faith < 0.2 || support < 0.34) {
+          oracle.outcome = 'refused';
+          changeStage(state, town, 'refused', '信任不足：居民認為眼前的生活經驗比這道聲音可靠。', 12);
+        } else if ((town.food < 12 || s.hunger > 0.5) && oracle.deferrals < 2) {
+          oracle.deferrals++;
+          changeStage(state, town, 'deferred', '糧食或體力吃緊；居民先覓食與休息，稍後重新討論。', 18);
+        } else if (s.hunger > 0.7) {
+          oracle.outcome = 'refused';
+          changeStage(state, town, 'refused', '飢餓壓過了信任；家戶無力承擔額外的備荒工作。', 12);
+        } else changeStage(state, town, 'accepted', '信任足以支持嘗試；居民同意提高耕作優先，但仍保留各自的選擇。', 8);
+        break;
+      }
+      case 'accepted':
+        oracle.initialHarvest = town.harvested;
+        changeStage(state, town, 'attempted', '部分居民開始優先照料田地；成果取決於水分、成熟度與實際收穫。', 56); break;
+      case 'attempted':
+        if (oracle.progress >= oracle.target) {
+          oracle.outcome = 'completed';
+          changeStage(state, town, 'completed', '居民在嘗試期間實際收穫了 ' + Math.floor(oracle.progress) + ' 份糧食，達到備荒目標。', 10);
+        } else {
+          oracle.outcome = 'failed';
+          changeStage(state, town, 'failed', s.moisture < 0.25 ? '乾燥土壤拖慢作物；即使有人耕作，也未能及時收足糧食。' : '有限的勞力、成熟作物與家戶需要，使這次積糧未達目標。', 10);
+        }
+        break;
+      case 'completed': case 'failed': case 'refused':
+        changeStage(state, town, 'consequences', oracle.outcome === 'completed' ? '收穫成為可見的證據；居民將依自身經驗重新評估信仰。' : oracle.outcome === 'refused' ? '拒絕沒有停止世界；居民繼續生活，神性火種依然存在。' : '落空的期望留下疑問；居民將依自身經驗重新評估信仰。', 0);
+        break;
+    }
+  }
+  function weatherStep(state) {
+    state.weather.remaining--;
+    if (state.weather.remaining > 0) return;
+    state.weather.cycle++;
+    const phases = [{ kind: 'drought', duration: 96 }, { kind: 'clear', duration: 96 }, { kind: 'rain', duration: 44 }, { kind: 'clear', duration: 120 }];
+    const phase = phases[(state.weather.cycle - 1) % phases.length];
+    state.weather.kind = phase.kind; state.weather.remaining = phase.duration;
+    emit(state, 'weather', phase.kind === 'drought' ? '乾旱來臨：水分加速流失，田野開始承受壓力。' : phase.kind === 'rain' ? '季雨抵達：雨水慢慢滲入乾燥的土地。' : '天色轉晴；聚落繼續調整生活。',
+      { reason: phase.kind === 'drought' ? '乾旱增加蒸散；低含水量會抑制作物生長，之後才影響糧倉與居民。' : '天氣先改變土壤，再經由生長、勞動與食物影響生活。' });
+  }
+  function ecologyStep(state) {
+    for (const tile of state.tiles) {
+      if (tile.kind === 'water') { tile.moisture = 1; continue; }
+      const localRain = state.rainZones.some(z => distance(tile, z) <= z.radius);
+      const rain = (state.weather.kind === 'rain' ? 0.026 : 0) + (localRain ? 0.041 : 0);
+      const evaporation = state.weather.kind === 'drought' ? 0.0105 : 0.0028;
+      tile.moisture = clamp(tile.moisture + rain - evaporation);
+      const town = tile.town ? state.towns.find(t => t.id === tile.town) : null;
+      const wet = clamp((tile.moisture - 0.13) / 0.55);
+      const blessing = town && town.blessing > 0 ? 1.8 : 1;
+      let growth = tile.kind === 'field' ? 0.0048 * wet * blessing : tile.kind === 'forest' ? 0.0028 * wet : 0.001 * wet;
+      if (tile.moisture < 0.13) growth -= tile.kind === 'field' ? 0.0023 : 0.0005;
+      tile.growth = clamp(tile.growth + growth);
+    }
+    for (const zone of state.rainZones) zone.remaining--;
+    state.rainZones = state.rainZones.filter(z => z.remaining > 0);
+    for (const town of state.towns) {
+      if (town.blessing > 0) town.blessing--;
+      town.signs = town.signs.filter(s => s.until >= state.tick);
+    }
+  }
+  function selectTask(state, person, town) {
+    const oracle = town.oracle;
+    const pressure = clamp(1 - town.food / 65);
+    const obey = oracle && ['accepted', 'attempted'].includes(oracle.stage) ? person.faith * (1 - person.traits.independence * 0.6) * 0.48 : 0;
+    const phase = (state.tick + Number(person.id.split('-')[1]) * 5) % 48;
+    const scores = {
+      farming: 0.30 + person.traits.diligence * 0.20 + pressure * 0.22 + obey + (phase < 19 ? 0.2 : 0),
+      foraging: 0.21 + person.hunger * 0.65 + pressure * 0.30 + (phase >= 19 && phase < 34 ? 0.22 : 0),
+      praying: 0.12 + person.faith * 0.3 + (phase >= 34 ? 0.35 : 0) - person.hunger * 0.4,
+      resting: 0.12 + (1 - person.energy) * 0.72 + (person.health < 0.7 ? 0.2 : 0)
+    };
+    let task = 'resting';
+    if (person.energy < 0.13) task = 'resting';
+    else task = Object.keys(scores).reduce((a, b) => scores[a] >= scores[b] ? a : b);
+    if (task !== person.task) { person.task = task; person.taskSince = state.tick; person.effort = 0; person.target = null; }
+    person.reason = task === 'farming' ? (obey > 0 ? '神諭提高了耕作的重要性，但我也需要照料家戶。' : pressure > 0.5 ? '糧倉正在減少，需要照料田地。' : '照料作物，為家戶累積糧食。')
+      : task === 'foraging' ? '先從林地尋找能入口的食物。' : task === 'praying' ? '身體暫時安穩，願意把時間交給信仰。' : '體力不足，需要回到家戶休息。';
+    person.nextDecision = state.tick + 6 + Math.floor(random(state) * 5);
+  }
+  function chooseTarget(state, person, town) {
+    if (person.task === 'farming') {
+      const plots = fields(state, town);
+      // Farmers observe nearby fields; their preferences depend on ripeness and distance.
+      person.target = plots.reduce((best, tile) => !best || tile.growth - distance(person, tile) * 0.027 > best.growth - distance(person, best) * 0.027 ? tile : best, null);
+    } else if (person.task === 'foraging') {
+      const plots = state.tiles.filter(t => t.kind === 'forest' && distance(t, town) < 9);
+      person.target = plots.reduce((best, tile) => !best || tile.growth - distance(person, tile) * 0.045 > best.growth - distance(person, best) * 0.045 ? tile : best, null);
+    } else if (person.task === 'resting') person.target = state.households.find(h => h.id === person.household);
+    else person.target = town;
+    // Targets are coordinates only: no shared object references or state cycles in save files.
+    if (person.target) person.target = { x: person.target.x, y: person.target.y };
+  }
+  function individualStep(state, person) {
+    const town = state.towns.find(t => t.id === person.town);
+    if (!town) return;
+    person.hunger = clamp(person.hunger + 0.0065);
+    if (town.food >= 0.18 && person.hunger > 0.12) {
+      town.food -= 0.18; town.consumed += 0.18; person.hunger = clamp(person.hunger - 0.022);
+    }
+    if (person.hunger > 0.75) person.health = clamp(person.health - 0.0017, 0.18, 1);
+    else if (person.hunger < 0.3) person.health = clamp(person.health + 0.0013, 0.18, 1);
+    if (state.tick >= person.nextDecision) selectTask(state, person, town);
+    if (!person.target || state.tick % 12 === 0) chooseTarget(state, person, town);
+    if (person.target) {
+      const dx = person.target.x - person.x, dy = person.target.y - person.y, d = Math.hypot(dx, dy);
+      const speed = 0.28 * (0.65 + person.health * 0.35);
+      if (d > speed) { person.x += dx / d * speed; person.y += dy / d * speed; }
+      else { person.x = person.target.x; person.y = person.target.y; }
+    }
+    const arrived = person.target && distance(person, person.target) < 0.4;
+    if (person.task === 'resting') person.energy = clamp(person.energy + 0.03);
+    else person.energy = clamp(person.energy - (person.task === 'praying' ? 0.003 : 0.007));
+    if (arrived && person.task === 'farming') {
+      const tile = tileAt(state, Math.round(person.x), Math.round(person.y));
+      if (tile && tile.kind === 'field') {
+        const work = 0.0035 * (0.5 + person.traits.diligence) * clamp((tile.moisture - 0.12) / 0.4);
+        tile.growth = clamp(tile.growth + work); person.effort++;
+        if (tile.growth >= 0.90 && person.effort >= 3) {
+          const yieldFood = 4.5 + tile.moisture * 2;
+          tile.growth = 0.08; town.food += yieldFood; town.harvested += yieldFood; person.effort = 0; person.target = null;
+          if (town.oracle && town.oracle.stage === 'attempted') town.oracle.progress = town.harvested - town.oracle.initialHarvest;
+          if (state.tick - town.lastHarvestEvent >= 18) {
+            town.lastHarvestEvent = state.tick;
+            const sign = town.signs.find(s => s.type === 'bless') || town.signs.find(s => s.type === 'rain');
+            emit(state, 'harvest', town.name + '收穫了一批糧食。', { reason: '成熟作物經居民收割，成為糧倉中的食物。' + (sign ? '這片田地曾受到神蹟影響。' : ''), town: town.id, person: person.id, parents: sign ? [sign.id] : [], amount: yieldFood });
+          }
+          if (town.blessing > 0) person.faith = clamp(person.faith + 0.018);
+        }
+      }
+    } else if (arrived && person.task === 'foraging') {
+      const tile = tileAt(state, Math.round(person.x), Math.round(person.y));
+      if (tile && tile.kind === 'forest' && tile.growth > 0.045) {
+        const amount = Math.min(tile.growth, 0.014); tile.growth -= amount; town.food += amount * 9; town.foraged += amount * 9;
+      } else person.target = null;
+    }
+    // Personal faith is evaluated here from experienced evidence, never set by the divine actor.
+    const lastSeenSign = person.lastSign ? Number(person.lastSign.slice(1)) : 0;
+    const sign = town.signs.find(s => s.type === 'rain' && Number(s.id.slice(1)) > lastSeenSign);
+    if (sign && townStats(state, town).moisture > 0.3) { person.faith = clamp(person.faith + 0.025 * (1 - person.traits.independence * 0.5)); person.lastSign = sign.id; }
+    if (person.task === 'praying' && person.hunger < 0.5) person.faith = clamp(person.faith + 0.0006);
+    if (person.hunger > 0.55) person.faith = clamp(person.faith - 0.0009 * (0.5 + person.traits.independence));
+    if (town.oracle && town.oracle.stage === 'consequences' && person.lastOracle !== town.oracle.id) {
+      const change = town.oracle.outcome === 'completed' ? 0.045 : town.oracle.outcome === 'failed' ? -0.032 : -0.005;
+      person.faith = clamp(person.faith + change * (1 - person.traits.independence * 0.4)); person.lastOracle = town.oracle.id;
+    }
+  }
+  function step(state, ticks = 1) {
+    if (!finite(ticks) || ticks < 0) throw new TypeError('ticks must be a finite nonnegative number');
+    ticks = Math.floor(ticks);
+    if (ticks > 100000) throw new RangeError('step is limited to 100000 ticks per call');
+    for (let i = 0; i < ticks; i++) {
+      state.tick++; state.day = 1 + Math.floor(state.tick / TICKS_PER_DAY);
+      state.time.tick = state.tick; state.time.day = state.day;
+      weatherStep(state); ecologyStep(state);
+      // Rotate processing order to avoid permanently privileging a household at an empty granary.
+      for (let j = 0; j < state.people.length; j++) individualStep(state, state.people[(j + state.tick) % state.people.length]);
+      for (const town of state.towns) {
+        updateOracle(state, town);
+        const scarce = town.food < 15;
+        if (scarce && !town.scarcity) emit(state, 'scarcity', town.name + '的糧倉告急；居民開始把覓食放在更前面。', { reason: '食物消耗超過收穫，改變了家戶的工作選擇；飢餓也可能改變信仰。', town: town.id });
+        if (!scarce && town.scarcity) emit(state, 'recovery', town.name + '的糧倉重新有了餘裕。', { reason: '居民實際取得的收穫與野食，暫時減輕了生活壓力。', town: town.id });
+        town.scarcity = scarce;
+      }
+      state.power = clamp(state.power + stats(state).powerRate, 0, MAX_POWER);
+    }
+    return state;
+  }
+  function validateSave(input) {
+    const errors = [];
+    const fail = message => { if (errors.length < 12) errors.push(message); };
+    const object = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+    const inRange = (v, a, b) => finite(v) && v >= a && v <= b;
+    const string = (v, max = 500) => typeof v === 'string' && v.length <= max;
+    const list = (v, max) => Array.isArray(v) && v.length <= max;
+    const s = input;
+    if (!object(s)) return { ok: false, errors: ['存檔必須是物件。'] };
+    if (s.version !== VERSION || s.ruleset !== 'wog-1') fail('不支援的存檔版本。');
+    if (s.width !== WIDTH || s.height !== HEIGHT) fail('地圖尺寸不符。');
+    if (!Number.isSafeInteger(s.tick) || s.tick < 0 || s.tick > 1e12 || s.day !== 1 + Math.floor(s.tick / TICKS_PER_DAY)) fail('世界時間無效。');
+    if (!object(s.time) || s.time.tick !== s.tick || s.time.day !== s.day || s.time.ticksPerDay !== TICKS_PER_DAY) fail('時間快照無效。');
+    if (!Number.isInteger(s.rng) || s.rng < 0 || s.rng > 0xffffffff || !string(s.seed, 120)) fail('隨機種子無效。');
+    if (!object(s.config) || !Object.hasOwn(presets, s.config.preset) || !Object.hasOwn(DIFFICULTY, s.config.difficulty) || !inRange(s.config.moisture, 0, 1) || !inRange(s.config.food, 0, 1000) || !inRange(s.config.belief, 0, 1) || s.config.seed !== s.seed) fail('創世設定無效。');
+    if (!inRange(s.power, 0, MAX_POWER)) fail('神力無效。');
+    if (!object(s.weather) || !['clear', 'rain', 'drought'].includes(s.weather.kind) || !inRange(s.weather.remaining, 1, 120) || !Number.isSafeInteger(s.weather.cycle) || s.weather.cycle < 0) fail('天候無效。');
+    if (!list(s.tiles, WIDTH * HEIGHT) || s.tiles.length !== WIDTH * HEIGHT) fail('地形資料不完整。');
+    else s.tiles.forEach((t, i) => { if (!object(t) || t.x !== i % WIDTH || t.y !== Math.floor(i / WIDTH) || !TERRAIN.has(t.kind) || !inRange(t.moisture, 0, 1) || !inRange(t.growth, 0, 1)) fail('地形資料無效。'); });
+    if (!list(s.towns, 2) || s.towns.length !== 2 || !list(s.households, 8) || s.households.length !== 8 || !list(s.people, 24) || s.people.length > 24) fail('居民或聚落資料不完整。');
+    const towns = list(s.towns, 2) ? s.towns : [], households = list(s.households, 8) ? s.households : [], people = list(s.people, 24) ? s.people : [];
+    const townIds = new Set(towns.map(t => t && t.id)), householdIds = new Set(households.map(h => h && h.id)), personIds = new Set(people.map(p => p && p.id));
+    if (townIds.size !== towns.length || householdIds.size !== households.length || personIds.size !== people.length) fail('實體 ID 重複。');
+    const point = p => object(p) && finite(p.x) && p.x >= 0 && p.x < WIDTH && finite(p.y) && p.y >= 0 && p.y < HEIGHT;
+    for (const t of towns) {
+      if (!point(t) || !string(t.id, 80) || !string(t.name, 80) || !inRange(t.food, 0, 1e12) || !inRange(t.blessing, 0, 72) || !inRange(t.harvested, 0, 1e12) || !inRange(t.foraged, 0, 1e12) || !inRange(t.consumed, 0, 1e12) || !finite(t.lastHarvestEvent) || typeof t.scarcity !== 'boolean') { fail('聚落資料無效。'); continue; }
+      if (!list(t.signs, 12) || t.signs.some(v => !object(v) || !string(v.id, 80) || !['rain', 'bless'].includes(v.type) || !finite(v.tick) || !finite(v.until))) fail('神蹟痕跡無效。');
+      if (t.oracle !== null) {
+        const o = t.oracle;
+        if (!object(o) || !STAGES.has(o.stage) || !string(o.id, 80) || !string(o.title) || !string(o.reason) || !string(o.eventId, 80) || !inRange(o.progress, 0, 1e12) || !inRange(o.target, 1, 100) || !inRange(o.initialHarvest, 0, 1e12) || !inRange(o.deferrals, 0, 2) || !finite(o.nextAt) || !finite(o.issuedAt) || !finite(o.stageAt) || ![null, 'completed', 'failed', 'refused'].includes(o.outcome) || !list(o.history, 16) || o.history.some(h => !object(h) || !STAGES.has(h.stage) || !finite(h.tick) || !string(h.reason) || !string(h.eventId, 80))) fail('神諭歷程無效。');
+      }
+    }
+    for (const h of households) if (!point(h) || !string(h.id, 80) || !string(h.name, 80) || !townIds.has(h.town) || !list(h.members, 3) || h.members.some(id => !personIds.has(id))) fail('家戶資料無效。');
+    for (const p of people) {
+      if (!point(p) || !string(p.id, 80) || !string(p.name, 80) || !townIds.has(p.town) || !householdIds.has(p.household) || !TASKS.has(p.task) || !inRange(p.faith, 0, 1) || !inRange(p.hunger, 0, 1) || !inRange(p.energy, 0, 1) || !inRange(p.health, 0.18, 1) || !object(p.traits) || !inRange(p.traits.diligence, 0, 1) || !inRange(p.traits.independence, 0, 1) || !(p.target === null || point(p.target)) || !inRange(p.effort, 0, 1e12) || !finite(p.nextDecision) || !finite(p.taskSince) || !(p.lastSign === null || (string(p.lastSign, 80) && /^e[1-9]\d*$/.test(p.lastSign))) || !(p.lastOracle === null || string(p.lastOracle, 80)) || !string(p.reason)) { fail('個人資料無效。'); continue; }
+      const household = households.find(h => h && h.id === p.household);
+      if (!household || household.town !== p.town || !Array.isArray(household.members) || !household.members.includes(p.id)) fail('個人與家戶歸屬不一致。');
+    }
+    if (!list(s.rainZones, 12) || s.rainZones.some(z => !point(z) || !inRange(z.radius, 1, 7) || !inRange(z.remaining, 1, 22) || !string(z.id, 80) || !string(z.eventId, 80))) fail('降雨範圍無效。');
+    if (!Number.isSafeInteger(s.eventSeq) || s.eventSeq < 0 || !list(s.events, MAX_EVENTS)) fail('歷史資料無效。');
+    else {
+      let seq = 0;
+      for (const e of s.events) {
+        if (!object(e) || !Number.isSafeInteger(e.seq) || e.seq <= seq || e.seq > s.eventSeq || e.id !== 'e' + e.seq || !inRange(e.tick, 0, s.tick) || !string(e.type, 80) || !string(e.text, 1000) || !string(e.reason, 1000) || !list(e.parents, 8) || e.parents.some(id => !string(id, 80))) fail('歷史事件無效。');
+        seq = e && e.seq;
+      }
+    }
+    if (!Number.isSafeInteger(s.actionSeq) || s.actionSeq < 0 || !list(s.actions, MAX_ACTIONS)) fail('神意紀錄無效。');
+    else for (const a of s.actions) if (!object(a) || !string(a.id, 80) || !Object.hasOwn(COSTS, a.type) || a.cost !== COSTS[a.type] || !inRange(a.tick, 0, s.tick) || !(townIds.has(a.target) || point(a.target))) fail('神意紀錄無效。');
+    return { ok: errors.length === 0, errors };
+  }
+  return Object.freeze({ VERSION, WIDTH, HEIGHT, TICKS_PER_DAY, MAX_EVENTS, MAX_ACTIONS, MAX_POWER, COSTS, presets, create, step, act, stats, validateSave });
+});
+</script><script>/* World of God: presentation and local persistence. No network dependencies. */
+(() => {'use strict';
+const $=id=>document.getElementById(id), canvas=$('world'), ctx=canvas.getContext('2d');
+const names={valley:'豐饒河谷',dry:'乾燥盆地',islands:'群島微光'};
+const taskNames={farm:'耕作',farming:'耕作',forage:'採集',foraging:'採集',pray:'祈禱',praying:'祈禱',rest:'休息',resting:'休息',eat:'進食',eating:'進食'};
+const stageNames={issued:'已傳下',heard:'已聽見',interpreted:'已解讀',accepted:'接受',deferred:'暫緩',refused:'拒絕',rejected:'拒絕',attempted:'嘗試中',completed:'完成',failed:'未完成',consequences:'結果浮現'};
+let state,paused=true,speed=1,selectedTown=0,selectedPerson=null,armed=null,hover=null,db=null,storageOK=true,archiveSeq=0,worldKey='',toastTimer,frame=0,accum=0,lastFrame=0,preset='valley';
+let markers=[],seen={miracle:false,oracle:false,consequence:false};
+const num=(x,n=0)=>Number(x||0).toFixed(n), esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function toast(text){$('toast').textContent=text;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3400)}
+function store(key,value){try{localStorage.setItem(key,value);return true}catch(e){storageOK=false;storageMessage();return false}}
+function read(key){try{return localStorage.getItem(key)}catch(e){storageOK=false;storageMessage();return null}}
+function storageMessage(){$('storage').textContent=storageOK?(db?'本機儲存 · 歷史持續寫入':'本機存檔 · 歷史僅保留近期'):'⚠ 無法持久儲存，請使用匯出';}
+function openDB(){try{const req=indexedDB.open('wog-history-v1',1);req.onupgradeneeded=()=>{const s=req.result.createObjectStore('events',{keyPath:'key'});s.createIndex('world','world');};req.onsuccess=()=>{db=req.result;storageMessage();archiveEvents()};req.onerror=()=>{storageMessage();toast('歷史檔案不可用；近期事件仍隨存檔保存。請定期匯出。')}}catch(e){storageMessage()}}
+function archiveEvents(){if(!state||!db)return;const fresh=state.events.filter(e=>e.seq>archiveSeq);if(!fresh.length)return;try{const tx=db.transaction('events','readwrite'),s=tx.objectStore('events');fresh.forEach(e=>s.put({...e,key:worldKey+':'+String(e.seq).padStart(14,'0'),world:worldKey}));tx.oncomplete=()=>{archiveSeq=Math.max(archiveSeq,...fresh.map(e=>e.seq))};tx.onerror=()=>{db=null;storageMessage();toast('歷史寫入失敗；請匯出存檔保留目前進度。')}}catch(e){db=null;storageMessage()}}
+function save(silent=false){if(!state)return;archiveEvents();const ok=store('wog-save-v1',JSON.stringify({format:'WorldOfGod',state,seen,worldKey}));if(!silent)toast(ok?'世界已儲存在這個瀏覽器。':'儲存失敗，請按「匯出」下載存檔。');}
+function restore(data){const s=data.state||data;const valid=WoG.validateSave(s);if(valid===false||valid?.ok===false)throw new Error(valid?.errors?.join('；')||'存檔格式不相容');state=s;seen={miracle:data.seen?.miracle===true,oracle:data.seen?.oracle===true,consequence:data.seen?.consequence===true};worldKey=typeof data.worldKey==='string'&&data.worldKey.length<200?data.worldKey:`import-${Date.now()}`;archiveSeq=0;selectedTown=state.towns[0].id;selectedPerson=null;paused=true;markers=[];armed=null;renderUI();draw(0);archiveEvents();}
+function load(){const raw=read('wog-save-v1');if(!raw)return toast('還沒有存檔。先開始一個世界，或匯入 JSON。');try{restore(JSON.parse(raw));toast('世界已讀取，時間暫停中。')}catch(e){toast('無法讀取：'+e.message)}}
+function download(name,text,type='application/json'){const u=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+function getTown(){return state.towns.find(t=>t.id===selectedTown)||state.towns[0]}
+function townPeople(t){return state.people.filter(p=>p.town===t.id)}
+function localTiles(t){return state.tiles.filter(c=>c.kind==='field'&&Math.hypot(c.x-t.x,c.y-t.y)<9)}
+function config(){return {preset,seed:$('seed').value.trim()||'river-dawn-01',difficulty:$('difficulty').value,moisture:Number($('wet').value)/100,food:Number($('startFood').value),belief:Number($('belief').value)/100}}
+function fillConfig(c){preset=c.preset||'valley';$('seed').value=c.seed||'river-dawn-01';$('difficulty').value=c.difficulty||'relaxed';$('wet').value=Math.round((c.moisture??.65)*100);$('startFood').value=c.food??80;$('belief').value=Math.round((c.belief??.28)*100);document.querySelectorAll('[data-preset]').forEach(b=>b.classList.toggle('selected',b.dataset.preset===preset));updateOutputs()}
+function updateOutputs(){$('wetOut').textContent=$('wet').value+'%';$('foodOut').textContent=$('startFood').value;$('beliefOut').textContent=$('belief').value+'%'}
+function begin(c){state=WoG.create(c);worldKey=`${Date.now()}-${c.seed}`;archiveSeq=0;selectedTown=state.towns[0].id;selectedPerson=null;seen={miracle:false,oracle:false,consequence:false};paused=false;markers=[];armed=null;save(true);renderUI();toast('歷史開始了。觀察糧食與土壤，再決定是否介入。');}
+function setAction(type){if(!state)return;const t=getTown();if(type==='rain'){armed=armed==='rain'?null:'rain';renderUI();return;}const r=WoG.act(state,type,t.id);if(!r.ok)return toast(r.message||'現在無法施展');if(type==='oracle')seen.oracle=true;else seen.miracle=true;markers.push({x:t.x,y:t.y,life:180,type});toast(r.message||'神意已傳入世界。');archiveEvents();renderUI();}
+function eventHTML(e){const reason=e.reason||e.reasons||e.cause;return `<div class="event"><small>第 ${Math.floor(e.tick/12)+1} 日 · #${e.seq}</small><p>${esc(e.text)}</p>${reason?`<details><summary>為什麼？</summary>${esc(Array.isArray(reason)?reason.join('；'):typeof reason==='object'?JSON.stringify(reason):reason)}</details>`:''}</div>`}
+function renderUI(){if(!state)return;const st=WoG.stats(state),t=getTown(),ps=townPeople(t),tiles=localTiles(t);$('worldTitle').textContent=names[state.config.preset]+' · '+(state.tick<72?'初光':'流動的歷史');$('population').textContent=st.population;$('followers').textContent=st.followers;$('devotion').textContent=num(st.devotion,1);$('power').textContent=num(state.power,1);$('powerBar').style.width=Math.min(100,state.power)+'%';$('day').textContent=`第 ${Math.floor(state.tick/12)+1} 日`;$('weather').textContent=({drought:'乾旱',dry:'乾旱',rain:'降雨',mild:'和暖',clear:'晴朗',rainy:'雨季'}[state.weather?.kind]||state.weather?.kind||'晴朗');$('pause').textContent=paused?'▶ 繼續歷史':'Ⅱ 暫停';$('townName').textContent=t.name;$('townIndex').textContent='0'+(state.towns.indexOf(t)+1);$('food').textContent=num(t.food);$('moisture').textContent=num(100*(tiles.reduce((s,c)=>s+c.moisture,0)/(tiles.length||1)))+'%';const avg=ps.reduce((s,p)=>s+p.faith,0)/(ps.length||1);$('faith').textContent=num(avg*100)+'%';$('townSummary').textContent=t.food<25?'糧倉見底，人們正在重新安排生活。':t.food<65?'糧食需要照顧。居民正自行尋找出路。':'河岸生活暫時安穩，日常仍在繼續。';
+const o=t.oracle;$('oracleInfo').innerHTML=o?`<strong>◈ 糧食優先 · ${esc(stageNames[o.stage]||o.stage)}</strong><span>${esc(o.reason||'人們正在思考你的意思。')}</span><div class="oracle-steps">${(o.history||[]).map(h=>esc(stageNames[h.stage]||h.stage)).join(' → ')}</div>`:'';
+if(o&&['completed','failed','consequences'].includes(o.stage))seen.consequence=true;
+$('people').innerHTML=ps.map(p=>`<button class="person ${p.faith>=.35?'believer':''} ${p.id===selectedPerson?'selected':''}" data-person="${esc(p.id)}"><span class="dot"></span>${esc(p.name)}<small>${esc(taskNames[p.task]||p.task)}</small></button>`).join('');
+const p=ps.find(p=>p.id===selectedPerson);$('personDetail').textContent=p?`${p.name} · 信仰 ${num(p.faith*100)}% · 飢餓 ${num(p.hunger*100)}% · ${p.reason||p.taskReason||'根據飢餓、體力與信仰，自行選擇下一步。'}`:`${ps.length} 位居民，${state.households.filter(h=>h.town===t.id).length} 個家戶。金色標記代表信徒，並非所有人都相信你。`;
+$('events').innerHTML=state.events.slice(-5).reverse().map(eventHTML).join('');$('goals').innerHTML=[['觀察生活',state.tick>=12],['帶來一場神蹟',seen.miracle],['傳下神諭',seen.oracle],['看見回應',seen.consequence]].map(([x,v])=>`<span class="goal ${v?'done':''}">${x}</span>`).join('');
+$('rain').classList.toggle('armed',armed==='rain');$('rain').disabled=state.power<18;$('bless').disabled=state.power<14;$('oracle').disabled=state.power<10||!!(o&&o.stage!=='consequences');$('mapHint').textContent=armed?'點選土地，讓雨滋潤周圍農田 · Esc 取消':'點選聚落或居民，聆聽這個世界';canvas.style.cursor=armed?'crosshair':'pointer';$('status').textContent=paused?'時間已暫停 · 空白鍵繼續':`神性火種仍在 · 神力 +${num(st.powerRate||0,2)} / 刻 · ${speed}× 時間`;storageMessage();}
+const C=30;function shade(x,y){return ((x*137+y*73+x*y*17)%23)/23}
+function draw(time){if(!state)return;frame++;const w=state.width,h=state.height;ctx.clearRect(0,0,1200,780);ctx.fillStyle='#658d85';ctx.fillRect(0,0,1200,780);
+for(const t of state.tiles){const x=t.x*C,y=t.y*C,n=shade(t.x,t.y),m=t.moisture??.5;if(t.kind==='water'){ctx.fillStyle=`hsl(171,${23+n*8}%,${43+n*7}%)`;ctx.fillRect(x,y,C+1,C+1);if(n>.65){ctx.strokeStyle='#a9d1bb50';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+5,y+13+Math.sin(time/1300+t.x)*2);ctx.lineTo(x+22,y+13);ctx.stroke();}continue;}
+const light=43+m*16+n*5;ctx.fillStyle=t.kind==='hill'?`hsl(86,16%,${light-6}%)`:t.kind==='field'?`hsl(${43+m*15},35%,${50+m*11+n*4}%)`:`hsl(${77+m*20},${18+m*9}%,${light}%)`;ctx.fillRect(x,y,C+1,C+1);
+if(t.kind==='field'){ctx.strokeStyle='#73865180';ctx.lineWidth=2;for(let k=5;k<28;k+=6){ctx.beginPath();ctx.moveTo(x+3,y+k);ctx.lineTo(x+27,y+k);ctx.stroke()}if(t.growth>.3){ctx.fillStyle=t.growth>.7?'#e4d48b':'#9fae6f';for(let k=5;k<28;k+=7)for(let j=6;j<28;j+=8){ctx.fillRect(x+j,y+k,2,Math.max(2,t.growth*5))}}}
+else if(t.kind==='hill'){ctx.fillStyle='#818b71';ctx.beginPath();ctx.moveTo(x+1,y+26);ctx.lineTo(x+14,y+5);ctx.lineTo(x+30,y+26);ctx.fill();ctx.fillStyle='#a3aa87';ctx.beginPath();ctx.moveTo(x+14,y+5);ctx.lineTo(x+19,y+26);ctx.lineTo(x+30,y+26);ctx.fill()}
+else if(n>.85){ctx.strokeStyle='#e1e3aa50';ctx.beginPath();ctx.moveTo(x+10,y+20);ctx.lineTo(x+11,y+15);ctx.moveTo(x+13,y+20);ctx.lineTo(x+15,y+17);ctx.stroke()}}
+// Riverbank edges, soft paths, and groves.
+for(const t of state.tiles){if(t.kind==='water')continue;const right=state.tiles[t.y*w+t.x+1],down=state.tiles[(t.y+1)*w+t.x];ctx.strokeStyle='#d1d0a46b';ctx.lineWidth=2;if(t.x<w-1&&right?.kind==='water'){ctx.beginPath();ctx.moveTo((t.x+1)*C,t.y*C);ctx.lineTo((t.x+1)*C,(t.y+1)*C);ctx.stroke()}if(t.y<h-1&&down?.kind==='water'){ctx.beginPath();ctx.moveTo(t.x*C,(t.y+1)*C);ctx.lineTo((t.x+1)*C,(t.y+1)*C);ctx.stroke()}}
+for(const t of state.towns){const x=(t.x+.5)*C,y=(t.y+.5)*C;ctx.strokeStyle='#d0c49d70';ctx.lineWidth=9;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x-65,y+22);ctx.lineTo(x+55,y+22);ctx.moveTo(x,y-38);ctx.lineTo(x,y+50);ctx.stroke();if(t.id===getTown().id){ctx.strokeStyle='#f1e8b075';ctx.lineWidth=1.5;ctx.setLineDash([5,7]);ctx.beginPath();ctx.ellipse(x,y,104,77,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
+for(let i=0;i<4;i++){const hx=x+(i%2)*65-47,hy=y+Math.floor(i/2)*49-34;house(hx,hy,i)}ctx.fillStyle='#64775a';ctx.beginPath();ctx.ellipse(x+3,y+10,12,6,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d9cda6';ctx.fillRect(x-4,y-8,8,16);ctx.fillStyle='#f1e3b2';ctx.beginPath();ctx.arc(x,y-10,4,0,Math.PI*2);ctx.fill();if(t.blessing>0){ctx.strokeStyle='#f4df9180';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,90+Math.sin(time/700)*4,0,Math.PI*2);ctx.stroke()}}
+for(const t of state.tiles){if(t.kind!=='forest')continue;const x=(t.x+.5)*C,y=(t.y+.5)*C,n=shade(t.x,t.y);ctx.fillStyle='#324b4326';ctx.beginPath();ctx.ellipse(x+4,y+6,11,6,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#5b6950';ctx.fillRect(x-2,y-3,4,12);ctx.fillStyle=n>.5?'#3f6951':'#547951';ctx.beginPath();ctx.arc(x,y-6,10+n*3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#71946580';ctx.beginPath();ctx.arc(x-3,y-9,5,0,Math.PI*2);ctx.fill()}
+for(const p of state.people){const x=(p.x+.5)*C,y=(p.y+.5)*C;ctx.fillStyle='#233d3333';ctx.beginPath();ctx.ellipse(x+2,y+7,5,3,0,0,Math.PI*2);ctx.fill();if(p.faith>=.35){ctx.strokeStyle='#f2dc9790';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y-3,8,0,Math.PI*2);ctx.stroke()}ctx.fillStyle=p.faith>=.35?'#dac282':'#e5e2c0';ctx.fillRect(x-3,y-1,6,7);ctx.fillStyle='#554e3d';ctx.fillRect(x-3,y-8,6,5);ctx.fillStyle='#d9b991';ctx.fillRect(x-2,y-5,4,4);if(p.id===selectedPerson){ctx.strokeStyle='#fff4b4';ctx.strokeRect(x-7,y-11,14,21)}}
+for(const t of state.towns){const x=(t.x+.5)*C,y=(t.y+.5)*C;ctx.font='15px sans-serif';const tw=ctx.measureText(t.name).width;ctx.fillStyle=t.id===getTown().id?'#f4f1dcef':'#f4f1dccc';ctx.fillRect(x-tw/2-13,y-75,tw+26,29);ctx.fillStyle='#355144';ctx.textAlign='center';ctx.fillText(t.name,x,y-55)}
+if(armed&&hover){ctx.fillStyle='#c2e4d02a';ctx.strokeStyle='#f5f4cfb0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(hover.x*C,hover.y*C,7*C,0,Math.PI*2);ctx.fill();ctx.stroke()}
+markers=markers.filter(m=>m.life>0);for(const m of markers){m.life--;const x=(m.x+.5)*C,y=(m.y+.5)*C;ctx.strokeStyle=m.type==='rain'?`rgba(209,243,231,${m.life/200})`:`rgba(255,229,150,${m.life/200})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,40+(180-m.life)*1.1,0,Math.PI*2);ctx.stroke();if(m.type==='rain'){ctx.lineWidth=1.5;for(let i=0;i<45;i++){const rx=x+Math.sin(i*29)*140,ry=y+((i*37+frame*5)%230)-115;ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-4,ry+12);ctx.stroke()}}}
+ctx.fillStyle='#203c3110';ctx.fillRect(0,0,1200,780);
+}
+function house(x,y,i){ctx.fillStyle='#2e403329';ctx.beginPath();ctx.ellipse(x+9,y+14,22,9,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d4ca9c';ctx.fillRect(x-14,y-4,28,20);ctx.fillStyle='#b3ad86';ctx.fillRect(x+5,y-4,9,20);ctx.fillStyle=i%2?'#7b7761':'#89735b';ctx.beginPath();ctx.moveTo(x-20,y-3);ctx.lineTo(x,y-21);ctx.lineTo(x+20,y-3);ctx.closePath();ctx.fill();ctx.strokeStyle='#b2a082';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x-14,y-4);ctx.lineTo(x,y-17);ctx.lineTo(x+14,y-4);ctx.stroke();ctx.fillStyle='#676b51';ctx.fillRect(x-4,y+4,7,12);ctx.fillStyle='#e5d7a3';ctx.fillRect(x-11,y+3,4,5)}
+function loop(t){const dt=Math.min(250,t-(lastFrame||t));lastFrame=t;if(state&&!paused&&!$('genesisDialog').open&&!$('infoDialog').open){accum+=dt*speed;if(accum>=500){const count=Math.floor(accum/500);accum-=count*500;for(let i=0;i<count;i++){WoG.step(state,1);archiveEvents()}renderUI();if(state.tick%24===0)save(true)}}draw(t);requestAnimationFrame(loop)}
+$('begin').addEventListener('click',e=>{e.preventDefault();begin(config());$('genesisDialog').close()});$('closeGenesis').onclick=()=>$('genesisDialog').close();$('genesis').onclick=()=>{paused=true;renderUI();$('genesisDialog').showModal()};$('pause').onclick=()=>{paused=!paused;renderUI()};document.querySelectorAll('[data-speed]').forEach(b=>b.onclick=()=>{speed=+b.dataset.speed;document.querySelectorAll('[data-speed]').forEach(x=>x.classList.toggle('active',x===b));renderUI()});
+for(const id of ['rain','bless','oracle'])$(id).onclick=()=>setAction(id);$('save').onclick=()=>save();$('load').onclick=load;$('export').onclick=()=>{if(state)download('world-of-god-save.json',JSON.stringify({format:'WorldOfGod',state,seen,worldKey},null,2));toast('已匯出目前世界與近期歷史。更多近期事件可從「歷史檔案」匯出。')};$('import').onclick=()=>$('fileInput').click();$('fileInput').onchange=async e=>{const file=e.target.files[0];if(!file)return;if(file.size>5e6)return toast('檔案太大，請選擇 5 MB 以下的遊戲存檔。');try{const data=JSON.parse(await file.text());restore(data.state?{...data,worldKey:`import-${Date.now()}`}:{state:data,worldKey:`import-${Date.now()}`});save(true);toast('已匯入世界，時間暫停中。')}catch(err){toast('無法匯入：'+err.message)}e.target.value=''};
+$('people').onclick=e=>{const b=e.target.closest('[data-person]');if(!b)return;selectedPerson=state.people.find(p=>String(p.id)===b.dataset.person)?.id;renderUI()};canvas.addEventListener('pointermove',e=>{const r=canvas.getBoundingClientRect();hover={x:(e.clientX-r.left)/r.width*state.width,y:(e.clientY-r.top)/r.height*state.height}});canvas.addEventListener('pointerleave',()=>hover=null);canvas.addEventListener('click',e=>{const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*state.width,y=(e.clientY-r.top)/r.height*state.height;if(armed){const result=WoG.act(state,'rain',{x:Math.floor(x),y:Math.floor(y)});if(result.ok){seen.miracle=true;markers.push({x,y,life:180,type:'rain'});armed=null;archiveEvents()}toast(result.message||'雨落下了。');renderUI();return;}const p=state.people.find(p=>Math.hypot(p.x+.5-x,p.y+.5-y)<.65);const t=p?state.towns.find(t=>t.id===p.town):state.towns.reduce((a,b)=>Math.hypot(a.x-x,a.y-y)<Math.hypot(b.x-x,b.y-y)?a:b);selectedTown=t.id;selectedPerson=p?.id??null;renderUI()});
+$('saveConfig').onclick=()=>toast(store('wog-config',JSON.stringify(config()))?'自訂世界設定已儲存。':'無法儲存自訂設定。');$('loadConfig').onclick=()=>{try{const c=JSON.parse(read('wog-config'));if(!c)return toast('還沒有自訂設定。');fillConfig(c);toast('已讀取自訂設定。')}catch(e){toast('設定格式無法讀取。')}};document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=b.dataset.preset;fillConfig({preset:p,seed:$('seed').value,difficulty:$('difficulty').value,moisture:p==='dry'?.28:p==='islands'?.7:.65,food:p==='dry'?45:80,belief:.28})});['wet','startFood','belief'].forEach(id=>$(id).oninput=updateOutputs);
+function info(title,html){$('infoLabel').textContent=title;$('infoBody').innerHTML=html;$('infoDialog').showModal()}$('closeInfo').onclick=()=>$('infoDialog').close();$('guide').onclick=()=>info('遊玩指南 / HOW TO PLAY',`<h3>你是神，世界有自己的意志。</h3><ol><li>開始歷史，觀察兩座聚落的糧倉、土壤與居民選擇。點選地圖或人物可查看詳情。</li><li>按「喚雨」，再點土地。雨水先改善土壤，作物成長、居民採收後才會變成糧食。</li><li>點選一座聚落，給予「豐收祝福」，或傳下「糧食優先」神諭。人們可能接受、暫緩或拒絕。</li><li>在右側追蹤神諭階段與世界事件。1× 約每秒 2 刻，12 刻為一日。空白鍵暫停，1 / 2 / 3 選擇神力，Esc 取消喚雨。</li><li>神力由信仰與緩慢恢復的神性火種產生。個人信仰 ≥ 35% 算作信徒；奉獻是居民的宗教貢獻。</li></ol><p>世界每約 12 秒自動儲存，亦可手動儲存。瀏覽器清除資料會移除進度；請匯出 JSON 備份。雙擊 HTML 若無法持久儲存，請使用 localhost 方式執行。</p><p>這是一個小型可玩原型。家戶只有成員結構；繁衍、遷徙、政治、建築系統與完整跨版本回放尚未實作。</p>`);
+$('archive').onclick=async()=>{let events=state.events;if(db){try{events=await new Promise((resolve,reject)=>{const rows=[];const req=db.transaction('events').objectStore('events').index('world').openCursor(IDBKeyRange.only(worldKey),'prev');req.onsuccess=()=>{const cur=req.result;if(!cur||rows.length>=200)return resolve(rows);rows.push(cur.value);cur.continue()};req.onerror=reject})}catch(e){toast('無法讀取長期歷史，改顯示近期事件。')}}const snapshot=events.sort((a,b)=>b.seq-a.seq);info('歷史檔案 / CHRONICLE',`<h3>${esc(getTown().name)}所在的世界</h3><p>顯示本機檔案中的最近 ${snapshot.length} 則事件（最多 200 則）。近期記憶最多保留 80 則，較早事件存放在本機歷史檔案。</p><button id="downloadHistory">匯出這些事件 JSON</button><div class="archive-list">${snapshot.slice(0,200).map(eventHTML).join('')}</div>`);$('downloadHistory').onclick=()=>download('world-of-god-history.json',JSON.stringify(snapshot,null,2))};
+document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||$('genesisDialog').open||$('infoDialog').open)return;if(e.code==='Space'){e.preventDefault();paused=!paused;renderUI()}if(e.key==='Escape'){armed=null;renderUI()}if(e.key==='1')setAction('rain');if(e.key==='2')setAction('bless');if(e.key==='3')setAction('oracle')});window.addEventListener('beforeunload',()=>save(true));
+state=WoG.create(config());selectedTown=state.towns[0].id;worldKey='preview';renderUI();openDB();const saved=read('wog-save-v1');if(saved){try{restore(JSON.parse(saved));toast('歡迎回來。已讀取上次的世界，時間暫停中。')}catch(e){$('genesisDialog').showModal()}}else $('genesisDialog').showModal();requestAnimationFrame(loop);
+})();
+</script></body></html>

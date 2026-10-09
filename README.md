@@ -12,6 +12,13 @@ The game is intended to generate history from interacting simulation rules: indi
 
 See [Core Principles](docs/CORE_PRINCIPLES.md).
 
+## Converged design specifications
+
+- [Religion, Saints, Priesthood, Shrines, and Temples (Issue #8)](docs/RELIGION_PRIESTHOOD_TEMPLE.md)
+- [Divine Presence and spatial Miracle capability (Issues #7/#8)](docs/DIVINE_PRESENCE_MIRACLES.md)
+- [Faith, Religion and Oracle historical checkpoint](docs/FAITH_RELIGION_ORACLE_DRAFT.md) (superseded where noted)
+
+
 ## Design workflow
 
 During the early design phase:

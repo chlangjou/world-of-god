@@ -14,6 +14,7 @@ See [Core Principles](docs/CORE_PRINCIPLES.md).
 
 ## Converged design specifications
 
+- [Settlement Economy, Occupations and Food Security (Issue #4)](docs/SETTLEMENT_ECONOMY_OCCUPATIONS.md)
 - [Oracle and Divine Calling (Issue #6)](docs/ORACLE_DIVINE_CALLING.md)
 - [Religion, Saints, Priesthood, Shrines, and Temples (Issue #8)](docs/RELIGION_PRIESTHOOD_TEMPLE.md)
 - [Divine Presence and spatial Miracle capability (Issues #7/#8)](docs/DIVINE_PRESENCE_MIRACLES.md)

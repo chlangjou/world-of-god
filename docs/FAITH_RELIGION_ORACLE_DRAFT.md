@@ -1,6 +1,6 @@
 # Faith, Religion, and Oracle — Design Checkpoint
 
-> **2026-10-09 update:** This is a historical design checkpoint, not the current authority for Religion / Saint / Priest / Temple roles or spatial Miracle eligibility. See [Religion / Priesthood / Temple v1](RELIGION_PRIESTHOOD_TEMPLE.md) and [Divine Presence / Miracle capability v1](DIVINE_PRESENCE_MIRACLES.md). In particular, Saints receive Oracle, Priests primarily communicate/organize, and Miracle capability is regionally constrained by effective Devotion.
+> **2026-10-09 update:** Oracle v1 is now authoritative in [Oracle / Divine Calling v1](ORACLE_DIVINE_CALLING.md); the receiver-role, quota, per-Saint lifecycle, time, Fervor and Calling sections below are historical rather than current policy. This is a historical design checkpoint, not the current authority for Religion / Saint / Priest / Temple roles or spatial Miracle eligibility. See [Religion / Priesthood / Temple v1](RELIGION_PRIESTHOOD_TEMPLE.md) and [Divine Presence / Miracle capability v1](DIVINE_PRESENCE_MIRACLES.md). In particular, Saints receive Oracle, Priests primarily communicate/organize, and Miracle capability is regionally constrained by effective Devotion.
 
 Status: **Working draft / checkpoint for Issues #5, #6, and #8**
 

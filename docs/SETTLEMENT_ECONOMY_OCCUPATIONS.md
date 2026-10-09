@@ -1,6 +1,6 @@
 # Settlement Economy, Occupations and Food Security — v1 Contract
 
-Status: **Issue #4 design converged (2026-10-10)**. Structure and behavior are agreed; numeric balance is **provisional and adjustable after playtesting**. This is a design specification, not a declaration that the \`web-poc\` branch implements it.
+Status: **Issue #4 design converged (2026-10-10)**. Structure and behavior are agreed; numeric balance is **provisional and adjustable after playtesting**. This is a design specification, not a declaration that the `web-poc` branch implements it.
 
 Related specifications: [Population #3](POPULATION_MODEL.md), [Simulation architecture #2](SIMULATION_ARCHITECTURE.md), [Oracle #6](ORACLE_DIVINE_CALLING.md), [Religion #8](RELIGION_PRIESTHOOD_TEMPLE.md), [Spatial Miracle capability #7/#8](DIVINE_PRESENCE_MIRACLES.md). Further ownership: [Issue #9](https://github.com/chlangjou/world-of-god/issues/9) for governance/war, [Issue #11](https://github.com/chlangjou/world-of-god/issues/11) for playable scope.
 
@@ -45,12 +45,12 @@ First-pass healthy-adult time budget: **1/3 Rest, 1/3 Work, 1/3 Other**, concept
 
 Conceptual decision path:
 
-\`\`\`text
+```text
 Actual need + available resources + public work demand + local context + Oracle pressure
   -> filter physically/skill feasible actions
   -> Individual/Household evaluates competing goals
   -> spends available activity budget, producing actual outcomes
-\`\`\`
+```
 
 ## 4. Work Demand as a small independent module
 
@@ -59,9 +59,9 @@ The base Work Demand module has **two primary inputs**:
 1. **Basic Demand**: food, shelter, basic repair/maintenance and other necessities derived from population, households, shared storage and environment.
 2. **Trade Demand**: actual exchange needs/surpluses for settlement-to-settlement trade where feasible; not a copy of Basic Demand counted again as new consumption.
 
-\`\`\`text
+```text
 Basic Demand + Trade Demand -> Work Demand summaries -> autonomous work choice
-\`\`\`
+```
 
 - Work Demand describes desired *activity, work quantity, priority and available inputs*, not jobs forced upon named people.
 - Individual/household personal actions and Religion/Polity intent are **additional decision inputs**, not reasons to turn the base Work Demand module into a universal NPC scheduler. Later explicit projects may produce bounded work requests through the same interface.
@@ -104,11 +104,11 @@ A building recipe distinguishes **required structural materials** from **optiona
 - Temple follows #8: autonomously proposed/built/maintained in response to religious demand; **not** an independent generator of Divine Power or Local Divine Presence. Temple Core footprints do not overlap.
 - **Large Temple example: ideal Wood : Stone : Glass = 6 : 4 : 2.** Wood and Stone satisfy its structural requirements; Glass is optional to achieve an increased **religious activity / preaching influence radius**, not spatial Miracle eligibility.
 - Assuming structural requirements are met, a v1 **tunable linear interpolation** is:
-  \`\`\`text
+  ```text
   radiusMultiplier = 1 + (maxRadiusMultiplier - 1)
                          * clamp(glassAvailable / glassIdealForThisBuildingScale, 0, 1)
   initial maxRadiusMultiplier = 2.0
-  \`\`\`
+  ```
   Glass 0 -> **100%** base radius; half the scaled ideal -> **150%**; ideal or more -> **200%**. For bigger buildings both required recipe amounts and the relevant ideal Glass amount scale; neither unlimited glass nor a bigger raw count alone gives uncapped multipliers.
 - Radius applies to social/religious organization/communication, *not* God-specific Local Divine Presence, dominance, Miracle range or instant Devotion conversion. A doubled circular radius can cover ~4x area; tune carefully after play.
 - Precious metals or other rare ingredients may support future prestige/quality variants, but no unapproved direct Faith/Divine Power bonus is implied.
@@ -154,7 +154,7 @@ Rule parameters should allow playtest adjustment without changing state ownershi
 - food need/yield, raw-material yields, seasonal rain modifiers, resource accessibility;
 - 20:80 output-allocation default, shared distribution policy, reserve capacity/loss, shortage/rationing thresholds;
 - recipe amounts, tools/wear, building production time, Glass ideal, Temple radius multiplier ceiling and curve;
-- Trading Post capacity/range/settlement settlement interval/efficiency if enabled;
+- Trading Post capacity/range/settlement interval/efficiency if enabled;
 - natural disaster severity/frequency/duration; population health, fertility and migration sensitivity to shortage;
 - Miracle support efficacy/cost/cooldown/area by #7; cross-God competition remains under existing spatial Miracle rules.
 

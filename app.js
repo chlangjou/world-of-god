@@ -3,7 +3,7 @@
   const S = window.WoG2;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null;
+  let activeProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, historyPage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedRain = false, cursor = null, chosen = 'p1', lastEventId = 0, toastTimeout;
   const ticksPerRealSecond = 12 / 8;
@@ -22,30 +22,37 @@
     return response.json();
   }
   function newWorld() {
-    state=S.create(activeProfile?{balanceProfile:activeProfile}:{});
+    state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{})});
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
-    paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;armedRain=false;
+    paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;lastRoster='';housePage=0;historyPage=0;armedRain=false;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
   $('balanceProfile').addEventListener('change',async e=>{
+    if(profileLoading)return;
     const desired=e.target.value;
-    if (!confirm('切換平衡設定將重新建立世界，尚未儲存的進度會消失。')) {
+    if(!confirm('切換 Balance Profile 會以相同 Seed 重新創世；尚未儲存的進度會消失。')){
       e.target.value=activeProfile?'agriculture':'original';return;
     }
-    try { activeProfile=desired==='agriculture'?await loadAgriculture():null;newWorld();
-      say(activeProfile?'已啟用 Agriculture v0.1':'已切換 Original'); }
-    catch(err){e.target.value=activeProfile?'agriculture':'original';say('Profile 載入失敗：'+err.message);}
+    const previous=activeProfile;profileLoading=true;$('balanceProfile').disabled=true;$('pauseBtn').disabled=true;
+    try{
+      activeProfile=desired==='agriculture'?await loadAgriculture():null;
+      newWorld();say(activeProfile?'Agriculture v0.1 已套用至新世界':'已切換為 Original');
+    }catch(err){activeProfile=previous;$('balanceProfile').value=previous?'agriculture':'original';say('Profile 載入失敗：'+err.message);}
+    finally{profileLoading=false;$('balanceProfile').disabled=false;$('pauseBtn').disabled=false;render();}
   });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
-  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;render();say(converted?'舊版存檔已升級；既有死亡不會倒轉，建議新開世界測試修正。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;lastRoster='';housePage=0;historyPage=0;render();say(converted?'舊版存檔已升級；既有死亡不會倒轉，建議新開世界測試修正。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost() {
     $('radiusValue').textContent=$('radius').value+' 格';$('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';$('durationValue').textContent=$('duration').value+' 日';
     const target=cursor||state.camp, preview=S.evalRain(state,{x:target.x,y:target.y,...opts()});
     $('rainCost').textContent=`預估 ${preview.cost} DP`;const left=Math.max(0,state.god.skills.rain.readyAtHour-state.hour);
-    $('rainCooldown').textContent=left ? `冷卻中：剩餘 ${Math.ceil(left/24)} 模擬日` : preview.reason || '可選擇施展位置；已準備好';
-    $('rainBtn').textContent=armedRain?'取消選擇位置':'選擇降雨位置';
+    if(armedRain && left>0)armedRain=false;
+    $('rainCooldown').textContent=left ? `冷卻中 · 剩餘 ${Math.ceil(left/24)} 模擬日` : preview.reason || '已就緒 · 點選後指定地圖中心';
+    $('rainBtn').textContent=armedRain?'取消選擇位置':'選擇施展位置';
+    $('rainBtn').disabled=profileLoading||(!preview.ok&&!armedRain);
+    $('rainBtn').title=preview.reason||'點擊後在地圖選擇喚雨中心';
     $('rainBtn').classList.toggle('secondary',armedRain);
   }
   function render() {
@@ -56,11 +63,17 @@
     $('familiesMetric').textContent=`${st.households} 個家戶 · 出生 ${st.births} / 死亡 ${st.deaths}`;
     $('townMetric').textContent=st.settlements?state.settlements[0].name:'尚未形成';
     $('houseMetric').textContent=`${st.houses} / ${st.households} 戶有住所`;
-    $('foodMetric').textContent=format(st.food);$('stockMetric').textContent=`共同儲存：${format(st.commonFood)}`;
+    const dailyNeed=state.people.filter(p=>p.alive).reduce((a,p)=>a+(p.stage==='child'?state.rules.foodNeedChild:state.rules.foodNeedAdult),0);
+    $('foodMetric').textContent=format(st.food);
+    $('stockMetric').textContent=`約 ${format(st.food/Math.max(dailyNeed,.01),1)} 日 · 公共 ${format(st.commonFood)}`;
     $('followersMetric').textContent=st.followers;$('devotionMetric').textContent=`奉獻權重 ${format(st.devotionWeight)} · 平均信仰 ${format(st.avgDevotion,1)}`;
     $('powerMetric').textContent=format(state.god.dp,1);$('powerRate').textContent=`+${format(st.dpRateDay,2)} DP / 模擬日`;
     $('powerFill').style.width=Math.min(100,state.god.dp/state.god.cap*100)+'%';
     $('pauseBtn').textContent=paused?'▶ 開始 / 繼續':'Ⅱ 暫停';
+    $('pauseBtn').disabled=profileLoading;
+    $('balanceProfile').value=state.agriculture?'agriculture':'original';
+    $('mapStatus').textContent=profileLoading?'載入平衡設定中…':state.agriculture?'Agriculture v0.1 · 河流、季節與實際農作物':'Original · 原始平衡對照';
+    $('mapTip').hidden=!armedRain;
     $('simHint').textContent=armedRain?'已選擇降雨：點擊地圖施展（Esc 取消）':st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。';
     $('simRate').textContent=`${speed}× · 約 ${format(2/speed,2)} 秒 / 模擬日`;
     updateCost();
@@ -75,31 +88,49 @@
     $('concludeBtn').hidden=!active;
     const prayers=state.religion.prayers.filter(p=>p.status==='open');
     const answered=state.religion.prayers.filter(p=>p.status==='answered').slice(-1);
-    $('needsPanel').innerHTML=prayers.length?prayers.map(p=>`<div class="need-item"><strong>缺雨與糧食的祈禱</strong><small>第 ${Math.floor(p.createdAtHour/24)+1} 日 · ${p.by.length} 位信徒提出實際需要</small><small>請觀察雨後是否真的改善耕作，而非只看施法次數。</small></div>`).join(''):
+    $('needsPanel').innerHTML=prayers.length?prayers.slice(-2).map(p=>`<div class="need-item"><strong>缺雨與糧食的祈禱</strong><small>第 ${Math.floor(p.createdAtHour/24)+1} 日 · ${p.by.length} 位信徒提出實際需要</small><small>請觀察雨後是否真的改善耕作，而非只看施法次數。</small></div>`).join(''):
       answered.length?'<div class="need-item"><strong>最近的祈求已獲得回應</strong><small>土地、勞動與食物真的出現變化；對應信徒的信仰已更新。</small></div>':'目前沒有迫切的祈禱。當水分、作物或糧食受到壓力，居民可能主動祈求。';
     $('weatherNotice').textContent=`農田平均含水 ${format(st.avgMoisture*100)}% · 作物生長 ${format(st.avgCrop*100)}% · ${st.phase==='dry'?'土地正失水，乾旱是有限的自然變化。':'降水、地力與居民的勞動共同決定糧食。'}`;
     const town=state.settlements[0];
     $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
       `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
-    $('houseList').innerHTML=state.households.map(h=>{
+    const housePageSize=2;
+    const housePages=Math.max(1,Math.ceil(state.households.length/housePageSize));
+    housePage=Math.min(housePage,housePages-1);
+    $('housePageLabel').textContent=`家戶 ${housePage+1} / ${housePages}`;
+    $('housePrev').disabled=housePage===0;$('houseNext').disabled=housePage>=housePages-1;
+    $('houseList').innerHTML=state.households.slice(housePage*housePageSize,(housePage+1)*housePageSize).map(h=>{
       const access=S.inspectHousehold(state,h.id);
-      const reach=!town?`尚無公共糧倉 · 家戶糧食約可供 ${format(access.foodCoverageDays,1)} 日`:
-        access.settlementId?`可領公共糧 · 約 ${format(access.foodCoverageDays,1)} 日糧食保障`:
-        `聚落供應範圍外 · 本地存糧約 ${format(access.foodCoverageDays,1)} 日`;
-      return `<div><b>${html(h.name)}</b><small>${h.home?'已有住所':'需要住屋'} · 私人存糧 ${format(h.inventory.food,1)} · ${reach}</small></div>`;
+      const reach=access.settlementId?'可領公共糧':town?'公共糧倉不可及':'無公共糧倉';
+      return `<div><b>${html(h.name)}</b><small>${h.home?'有住所':'建屋中'} · 私糧 ${format(h.inventory.food,1)}</small><small>${reach} · 可及 ${format(access.foodCoverageDays,1)} 日</small></div>`;
     }).join('');
-    $('personList').innerHTML=state.people.filter(p=>p.alive).slice(0,36).map(p=>`<button data-person="${p.id}" class="${p.id===chosen?'active':''}" type="button">${html(p.name)}</button>`).join('');
-    if(current) {
+    const alive=state.people.filter(p=>p.alive);
+    if(!alive.some(p=>p.id===chosen))chosen=alive[0]?.id||null;
+    const roster=alive.map(p=>p.id+':'+p.name).join('|');
+    if(roster!==lastRoster){
+      lastRoster=roster;
+      $('residentSelect').innerHTML=alive.map(p=>`<option value="${html(p.id)}">${html(p.name)} · ${p.age}歲</option>`).join('');
+    }
+    $('residentSelect').value=chosen||'';
+    const selectedPerson=state.people.find(p=>p.id===chosen&&p.alive);
+    if(selectedPerson) {
+      const current=selectedPerson;
       const p=current,h=state.households.find(v=>v.id===p.householdId),dec=p.lastDecision;
       const religious=current.religionId===state.religion.id?'初光信仰':'尚未歸屬';
       const workDay=dec && Number.isFinite(dec.hour)?`第 ${Math.floor(dec.hour/24)+1} 日的`:'先前的';
-      const activeReason=p.activityReason?`<div class="reason"><b>此刻行動原因：</b>${html(p.activityReason)}</div>`:'';
-      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'} · ${religious}</div><div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${activeReason}<div class="reason">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
+      const activeReason=p.activityReason?`<div class="reason" title="${html(p.activityReason)}" tabindex="0"><b>此刻行動：</b>${html(p.activityReason)}</div>`:'';
+      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'} · ${religious}</div><div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${activeReason}<div class="reason" title="${html(dec?.reason||'尚未進行工作決策')}" tabindex="0">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
     }
-    // Preserve DOM details scroll as much as possible; event list redraw only on new events.
-    if(lastEventId!==state.eventSeq) {
-      lastEventId=state.eventSeq;
-      $('events').innerHTML=state.events.slice(-25).reverse().map(e=>`<div class="event ${html(e.kind)}"><small>第 ${Math.floor(e.hour/24)+1} 日 · ${html(e.kind)} · #${e.id}</small><div>${html(e.text)}</div>${e.reasons?.length?`<details><summary>發生原因</summary>${e.reasons.map(x=>'<div>'+html(x)+'</div>').join('')}</details>`:''}</div>`).join('');
+    // Paginated history avoids nested scroll in fixed-viewport inspector.
+    const historyPageSize=3;
+    const historyPages=Math.max(1,Math.ceil(state.events.length/historyPageSize));
+    historyPage=Math.min(historyPage,historyPages-1);
+    $('historyPageLabel').textContent=`歷史 ${historyPage+1} / ${historyPages}`;
+    $('historyPrev').disabled=historyPage===0;$('historyNext').disabled=historyPage>=historyPages-1;
+    if(lastEventId!==state.eventSeq || $('events').dataset.page!==String(historyPage)){
+      lastEventId=state.eventSeq;$('events').dataset.page=String(historyPage);
+      $('events').innerHTML=state.events.slice().reverse().slice(historyPage*historyPageSize,(historyPage+1)*historyPageSize)
+        .map(e=>`<div class="event ${html(e.kind)}"><small>第 ${Math.floor(e.hour/24)+1} 日 · ${html(e.kind)}</small><div>${html(e.text)}</div>${e.reasons?.length?`<details><summary>原因</summary>${e.reasons.map(x=>'<div>'+html(x)+'</div>').join('')}</details>`:''}</div>`).join('')||'<div class="muted">尚無重大歷史事件</div>';
     }
     draw();
   }

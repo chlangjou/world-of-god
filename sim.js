@@ -127,7 +127,7 @@
           age, stage: isChild ? 'child' : 'adult', health: 100, hunger: 0, alive: true,
           genderRole: j === 1 ? 'gestate' : 'fertilize', partnerId: isChild ? null : 'p' + (i * 3 + (j === 0 ? 2 : 1)),
           pregnancyDueHour: null, recoveryUntilHour: 0, occupation: j === 0 ? 'food_producer' : j === 1 ? 'gatherer' : 'dependent',
-          proficiency: { food: .35 + rand(s) * .45, gather: .25 + rand(s) * .5, build: .18 + rand(s) * .45 },
+          proficiency: { food: agriculture ? agriculture.worker.startingSkillRange[0] + rand(s) * (agriculture.worker.startingSkillRange[1]-agriculture.worker.startingSkillRange[0]) : .35 + rand(s) * .45, gather: .25 + rand(s) * .5, build: .18 + rand(s) * .45 },
           activity: 'rest', devotion: belief, religionId: belief >= 20 ? 'r1' : null,
           receptivity: i === 0 && j === 0 ? .98 : rand(s), lastDecision: null, lastFaithEvidence: null,
           lastWorkHour: -1, lastOracleWorkHour: -1, activityReason: '剛進入世界，尚未開始日常活動' };
@@ -524,9 +524,11 @@
   function updateWorld(s) {
     const day = days(s);
     // Coarse, bounded weather stress; default drought is temporary, not a forced multi-year catastrophe.
-    const seasonal = day % 160;
-    const drought = seasonal >= 14 && seasonal <= 29;
-    const rainy = seasonal < 6 || (seasonal >= 32 && seasonal < 40) || (seasonal >= 68 && seasonal < 75);
+    const climate=s.agriculture?.seasons;
+    const seasonal = day % (climate?.cycleDays || 160);
+    const inWindows = (windows) => windows.some(([lo,hi])=>seasonal>=lo&&seasonal<=hi);
+    const drought = climate ? inWindows(climate.dryWindows) : seasonal >= 14 && seasonal <= 29;
+    const rainy = climate ? inWindows(climate.rainWindows) : seasonal < 6 || (seasonal >= 32 && seasonal < 40) || (seasonal >= 68 && seasonal < 75);
     s.environment.phase = drought ? 'dry' : rainy ? 'rainy' : 'mild';
     const naturalRain = drought ? 0 : rainy ? .015 : .005;
     const A=s.agriculture, season=drought?'dry':rainy?'rain':'mild';

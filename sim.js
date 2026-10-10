@@ -438,7 +438,7 @@
     // Not every work period should be production. When accessible reserves are
     // strong, adults can spend the work block supporting dependents and the home.
     // Oracle pressure can redirect willing people to feasible food activities.
-    candidates.push({ name: 'care', score: 3.5 + (security.days >= 11 ? 5.0 : security.days >= 7 ? 2.7 : 0) +
+    candidates.push({ name: 'care', score: 3.5 + (security.days >= (s.agriculture?.workDemand?.reserveComfortDays ?? 11) ? 5.0 : security.days >= (s.agriculture?.workDemand?.reserveRelaxDays ?? 7) ? 2.7 : 0) +
       (householdMembers(s,h).some(v=>v.stage==='child') ? .7 : 0), valid: true });
     if (!candidates.length) { p.activity = 'rest'; p.activityReason = '附近缺少可用資源，這次無法工作';
       p.lastDecision = { work: 'rest', hour: s.hour, reason: p.activityReason, foodDays: security.days, oracleInfluence: 0 }; return; }
@@ -596,7 +596,7 @@
       const activeHomes = s.households.filter(h => accessibleSettlement(s,h)?.id === town.id && householdMembers(s,h).length);
       const totalNeed = activeHomes.reduce((n,h)=>n+dailyFoodNeed(s,h),0);
       const foodStock = town.storage.food + activeHomes.reduce((z,h)=>z+h.inventory.food,0);
-      const required = totalNeed * 8; // desired buffer, not a hard rationing or mortality threshold
+      const required = totalNeed * (s.agriculture?.workDemand?.reserveTargetDays ?? 8); // adjustable desired buffer; not forced rationing
       const foodPressure = totalNeed ? clamp(1 - foodStock/Math.max(1,required)) : 0;
       const housingPressure = activeHomes.filter(h=>!h.home).length / Math.max(1,activeHomes.length);
       town.workDemand = {foodPressure,housingPressure};

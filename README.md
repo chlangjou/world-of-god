@@ -6,8 +6,8 @@ This branch is a **fresh, independent browser-based prototype** derived from the
 
 ## Play immediately
 
-1. Download this branch or its ZIP archive.
-2. Open `index.html` in Chrome / Edge / Firefox. There is **no build step, package installation or server dependency** for gameplay.
+1. Download **`World-of-God-Web-MVP0.html`** from this branch (or download the source ZIP).
+2. Double-click **`World-of-God-Web-MVP0.html`** (or `index.html` in the source ZIP) in Chrome / Edge / Firefox. There is **no build step, package installation or server dependency** for gameplay.
 3. Click **開始 / 繼續**. Use **1×, 4×, 16×** to observe settlement formation; the world can also run with no divine intervention.
 4. Inspect residents and homes. Click **選擇降雨位置**, then the map, to inject Rain into the physical world. The cast changes moisture/crop conditions; actual Food still comes from labor.
 5. When a Saint emerges, click **傳下神諭**. Residents decide how to act after social transmission. The inspector shows individual reasons and any changed priorities.
@@ -33,6 +33,7 @@ No runtime dependencies. Node.js 18+ optional, only required to run automated te
 ```sh
 npm test         # deterministic, autonomy, rain, Oracle, demographics and save checks
 npm run smoke    # seeded complete-loop headless scenario
+npm run build    # regenerate the self-contained offline HTML
 ```
 
 A preview may also be served with `python -m http.server 8000`, but local `index.html` normally works directly.

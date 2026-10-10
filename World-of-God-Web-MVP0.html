@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111d1f">
+  <title>World of God — 河谷初生 · Web MVP-0</title>
+  <style>
+:root { color-scheme:dark; --bg:#101b1d; --sheet:#172426; --sheet2:#1b2a2c; --muted:#9caeb1; --text:#e9eee7; --accent:#dbbc7b; --mint:#8ab9a2; --line:#37484a; --deep:#0d1719; --warn:#e7b17f; font-family:system-ui,-apple-system,'Noto Sans TC','Microsoft JhengHei',sans-serif; }
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 4% -15%,#233638 0,transparent 37%),var(--bg);color:var(--text);font-size:14px}button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.47}button:focus-visible,canvas:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}h1,h2,h3,p{margin:0}h2{font-size:17px;font-weight:650;letter-spacing:.015em}small{font-size:11px} .muted{color:var(--muted)}.small{font-size:12px}.overline,.eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}.topbar{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 max(20px,calc((100vw - 1520px)/2));border-bottom:1px solid #364649;background:#111d1fe8;gap:12px;position:relative}.brand{display:flex;align-items:center;gap:12px;letter-spacing:.12em;white-space:nowrap}.brand-icon{font-family:Georgia,serif;font-size:36px;color:var(--accent)}.brand b{display:block;font-size:16px}.brand small{display:block;color:#94a9a7;margin-top:3px;font-size:9px}.header-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end}.build-label{font-size:10px;color:var(--muted);margin-right:8px}.btn{border:1px solid transparent;border-radius:8px;padding:9px 12px;color:var(--text);background:#2b3a3c;transition:background .15s,transform .1s;white-space:nowrap}.btn:hover:not(:disabled){background:#3a5151}.btn:active{transform:scale(.98)}.btn.ghost{background:transparent;color:#ccd5d1}.btn.ghost:hover{background:#2a3b3c}.btn.outline{border-color:#6e6350;background:transparent;color:var(--accent)}.btn.primary{background:var(--accent);color:#17211f;font-weight:800}.btn.primary:hover{background:#e8d09b}.btn.accent{background:#d4b678;color:#162320;font-weight:800}.btn.accent.secondary{background:#8db9a0}.btn.speed{padding:8px 10px;border:1px solid #364b4b}.btn.speed.active{background:#324d48;color:#e7f2e9;border-color:#95bdaa}.main{max-width:1520px;padding:24px 20px 40px;margin:auto}.intro{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:20px}.intro h1{font-family:Georgia,'Noto Serif TC',serif;font-size:34px;font-weight:500;margin:9px 0 10px;color:#f4ebd6}.intro h1 span{font-size:14px;color:var(--muted);font-family:system-ui,sans-serif;font-weight:400;margin-left:8px}.intro p{max-width:730px;color:#bdcbc8;font-size:13px;line-height:1.75}.date-box{border-left:1px solid var(--line);padding-left:24px;min-width:155px}.date-box span,.date-box small{display:block;color:var(--muted)}.date-box strong{font-size:22px;display:block;margin:6px 0;color:var(--accent)}.metric-bar{display:grid;grid-template-columns:1fr 1.15fr 1fr 1fr 1.2fr;background:linear-gradient(135deg,#1f3232,#1a292b);border:1px solid var(--line);border-radius:12px;margin-bottom:18px;overflow:hidden}.metric{padding:17px 20px;position:relative;min-width:0}.metric:not(:last-child)::after{content:"";position:absolute;right:0;top:19%;height:62%;width:1px;background:#395153}.metric small{display:block;color:#adbfbd;font-size:11px}.metric strong{display:block;font-size:26px;margin:3px 0 2px;font-variant-numeric:tabular-nums}.metric #townMetric{font-size:19px;margin:9px 0 7px}.metric span{font-size:11px;color:#8faaa4}.metric em{font-size:12px;color:var(--muted);font-style:normal}.metric-power strong{color:var(--accent)}.power-track{height:5px;background:#3c4846;border-radius:5px;margin:5px 0 5px;overflow:hidden}.power-track i{display:block;background:linear-gradient(90deg,#c48f50,#ecd8a5);width:20%;height:100%;border-radius:5px}.workspace{display:grid;grid-template-columns:minmax(540px,1.24fr) minmax(350px,.76fr);gap:18px;align-items:start}.center-column,.side-column{min-width:0}.map-card,.panel,.intervention{background:var(--sheet);border:1px solid var(--line);border-radius:12px;overflow:hidden}.section-header{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:15px 18px}.section-header p{color:var(--muted);font-size:11px;margin-top:4px}.time-bar{display:flex;gap:5px;align-items:center}.map-wrap{position:relative;padding:10px;background:#111d20}.map-wrap canvas{display:block;width:100%;height:auto;max-width:768px;aspect-ratio:1;margin:0 auto;cursor:crosshair;image-rendering:auto;border-radius:4px;border:1px solid #3f5853}.legend{display:flex;gap:13px;align-items:center;flex-wrap:wrap;padding:12px 9px 5px;color:#9fb3af;font-size:11px}.legend span{white-space:nowrap}.sw{width:10px;height:10px;border-radius:2px;display:inline-block;vertical-align:-1px;margin-right:5px}.sw.river{background:#4d8da0}.sw.forest{background:#3c6750}.sw.field{background:#c59b4e}.sw.homes{background:#e6cc91}.sw.human{background:#d9f1c2}.map-tip{position:absolute;top:20px;left:20px;border:1px solid #526c66;background:#1b302ef0;color:#d9eadc;border-radius:9px;padding:9px 12px;font-size:11px;max-width:400px;pointer-events:none}.map-footer{display:flex;justify-content:space-between;gap:12px;padding:10px 17px 13px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}.map-footer #simHint{color:#bed2c5}.intervention{margin-top:18px}.action-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 15px 17px}.action-card{border:1px solid #455952;border-radius:10px;padding:14px;background:#202f30;min-width:0}.action-title{display:flex;gap:11px;align-items:center;margin-bottom:16px}.action-title .symbol{font-family:Georgia,serif;color:#efcc8e;font-size:32px;line-height:1}.action-title .oracle-symbol{color:#b5d9bf}.action-title strong{display:block;font-size:14px}.action-title small{display:block;color:var(--muted);margin-top:5px;font-size:11px;line-height:1.45}.ranges{display:grid;gap:9px}.ranges label{display:grid;grid-template-columns:1fr auto;align-items:center;gap:5px;color:#c3d3ca;font-size:12px}.ranges output{color:var(--accent);font-weight:700}.ranges input{grid-column:1/-1;accent-color:#d5b875;width:100%;margin:0}.action-bottom{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:14px}.action-bottom span{font-size:11px;color:#b5c5bd;text-align:right}.action-card>.muted{display:block;margin-top:9px;line-height:1.4}.saint-row{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #374a47;padding:10px 0;color:#b9c9c3;font-size:12px}.saint-row strong{color:#dfebdf;font-size:12px;text-align:right}.text-button{border:0;background:transparent;color:#dcbd7e;text-decoration:underline;font-size:11px;text-align:left;padding:8px 0 0}.side-column{display:grid;gap:15px}.panel{padding:17px}.panel-heading{display:flex;justify-content:space-between;align-items:center;gap:5px;border-bottom:1px solid #314443;padding-bottom:12px;margin-bottom:13px}.panel .content-text{color:#b6cbc3;font-size:12px;line-height:1.8}.notice{background:#243734;border-left:2px solid #a3c4ae;color:#b8d4c2;padding:10px 12px;margin-top:12px;font-size:11px;line-height:1.6;border-radius:2px 7px 7px 2px}.need-item{background:#293b37;border:1px solid #516651;padding:10px;border-radius:8px}.need-item strong{color:#e4c894}.need-item small{color:#b5c6bd;display:block;margin-top:4px}.details-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.details-grid>div{background:#263837;padding:10px;border-radius:7px}.details-grid small{color:#94a9a6;display:block;margin-bottom:5px}.details-grid b{color:#e8efe5}.house-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px}.house-list>div{font-size:11px;border:1px solid #344947;background:#223330;border-radius:6px;padding:8px 9px;color:#c4d0c7}.house-list small{color:#94aaa5;display:block;margin-top:4px}.person-list{display:flex;flex-wrap:wrap;gap:5px;max-height:105px;overflow-y:auto;margin:12px 0}.person-list button{border:1px solid #3f5650;background:#243734;color:#d0dfd3;padding:5px 9px;border-radius:5px;font-size:11px}.person-list button.active{background:#4b6457;border-color:#9fc1a5}.person-list button:hover{background:#38524b}.person-detail{background:#233533;padding:13px;border-radius:8px;min-height:110px;color:#bcd0c6;font-size:12px;line-height:1.7}.person-detail h3{font-size:14px;color:#e4eadf;margin-bottom:6px}.person-detail .reason{border-top:1px solid #3a504a;margin-top:7px;padding-top:7px;color:#eccf9b}.events-panel .events{max-height:460px;overflow-y:auto}.event{border-left:2px solid #668477;padding:0 0 13px 12px;margin-left:2px;margin-bottom:12px;position:relative;font-size:12px;color:#c7d5cd;line-height:1.5}.event:before{content:"";height:7px;width:7px;border-radius:50%;background:#a6c9ad;position:absolute;left:-4px;top:2px}.event.miracle,.event.prayer,.event.faith{border-color:#cea46a}.event.miracle:before,.event.prayer:before,.event.faith:before{background:#dfbe83}.event small{display:block;color:#8ba5a0;margin-bottom:3px}.event details{color:var(--muted);margin-top:5px;font-size:11px}.event summary{cursor:pointer;color:#d5bd91}footer{padding:35px 0 15px;color:#819895;text-align:center;font-size:11px;letter-spacing:.03em}dialog{background:#1d3030;border:1px solid #688176;color:#e7efe5;max-width:600px;width:calc(100vw - 30px);border-radius:12px;padding:24px;box-shadow:0 25px 100px #000b}dialog::backdrop{background:#071110ba}.dialog-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px}.help-text{line-height:1.9;color:#b8cac4;display:grid;gap:10px;font-size:13px}.help-text strong{color:#e4d3a9}#toast{position:fixed;z-index:10;bottom:22px;left:50%;transform:translateX(-50%);pointer-events:none;max-width:min(600px,90vw);background:#2a433c;border:1px solid #85a58e;border-radius:9px;color:#f3ebd7;padding:12px 18px;box-shadow:0 6px 40px #0008;opacity:0;transition:opacity .2s}#toast.visible{opacity:1}@media(max-width:1200px){.workspace{grid-template-columns:minmax(490px,1fr) minmax(310px,.65fr)}.action-cards{grid-template-columns:1fr}.topbar{height:auto;min-height:68px;padding:12px 18px}.header-actions .build-label{display:none}}@media(max-width:860px){.workspace{grid-template-columns:1fr}.side-column{grid-template-columns:1fr 1fr}.metric-bar{grid-template-columns:repeat(3,1fr)}.metric-power{grid-column:span 2}.intro{align-items:start}.header-actions{gap:3px}.header-actions .btn{padding:6px 8px;font-size:11px}.action-cards{grid-template-columns:1fr 1fr}}@media(max-width:650px){.main{padding:16px 10px}.intro{flex-direction:column;gap:10px}.intro h1{font-size:29px}.date-box{border:0;padding:0;min-width:0}.metric-bar{grid-template-columns:repeat(2,1fr)}.metric-power{grid-column:auto}.metric{padding:13px}.metric strong{font-size:19px}.workspace{display:block}.side-column{grid-template-columns:1fr;margin-top:12px}.section-header{flex-direction:column;align-items:stretch}.action-cards{grid-template-columns:1fr}.time-bar{justify-content:flex-start}.map-tip{position:static;background:#203332;border:0;margin-bottom:8px}.legend{gap:7px}.map-footer{flex-direction:column}.house-list{grid-template-columns:1fr 1fr}}
+
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">✧</span><div><b>WORLD OF GOD</b><small>河谷初生 · WEB MVP-0</small></div></div>
+    <div class="header-actions"><span class="build-label">獨立 PoC · v0.2</span><button id="helpBtn" class="btn ghost">玩法說明</button><button id="saveBtn" class="btn ghost">儲存</button><button id="loadBtn" class="btn ghost">讀取</button><button id="exportBtn" class="btn ghost">匯出</button><button id="importBtn" class="btn ghost">匯入</button><button id="resetBtn" class="btn outline">重新創世</button></div>
+  </header>
+  <main class="main">
+    <section class="intro"><div><span class="overline">神意之外，自有萬千生機</span><h1>河谷初生 <span>First Living World</span></h1><p>你是神，不是指揮官。施展神蹟改變自然，傳下神諭表達期望，再觀察居民如何自行回應。</p></div><div class="date-box"><span>模擬歷史</span><strong id="day">第 1 日</strong><small id="weather">和暖的天氣</small></div></section>
+    <section class="metric-bar" aria-label="世界摘要">
+      <div class="metric"><small>居民</small><strong id="peopleMetric">24</strong><span id="familiesMetric">8 個家戶</span></div>
+      <div class="metric"><small>聚落</small><strong id="townMetric">尚未形成</strong><span id="houseMetric">0 戶有住所</span></div>
+      <div class="metric"><small>可用糧食</small><strong id="foodMetric">—</strong><span id="stockMetric">共同儲存：0</span></div>
+      <div class="metric"><small>信徒</small><strong id="followersMetric">—</strong><span id="devotionMetric">信仰平均值</span></div>
+      <div class="metric metric-power"><small>神力 Divine Power</small><strong><span id="powerMetric">—</span><em> / 100</em></strong><div class="power-track"><i id="powerFill"></i></div><span id="powerRate">— / 模擬日</span></div>
+    </section>
+    <div class="workspace">
+      <div class="center-column">
+        <section class="map-card">
+          <div class="section-header"><div><h2>世界觀察</h2><p>居民依環境、家戶需要與自身意願做出選擇</p></div><div class="time-bar"><button id="pauseBtn" class="btn primary">▶ 開始</button><button class="btn speed active" data-speed="1">1×</button><button class="btn speed" data-speed="4">4×</button><button class="btn speed" data-speed="16">16×</button></div></div>
+          <div class="map-wrap"><canvas id="world" width="768" height="768" aria-label="世界地圖，點擊土地施展降雨或查看居民" tabindex="0"></canvas><div class="legend"><span><i class="sw river"></i>河流</span><span><i class="sw forest"></i>森林</span><span><i class="sw field"></i>農田</span><span><i class="sw homes"></i>住所</span><span><i class="sw human"></i>居民</span></div><div class="map-tip" id="mapTip">按「喚雨」，再點擊地圖選擇神蹟中心</div></div>
+          <div class="map-footer"><span id="simHint">世界已準備好。開始歷史後，居民會自行勞作與形成聚落。</span><span id="simRate">1× · 約 1 日 / 2 秒</span></div>
+        </section>
+        <section class="intervention"><div class="section-header"><div><h2>神意介入</h2><p>Miracle 改變現實；Oracle 改變理解與選擇</p></div></div>
+          <div class="action-cards"><div class="action-card rain-card"><div class="action-title"><span class="symbol">☂</span><div><strong>喚雨 Rain</strong><small>影響降水與土壤，而非直接產生糧食</small></div></div><div class="ranges"><label>範圍 <output id="radiusValue">7 格</output><input type="range" id="radius" min="2" max="14" value="7"></label><label>強度 <output id="intensityValue">0.85×</output><input type="range" id="intensity" min="30" max="120" step="5" value="85"></label><label>持續 <output id="durationValue">10 日</output><input type="range" id="duration" min="1" max="30" value="10"></label></div><div class="action-bottom"><button id="rainBtn" class="btn accent">選擇降雨位置</button><span id="rainCost">預估消耗 — DP</span></div><small id="rainCooldown" class="muted">等待施展</small></div>
+          <div class="action-card oracle-card"><div class="action-title"><span class="symbol oracle-symbol">◇</span><div><strong>糧食生產神諭</strong><small>food.produce · 經 Saint 傳播，再由居民自主行動</small></div></div><div class="saint-row"><span>接收者</span><strong id="saintName">等待第一位聆聽者出現</strong></div><div class="saint-row"><span>剩餘額度</span><strong id="saintQuota">— / 4</strong></div><div class="action-bottom"><button id="oracleBtn" class="btn accent secondary">傳下神諭</button><span id="oracleStatus">尚未發佈</span></div><small id="oracleReason" class="muted">神諭不會直接指定任何居民的職業或行動。</small><button id="concludeBtn" class="text-button" hidden>宣告當前神諭已完成（另耗 1 額度）</button></div></div>
+        </section>
+      </div>
+      <aside class="side-column">
+        <section class="panel"><div class="panel-heading"><h2>世界的訊號</h2><span class="eyebrow">PRAYERS & NEEDS</span></div><div id="needsPanel" class="content-text">當居民遇到實際需要時，祈禱會直接傳達給你。</div><div class="notice" id="weatherNotice">自然環境在變化；玩家不需要持續照顧每一個人。</div></section>
+        <section class="panel"><div class="panel-heading"><h2>聚落與家戶</h2><span class="eyebrow">SETTLEMENT</span></div><div id="townPanel" class="content-text"></div><div id="houseList" class="house-list"></div></section>
+        <section class="panel"><div class="panel-heading"><h2>居民觀察</h2><span class="eyebrow">INDIVIDUAL</span></div><p class="muted small">點選地圖上的居民或下方名單，查看其自主工作原因。</p><div id="personList" class="person-list"></div><div id="personDetail" class="person-detail"></div></section>
+        <section class="panel events-panel"><div class="panel-heading"><h2>歷史與因果</h2><span class="eyebrow">RECENT EVENTS</span></div><div id="events" class="events"></div></section>
+      </aside>
+    </div>
+    <footer>World of God · Clean-room Web MVP-0 · Simulation 與畫面分離 · 不使用舊版 PoC 的模型或平衡數值</footer>
+  </main>
+  <dialog id="infoDialog"><div class="dialog-head"><h2>如何觀察一個活著的世界</h2><button id="closeHelp" class="btn ghost">關閉</button></div><div class="help-text"><p><strong>1. 開始歷史。</strong>居民會找食物、木材、纖維，建造住所；當足夠家戶安居，聚落會自然形成，並非你放置的建築。</p><p><strong>2. 觀察乾旱。</strong>氣候會改變水分與農作物。右側會顯示居民實際產生的祈禱，並非任務提示。</p><p><strong>3. 施展喚雨。</strong>選擇範圍、強度與持續時間，按「選擇降雨位置」，再點地圖。實際產量仍依農作物、勞動與儲存決定。</p><p><strong>4. 傳下神諭。</strong>神諭由 Saint 接收、傳播；居民可能因信仰提高糧食生產優先度，也可能選擇其他迫切需要。點人名可查看決策原因。</p><p><strong>5. 調整時間。</strong>暫停、1×、4×、16× 不改變模擬規則。相同 Seed 與操作時間會產生相同結果。</p><p>這是全新小規模實驗原型。完整九種神蹟、多宗教、神殿與政治戰爭尚未實作；數值仍是可調整的第一輪設定。</p></div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <input id="importFile" type="file" accept="application/json,.json" hidden>
+  <script>
+/* World of God — Web-first MVP-0. Standalone deterministic simulation, no DOM or wall clock. */
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  if (root) root.WoG2 = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+  const VERSION = 'mvp0-web-1';
+  const DEFAULT_RULES = Object.freeze({
+    width: 64, height: 64, initialHouseholds: 8, tickHours: 8, daysPerMonth: 30,
+    foodNeedAdult: 0.50, foodNeedChild: 0.31, naturalDpPerDay: 0.16,
+    devotionDpPerWeightDay: 0.075, maxDp: 100, initialDp: 42,
+    householdShare: 0.20, hutWood: 4, hutFiber: 2, hutWork: 3,
+    settlementMinHuts: 4, settlementClusterDistance: 13,
+    rainMaxDays: 30, rainBaseCooldownDays: 30,
+    rainSupportMaxIntensity: 1.2, rainRadiusMax: 14,
+    oracleQuota: 4, oracleRefillDays: 90, oracleDurationDays: 180,
+    oracleCommunicationRadius: 13, faithThreshold: 40,
+    defaultRainRadius: 7, defaultRainIntensity: 0.85, defaultRainDays: 10,
+    eventLimit: 130, prayerLimit: 18, daysPerYear: 360
+  });
+  const HUMAN_NAMES = ['青禾','木川','雨生','阿岑','松遠','小滿','雲舒','柏石','穗寧','如月','望山','松原','溪明','海棠','春野','南星','芷晴','阿黎','長空','岑音','林羽','安年','初光','碧落','稻安','嵐風','稻香','晨露','南風','青木','田川','百合'];
+  const FAMILY_NAMES = ['青禾家','溪畔家','松原家','山影家','白石家','風林家','雲野家','河望家','田北家','林北家'];
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const num = (v, fallback) => typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const days = (s) => Math.floor(s.hour / 24);
+  const monthHours = (s) => s.rules.daysPerMonth * 24;
+  const tile = (s, x, y) => s.tiles[y * s.width + x];
+  const living = s => s.people.filter(p => p.alive);
+  const householdOf = (s, p) => s.households.find(h => h.id === p.householdId);
+  const hasSettlement = s => s.settlements.length > 0;
+
+  function hash(str) {
+    let h = 2166136261;
+    for (const char of String(str)) { h ^= char.charCodeAt(0); h = Math.imul(h, 16777619); }
+    return h >>> 0 || 123456789;
+  }
+  function rand(s) {
+    let x = s.rng >>> 0;
+    x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
+    s.rng = x >>> 0;
+    return s.rng / 4294967296;
+  }
+  function rulesFrom(input) {
+    const result = { ...DEFAULT_RULES };
+    const adjustable = input && input.rules && typeof input.rules === 'object' ? input.rules : {};
+    for (const [key, original] of Object.entries(DEFAULT_RULES)) {
+      if (typeof original === 'number' && Number.isFinite(adjustable[key]) && adjustable[key] >= 0)
+        result[key] = adjustable[key];
+    }
+    // These invariants keep user-supplied config from creating invalid dimensions/cadences.
+    result.width = Math.round(clamp(result.width, 32, 128));
+    result.height = Math.round(clamp(result.height, 32, 128));
+    result.initialHouseholds = Math.round(clamp(result.initialHouseholds, 4, 10));
+    result.tickHours = 8; // canonical activity/work/rest cycle for this ruleset
+    result.daysPerMonth = Math.max(1, Math.round(result.daysPerMonth));
+    result.rainMaxDays = Math.max(1, Math.round(result.rainMaxDays));
+    result.rainBaseCooldownDays = Math.max(1, result.rainBaseCooldownDays);
+    result.oracleQuota = Math.max(1, Math.round(result.oracleQuota));
+    result.oracleRefillDays = Math.max(1, Math.round(result.oracleRefillDays));
+    result.oracleDurationDays = Math.max(1, Math.round(result.oracleDurationDays));
+    result.eventLimit = Math.max(20, Math.round(result.eventLimit));
+    result.prayerLimit = Math.max(5, Math.round(result.prayerLimit));
+    result.householdShare = clamp(result.householdShare, 0, 1);
+    return result;
+  }
+  function log(s, kind, text, reasons = [], entities = []) {
+    const evt = { id: ++s.eventSeq, hour: s.hour, kind, text, reasons, entities };
+    s.events.push(evt);
+    if (s.events.length > s.rules.eventLimit) s.events.shift();
+    return evt.id;
+  }
+  function riverX(s, y) {
+    return s.width * .46 + Math.sin(y * .17) * 4 + Math.sin(y * .052) * 5;
+  }
+  function makeMap(s, moisture) {
+    const out = [];
+    for (let y = 0; y < s.height; y++) for (let x = 0; x < s.width; x++) {
+      const d = Math.abs(x - riverX(s, y));
+      const r = rand(s);
+      let terrain = d < 1.6 ? 'river' : r < .16 ? 'forest' : r > .93 && d > 6 ? 'rock' : 'meadow';
+      const nearRiver = clamp(1 - d / 12);
+      const fert = clamp(.39 + rand(s) * .40 + nearRiver * .18, .2, 1);
+      const wet = clamp(moisture + nearRiver * .16 + (rand(s) - .5) * .13, .06, .96);
+      out.push({ x, y, terrain, moisture: terrain === 'river' ? 1 : wet,
+        fertility: fert, crop: 0, forage: terrain === 'river' ? 0 : .3 + rand(s) * .6,
+        wood: terrain === 'forest' ? 8 + rand(s) * 8 : .3 + rand(s) * 2,
+        fiber: terrain === 'meadow' ? 6 + rand(s) * 3 : rand(s) * 2,
+        stone: terrain === 'rock' ? 11 + rand(s) * 7 : rand(s) * 2 });
+    }
+    return out;
+  }
+  function nearestLand(s, x, y) {
+    const cx = Math.round(clamp(x, 0, s.width - 1)), cy = Math.round(clamp(y, 0, s.height - 1));
+    if (tile(s, cx, cy).terrain !== 'river') return { x: cx, y: cy };
+    for (let r = 1; r <= 12; r++) for (let oy = -r; oy <= r; oy++) for (let ox = -r; ox <= r; ox++) {
+      const nx = cx + ox, ny = cy + oy;
+      if (nx >= 0 && nx < s.width && ny >= 0 && ny < s.height && tile(s, nx, ny).terrain !== 'river') return { x: nx, y: ny };
+    }
+    return { x: cx, y: cy };
+  }
+  function generate(s, startMoisture) {
+    s.tiles = makeMap(s, startMoisture);
+    const river = riverX(s, Math.floor(s.height / 2));
+    s.camp = nearestLand(s, river + 7, Math.floor(s.height / 2));
+    const count = s.rules.initialHouseholds;
+    for (let i = 0; i < count; i++) {
+      const angle = i * Math.PI * 2 / count;
+      const hx = s.camp.x + Math.cos(angle) * (3 + (i % 3));
+      const hy = s.camp.y + Math.sin(angle) * (3 + (i % 2));
+      const loc = nearestLand(s, hx, hy);
+      const h = { id: 'h' + (i + 1), name: FAMILY_NAMES[i], x: loc.x, y: loc.y,
+        members: [], inventory: { food: 9 + (i % 3) * 2, wood: 0, stone: 0, fiber: 0 },
+        home: false, buildProgress: 0, buildMaterialsPaid: false, needs: {}, migrated: 0 };
+      s.households.push(h);
+      for (let j = 0; j < 3; j++) {
+        const idx = i * 3 + j;
+        const isChild = j === 2;
+        const age = isChild ? 5 + i % 7 : 21 + (i * 3 + j * 5) % 24;
+        const belief = i === 0 && j === 0 ? 70 : i < 3 && j === 0 ? 46 : i % 2 === 0 ? 29 + j * 2 : 20 + i % 5;
+        const p = { id: 'p' + (idx + 1), name: HUMAN_NAMES[idx % HUMAN_NAMES.length],
+          x: loc.x + (j - 1) * .35, y: loc.y + (j - 1) * .2, householdId: h.id, settlementId: null,
+          age, stage: isChild ? 'child' : 'adult', health: 100, hunger: 0, alive: true,
+          genderRole: j === 1 ? 'gestate' : 'fertilize', partnerId: isChild ? null : 'p' + (i * 3 + (j === 0 ? 2 : 1)),
+          pregnancyDueHour: null, occupation: j === 0 ? 'food_producer' : j === 1 ? 'gatherer' : 'dependent',
+          proficiency: { food: .35 + rand(s) * .45, gather: .25 + rand(s) * .5, build: .18 + rand(s) * .45 },
+          activity: 'rest', devotion: belief, religionId: belief >= 20 ? 'r1' : null,
+          receptivity: i === 0 && j === 0 ? .98 : rand(s), lastDecision: null, lastFaithEvidence: null,
+          lastWorkHour: -1, lastOracleWorkHour: -1 };
+        s.people.push(p); h.members.push(p.id);
+      }
+    }
+    // Farmable patches arise from terrain suitability, not free food stocks.
+    let patches = 0;
+    for (let y = s.camp.y - 10; y <= s.camp.y + 10; y++) for (let x = s.camp.x - 11; x <= s.camp.x + 11; x++) {
+      if (x < 0 || y < 0 || x >= s.width || y >= s.height) continue;
+      const t = tile(s, x, y), dd = Math.hypot(x - s.camp.x, y - s.camp.y);
+      if (t.terrain === 'meadow' && dd > 2 && dd < 11 && t.fertility > .52 && rand(s) > .37) {
+        t.terrain = 'field'; t.crop = .25 + rand(s) * .43; patches++;
+      }
+    }
+    if (patches < 8) for (let y = s.camp.y - 8; y <= s.camp.y + 8; y++) for (let x = s.camp.x - 8; x <= s.camp.x + 8; x++) {
+      if (x < 0 || y < 0 || x >= s.width || y >= s.height) continue;
+      const t = tile(s, x, y);
+      if (t.terrain === 'meadow' && rand(s) > .6) { t.terrain = 'field'; t.crop = .35; }
+    }
+  }
+  function create(config = {}) {
+    const rules = rulesFrom(config);
+    const seed = String(config.seed || 'valley-spring-01').slice(0, 100);
+    const initialMoisture = clamp(num(config.moisture, .52), .2, .9);
+    const s = { version: VERSION, seed, rules, rng: hash(seed), hour: 0, tick: 0,
+      width: rules.width, height: rules.height, tiles: [], people: [], households: [], settlements: [],
+      camp: null, religion: { id: 'r1', godId: 'g1', name: '初光信仰', saints: [], priests: [],
+        oracles: [], prayers: [], lastPrayerHour: -1 },
+      god: { id: 'g1', dp: rules.initialDp, cap: rules.maxDp,
+        skills: { rain: { level: 1, xp: 0, readyAtHour: 0 } } },
+      effects: [], nextId: 1, eventSeq: 0, events: [],
+      counts: { births: 0, deaths: 0, relocations: 0, rainCasts: 0, foodFromLabor: 0 },
+      environment: { phase: 'mild', totalRain: 0 }, lastFoodOutput: 0,
+      history: { settlementFoundedHour: null, firstSaintHour: null },
+      metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
+    generate(s, initialMoisture);
+    s.nextId = s.people.length + 1; // prevent later born Person IDs from colliding with Genesis people
+    log(s, 'world', '河谷甦醒。八個家戶正在尋找安居之所。', ['居民有各自的糧食、家庭需求與地形條件']);
+    return s;
+  }
+  function faithfulWeight(devotion) {
+    if (devotion < 20) return 0;
+    if (devotion < 40) return 1;
+    if (devotion < 80) return 2;
+    if (devotion < 90) return 4;
+    return 8;
+  }
+  function stats(s) {
+    const pop = living(s), religious = pop.filter(p => p.religionId === s.religion.id);
+    const followers = religious.filter(p => p.devotion >= s.rules.faithThreshold);
+    const devWeight = religious.reduce((sum, p) => sum + faithfulWeight(p.devotion), 0);
+    const foodPrivate = s.households.reduce((sum, h) => sum + h.inventory.food, 0);
+    const common = s.settlements.reduce((sum, t) => sum + t.storage.food, 0);
+    const fields = s.tiles.filter(t => t.terrain === 'field' && dist(t, s.camp) < 14);
+    const wet = fields.reduce((sum, t) => sum + t.moisture, 0) / Math.max(1, fields.length);
+    const crop = fields.reduce((sum, t) => sum + t.crop, 0) / Math.max(1, fields.length);
+    const activeOracle = s.religion.oracles.find(o => o.status === 'active');
+    return { day: days(s) + 1, people: pop.length, households: s.households.length, houses: s.households.filter(h => h.home).length,
+      settlements: s.settlements.length, followers: followers.length, avgDevotion: religious.reduce((z,p)=>z+p.devotion,0)/Math.max(1,religious.length),
+      devotionWeight: devWeight, dpRateDay: s.rules.naturalDpPerDay + devWeight * s.rules.devotionDpPerWeightDay,
+      food: foodPrivate + common, commonFood: common, privateFood: foodPrivate, avgMoisture: wet, avgCrop: crop,
+      saintId: s.religion.saints[0] || null, activeOracle: activeOracle || null,
+      rainReady: s.hour >= s.god.skills.rain.readyAtHour, rainReadyHour: s.god.skills.rain.readyAtHour,
+      phase: s.environment.phase, births: s.counts.births, deaths: s.counts.deaths,
+      rainActive: s.effects.length, householdsUnhoused: s.households.filter(h => !h.home).length,
+      workChoices: s.metrics.workChoices, oracleInfluenced: s.metrics.oracleInfluencedChoices };
+  }
+  function rayCells(s, center, radius) {
+    const out = [];
+    const xa = Math.max(0, Math.floor(center.x - radius)), xb = Math.min(s.width - 1, Math.ceil(center.x + radius));
+    const ya = Math.max(0, Math.floor(center.y - radius)), yb = Math.min(s.height - 1, Math.ceil(center.y + radius));
+    for (let y = ya; y <= yb; y++) for (let x = xa; x <= xb; x++) {
+      if (Math.hypot(x - center.x, y - center.y) <= radius) out.push(tile(s, x, y));
+    }
+    return out;
+  }
+  function presenceAt(s, center) {
+    // Derived weighted spatial contribution; MVP supports a single actual religion.
+    let weighted = 0;
+    for (const p of s.people) if (p.alive && p.religionId === s.religion.id) {
+      const d = dist(p, center);
+      if (d < 13) weighted += faithfulWeight(p.devotion) * (1 - d/13);
+    }
+    return { density: weighted / (Math.PI * 13 * 13), share: weighted > 0 ? 1 : 0, weighted };
+  }
+  function evalRain(s, input = {}) {
+    const x = num(input.x, NaN), y = num(input.y, NaN);
+    const radius = num(input.radius, s.rules.defaultRainRadius);
+    const intensity = num(input.intensity, s.rules.defaultRainIntensity);
+    const durationDays = num(input.durationDays, s.rules.defaultRainDays);
+    const cost = Math.ceil((7 + .09 * radius * radius + 6 * intensity + .4 * durationDays) / (1 + (s.god.skills.rain.level - 1) * .14));
+    const workload = radius * radius * intensity * durationDays;
+    const cooldownDays = s.rules.rainBaseCooldownDays * Math.max(.5, Math.min(1, workload / (7*7*.85*10))) / (1 + (s.god.skills.rain.level - 1) * .12);
+    let reason = null;
+    if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x >= s.width || y >= s.height) reason = '降雨中心不在地圖內';
+    else if (!(radius >= 2 && radius <= s.rules.rainRadiusMax)) reason = '範圍不在可施展界線內';
+    else if (!(intensity > 0 && intensity <= s.rules.rainSupportMaxIntensity)) reason = '目前僅開放一般支援型降雨強度';
+    else if (!(durationDays >= 1 && durationDays <= s.rules.rainMaxDays)) reason = '單次降雨不可超過一個模擬月';
+    else if (s.hour < s.god.skills.rain.readyAtHour) reason = '喚雨仍在冷卻';
+    else if (s.god.dp + 1e-8 < cost) reason = '神力不足';
+    return { ok: !reason, reason, cost, cooldownDays, radius, intensity, durationDays,
+      center: { x, y }, presence: Number.isFinite(x) ? presenceAt(s, { x, y }) : null };
+  }
+  function castRain(s, input) {
+    const test = evalRain(s, input);
+    if (!test.ok) return test;
+    s.god.dp = Math.max(0, s.god.dp - test.cost);
+    const effect = { id: 'rain-' + s.nextId++, x: test.center.x, y: test.center.y,
+      radius: test.radius, intensity: test.intensity, startsAtHour: s.hour,
+      endsAtHour: s.hour + test.durationDays * 24 };
+    s.effects.push(effect);
+    s.god.skills.rain.readyAtHour = s.hour + Math.round(test.cooldownDays * 24/8)*8;
+    s.god.skills.rain.xp += Math.max(1, Math.round(test.radius * test.intensity * test.durationDays / 8));
+    const skill = s.god.skills.rain;
+    while (skill.level < 5 && skill.xp >= skill.level * skill.level * 30) skill.level++;
+    s.counts.rainCasts++;
+    log(s, 'miracle', `你向河谷施展降雨，雨雲將停留約 ${test.durationDays} 日。`,
+      [`直接效果：選定範圍增加降雨；不保證豐收`, `神力 -${test.cost}，喚雨冷卻 ${Math.round(test.cooldownDays)} 日`]);
+    return { ...test, effectId: effect.id };
+  }
+  function ensureSaint(s) {
+    const active = s.religion.saints.find(id => s.people.some(p => p.id === id && p.alive));
+    if (active) return;
+    // Autonomous qualification: devotion/receptivity and viability; no player nomination.
+    const candidates = living(s).filter(p => p.religionId === s.religion.id && p.devotion >= 40 && p.stage === 'adult');
+    if (!candidates.length) return;
+    const chosen = candidates.slice().sort((a,b) => (b.devotion * .5 + b.receptivity * 45) - (a.devotion * .5 + a.receptivity * 45) || a.id.localeCompare(b.id))[0];
+    if (days(s) < 2) return;
+    s.religion.saints = [chosen.id];
+    if (!s.religion.saintQuota) s.religion.saintQuota = {};
+    if (!s.religion.saintQuota[chosen.id]) s.religion.saintQuota[chosen.id] = { quota: s.rules.oracleQuota, nextRefillHour: s.hour + s.rules.oracleRefillDays * 24 };
+    // Saint is NOT automatically promoted to Priest: reception and preaching roles differ.
+    if (s.history.firstSaintHour === null) s.history.firstSaintHour = s.hour;
+    log(s, 'religion', `${chosen.name} 在祈禱與觀察中成為第一位聆聽者。`, ['Saint 由實際信徒條件與宗教需求產生；不是玩家指派']);
+  }
+  function ensurePriest(s) {
+    // A community chooses an organizer independently from Saint reception.
+    // A Saint may also serve as Priest later, but sainthood never directly grants this office.
+    const active=s.religion.priests.some(id=>s.people.some(p=>p.id===id&&p.alive));
+    if(active || days(s)<10 || !hasSettlement(s)) return;
+    const followers=living(s).filter(p=>p.religionId===s.religion.id&&p.devotion>=40&&p.stage==='adult');
+    if(followers.length<2) return;
+    const eligible=followers.filter(p=>s.households.find(h=>h.id===p.householdId)?.home);
+    if(!eligible.length)return;
+    const candidates=eligible.filter(p=>!s.religion.saints.includes(p.id));
+    const chosen=(candidates.length?candidates:eligible).slice().sort((a,b)=>
+      (b.receptivity*2+b.proficiency.gather+b.devotion/100)-(a.receptivity*2+a.proficiency.gather+a.devotion/100)||a.id.localeCompare(b.id))[0];
+    s.religion.priests.push(chosen.id);
+    log(s,'religion',`${chosen.name} 獲社群支持，開始組織祈禱與傳揚消息。`,
+      ['Priest 源於信徒需求、個人適任性與已存在的聚落支持；沒有天生神諭接收權']);
+  }
+  function checkOracle(s, saintId, intentType) {
+    if (intentType !== 'food.produce') return { ok: false, reason: '此試玩版僅實作糧食生產神諭' };
+    const saint = s.people.find(p => p.id === saintId && p.alive);
+    if (!saint || !s.religion.saints.includes(saintId)) return { ok: false, reason: '接收者必須是本宗教仍在世的 Saint' };
+    const record = s.religion.saintQuota && s.religion.saintQuota[saintId];
+    if (!record || record.quota < 1) return { ok: false, reason: 'Saint 的神諭接收額度不足' };
+    if (s.religion.oracles.some(o => o.saintId === saintId && o.intentType === intentType && o.status === 'active'))
+      return { ok: false, reason: '這位 Saint 已經持有相同類型的有效神諭' };
+    return { ok: true, saint };
+  }
+  function issueOracle(s, input = {}) {
+    const saintId = input.saintId || s.religion.saints[0];
+    const test = checkOracle(s, saintId, input.intentType || 'food.produce');
+    if (!test.ok) return test;
+    const durationDays = clamp(num(input.durationDays, s.rules.oracleDurationDays), 1, 720);
+    s.religion.saintQuota[saintId].quota--;
+    const o = { id: 'o' + s.nextId++, godId: s.god.id, saintId,
+      intentType: 'food.produce', audience: 'local-community', issuedAtHour: s.hour,
+      expiresAtHour: s.hour + durationDays * 24, status: 'active', propagatedAtHour: null,
+      reachRadius: s.rules.oracleCommunicationRadius, influenceWorkCount: 0, heardCount: 0,
+      fulfillmentCredited: false, progressFoodAtStart: stats(s).food };
+    s.religion.oracles.push(o);
+    log(s, 'oracle', `神諭交給 ${test.saint.name}：請讓族人重視糧食生產。`,
+      ['Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定']);
+    return { ok: true, oracleId: o.id, saintId, quotaLeft: s.religion.saintQuota[saintId].quota };
+  }
+  function concludeOracle(s, oracleId) {
+    const o = s.religion.oracles.find(v => v.id === oracleId && v.status === 'active');
+    if (!o) return { ok: false, reason: '沒有可宣告完成的神諭' };
+    const q = s.religion.saintQuota[o.saintId];
+    if (!q || q.quota <= -1) return { ok: false, reason: 'Saint 的額度已達 -1 下限' };
+    q.quota--; o.status = 'concluded';
+    log(s, 'oracle', '神宣告這道神諭的使命已經結束。', ['結束此 Saint 的單一指派；既有生活成果仍保留']);
+    return { ok: true, quotaLeft: q.quota };
+  }
+  function nearestResource(s, home, kind) {
+    let best = null, strength = -Infinity;
+    for (let y = Math.max(0, home.y - 7); y <= Math.min(s.height - 1, home.y + 7); y++)
+      for (let x = Math.max(0, home.x - 7); x <= Math.min(s.width - 1, home.x + 7); x++) {
+        const t = tile(s, x, y);
+        if (t.terrain === 'river') continue;
+        const quantity = kind === 'food' ? t.forage : t[kind];
+        const score = quantity - .13 * Math.hypot(x - home.x, y - home.y);
+        if (score > strength) { strength = score; best = t; }
+      }
+    return best && (kind === 'food' ? best.forage : best[kind]) > .2 ? best : null;
+  }
+  function nearestField(s, home) {
+    let best = null, strength = -Infinity;
+    for (let y = Math.max(0, home.y - 9); y <= Math.min(s.height - 1, home.y + 9); y++)
+      for (let x = Math.max(0, home.x - 9); x <= Math.min(s.width - 1, home.x + 9); x++) {
+        const t = tile(s, x, y);
+        if (t.terrain !== 'field') continue;
+        const score = t.crop * 4 + t.moisture * .5 - .09 * Math.hypot(x - home.x, y - home.y);
+        if (score > strength) { strength = score; best = t; }
+      }
+    return best;
+  }
+  function workCalling(s, p) {
+    let strongest = { score: 0, oracle: null };
+    if (p.religionId !== s.religion.id || p.devotion < 20) return strongest;
+    for (const o of s.religion.oracles) {
+      if (o.status !== 'active' || o.propagatedAtHour === null) continue;
+      const saint = s.people.find(v => v.id === o.saintId && v.alive);
+      if (!saint || dist(saint, p) > o.reachRadius) continue;
+      const ageDays = (s.hour - o.issuedAtHour)/24;
+      const half = Math.max(30, (o.expiresAtHour-o.issuedAtHour)/24 * .58);
+      const attention = clamp(1 - Math.max(0,ageDays-20) / half, .18, 1);
+      const score = (2.6 + p.devotion/18) * attention;
+      if (score > strongest.score) strongest = { score, oracle: o };
+    }
+    return strongest;
+  }
+  function distribute(s, h, kind, amount) {
+    if (!(amount > 0)) return;
+    const settlement = s.settlements.find(t => dist(t, h) <= s.rules.settlementClusterDistance);
+    if (settlement) {
+      const privatePart = amount * s.rules.householdShare;
+      h.inventory[kind] += privatePart;
+      settlement.storage[kind] += amount - privatePart;
+    } else h.inventory[kind] += amount;
+    if (kind === 'food') { s.counts.foodFromLabor += amount; s.lastFoodOutput += amount; }
+  }
+  function performWork(s, p) {
+    const h = householdOf(s, p);
+    if (!h) return;
+    const basic = s.settlements[0] ? s.settlements[0].workDemand : null;
+    const scarce = h.inventory.food < 7 || (basic && basic.foodPressure > .4);
+    const field = nearestField(s, h);
+    const wood = nearestResource(s, h, 'wood');
+    const fiber = nearestResource(s, h, 'fiber');
+    const forage = nearestResource(s, h, 'food');
+    const stone = nearestResource(s, h, 'stone');
+    const publicMaterials = s.settlements[0] && s.settlements[0].storage.wood < 20;
+    const publicStone = s.settlements[0] && s.settlements[0].storage.stone < 14;
+    const canBuild = !h.home && h.inventory.wood >= s.rules.hutWood && h.inventory.fiber >= s.rules.hutFiber;
+    const call = workCalling(s, p);
+    const foodBias = call.score;
+    const candidates = [];
+    if (forage) candidates.push({ name: 'forage', score: 4.8 + (scarce ? 3.5 : 0) + p.proficiency.gather + foodBias, valid: true });
+    if (field) candidates.push({ name: 'farm', score: 4.4 + field.crop * 2.5 + (scarce ? 2.2 : 0) + p.proficiency.food + foodBias, valid: true });
+    if (wood && (!h.home || publicMaterials || (basic && basic.housingPressure > .2))) candidates.push({ name: 'wood', score: (!h.home && h.inventory.wood < s.rules.hutWood ? 8.0 : publicMaterials ? 6.5 : 2.6) + p.proficiency.gather, valid: true });
+    if (stone && publicStone) candidates.push({ name: 'stone', score: 6.0 + p.proficiency.gather, valid: true });
+    if (fiber && !h.home) candidates.push({ name: 'fiber', score: h.inventory.fiber < s.rules.hutFiber ? 7.5 + p.proficiency.gather : 1, valid: true });
+    if (!h.home && canBuild) candidates.push({ name: 'build', score: 9.3 + p.proficiency.build, valid: true });
+    if (!candidates.length) { p.activity = 'rest'; p.lastDecision = { work: 'rest', reason: '附近沒有可行的工作資源', oracleInfluence: 0 }; return; }
+    // Reasoned autonomous utility; no Oracle writes occupation, action or inventory directly.
+    const specialization = n => (p.occupation === 'food_producer' && (n === 'farm' || n === 'forage') ? 1.35 : 0) +
+      (p.occupation === 'gatherer' && (n === 'wood' || n === 'fiber' || n === 'stone') ? 1.1 : 0);
+    candidates.sort((a,b)=> (b.score + specialization(b.name)) - (a.score + specialization(a.name)) || a.name.localeCompare(b.name));
+    const choice = candidates[0];
+    const normalScores = candidates.map(x=>({name:x.name,score:x.score - ((x.name==='farm'||x.name==='forage')?foodBias:0) + specialization(x.name)}));
+    normalScores.sort((a,b)=>b.score-a.score || a.name.localeCompare(b.name));
+    const shifted = !!(call.oracle && (choice.name === 'farm' || choice.name === 'forage') && normalScores[0].name !== choice.name);
+    p.lastDecision = { work: choice.name, normalBest: normalScores[0].name,
+      oracleInfluence: (choice.name==='farm'||choice.name==='forage')?foodBias:0,
+      changedByOracle: shifted,
+      reason: shifted ? '神諭提高了糧食生產的優先度，但仍須具備工作能力' :
+        scarce ? '家戶或聚落糧食不足，優先處理實際需求' :
+        !h.home ? '衡量住屋、物資與日常食物需要' : '依照技能、作物與地方需求自主選擇' };
+    p.activity = choice.name;
+    p.lastWorkHour = s.hour;
+    s.metrics.workChoices++;
+    if (shifted) { s.metrics.oracleInfluencedChoices++; call.oracle.influenceWorkCount++; p.lastOracleWorkHour = s.hour; }
+    if (choice.name === 'forage' && forage) {
+      const amount = Math.min(forage.forage, .6 + p.proficiency.gather * .45);
+      forage.forage -= amount; distribute(s, h, 'food', amount);
+    } else if (choice.name === 'farm' && field) {
+      if (field.crop >= .47) {
+        const amount = (1.5 + p.proficiency.food * .8) * field.crop * field.fertility;
+        field.crop = Math.max(.04, field.crop - .52);
+        distribute(s, h, 'food', amount);
+      } else field.crop = clamp(field.crop + .035 + .04 * p.proficiency.food, 0, 1);
+    } else if (choice.name === 'wood' && wood) {
+      const amt = Math.min(wood.wood, 1.7 + p.proficiency.gather * .8);
+      wood.wood -= amt; distribute(s, h, 'wood', amt);
+    } else if (choice.name === 'stone' && stone) {
+      const amt = Math.min(stone.stone, 1.2 + p.proficiency.gather * .6);
+      stone.stone -= amt; distribute(s, h, 'stone', amt);
+    } else if (choice.name === 'fiber' && fiber) {
+      const amt = Math.min(fiber.fiber, 1.4 + p.proficiency.gather * .7);
+      fiber.fiber -= amt; distribute(s, h, 'fiber', amt);
+    } else if (choice.name === 'build') {
+      if (!h.buildMaterialsPaid) {
+        h.inventory.wood -= s.rules.hutWood; h.inventory.fiber -= s.rules.hutFiber;
+        h.buildMaterialsPaid = true;
+      }
+      h.buildProgress += 1 + p.proficiency.build * .55;
+      if (h.buildProgress >= s.rules.hutWork) {
+        h.home = true;
+        log(s,'housing',`${h.name} 蓋起第一間住所。`,['家戶消耗木材與纖維，居民實際投入建造活動'],[h.id,p.id]);
+      }
+    }
+    p.x = h.x + (choice.name === 'farm' && field ? clamp(field.x - h.x,-2,2) * .28 : 0);
+    p.y = h.y + (choice.name === 'farm' && field ? clamp(field.y - h.y,-2,2) * .28 : 0);
+  }
+  function updatePeople(s) {
+    const phase = s.tick % 3;
+    for (const p of s.people) {
+      if (!p.alive) continue;
+      if (phase === 0) p.activity = 'rest';
+      else if (phase === 2) p.activity = p.stage === 'child' ? 'family' : p.devotion >= 20 && (s.tick + Number(p.id.slice(1))) % 5 === 0 ? 'pray' : 'family';
+      else if (p.stage === 'adult' && p.health >= 20) performWork(s,p);
+      else p.activity = 'family';
+    }
+  }
+  function updateWorld(s) {
+    const day = days(s);
+    // Coarse, bounded weather stress; default drought is temporary, not a forced multi-year catastrophe.
+    const seasonal = day % 160;
+    const drought = seasonal >= 14 && seasonal <= 29;
+    const rainy = seasonal < 6 || (seasonal >= 32 && seasonal < 40) || (seasonal >= 68 && seasonal < 75);
+    s.environment.phase = drought ? 'dry' : rainy ? 'rainy' : 'mild';
+    const naturalRain = drought ? 0 : rainy ? .015 : .005;
+    let effectSummary = 0;
+    for (const t of s.tiles) {
+      if (t.terrain === 'river') continue;
+      const nearRiver = clamp(1-Math.abs(t.x-riverX(s,t.y))/10);
+      let boost = 0;
+      for (const e of s.effects) {
+        if (s.hour < e.endsAtHour && Math.hypot(t.x - e.x, t.y - e.y) <= e.radius) boost += .028 * e.intensity;
+      }
+      effectSummary += boost;
+      t.moisture = clamp(t.moisture - (drought ? .014 : .007) + naturalRain + nearRiver*.003 + boost, .03, .98);
+      if (t.terrain === 'field') {
+        const growth = t.moisture > .23 ? (.006 + .029 * t.moisture) * t.fertility : -.006;
+        t.crop = clamp(t.crop + growth, .02, 1);
+      }
+      t.forage = clamp(t.forage + .004 * t.moisture * t.fertility, 0, 1.3);
+      if (t.terrain === 'forest') t.wood = Math.min(16, t.wood + .005 * t.moisture);
+      if (t.terrain === 'meadow') t.fiber = Math.min(8, t.fiber + .012 * t.moisture);
+    }
+    s.environment.totalRain += effectSummary;
+    const expired = s.effects.filter(e => s.hour >= e.endsAtHour);
+    if (expired.length) {
+      s.effects = s.effects.filter(e => s.hour < e.endsAtHour);
+      for (const e of expired) log(s, 'weather', '神蹟的降雨已結束；土地保留真實的濕潤或乾燥狀態。', ['只停止持續雨水輸入，沒有回溯物理後果']);
+    }
+  }
+  function updateSettlement(s) {
+    if (!hasSettlement(s)) {
+      const near = s.households.filter(h=>dist(h,s.camp)<=s.rules.settlementClusterDistance);
+      const huts = near.filter(h=>h.home);
+      // Founding is derived from completed material/work-based homes and residential cluster.
+      if (huts.length >= s.rules.settlementMinHuts && near.length >= 4) {
+        const town = { id: 's1', name: '初穗聚落', x:s.camp.x, y:s.camp.y,
+          foundedAtHour:s.hour, householdIds:near.map(h=>h.id), storage:{food:0,wood:0,stone:0,fiber:0},
+          workDemand:{foodPressure:0,housingPressure:0}, foodShortageDays:0 };
+        s.settlements.push(town);
+        for (const p of s.people) if (town.householdIds.includes(p.householdId)) p.settlementId = town.id;
+        s.history.settlementFoundedHour = s.hour;
+        log(s,'settlement',`${town.name} 由 ${huts.length} 戶已建屋的家庭形成。`,['群居、土地與水源適宜；多戶已實際收集建材並完成住所']);
+      }
+      return;
+    }
+    const town=s.settlements[0], count=living(s).filter(p => p.settlementId===town.id).length;
+    const foodStock = town.storage.food + s.households.reduce((z,h)=>z+h.inventory.food,0);
+    const required = count * .5 * 8;
+    const foodPressure = clamp(1 - foodStock/Math.max(1,required));
+    const housingPressure = s.households.filter(h=>!h.home).length / Math.max(1,s.households.length);
+    town.workDemand = {foodPressure,housingPressure};
+    if (foodPressure > .6) town.foodShortageDays++;
+    else town.foodShortageDays = Math.max(0,town.foodShortageDays-1);
+  }
+  function consumeFood(s) {
+    const town=s.settlements[0];
+    for (const h of s.households) {
+      let need=0;
+      for (const pid of h.members) {
+        const p=s.people.find(x=>x.id===pid);
+        if (p && p.alive) need += p.stage === 'child' ? s.rules.foodNeedChild : s.rules.foodNeedAdult;
+      }
+      const own = Math.min(need,h.inventory.food);
+      h.inventory.food = Math.max(0,h.inventory.food-own);
+      need -= own;
+      if (need > 0 && town && town.householdIds.includes(h.id)) {
+        const communal=Math.min(need,town.storage.food);
+        town.storage.food-=communal; need-=communal;
+      }
+      const short=need;
+      for (const pid of h.members) {
+        const p=s.people.find(x=>x.id===pid);
+        if (!p || !p.alive) continue;
+        p.hunger = clamp(p.hunger + (short > 0 ? .09 : -.07),0,1);
+        if (p.hunger > .7) p.health = Math.max(0,p.health - .35);
+        else p.health = Math.min(100,p.health + .08);
+      }
+    }
+  }
+  function updatePrayers(s) {
+    // Direct believer Prayer: short-lived evidence context, not perpetual exposure logs.
+    const fields = s.tiles.filter(t=>t.terrain==='field' && dist(t,s.camp)<11);
+    const wet = fields.reduce((z,t)=>z+t.moisture,0)/Math.max(fields.length,1);
+    const poorFood = stats(s).food < living(s).length * 8 || fields.reduce((z,t)=>z+t.crop,0)/Math.max(fields.length,1) < .40;
+    const needRain = wet < .48;
+    const existing=s.religion.prayers.find(p=>p.status==='open' && p.type==='food-water');
+    if (needRain && poorFood && !existing && (s.hour-s.religion.lastPrayerHour)>=6*24) {
+      const supporters=living(s).filter(p=>p.religionId===s.religion.id && p.devotion>=20 && dist(p,s.camp)<13);
+      if (supporters.length) {
+        const prayer={ id:'need-'+s.nextId++, type:'food-water', createdAtHour:s.hour, status:'open',
+          by:supporters.slice(0,12).map(p=>p.id), beforeMoisture:wet, foodAtRequest:stats(s).food,
+          foodProductionAtRequest:s.counts.foodFromLabor, castSeen:false, castId:null };
+        s.religion.prayers.push(prayer);
+        s.religion.lastPrayerHour=s.hour;
+        log(s,'prayer','河谷的祈禱傳來：土地缺雨，恐怕難以養活家人。',['居民直接祈求；祈禱不會強制神回應']);
+      }
+    }
+    s.religion.prayers = s.religion.prayers.filter(p=>s.hour-p.createdAtHour<=120*24).slice(-s.rules.prayerLimit);
+  }
+  function individualApplyFaithEvidence(s, ids, amount, cause) {
+    // Individual ownership: religion reports credible evidence; only the person-state transition changes Devotion.
+    let changed=0;
+    for(const id of ids) {
+      const p=s.people.find(v=>v.id===id && v.alive);
+      if(!p||p.religionId!==s.religion.id) continue;
+      const prev=p.devotion;
+      p.devotion=clamp(p.devotion+amount,0,100);
+      p.lastFaithEvidence={hour:s.hour,cause,change:p.devotion-prev};
+      if(p.devotion>prev) changed++;
+    }
+    return changed;
+  }
+  function checkFulfillment(s) {
+    const st=stats(s);
+    for(const prayer of s.religion.prayers) {
+      if (prayer.status!=='open') continue;
+      // Attribution needs a physically relevant prior Rain cast, improved field condition,
+      // actual subsequent food labor and reduced food shortage. A button press alone never qualifies.
+      const rain=s.effects.find(e=>dist(e,s.camp)<=e.radius+6 && e.startsAtHour>=prayer.createdAtHour);
+      if (rain) { prayer.castSeen=true; prayer.castId=rain.id; }
+      const changedMoisture=st.avgMoisture-prayer.beforeMoisture > .08;
+      const extraHarvest=s.counts.foodFromLabor-prayer.foodProductionAtRequest >= 8;
+      const recent=s.hour-prayer.createdAtHour < 60*24;
+      if (prayer.castSeen && changedMoisture && extraHarvest && recent) {
+        prayer.status='answered'; prayer.answeredAtHour=s.hour;
+        const changed=individualApplyFaithEvidence(s,prayer.by,12,'降雨改善作物與實際食物供應，回應祈求');
+        log(s,'faith',`人們看到雨後的糧食收穫，${changed} 位祈禱者加深信仰。`,
+          ['雨水提高土壤濕度','居民實際投入糧食生產','回應了仍存在的祈禱；此需求僅給一次持續性信仰回饋']);
+      } else if (!recent) prayer.status='lapsed';
+    }
+    for(const o of s.religion.oracles) {
+      if(o.status!=='active' || o.fulfillmentCredited || o.influenceWorkCount < 3) continue;
+      const foodGain=st.food-o.progressFoodAtStart;
+      if(foodGain > 5 && s.hour>o.issuedAtHour+24) {
+        o.fulfillmentCredited=true;
+        const saint=s.people.find(p=>p.id===o.saintId);
+        const ids=living(s).filter(p=>p.religionId===s.religion.id && saint && dist(p,saint)<=o.reachRadius).map(p=>p.id);
+        const changed=individualApplyFaithEvidence(s,ids,6,'神諭推動真實食物勞動並改善存糧');
+        log(s,'faith',`糧食神諭的成果逐漸被看見；${changed} 位居民增加信仰。`,
+          ['部分居民自主提高糧食工作優先度','實際的總可用食物增加','成果與仍有效的 Saint 神諭具有可追溯關聯']);
+      }
+    }
+  }
+  function daily(s) {
+    consumeFood(s);
+    updateSettlement(s);
+    updatePrayers(s);
+    checkFulfillment(s);
+    const rate=stats(s).dpRateDay;
+    s.god.dp=Math.min(s.god.cap,s.god.dp+rate);
+    ensureSaint(s);
+    ensurePriest(s);
+    // Slowly varying devotion; strongest lasting shifts require attributable outcomes.
+    if (days(s)%12===0) {
+      for(const p of s.people) {
+        if(!p.alive || p.religionId!==s.religion.id || p.devotion>=40) continue;
+        if (p.devotion>=20 && s.religion.priests.length && rand(s)<.3)
+          p.devotion=Math.min(39,p.devotion+1); // ordinary preaching never manufactures devout status
+      }
+    }
+    if (days(s)%10===0) {
+      const t=stats(s);
+      log(s,'world',`第 ${days(s)+1} 日：${t.people} 人，${t.houses} 戶有住所，糧食 ${t.food.toFixed(0)}。`,
+        ['這是由實際居民、家戶和儲存推導的摘要']);
+    }
+    s.lastFoodOutput=0;
+  }
+  function processOracles(s) {
+    for(const o of s.religion.oracles) {
+      if (o.status!=='active') continue;
+      const owner=s.people.find(p=>p.id===o.saintId && p.alive);
+      if(!owner) {
+        o.status='saint_dead';
+        log(s,'oracle','聆聽者離世，屬於他的神諭停止傳播。',['不自動轉移給下一位 Saint；既有生活成果繼續存在']);
+      } else if(s.hour>=o.expiresAtHour) {
+        o.status='expired';
+        log(s,'oracle','糧食神諭的效期自然結束。',['到期免費，已完成的生活成果不回溯']);
+      } else if (o.propagatedAtHour===null && s.hour>=o.issuedAtHour+24) {
+        o.propagatedAtHour=s.hour;
+        o.heardCount=living(s).filter(p=>p.religionId===s.religion.id && dist(p,owner)<=o.reachRadius).length;
+        log(s,'oracle',`${owner.name} 開始向附近居民講述糧食神諭；${o.heardCount} 人有機會聽見。`,
+          ['Saint 接收內容可靠','傳播受個人距離與社群影響，不是向全地圖強制廣播']);
+      }
+    }
+    // Independent quota refill from simulation time, including overdraft debt.
+    for(const record of Object.values(s.religion.saintQuota||{})) {
+      while(s.hour>=record.nextRefillHour) {
+        record.quota=Math.min(s.rules.oracleQuota,record.quota+1);
+        record.nextRefillHour+=s.rules.oracleRefillDays*24;
+      }
+    }
+  }
+  function processScheduledBirths(s) {
+    // Births are due-time events, not delayed until the next monthly conception check.
+    for(const p of s.people.slice()) {
+      if(!p.alive) continue;
+      if(p.pregnancyDueHour!==null && s.hour>=p.pregnancyDueHour) {
+        p.pregnancyDueHour=null;
+        const h=householdOf(s,p); if (!h) continue;
+        const baby={...p,id:'p'+s.nextId++,name:'新生・'+HUMAN_NAMES[Math.floor(rand(s)*HUMAN_NAMES.length)],
+          x:h.x,y:h.y,age:0,stage:'child',genderRole:rand(s)<.5?'gestate':'fertilize',partnerId:null,
+          occupation:'dependent',pregnancyDueHour:null,health:100,hunger:0,devotion:10,religionId:null,
+          receptivity:rand(s),activity:'family',lastDecision:null,lastFaithEvidence:null,lastWorkHour:-1,lastOracleWorkHour:-1};
+        s.people.push(baby);h.members.push(baby.id);s.counts.births++;
+        log(s,'birth',`${h.name} 迎來一名新生兒。`,['孕期到達，依家庭關係新增真正的 Individual']);
+      }
+    }
+  }
+  function demographic(s) {
+    const now=days(s);
+    for(const p of s.people.slice()) {
+      if(!p.alive) continue;
+      if(now > 0 && now % s.rules.daysPerYear === 0) {
+        p.age++;
+        if (p.age >= 18 && p.stage==='child') p.stage='adult';
+        if (p.age >= 66) p.stage='elder';
+        if (p.age>78 && rand(s)<clamp((p.age-76)*.025,0,.65)) die(s,p.id,'自然老化');
+      }
+      if (p.alive && p.health <= 0 && p.hunger > .9) die(s,p.id,'長期嚴重飢餓與健康惡化');
+      if (p.alive && p.stage==='adult' && p.genderRole==='gestate' && p.pregnancyDueHour===null && p.age<43 && p.age>18) {
+        const h=householdOf(s,p);
+        const partner=s.people.find(v=>v.id===p.partnerId && v.alive);
+        if (h && partner && h.home && h.inventory.food > 4 && rand(s)<.075)
+          p.pregnancyDueHour=s.hour+9*monthHours(s);
+      }
+    }
+    // Household relocation is an autonomous response to sustained home/food pressure.
+    const settlement=s.settlements[0];
+    if (settlement && settlement.workDemand.foodPressure>.9 && settlement.foodShortageDays>=30) {
+      const vulnerable=s.households.find(h=>h.migrated===0 && h.inventory.food<1);
+      if(vulnerable) {
+        const old={x:vulnerable.x,y:vulnerable.y};
+        const next=nearestLand(s, riverX(s, s.camp.y + 12)+6, s.camp.y+12);
+        vulnerable.x=next.x; vulnerable.y=next.y; vulnerable.migrated++;
+        for(const pid of vulnerable.members) {
+          const p=s.people.find(v=>v.id===pid); if(p && p.alive){p.x=next.x;p.y=next.y;p.settlementId=null;}
+        }
+        settlement.householdIds=settlement.householdIds.filter(id=>id!==vulnerable.id);
+        s.counts.relocations++;
+        log(s,'migration',`${vulnerable.name} 為了尋找生機搬離聚落。`,['長期糧食壓力與家戶存糧不足觸發自主遷移',`原位置 ${old.x},${old.y}`]);
+      }
+    }
+  }
+  function die(s, personId, reason) {
+    const p=s.people.find(v=>v.id===personId && v.alive);
+    if(!p) return {ok:false,reason:'居民不存在或已死亡'};
+    p.alive=false;p.activity='dead';s.counts.deaths++;
+    for(const o of s.religion.oracles) if(o.status==='active' && o.saintId===personId) o.status='saint_dead';
+    s.religion.saints=s.religion.saints.filter(id=>id!==personId);
+    s.religion.priests=s.religion.priests.filter(id=>id!==personId);
+    log(s,'death',`${p.name} 離世。`,[reason]);
+    return {ok:true};
+  }
+  function advanceTicks(s, ticks = 1) {
+    if(!Number.isSafeInteger(ticks) || ticks<0 || ticks>50000) throw new RangeError('ticks must be integer 0..50000');
+    for(let k=0;k<ticks;k++) {
+      s.hour+=s.rules.tickHours;s.tick++;
+      processOracles(s);processScheduledBirths(s);updateWorld(s);updatePeople(s);
+      if(s.tick%3===0) daily(s);
+      if(s.hour>0 && s.hour%(s.rules.daysPerMonth*24)===0) demographic(s);
+    }
+    return s;
+  }
+  function validate(s) {
+    const errors=[];
+    if(!s || s.version!==VERSION) return {ok:false,errors:['版本不相容']};
+    if(!Number.isSafeInteger(s.hour)||s.hour<0 || !Number.isSafeInteger(s.tick)) errors.push('時間不正確');
+    if(!Array.isArray(s.tiles)||s.tiles.length!==s.width*s.height) errors.push('地圖資料不完整');
+    if(!Array.isArray(s.people)||!Array.isArray(s.households)||!Array.isArray(s.settlements)) errors.push('人口資料不完整');
+    if(!s.god || !Number.isFinite(s.god.dp)||s.god.dp<0||s.god.dp>s.rules.maxDp+.001) errors.push('神力不正確');
+    for(const h of s.households||[]) for(const value of Object.values(h.inventory||{}))
+      if(!Number.isFinite(value)||value<-.00001) errors.push(`家戶 ${h.id} 庫存無效`);
+    for(const t of s.settlements||[]) for(const value of Object.values(t.storage||{}))
+      if(!Number.isFinite(value)||value<-.00001) errors.push(`聚落 ${t.id} 庫存無效`);
+    for(const p of s.people||[]) if(!s.households.some(h=>h.id===p.householdId && h.members.includes(p.id))) errors.push(`居民 ${p.id} 家戶不一致`);
+    const ids=new Set((s.people||[]).map(p=>p.id));
+    if(ids.size!==(s.people||[]).length) errors.push('居民 ID 重複');
+    return {ok:errors.length===0, errors};
+  }
+  function restore(json) {
+    const candidate=typeof json==='string'?JSON.parse(json):JSON.parse(JSON.stringify(json));
+    const verdict=validate(candidate);
+    if(!verdict.ok) throw new Error('無法讀取世界：'+verdict.errors.join('；'));
+    return candidate;
+  }
+  return {VERSION,DEFAULT_RULES,create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
+    issueOracle,concludeOracle,checkOracle,die,validate,restore,days};
+});
+
+</script><script>
+/* Browser-only view/input adapter. All authoritative simulation resides in sim.js. */
+(() => { 'use strict';
+  const S = window.WoG2;
+  const $ = id => document.getElementById(id);
+  const canvas = $('world'), ctx = canvas.getContext('2d');
+  let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
+  let armedRain = false, cursor = null, chosen = 'p1', lastEventId = 0, toastTimeout;
+  const ticksPerRealSecond = 12 / 8;
+  const format = (v, n=0) => Number(v || 0).toFixed(n);
+  const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
+  const taskName = {rest:'休息',family:'家庭／社交',pray:'祈禱',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',dead:'已離世'};
+  const stageName = {adult:'成年人',child:'兒童',elder:'長者'};
+  function say(text) { const box=$('toast');box.textContent=text;box.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>box.classList.remove('visible'),3000); }
+  function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,durationDays:+$('duration').value}; }
+  function storageKey() {return 'wog-mvp0-web-save';}
+  function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
+  function restore(raw) {try{state=S.restore(raw);armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;render();say('世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+  function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
+  function updateCost() {
+    $('radiusValue').textContent=$('radius').value+' 格';$('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';$('durationValue').textContent=$('duration').value+' 日';
+    const target=cursor||state.camp, preview=S.evalRain(state,{x:target.x,y:target.y,...opts()});
+    $('rainCost').textContent=`預估 ${preview.cost} DP`;const left=Math.max(0,state.god.skills.rain.readyAtHour-state.hour);
+    $('rainCooldown').textContent=left ? `冷卻中：剩餘 ${Math.ceil(left/24)} 模擬日` : preview.reason || '可選擇施展位置；已準備好';
+    $('rainBtn').textContent=armedRain?'取消選擇位置':'選擇降雨位置';
+    $('rainBtn').classList.toggle('secondary',armedRain);
+  }
+  function render() {
+    const st=S.stats(state), current=state.people.find(p=>p.id===chosen);
+    $('day').textContent=`第 ${st.day} 日`;
+    $('weather').textContent=st.phase==='dry'?'乾旱期':st.phase==='rainy'?'雨季':'和暖時節';
+    $('peopleMetric').textContent=st.people;
+    $('familiesMetric').textContent=`${st.households} 個家戶 · 出生 ${st.births} / 死亡 ${st.deaths}`;
+    $('townMetric').textContent=st.settlements?state.settlements[0].name:'尚未形成';
+    $('houseMetric').textContent=`${st.houses} / ${st.households} 戶有住所`;
+    $('foodMetric').textContent=format(st.food);$('stockMetric').textContent=`共同儲存：${format(st.commonFood)}`;
+    $('followersMetric').textContent=st.followers;$('devotionMetric').textContent=`奉獻權重 ${format(st.devotionWeight)} · 平均信仰 ${format(st.avgDevotion,1)}`;
+    $('powerMetric').textContent=format(state.god.dp,1);$('powerRate').textContent=`+${format(st.dpRateDay,2)} DP / 模擬日`;
+    $('powerFill').style.width=Math.min(100,state.god.dp/state.god.cap*100)+'%';
+    $('pauseBtn').textContent=paused?'▶ 開始 / 繼續':'Ⅱ 暫停';
+    $('simHint').textContent=armedRain?'已選擇降雨：點擊地圖施展（Esc 取消）':st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。';
+    $('simRate').textContent=`${speed}× · 約 ${format(2/speed,2)} 秒 / 模擬日`;
+    updateCost();
+    const saint=state.people.find(p=>p.id===st.saintId);
+    $('saintName').textContent=saint?`${saint.name} · ${stageName[saint.stage]||''}`:'尚未出現（通常在初期信仰活動後）';
+    const quota=saint&&state.religion.saintQuota?state.religion.saintQuota[saint.id]:null;
+    $('saintQuota').textContent=quota?`${quota.quota} / ${state.rules.oracleQuota}`:'—';
+    const active=st.activeOracle;
+    $('oracleStatus').textContent=active?`持續中 · 已影響工作選擇 ${active.influenceWorkCount} 次`:'目前沒有有效指派';
+    $('oracleReason').textContent=active?active.propagatedAtHour===null?'Saint 已接收，準備向居民傳達。':`已傳播到 ${active.heardCount} 位可能聽見的居民；是否改變行為仍取決於實際生活。`:'神諭不消耗 DP，但需要合格的 Saint 和他的接收額度。';
+    $('oracleBtn').disabled=!saint||!quota||quota.quota<1||!!active;
+    $('concludeBtn').hidden=!active;
+    const prayers=state.religion.prayers.filter(p=>p.status==='open');
+    const answered=state.religion.prayers.filter(p=>p.status==='answered').slice(-1);
+    $('needsPanel').innerHTML=prayers.length?prayers.map(p=>`<div class="need-item"><strong>缺雨與糧食的祈禱</strong><small>第 ${Math.floor(p.createdAtHour/24)+1} 日 · ${p.by.length} 位信徒提出實際需要</small><small>請觀察雨後是否真的改善耕作，而非只看施法次數。</small></div>`).join(''):
+      answered.length?'<div class="need-item"><strong>最近的祈求已獲得回應</strong><small>土地、勞動與食物真的出現變化；對應信徒的信仰已更新。</small></div>':'目前沒有迫切的祈禱。當水分、作物或糧食受到壓力，居民可能主動祈求。';
+    $('weatherNotice').textContent=`農田平均含水 ${format(st.avgMoisture*100)}% · 作物生長 ${format(st.avgCrop*100)}% · ${st.phase==='dry'?'土地正失水，乾旱是有限的自然變化。':'降水、地力與居民的勞動共同決定糧食。'}`;
+    const town=state.settlements[0];
+    $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
+      `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
+    $('houseList').innerHTML=state.households.map(h=>`<div><b>${html(h.name)}</b><small>${h.home?'已有住所':'準備建屋'} · 存糧 ${format(h.inventory.food,1)}</small></div>`).join('');
+    $('personList').innerHTML=state.people.filter(p=>p.alive).slice(0,36).map(p=>`<button data-person="${p.id}" class="${p.id===chosen?'active':''}" type="button">${html(p.name)}</button>`).join('');
+    if(current) {
+      const p=current,h=state.households.find(v=>v.id===p.householdId),dec=p.lastDecision;
+      const religious=current.religionId===state.religion.id?'初光信仰':'尚未歸屬';
+      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'} · ${religious}</div><div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div><div class="reason">${dec?`上次工作：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭決策權重 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' ★ 相較一般決策，神諭使他的選擇改變':''}`:'尚未進行工作決策，開始歷史後可查看。'}</div>`;
+    }
+    // Preserve DOM details scroll as much as possible; event list redraw only on new events.
+    if(lastEventId!==state.eventSeq) {
+      lastEventId=state.eventSeq;
+      $('events').innerHTML=state.events.slice(-25).reverse().map(e=>`<div class="event ${html(e.kind)}"><small>第 ${Math.floor(e.hour/24)+1} 日 · ${html(e.kind)} · #${e.id}</small><div>${html(e.text)}</div>${e.reasons?.length?`<details><summary>發生原因</summary>${e.reasons.map(x=>'<div>'+html(x)+'</div>').join('')}</details>`:''}</div>`).join('');
+    }
+    draw();
+  }
+  function draw() {
+    const size=canvas.width/state.width;
+    const c=ctx;c.clearRect(0,0,canvas.width,canvas.height);
+    const time=performance.now()/1000;
+    for(const t of state.tiles) {
+      let color;
+      if(t.terrain==='river') color='#478597';
+      else if(t.terrain==='forest') color=t.moisture<.3?'#5c6750':'#3d6851';
+      else if(t.terrain==='rock') color='#62716b';
+      else if(t.terrain==='field') color=t.crop>.45?'#bc9754':t.crop>.22?'#987c49':'#7c6e48';
+      else color=t.moisture<.27?'#9d9162':t.moisture<.5?'#71916c':'#588a70';
+      c.fillStyle=color;c.fillRect(t.x*size,t.y*size,Math.ceil(size+.1),Math.ceil(size+.1));
+      if(t.terrain==='forest' && ((t.x*7+t.y*13)%3===0)){c.fillStyle='#2d5242';c.fillRect(t.x*size+size*.27,t.y*size+size*.15,size*.5,size*.63)}
+      if(t.terrain==='field' && t.crop>.18){c.strokeStyle=t.crop>.5?'#ead49b':'#af9759';c.lineWidth=.75;c.beginPath();c.moveTo(t.x*size+size*.22,t.y*size+size*.75);c.lineTo(t.x*size+size*.78,t.y*size+size*.20);c.stroke();}
+    }
+    c.strokeStyle='#c7c7ab80';c.lineWidth=1;
+    for(const h of state.households) {
+      const px=h.x*size+size/2,py=h.y*size+size/2;
+      if(h.home){c.fillStyle='#e1cf9d';c.fillRect(px-size*.47,py-size*.20,size*.95,size*.8);c.fillStyle='#7c6654';c.beginPath();c.moveTo(px-size*.72,py-size*.23);c.lineTo(px,py-size*.91);c.lineTo(px+size*.72,py-size*.23);c.closePath();c.fill();}
+      else {c.fillStyle='#d6bb947e';c.beginPath();c.moveTo(px-size*.5,py+size*.28);c.lineTo(px,py-size*.47);c.lineTo(px+size*.5,py+size*.28);c.fill();}
+    }
+    if(state.settlements.length){const t=state.settlements[0];c.save();c.strokeStyle='#f4d69f';c.lineWidth=2;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,14*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 17px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-11)*size);c.restore();}
+    for(const p of state.people){if(!p.alive)continue;const px=(p.x+.5)*size,py=(p.y+.5)*size;
+      c.beginPath();c.arc(px,py,p.stage==='child'?size*.23:size*.3,0,Math.PI*2);
+      c.fillStyle=p.devotion>=40?'#f6d2a0':p.devotion>=20?'#e1e6c2':'#bcd9d2';c.fill();c.strokeStyle='#21342fcc';c.lineWidth=1.4;c.stroke();
+      if(p.id===chosen){c.strokeStyle='#faf5c7';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.59,0,Math.PI*2);c.stroke();}
+    }
+    for(const e of state.effects){if(state.hour>=e.endsAtHour)continue;c.save();c.fillStyle='#9dccde24';c.strokeStyle='#bfeaff';c.lineWidth=2.5;c.beginPath();c.arc(e.x*size,e.y*size,e.radius*size,0,Math.PI*2);c.fill();c.stroke();
+      c.strokeStyle='#acd7e680';for(let i=0;i<30;i++){const aa=i*2.39996,rr=(i%10)/10*e.radius*size;const x=e.x*size+Math.cos(aa)*rr,y=e.y*size+Math.sin(aa)*rr;const fall=(time*19+i*13)%24;c.beginPath();c.moveTo(x,y+fall-12);c.lineTo(x-3,y+fall);c.stroke();}c.restore();}
+    if(armedRain) {const target=cursor||state.camp;c.save();c.strokeStyle='#ffdda7';c.lineWidth=3;c.setLineDash([7,4]);c.beginPath();c.arc(target.x*size,target.y*size,+$('radius').value*size,0,Math.PI*2);c.stroke();c.restore();}
+  }
+  function onMap(e) {
+    const rect=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-rect.left)*state.width/rect.width), y=Math.floor((e.clientY-rect.top)*state.height/rect.height);
+    if(x<0||y<0||x>=state.width||y>=state.height)return;
+    if(armedRain){const r=S.castRain(state,{x,y,...opts()});say(r.ok?`降雨成功：消耗 ${r.cost} DP，世界將自行運作。`:r.reason);if(r.ok)armedRain=false;render();return;}
+    let selected=null,dd=Infinity;for(const p of state.people){if(!p.alive)continue;const d=Math.hypot(p.x-x,p.y-y);if(d<dd){selected=p;dd=d;}}
+    if(selected && dd<3.2){chosen=selected.id;render();say(`正在觀察 ${selected.name} 的生活與工作選擇`);}else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
+  }
+  function animate(t) {
+    const dt=Math.min(250,t-(previous||t));previous=t;
+    if(!paused){acc+=dt/1000 * ticksPerRealSecond*speed;
+      let count=Math.floor(acc);if(count>0){count=Math.min(count,200);acc-=count;S.advanceTicks(state,count);}
+    }
+    if(t-lastDraw>145){lastDraw=t;render();}
+    requestAnimationFrame(animate);
+  }
+  $('pauseBtn').onclick=()=>{paused=!paused;render();};
+  document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>{speed=+btn.dataset.speed;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',b===btn));render();});
+  ['radius','intensity','duration'].forEach(id=>$(id).addEventListener('input',()=>{updateCost();draw();}));
+  $('rainBtn').onclick=()=>{armedRain=!armedRain;render();if(armedRain)say('請點擊地圖上的目標位置，確認施展喚雨。');};
+  $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{intentType:'food.produce'});say(r.ok?'神諭已交給 Saint；居民稍後自主聆聽與回應。':r.reason);render();};
+  $('concludeBtn').onclick=()=>{const o=S.stats(state).activeOracle;const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
+  canvas.addEventListener('click',onMap);
+  canvas.addEventListener('mousemove',e=>{const rect=canvas.getBoundingClientRect();cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};});
+  canvas.addEventListener('mouseleave',()=>{cursor=null;});
+  $('personList').addEventListener('click',e=>{const p=e.target.closest('button[data-person]');if(p){chosen=p.dataset.person;render();}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedRain){armedRain=false;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT'].includes(document.activeElement?.tagName)){armedRain=!armedRain;render();}});
+  $('saveBtn').onclick=save;
+  $('loadBtn').onclick=()=>{let raw=null;try{raw=localStorage.getItem(storageKey());}catch(_){}if(raw)restore(raw);else say('目前沒有本機存檔；可以匯入 JSON。');};
+  $('exportBtn').onclick=exportSave;
+  $('importBtn').onclick=()=>$('importFile').click();
+  $('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;if(file.size>10*1024*1024){say('檔案超過 10 MB，無法匯入。');return;}restore(await file.text());e.target.value='';});
+  $('resetBtn').onclick=()=>{if(!confirm('要重新開始河谷世界嗎？目前未儲存的進度會消失。'))return;state=S.create();paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;armedRain=false;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));render();say('新世界已生成。');};
+  $('helpBtn').onclick=()=>$('infoDialog').showModal();$('closeHelp').onclick=()=>$('infoDialog').close();
+  render();requestAnimationFrame(animate);
+})();
+
+</script>
+</body>
+</html>

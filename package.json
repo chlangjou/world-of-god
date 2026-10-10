@@ -6,7 +6,10 @@
   "scripts": {
     "test": "node --test tests/*.test.cjs",
     "start": "python3 -m http.server 8000",
-    "smoke": "node tests/smoke.cjs"
+    "smoke": "node tests/smoke.cjs",
+    "build": "node build.cjs"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

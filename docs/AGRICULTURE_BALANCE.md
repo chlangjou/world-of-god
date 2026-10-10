@@ -1,17 +1,17 @@
 # World of God — Agriculture Balance Formula & Verification v0.1
 
-**Status:** Experimental analytical reference committed on `web-mvp-0` only. Formula and micro-model tests; **no changes to the game runtime, `sim.js`, playable balance, or authoritative design on `main`**. This is not a complete deterministic game simulation.
+**Status:** Agriculture v0.1 is now an **optional experimental Web PoC runtime profile** on `web-mvp-0`; Original remains selectable. The historical formula and micro-model results below are calibration references, not runtime outcome guarantees. Authoritative God–World rules on `main` are unchanged.
 
 **Source snapshot:** `chlangjou/world-of-god` / `web-mvp-0`, commit `c57d8268f2f9283799aaf6ff2bade9101b43b440`, `sim.js` Git blob SHA `52b73c277b1a6111fa787374aeb5d300747d2e9f` (identical to the v0.2.1 local archive). The actual world generator and farmland locations/fertility were used. Workers may reach a tile if it lies within ±9 cells of **at least one initial household**; does not simulate later relocations.
 
 ## Profile ownership and how to reproduce
 
 - `config/balance-default.json` is a **read-only snapshot** of the current game `sim.js` defaults; it is not loaded by the game.
-- `config/balance-agriculture-v0.1.json` contains the **candidate** river, land, climate, worker, learning and calibration parameters; it is also **not loaded by the game**.
+- `config/balance-agriculture-v0.1.json` contains the **active optional** Agriculture parameters. The browser loads it when Agriculture is selected; `npm run build` embeds the same JSON for the standalone HTML.
 - This report compares equilibrium capacity against season-transition microtests using those profile assumptions, not a completed integration or a promise of identical player behavior.
 - `node tools/agriculture-balance-check.mjs --check` reproduces map-based capacity and 40-seed checks from `sim.js` map generation.
 - `node tools/agriculture-climate-check.mjs --check` checks soil-response lag and crop-stock conservation in a separate bounded micro-model.
-- The code's *implemented* Rain, crop growth and harvest rules are still those in `sim.js`; integration will require explicit changes, versioning, and real-game testing.
+- The Web PoC uses the original production model unless Agriculture is selected; the Agriculture route uses seasonal river moisture, explicit per-field crop stock, bounded harvesting and actual-workday skill progression. Climate windows and crop-stock cap are provisional JSON parameters.
 
 **Interpretation:** the 10–20% normal food-labor goal counts **work-capable equivalent full workdays** (not total residents), while rainy 6–8% and drought 40–50% are season-level diagnostic choices rather than enforced jobs. Expected season coverage depends on available plots and may be below target in some worlds.
 
@@ -148,4 +148,4 @@ node tools/agriculture-balance-check.mjs --json   # machine-readable analysis
 npm test  # game regression suite (run independently; no game logic changes)
 ```
 
-This profile/report commit changes repository documentation, candidate JSON and analysis scripts **only**. Runtime game parameters and simulation code remain unchanged.
+The historical numbers in this report were generated using the analytical scripts. The selectable runtime profile now exists on `web-mvp-0`; validate actual gameplay separately via seeded no-Miracle runs and the Web PoC.

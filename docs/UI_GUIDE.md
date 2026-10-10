@@ -1,6 +1,6 @@
 # World of God — PoC UI Guide v0.1
 
-**Status:** Proposed and agreed UI direction for the experimental `web-mvp-0` playtest branch (2026-10-10). **Guidelines and acceptance criteria only; not yet implemented in the UI.**
+**Status:** Experimental single-viewport layout and two-level Miracle/Oracle controls implemented on `web-mvp-0` (2026-10-11). Layout CSS is in place; manual browser verification at the viewport sizes below is still required.
 
 **Scope:** Browser-first playable prototype. UI presentation may evolve without changing the authoritative God–World simulation or formal rules on `main`.
 
@@ -98,9 +98,9 @@ Implementation guidance:
 - Sim speed, pause and active Miracle feedback must stay visible even after selecting another person or detail view.
 - Help/Hints are presentation state and must not change the simulation or its deterministic results.
 
-## 6. Observed gaps in `web-mvp-0` v0.2.1 (current code review)
+## 6. Historical gaps in Web v0.2.1 (before the 2026-10-11 UI revision)
 
-These are observed **implementation gaps**, not claims of an already completed fix:
+These gaps led to the current **fixed-viewport, tabbed inspection, two-level divine selection and disabled-Rain UI**. The bullet points below describe the *previous* v0.2.1 implementation:
 
 - `index.html` / `style.css`: the header, intro, five metrics, large square canvas, intervention cards, four sidebar panels and footer form a tall page. The regular flow is not constrained to one viewport.
 - `style.css`: `.person-list { max-height:105px; overflow-y:auto; }` and `.events-panel .events { max-height:460px; overflow-y:auto; }` explicitly introduce internal vertical scrolling.
@@ -122,8 +122,17 @@ Test with both little and much content (e.g. 24 vs 40+ people; few vs 100+ recen
 
 ## 8. Scope and rollout
 
-This document is **a UI Guide for the PoC**, not a request to redesign the simulation or to implement the entire UI in this commit. Apply it during the next Web PoC UI iteration, then verify the acceptance checks and actual browser layout.
+This document is **a UI Guide for the PoC**, not a request to redesign the simulation. Apply it during the next Web PoC UI iteration, then verify the acceptance checks and actual browser layout.
 
 Suggested rollout: (1) fixed viewport and map-first layout; (2) compact panels, tabs/pagination and contextual Hints; (3) real disabled/grey cooldown states and consistent pointer/keyboard handling; (4) responsive/manual usability regression.
 
 **Authoritative source:** `main` gameplay/Simulation/Miracle/Oracle contracts remain unchanged. This guide governs experimental **presentation**, not numeric balancing or rule changes.
+
+## 9. Web PoC layout revision (2026-10-11)
+
+- Replaced the long stacked page with a bounded `100%`-height header, top HUD and a workspace containing the map and a right-hand control/inspection rail. The map and selected divine action remain visible together.
+- Divine selection has **two layers**: Miracle/Oracle category tabs, then an extensible power-type dropdown (Rain or food-production Oracle currently implemented). Selected power parameters/actions appear only in the corresponding compact panel.
+- Resident inspection is a dropdown rather than an unbounded button list. Household cards and meaningful history events are explicitly paged; the inspector uses tabs rather than nested scroll lists.
+- Rain reads live `evalRain` status. Cooldown and insufficient-DP states disable the cast/target control with a textual reason; the `1` shortcut shares the same check.
+- Header File dropdown keeps save/load/import/export reachable without spending permanent horizontal width on each button.
+- Baseline viewport sizes **1280×720, 1366×768 and 1920×1080** remain manual visual acceptance checks; no verified browser screenshots were produced in this change.

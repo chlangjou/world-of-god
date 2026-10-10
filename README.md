@@ -46,6 +46,10 @@ During the early design phase:
 10. [History, event provenance, and causal explanation](https://github.com/chlangjou/world-of-god/issues/10)
 11. [First playable vertical slice (S0–S3)](https://github.com/chlangjou/world-of-god/issues/11)
 
+## First playable implementation handoff
+
+- [Issue #11 — MVP-0 implementation contract (S0–S3)](docs/FIRST_PLAYABLE_IMPLEMENTATION.md)
+
 ## Current milestone direction
 
 The first meaningful playable path is expected to be:

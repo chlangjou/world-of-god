@@ -3,6 +3,7 @@
   const S = window.WoG2;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
+  let activeProfile = null;
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedRain = false, cursor = null, chosen = 'p1', lastEventId = 0, toastTimeout;
   const ticksPerRealSecond = 12 / 8;
@@ -14,8 +15,30 @@
   function say(text) { const box=$('toast');box.textContent=text;box.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>box.classList.remove('visible'),3000); }
   function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,durationDays:+$('duration').value}; }
   function storageKey() {return 'wog-mvp0-web-save';}
+  async function loadAgriculture() {
+    if (window.WOG_AGRICULTURE_PROFILE) return window.WOG_AGRICULTURE_PROFILE;
+    const response=await fetch('config/balance-agriculture-v0.1.json');
+    if (!response.ok) throw new Error('Agriculture Profile 無法載入');
+    return response.json();
+  }
+  function newWorld() {
+    state=S.create(activeProfile?{balanceProfile:activeProfile}:{});
+    $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
+    paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;armedRain=false;
+    document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
+    render();
+  }
+  $('balanceProfile').addEventListener('change',async e=>{
+    const desired=e.target.value;
+    if (!confirm('切換平衡設定將重新建立世界，尚未儲存的進度會消失。')) {
+      e.target.value=activeProfile?'agriculture':'original';return;
+    }
+    try { activeProfile=desired==='agriculture'?await loadAgriculture():null;newWorld();
+      say(activeProfile?'已啟用 Agriculture v0.1':'已切換 Original'); }
+    catch(err){e.target.value=activeProfile?'agriculture':'original';say('Profile 載入失敗：'+err.message);}
+  });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
-  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;render();say(converted?'舊版存檔已升級；既有死亡不會倒轉，建議新開世界測試修正。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;render();say(converted?'舊版存檔已升級；既有死亡不會倒轉，建議新開世界測試修正。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost() {
     $('radiusValue').textContent=$('radius').value+' 格';$('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';$('durationValue').textContent=$('duration').value+' 日';
@@ -142,7 +165,7 @@
   $('exportBtn').onclick=exportSave;
   $('importBtn').onclick=()=>$('importFile').click();
   $('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;if(file.size>10*1024*1024){say('檔案超過 10 MB，無法匯入。');return;}restore(await file.text());e.target.value='';});
-  $('resetBtn').onclick=()=>{if(!confirm('要重新開始河谷世界嗎？目前未儲存的進度會消失。'))return;state=S.create();paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;armedRain=false;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));render();say('新世界已生成。');};
+  $('resetBtn').onclick=()=>{if(!confirm('要重新開始河谷世界嗎？目前未儲存的進度會消失。'))return;newWorld();say('新世界已生成。');};
   $('helpBtn').onclick=()=>$('infoDialog').showModal();$('closeHelp').onclick=()=>$('infoDialog').close();
   render();requestAnimationFrame(animate);
 })();

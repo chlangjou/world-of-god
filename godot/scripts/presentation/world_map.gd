@@ -2,6 +2,7 @@ extends Control
 
 signal selected(kind: String, entity_id: int, cell: Vector2)
 signal target_changed(center: Vector2)
+signal target_picked(center: Vector2)
 
 var view: Dictionary = {}
 var camera = Vector2(29, 29)
@@ -9,8 +10,10 @@ var zoom: float = 1.15
 var tile_size: float = 16.0
 var layer: int = 0
 var target = Vector2(24, 26)
-var rain_radius: float = 9.0
-var rain_mode: bool = false
+var target_radius: float = 9.0
+var targeting_id: String = ""
+var target_valid: bool = false
+var target_hovered: bool = false
 var selected_person: int = 0
 var daytime: bool = true
 var event_people: Array = []
@@ -52,6 +55,42 @@ func screen_to_world(point: Vector2) -> Vector2:
 
 func person_visible(p: Dictionary) -> bool:
 	return p.alive and ((daytime and p.activity != "rest") or p.id == selected_person or p.id in event_people)
+
+func prayer_bubbles() -> Array:
+	var bubbles: Array = []
+	if view.is_empty(): return bubbles
+	var people = {}
+	var homes = {}
+	for p in view.individuals.people: people[p.id] = p
+	for home in view.households.homes: homes[home.id] = home
+	for home_id in view.religion.prayers:
+		var prayer = view.religion.prayers[home_id]
+		if prayer.status != "pending": continue
+		var petitioner = people.get(prayer.person_id, {})
+		var anchor = petitioner if petitioner.get("alive", false) else homes.get(home_id, {})
+		if anchor.is_empty(): continue
+		var point = world_to_screen(Vector2(anchor.x, anchor.y))
+		if not Rect2(Vector2.ZERO, size).has_point(point): continue
+		var rect = Rect2(point + Vector2(-13, -29), Vector2(26, 19))
+		rect.position = rect.position.clamp(Vector2.ZERO, (size - rect.size).max(Vector2.ZERO))
+		# Stack nearby requests deterministically; drawing and hits share these rects.
+		for bubble in bubbles:
+			if rect.grow(2).intersects(bubble.rect): rect.position.y = bubble.rect.position.y - 23
+		if rect.position.y < 0: continue
+		bubbles.append({"household_id": home_id, "person_id": prayer.person_id, "point": point, "rect": rect})
+	return bubbles
+
+func _get_tooltip(at_position: Vector2) -> String:
+	if not targeting_id.is_empty(): return "點擊施放所選神蹟；Esc 取消。"
+	for bubble in prayer_bubbles():
+		if bubble.rect.has_point(at_position): return "第 %d 戶有待回應祈求，點擊查看內容。" % bubble.household_id
+	return tooltip_text
+
+func hover_target(at_position: Vector2) -> void:
+	if targeting_id.is_empty(): return
+	target = screen_to_world(at_position).floor() + Vector2(0.5, 0.5)
+	target_hovered = true
+	target_changed.emit(target)
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color("14282e"))
@@ -111,15 +150,22 @@ func _draw() -> void:
 			var offset = Vector2(cos(angle), sin(angle)) * sqrt(float(drop) / 26) * effect.radius * scale_value
 			var point = center + offset
 			draw_line(point, point + Vector2(-2, 7), Color(0.64, 0.88, 0.92, 0.65), 1)
-	if rain_mode:
+	if not targeting_id.is_empty() and target_hovered:
 		var center = world_to_screen(target)
-		draw_circle(center, rain_radius * scale_value, Color(0.47, 0.87, 0.84, 0.08))
-		draw_arc(center, rain_radius * scale_value, 0, TAU, 100, Color("a6d8cd"), 2)
+		draw_circle(center, target_radius * scale_value, Color(0.47, 0.87, 0.84, 0.08))
+		draw_arc(center, target_radius * scale_value, 0, TAU, 100, Color("a6d8cd") if target_valid else Color("e0ac86"), 2)
 		draw_line(center - Vector2(7, 0), center + Vector2(7, 0), Color("e8f2df"), 1)
 		draw_line(center - Vector2(0, 7), center + Vector2(0, 7), Color("e8f2df"), 1)
 	if hover_cell.x >= 0:
 		var point = world_to_screen(hover_cell.floor())
 		draw_rect(Rect2(point, Vector2.ONE * scale_value), Color(0.9, 0.92, 0.8, 0.45), false, 1)
+	for bubble in prayer_bubbles():
+		var box = StyleBoxFlat.new()
+		box.bg_color = Color("e6cc94")
+		box.set_corner_radius_all(5)
+		draw_colored_polygon(PackedVector2Array([bubble.rect.end - Vector2(12, 1), bubble.rect.end - Vector2(5, 1), bubble.point - Vector2(0, 5)]), Color("e6cc94"))
+		draw_style_box(box, bubble.rect)
+		draw_string(font, bubble.rect.position + Vector2(5, 13), "...", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("263b36"))
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -134,10 +180,18 @@ func _gui_input(event: InputEvent) -> void:
 			queue_redraw()
 			accept_event()
 		elif event.button_index == MOUSE_BUTTON_LEFT:
+			if not targeting_id.is_empty():
+				hover_target(event.position)
+				target_picked.emit(target)
+				accept_event()
+				return
+			for bubble in prayer_bubbles():
+				if bubble.rect.has_point(event.position):
+					selected.emit("prayer", bubble.household_id, screen_to_world(bubble.point))
+					accept_event()
+					return
 			var point = screen_to_world(event.position)
 			if point.x < 0 or point.y < 0 or point.x >= view.get("world", {}).get("size", 64) or point.y >= view.get("world", {}).get("size", 64): return
-			target = point.floor() + Vector2(0.5, 0.5)
-			target_changed.emit(target)
 			var kind = "cell"
 			var entity_id = 0
 			var nearest = 10.0
@@ -162,6 +216,7 @@ func _gui_input(event: InputEvent) -> void:
 		if dragging:
 			camera -= event.relative / (tile_size * zoom)
 			queue_redraw()
+		hover_target(event.position)
 		queue_redraw()
 
 func _process(delta: float) -> void:
@@ -169,4 +224,5 @@ func _process(delta: float) -> void:
 	var direction = Vector2(float(Input.is_physical_key_pressed(KEY_D)) - float(Input.is_physical_key_pressed(KEY_A)), float(Input.is_physical_key_pressed(KEY_S)) - float(Input.is_physical_key_pressed(KEY_W)))
 	if direction != Vector2.ZERO:
 		camera += direction * delta * 16 / zoom
+		hover_target(get_local_mouse_position())
 		queue_redraw()

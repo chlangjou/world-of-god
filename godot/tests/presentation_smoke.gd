@@ -2,6 +2,7 @@ extends SceneTree
 
 const Session = preload("res://scripts/simulation/session.gd")
 const ObservationClock = preload("res://scripts/presentation/observation_clock.gd")
+const MiraclePicker = preload("res://scripts/presentation/miracle_picker.gd")
 
 var failures: int = 0
 var checks: int = 0
@@ -16,6 +17,17 @@ func check(condition: bool, message: String) -> void:
 func _initialize() -> void:
 	call_deferred("run")
 
+func click_map(scene, position: Vector2) -> void:
+	var click = InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = position
+	scene.map._gui_input(click)
+
+func choose_area_and_cast(scene, center: Vector2 = Vector2(24, 26)) -> void:
+	scene.miracle_button.pressed.emit()
+	click_map(scene, scene.map.world_to_screen(center))
+
 func run() -> void:
 	var scene = load("res://scenes/main.tscn").instantiate()
 	root.add_child(scene)
@@ -25,14 +37,16 @@ func run() -> void:
 	scene.sim.advance_to(3 * scene.sim.day_seconds())
 	scene.refresh_view()
 	scene.quick_rain()
-	scene.rain_button.pressed.emit()
-	check(scene.last_result.ok and not scene.sim.world.effects.is_empty(), "Rain button calls real shared kernel")
+	choose_area_and_cast(scene)
+	check(scene.last_result.ok and not scene.sim.world.effects.is_empty(), "Miracle area click calls real shared Rain kernel")
 	scene.divine_tabs.current_tab = 1
 	scene.oracle_button.pressed.emit()
 	check(scene.last_result.ok and scene.sim.religion.oracles.size() == 1, "Oracle button addresses real eligible Saint")
 	scene.sim.advance_to(9 * scene.sim.day_seconds() + scene.sim.day_seconds() / 3)
 	scene.refresh_view()
 	scene.select_entity("person", scene.sim.religion.living_saints(scene.sim)[0], Vector2.ZERO)
+	scene.person_section.select(1)
+	scene.update_inspector()
 	check(scene.inspector_pages.content.contains("神諭壓力") and scene.sim.world.rain_bonus_harvest > 0, "Inspector exposes real decision and environmental consequence")
 	var before = var_to_bytes(scene.sim.export_state())
 	scene.save_world()
@@ -53,6 +67,7 @@ func run() -> void:
 	scene.toggle_pause()
 	await check_observation(scene)
 	await check_ui_guide(scene)
+	await check_inspection_and_targeting(scene)
 	scene.map.zoom = zoom_before
 	scene.map.camera = Vector2(29, 29)
 	scene.refresh_view()
@@ -86,6 +101,143 @@ func pages_fit(pager) -> bool:
 	pager.display_page()
 	return not pager.body.scroll_active
 
+func check_inspection_and_targeting(scene) -> void:
+	var original_sim = scene.sim
+	var original_state = var_to_bytes(original_sim.export_state())
+	scene.sim = Session.new()
+	scene.sim.start()
+	scene.sim.advance_to(3 * scene.sim.day_seconds() + scene.sim.day_seconds() / 3)
+	scene.sim.paused = true
+	scene.observation_clock.reset(scene.sim)
+	scene.night_event.clear()
+	scene.map.event_people.clear()
+	scene.map.camera = Vector2(29, 29)
+	scene.map.zoom = 1.15
+	scene.saints_in_menu = [-999]
+	scene.prayers_in_menu = [-999]
+	scene.last_feed_id = 0
+	scene.cancel_miracle_targeting(false)
+	scene.fill_people()
+	scene.refresh_view()
+	root.size = Vector2i(1280, 720)
+	scene.select_entity("person", 1, Vector2.ZERO)
+	await process_frame
+	await process_frame
+	await process_frame
+	check(scene.person_section.selected == 0 and scene.inspector_pages.page == 0 and scene.inspector.get_parsed_text().contains("虔誠") and scene.inspector.get_parsed_text().contains("農耕"), "resident's faith and basic abilities are visible immediately at 1280x720")
+	var basic_text = scene.inspector_pages.content
+	var world_before_inspection = var_to_bytes(scene.sim.export_state())
+	scene.person_section.select(1)
+	scene.person_section.item_selected.emit(1)
+	check(scene.inspector_pages.content.contains("此刻") and scene.inspector_pages.content.contains("決策原因"), "live activity and decision details remain available in their own view")
+	scene.refresh_view()
+	check(scene.person_section.selected == 1, "periodic refresh preserves the user's chosen resident view")
+	scene.select_entity("person", 2, Vector2.ZERO)
+	check(scene.person_section.selected == 0 and not scene.inspector_pages.content.contains("決策原因"), "selecting another resident returns to basic attributes and faith")
+	scene.select_entity("person", 1, Vector2.ZERO)
+	check(scene.inspector_pages.content == basic_text and var_to_bytes(scene.sim.export_state()) == world_before_inspection, "resident presentation does not mutate attributes, faith or decisions")
+	var bubbles = scene.map.prayer_bubbles()
+	var real_pending_bubbles = not bubbles.is_empty()
+	for bubble in bubbles:
+		real_pending_bubbles = real_pending_bubbles and scene.sim.religion.prayers[bubble.household_id].status == "pending"
+	check(real_pending_bubbles, "visible prayer bubbles all belong to real pending household requests")
+	if not bubbles.is_empty():
+		var bubble = bubbles[0]
+		var old_target = scene.map.target
+		click_map(scene, bubble.rect.get_center())
+		var prayer = scene.sim.religion.prayers[bubble.household_id]
+		check(scene.selected_kind == "prayer" and scene.selected_id == bubble.household_id and scene.inspector_pages.content.contains("原始祈求 #%d" % prayer.event_id), "clicking a prayer bubble opens that request and its real history link")
+		check(scene.map.target == old_target and scene.miracles.active_id.is_empty() and scene.sim.command_log.is_empty(), "reading a prayer neither chooses a Miracle area nor sends a command")
+		scene.prayer_select.select(0)
+		scene.focus_prayer()
+		check(scene.selected_kind == "prayer" and scene.map.target == old_target and scene.map.targeting_id.is_empty(), "prayer list navigation also remains independent of casting")
+		scene.map.zoom = 1.7
+		scene.map.camera += Vector2(1, 2)
+		bubbles = scene.map.prayer_bubbles()
+		if not bubbles.is_empty():
+			bubble = bubbles.back()
+			click_map(scene, bubble.rect.get_center())
+			check(scene.selected_id == bubble.household_id and bubble.rect.size == Vector2(26, 19), "prayer drawing and hit regions remain aligned after zoom and pan")
+		scene.map.zoom = 1.15
+		scene.map.camera = Vector2(29, 29)
+		scene.select_entity("prayer", prayer.household_id, Vector2.ZERO)
+		scene.refresh_view()
+		await process_frame
+		await process_frame
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("res://test-output/ui-prayer.png")
+	check(var_to_bytes(scene.sim.export_state()) == world_before_inspection, "prayer bubbles, navigation and camera changes preserve the complete world state")
+	var target_before = scene.map.target
+	click_map(scene, scene.map.size * 0.5)
+	check(scene.map.target == target_before and scene.miracles.active_id.is_empty(), "ordinary map inspection does not change a Miracle center")
+	scene.map.target = Vector2(-1, -1)
+	scene.quick_rain()
+	check(scene.miracle_select.item_count == 1 and scene.miracles.selected_id == "rain" and scene.miracles.active_id.is_empty(), "MVP catalog contains only Rain; quick settings do not begin targeting")
+	scene.miracle_button.pressed.emit()
+	check(scene.miracles.active_id == "rain" and scene.map.targeting_id == "rain" and not scene.map.target_hovered, "chosen Miracle enters targeting without adopting the previous map location")
+	var motion = InputEventMouseMotion.new()
+	motion.position = scene.map.world_to_screen(Vector2(-1, -1))
+	scene.map._gui_input(motion)
+	check(scene.miracle_preview.text.contains("超出河谷") and not scene.map.target_valid and not scene.miracle_button.disabled, "invalid hover shows authoritative local rejection while cancellation remains available")
+	click_map(scene, motion.position)
+	check(not scene.last_result.ok and scene.miracles.active_id == "rain" and scene.sim.command_log.is_empty() and var_to_bytes(scene.sim.export_state()) == world_before_inspection, "invalid area click preserves targeting and spends no DP or command")
+	var cancel = InputEventKey.new()
+	cancel.keycode = KEY_ESCAPE
+	cancel.pressed = true
+	scene._unhandled_key_input(cancel)
+	check(scene.miracles.active_id.is_empty() and scene.map.targeting_id.is_empty() and var_to_bytes(scene.sim.export_state()) == world_before_inspection, "Escape cancels targeting without changing simulation state")
+	scene.miracle_button.pressed.emit()
+	motion.position = scene.map.world_to_screen(Vector2(60, 60))
+	scene.map._gui_input(motion)
+	click_map(scene, motion.position)
+	check(not scene.last_result.ok and scene.last_result.reason.contains("缺少信仰臨在") and scene.miracles.active_id == "rain" and scene.sim.command_log.is_empty(), "local faith is checked only at the newly chosen area and rejects remote casting")
+	await process_frame
+	await process_frame
+	check(controls_fit(scene, Rect2(Vector2.ZERO, Vector2(root.size))), "local rejection and the cancel control remain visible at 1280x720")
+	motion.position = scene.map.world_to_screen(Vector2(24, 26))
+	scene.map._gui_input(motion)
+	check(scene.map.target_valid and scene.miracle_preview.text.contains("臨在 "), "hover previews the currently chosen area's real faith and radius")
+	await process_frame
+	await process_frame
+	await process_frame
+	check(root.size == Vector2i(1280, 720) and controls_fit(scene, Rect2(Vector2.ZERO, Vector2(root.size))), "armed targeting preview and cancellation fit the minimum viewport")
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png("res://test-output/ui-targeting.png")
+	var projected_dp = scene.sim.divine.projected_dp(scene.sim)
+	var expected_cost = scene.miracles.preview(scene.sim, scene.map.target).cost
+	click_map(scene, motion.position)
+	check(scene.last_result.ok and scene.sim.command_log.size() == 1 and is_equal_approx(scene.sim.divine.dp, projected_dp - expected_cost) and scene.sim.world.effects.size() == 1, "valid area click spends the quoted DP once and creates one real Rain")
+	check(scene.map.targeting_id.is_empty() and scene.miracles.active_id.is_empty() and scene.miracle_button.disabled, "casting exits generic targeting and enforces the existing cooldown")
+	scene.issue_oracle()
+	scene.sim.advance_to(9 * scene.sim.day_seconds() + scene.sim.day_seconds() / 3)
+	scene.refresh_view()
+	var fulfilled_bubble = false
+	for bubble in scene.map.prayer_bubbles(): fulfilled_bubble = fulfilled_bubble or scene.sim.religion.prayers[bubble.household_id].status == "fulfilled"
+	check(scene.sim.religion.fulfilled_count > 0 and not fulfilled_bubble, "real Rain and Oracle need recovery removes fulfilled prayer bubbles")
+	# Routing fixture only: no extra Miracle is registered in the game or kernel.
+	var picker = MiraclePicker.new()
+	var available = func(_sim, _command): return {"ok": true, "cost": 1.0, "reason": "fixture"}
+	picker.configure([
+		{"id": "first", "parameters": func(): return {"radius": 2}, "availability": available, "evaluate": available},
+		{"id": "second", "parameters": func(): return {"radius": 4}, "availability": available, "evaluate": available}], ["first", "second"])
+	picker.begin(scene.sim)
+	picker.select("second")
+	check(picker.active_id.is_empty() and picker.selected_id == "second", "switching Miracle definitions cancels the prior area's operation")
+	picker.begin(scene.sim)
+	var routed = picker.command_at(Vector2(10, 12))
+	check(routed.type == "second" and routed.radius == 4 and routed.x == 10 and routed.y == 12, "generic targeting routes the selected Miracle's own ID and parameters")
+	scene.sim = original_sim
+	root.size = Vector2i(1440, 900)
+	scene.cancel_miracle_targeting(false)
+	scene.observation_clock.reset(scene.sim)
+	scene.saints_in_menu = [-999]
+	scene.prayers_in_menu = [-999]
+	scene.last_feed_id = 0
+	scene.fill_people()
+	scene.select_entity("person", scene.sim.religion.living_saints(scene.sim)[0], Vector2.ZERO)
+	scene.refresh_view()
+	check(var_to_bytes(original_sim.export_state()) == original_state, "inspection and targeting tests preserve the original world")
+
 func check_ui_guide(scene) -> void:
 	var original_sim = scene.sim
 	var original_result = scene.last_result.duplicate(true)
@@ -99,34 +251,34 @@ func check_ui_guide(scene) -> void:
 	scene.fill_people()
 	scene.refresh_view()
 	scene.quick_rain()
-	scene.rain_button.pressed.emit()
-	check(scene.last_result.ok and scene.rain_button.disabled and scene.rain_target_toggle.disabled and not scene.map.rain_mode, "successful Rain greys out cast and targeting and clears armed state")
+	choose_area_and_cast(scene)
+	check(scene.last_result.ok and scene.miracle_button.disabled and scene.miracles.active_id.is_empty() and scene.map.targeting_id.is_empty(), "successful Rain greys out targeting and clears the selected area mode")
 	var shortcut = InputEventKey.new()
 	shortcut.keycode = KEY_1
 	shortcut.pressed = true
 	scene._unhandled_key_input(shortcut)
-	check(not scene.map.rain_mode and not scene.last_result.ok, "Rain shortcut cannot arm a cooling-down Miracle")
-	var cooldown_label = scene.rain_button.text
+	check(scene.map.targeting_id.is_empty() and not scene.last_result.ok, "shortcut cannot arm a cooling-down Miracle")
+	var cooldown_label = scene.miracle_preview.text
 	scene.advance_observation(20.0)
 	scene.refresh_view()
-	check(scene.rain_button.text == cooldown_label, "paused UI keeps the simulated cooldown constant")
+	check(scene.miracle_preview.text == cooldown_label, "paused UI keeps the simulated cooldown constant")
 	scene.sim.advance_to(scene.sim.divine.skills.rain.cooldown_until - 1)
 	scene.refresh_view()
-	check(scene.rain_button.disabled, "Rain remains unavailable one simulated second before cooldown expiry")
+	check(scene.miracle_button.disabled, "Rain remains unavailable one simulated second before cooldown expiry")
 	scene.sim.advance_by(1)
 	scene.refresh_view()
-	check(not scene.rain_button.disabled and not scene.rain_target_toggle.disabled, "Rain targeting and cast recover at the exact simulation cooldown deadline")
+	check(not scene.miracle_button.disabled, "Rain targeting recovers at the exact simulation cooldown deadline")
 	var saint = scene.sim.religion.living_saints(scene.sim)[0]
 	scene.sim.religion.saints[saint].quota = 0
 	scene.refresh_view()
 	check(scene.oracle_button.disabled and scene.oracle_summary.text.contains("配額不足"), "Oracle uses authoritative quota evaluation and a distinct visible reason")
 	scene.sim.divine.dp = 0.0
 	scene.sim.divine.last_accrual = scene.sim.time
-	scene.update_rain_preview()
-	check(scene.rain_button.disabled and scene.rain_preview.text.contains("神力不足"), "insufficient DP blocks both Rain controls with the actual reason")
+	scene.update_miracle_preview()
+	check(scene.miracle_button.disabled and scene.miracle_preview.text.contains("神力不足"), "insufficient DP blocks targeting with the actual reason")
 	scene.map.target = Vector2(-1, -1)
-	scene.update_rain_preview()
-	check(scene.rain_button.disabled and scene.rain_preview.text.contains("超出河谷"), "invalid target displays the simulator's actual capability reason")
+	scene.update_miracle_preview()
+	check(scene.miracle_preview.text.contains("尚未選擇區域") and scene.miracle_preview.text.contains("神力不足"), "idle availability uses global resources without evaluating a stale map target")
 	scene.map.target = Vector2(24, 26)
 	scene.refresh_view()
 	var fixture_state = var_to_bytes(scene.sim.export_state())
@@ -181,7 +333,7 @@ func check_ui_guide(scene) -> void:
 	scene.rain_settings.hide()
 	scene.show_result({"ok": false, "reason": "測試操作回饋"})
 	scene._process(5.1)
-	check(scene.status_label.text.is_empty() and scene.rain_button.disabled and scene.rain_preview.text.contains("神力不足"), "transient command feedback expires while the current blocking reason stays visible")
+	check(scene.status_label.text.is_empty() and scene.miracle_button.disabled and scene.miracle_preview.text.contains("神力不足"), "transient command feedback expires while the current blocking reason stays visible")
 	check(var_to_bytes(scene.sim.export_state()) == fixture_state, "pagination, hints and resizing preserve authoritative simulation state")
 	scene.sim = original_sim
 	root.size = Vector2i(1440, 900)
@@ -248,6 +400,8 @@ func check_observation(scene) -> void:
 	var unrelated = scene.sim.individuals.people[5]
 	check(scene.map.person_visible(child) and not scene.map.person_visible(unrelated), "night event participants stay visible while unrelated resting residents are hidden")
 	scene.select_entity("person", unrelated.id, Vector2.ZERO)
+	scene.person_section.select(1)
+	scene.update_inspector()
 	check(scene.map.person_visible(unrelated) and scene.inspector_pages.content.contains("休息"), "a resting resident remains available through the resident inspector")
 	scene.select_entity("overview", 0, Vector2.ZERO)
 	scene.show_event(scene.night_event.id)

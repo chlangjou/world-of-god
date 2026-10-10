@@ -1,7 +1,7 @@
 Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
 OpenGL API 3.3.0 Core Profile Context 26.8.1.260806 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon RX 6800 XT
 
-UI PASS: Rain button calls real shared kernel
+UI PASS: Miracle area click calls real shared Rain kernel
 UI PASS: Oracle button addresses real eligible Saint
 UI PASS: Inspector exposes real decision and environmental consequence
 UI PASS: manual save/load buttons preserve exact state
@@ -27,14 +27,14 @@ UI PASS: another manual Resume grants a fresh grace period
 UI PASS: grace expires by real elapsed time without replaying suppressed events
 UI PASS: a genuinely new nighttime birth pauses again after resume grace
 UI PASS: events observed during grace remain in History
-UI PASS: successful Rain greys out cast and targeting and clears armed state
-UI PASS: Rain shortcut cannot arm a cooling-down Miracle
+UI PASS: successful Rain greys out targeting and clears the selected area mode
+UI PASS: shortcut cannot arm a cooling-down Miracle
 UI PASS: paused UI keeps the simulated cooldown constant
 UI PASS: Rain remains unavailable one simulated second before cooldown expiry
-UI PASS: Rain targeting and cast recover at the exact simulation cooldown deadline
+UI PASS: Rain targeting recovers at the exact simulation cooldown deadline
 UI PASS: Oracle uses authoritative quota evaluation and a distinct visible reason
-UI PASS: insufficient DP blocks both Rain controls with the actual reason
-UI PASS: invalid target displays the simulator's actual capability reason
+UI PASS: insufficient DP blocks targeting with the actual reason
+UI PASS: idle availability uses global resources without evaluating a stale map target
 UI PASS: all 120 real residents remain selectable through bounded non-scrolling groups
 UI PASS: fixed viewport keeps map and tab 0 controls visible at (1280, 720)
 UI PASS: fixed viewport keeps map and tab 1 controls visible at (1280, 720)
@@ -56,4 +56,31 @@ UI PASS: transient command feedback expires while the current blocking reason st
 UI PASS: pagination, hints and resizing preserve authoritative simulation state
 UI PASS: same-Saint active intent lock is visible independently of Miracle cooldown
 UI PASS: UI guide tests leave the original world unchanged
-UI RESULT: 55 checks, 0 failures
+UI PASS: resident's faith and basic abilities are visible immediately at 1280x720
+UI PASS: live activity and decision details remain available in their own view
+UI PASS: periodic refresh preserves the user's chosen resident view
+UI PASS: selecting another resident returns to basic attributes and faith
+UI PASS: resident presentation does not mutate attributes, faith or decisions
+UI PASS: visible prayer bubbles all belong to real pending household requests
+UI PASS: clicking a prayer bubble opens that request and its real history link
+UI PASS: reading a prayer neither chooses a Miracle area nor sends a command
+UI PASS: prayer list navigation also remains independent of casting
+UI PASS: prayer drawing and hit regions remain aligned after zoom and pan
+UI PASS: prayer bubbles, navigation and camera changes preserve the complete world state
+UI PASS: ordinary map inspection does not change a Miracle center
+UI PASS: MVP catalog contains only Rain; quick settings do not begin targeting
+UI PASS: chosen Miracle enters targeting without adopting the previous map location
+UI PASS: invalid hover shows authoritative local rejection while cancellation remains available
+UI PASS: invalid area click preserves targeting and spends no DP or command
+UI PASS: Escape cancels targeting without changing simulation state
+UI PASS: local faith is checked only at the newly chosen area and rejects remote casting
+UI PASS: local rejection and the cancel control remain visible at 1280x720
+UI PASS: hover previews the currently chosen area's real faith and radius
+UI PASS: armed targeting preview and cancellation fit the minimum viewport
+UI PASS: valid area click spends the quoted DP once and creates one real Rain
+UI PASS: casting exits generic targeting and enforces the existing cooldown
+UI PASS: real Rain and Oracle need recovery removes fulfilled prayer bubbles
+UI PASS: switching Miracle definitions cancels the prior area's operation
+UI PASS: generic targeting routes the selected Miracle's own ID and parameters
+UI PASS: inspection and targeting tests preserve the original world
+UI RESULT: 82 checks, 0 failures

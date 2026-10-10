@@ -18,12 +18,18 @@ locally under the Git-ignored `.tools/godot/` directory. For a fresh checkout:
 ./tools/godot.ps1 -Mode play
 ```
 
-Use the left panel's **降雨 / 神諭 / 祈求** tabs. Scroll to zoom, drag with the right
-mouse button to pan, and select residents to inspect their decisions. Residents,
-inspection details and History use pages instead of vertical scrolling; **?**
-opens contextual help. Space pauses; **1** toggles valid Rain targeting and
-**Esc** cancels it. Cooldown greys out both Rain controls and shows simulated
-time remaining. There are no mundane unit/job/building commands.
+Use the left panel's **神蹟 / 神諭 / 祈求** tabs. Choose a Miracle (MVP: Rain),
+press **選擇施放區域**, then hover to preview and click the map to cast.
+**1** toggles targeting for the selected Miracle; **Esc** cancels it.
+Cooldown disables targeting and shows simulated time remaining. Ordinary map
+inspection and prayer navigation do not choose a casting area.
+
+Residents open on **基本／信仰**; **活動／決策** shows changing activities and
+work comparisons. Click a resident's **...** prayer bubble to read the real
+request and inspect its household or history. Scroll to zoom, drag with the
+right mouse button to pan, and press Space to pause. Residents, inspection
+details and History use pages; **?** opens contextual help. There are no mundane
+unit/job/building commands.
 
 Night skip is enabled by default: 20:00–08:00 advances at 8 times the selected
 speed, then returns to the selected speed at 08:00. Significant nighttime events

@@ -77,7 +77,16 @@ func run() -> void:
 	var food = rain.stats().food
 	var devotion = rain.individuals.get_person(1).devotion
 	var estimate = rain.divine.evaluate(rain, rain_command())
+	var before_preview = var_to_bytes(rain.export_state())
+	var availability = rain.divine.evaluate_availability(rain, rain_command())
+	check(availability.ok and availability.cost == estimate.cost and var_to_bytes(rain.export_state()) == before_preview, "E: pre-target availability quotes the same cost without mutating the world")
+	var remote = rain_command()
+	remote.x = -1.0
+	remote.y = -1.0
+	check(rain.divine.evaluate_availability(rain, remote).ok and not rain.divine.evaluate(rain, remote).ok, "E: selecting a Miracle requires no center; actual casting still validates the chosen center")
 	check(rain.submit_command(rain_command()).ok and is_equal_approx(rain.divine.dp, dp - estimate.cost), "E: valid Rain spends quoted global DP")
+	before_preview = var_to_bytes(rain.export_state())
+	check(not rain.divine.evaluate_availability(rain, remote).ok and var_to_bytes(rain.export_state()) == before_preview, "E: pre-target cooldown rejection is independent of center and spends nothing")
 	check(rain.stats().food == food and rain.individuals.get_person(1).devotion == devotion, "E/F: no food creation or lasting faith reward at cast")
 	dp = rain.divine.dp
 	check(not rain.submit_command(rain_command()).ok and rain.divine.dp == dp, "E: cooldown rejection spends nothing")
@@ -92,6 +101,7 @@ func run() -> void:
 	dp = invalid.divine.dp
 	var bad = rain_command()
 	bad.days = 31
+	check(not invalid.divine.evaluate_availability(invalid, bad).ok, "E: pre-target availability retains the existing supported parameter limits")
 	check(not invalid.submit_command(bad).ok and invalid.divine.dp == dp, "E: duration beyond one month rejected before spending")
 	bad = rain_command()
 	bad.x = 60.0

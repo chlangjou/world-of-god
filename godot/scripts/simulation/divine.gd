@@ -41,7 +41,10 @@ func presence(s, center: Vector2) -> Dictionary:
 		weighted += devotion_weight(p.devotion) * (1.0 - distance / radius)
 	return {"weighted": weighted, "density": weighted / (PI * radius * radius), "dominance": 1.0 if weighted > 0.0 else 0.0}
 
-func evaluate(s, command: Dictionary) -> Dictionary:
+func evaluate_availability(s, command: Dictionary) -> Dictionary:
+	return evaluate(s, command, false)
+
+func evaluate(s, command: Dictionary, check_center: bool = true) -> Dictionary:
 	var x = command.get("x", -1.0)
 	var y = command.get("y", -1.0)
 	var radius = command.get("radius", s.rules.rain_standard_radius)
@@ -49,20 +52,20 @@ func evaluate(s, command: Dictionary) -> Dictionary:
 	var days = command.get("days", s.rules.rain_standard_days)
 	for value in [x, y, radius, intensity, days]:
 		if not (value is float or value is int) or not is_finite(float(value)): return {"ok": false, "reason": "降雨參數必須是有限數值。", "cost": 0.0, "cooldown_days": 0.0, "presence": {"weighted": 0.0}}
-	var sample = presence(s, Vector2(x, y))
+	var sample = presence(s, Vector2(x, y)) if check_center else {"weighted": 0.0}
 	var workload = pow(float(radius) / float(s.rules.rain_standard_radius), 2.0) * float(intensity) * float(days) / float(s.rules.rain_standard_days)
 	var efficiency = 1.0 + (skills.rain.mastery - 1) * 0.3
 	var cost = maxf(1.0, float(s.rules.rain_standard_cost) * workload / efficiency)
 	var cooldown_days = maxf(float(s.rules.rain_min_cooldown_days), float(s.rules.rain_cooldown_days) * minf(1.4, maxf(0.3, sqrt(maxf(0.0, workload)))) / efficiency)
-	var reason = "可以施放；收穫仍取決於土地與居民勞動。"
+	var reason = "可以施放；收穫仍取決於土地與居民勞動。" if check_center else "選擇區域後檢查當地信仰臨在。"
 	var ok = true
-	if x < 0.0 or y < 0.0 or x >= s.world.size or y >= s.world.size:
+	if check_center and (x < 0.0 or y < 0.0 or x >= s.world.size or y >= s.world.size):
 		ok = false
 		reason = "施放中心超出河谷範圍。"
 	elif radius < float(s.rules.rain_radius_min) or radius > float(s.rules.rain_radius_max) or intensity < float(s.rules.rain_intensity_min) or intensity > float(s.rules.rain_intensity_max) or days < 1 or days > int(s.rules.rain_max_days):
 		ok = false
 		reason = "超出目前 PoC 支援的低階降雨範圍（最長一個月）。"
-	elif sample.weighted < float(s.rules.rain_min_presence):
+	elif check_center and sample.weighted < float(s.rules.rain_min_presence):
 		ok = false
 		reason = "中心附近缺少信仰臨在；儲存神力不能取代當地信仰。"
 	elif skills.rain.cooldown_until > s.time:

@@ -8,6 +8,7 @@ var oracles: Array = []
 var prayers: Dictionary = {}
 var next_oracle_id: int = 1
 var fulfilled_count: int = 0
+var receiver_gap_since: int = 0
 
 func start(_s) -> void:
 	saints.clear()
@@ -16,6 +17,7 @@ func start(_s) -> void:
 	prayers.clear()
 	next_oracle_id = 1
 	fulfilled_count = 0
+	receiver_gap_since = 0
 
 func eligible(s, person_id: int) -> bool:
 	var person = s.individuals.get_person(person_id)
@@ -30,11 +32,13 @@ func living_saints(s) -> Array:
 
 func update(s) -> void:
 	var receivers = living_saints(s)
+	if not receivers.is_empty(): receiver_gap_since = s.time
+	var continuity_needed = receivers.is_empty() and s.time - receiver_gap_since >= int(s.rules.saint_fallback_wait_days) * s.day_seconds()
 	if receivers.size() < int(s.rules.saint_max) and s.time >= int(s.rules.first_listener_days) * s.day_seconds():
 		var candidate: Dictionary = {}
 		var suitability = -1.0
 		for p in s.individuals.people:
-			if not p.alive or p.religion_id != id or p.devotion < 40.0 or p.age < float(s.rules.adult_age) or p.receptivity < float(s.rules.saint_min_receptivity) or saints.has(p.id): continue
+			if not p.alive or p.religion_id != id or p.devotion < 40.0 or p.age < float(s.rules.adult_age) or (p.receptivity < float(s.rules.saint_min_receptivity) and not continuity_needed) or saints.has(p.id): continue
 			var score = p.receptivity + p.devotion / 100.0 + p.health / 1000.0
 			if score > suitability:
 				suitability = score
@@ -228,7 +232,7 @@ func evaluate_needs(s) -> void:
 			prayer.closed_at = s.time
 
 func state() -> Dictionary:
-	return {"id": id, "god_id": god_id, "saints": saints.duplicate(true), "priests": priests.duplicate(), "oracles": oracles.duplicate(true), "prayers": prayers.duplicate(true), "next_oracle_id": next_oracle_id, "fulfilled_count": fulfilled_count}
+	return {"id": id, "god_id": god_id, "saints": saints.duplicate(true), "priests": priests.duplicate(), "oracles": oracles.duplicate(true), "prayers": prayers.duplicate(true), "next_oracle_id": next_oracle_id, "fulfilled_count": fulfilled_count, "receiver_gap_since": receiver_gap_since}
 
 func restore(data: Dictionary) -> void:
 	for key in data: set(key, data[key].duplicate(true) if data[key] is Array or data[key] is Dictionary else data[key])

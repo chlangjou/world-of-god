@@ -25,6 +25,7 @@ var profile_us: Dictionary = {"world": 0, "individuals": 0, "economy": 0, "relig
 var paused: bool = false
 var speed: int = 1
 var wall_remainder: float = 0.0
+var command_archive_path: String = ""
 
 func start(preset: Dictionary = {}, seed_value: int = -1, overrides: Dictionary = {}) -> void:
 	rules = JSON.parse_string(FileAccess.get_file_as_string("res://data/rules.json"))
@@ -123,7 +124,14 @@ func submit_command(command: Dictionary, at_time: int = -1) -> Dictionary:
 		"oracle": result = religion.issue_oracle(self, command)
 		"conclude": result = religion.conclude(self, int(command.get("oracle_id", -1)))
 		_: result = {"ok": false, "reason": "尚未實作的神意。"}
-	command_log.append({"time": time, "command": command.duplicate(true), "ok": result.ok})
+	command_log.append({"time": time, "command": command.duplicate(true), "ok": result.ok, "reason": result.reason})
+	if command_log.size() > int(rules.history_limit):
+		var old_command = command_log.pop_front()
+		if not command_archive_path.is_empty():
+			var archive = FileAccess.open(command_archive_path, FileAccess.READ_WRITE) if FileAccess.file_exists(command_archive_path) else FileAccess.open(command_archive_path, FileAccess.WRITE)
+			if archive:
+				archive.seek_end()
+				archive.store_line(JSON.stringify(old_command))
 	return result
 
 func snapshot() -> Dictionary:
@@ -148,8 +156,12 @@ func export_state() -> Dictionary:
 	return {"format": 1, "rules": rules.duplicate(true), "scenario": scenario.duplicate(true), "time": time, "rng_state": rng.state, "scheduled": scheduled.duplicate(), "command_log": command_log.duplicate(true), "world": world.state(), "individuals": individuals.state(), "households": households.state(), "settlements": settlements.state(), "religion": religion.state(), "divine": divine.state(), "history": history.state()}
 
 func import_state(data: Dictionary) -> Dictionary:
-	if data.get("format", 0) != 1 or data.get("rules", {}).get("version", "") != "mvp0-1":
+	if data.get("format", 0) != 1 or not data.get("rules", {}) is Dictionary or data.get("rules", {}).get("version", "") != "mvp0-2":
 		return {"ok": false, "reason": "不支援的存檔版本。"}
+	for key in ["scenario", "scheduled", "world", "individuals", "households", "settlements", "religion", "divine", "history"]:
+		if not data.get(key, null) is Dictionary: return {"ok": false, "reason": "存檔缺少必要的狀態：%s。" % key}
+	if not data.get("time", null) is int or not data.get("rng_state", null) is int or not data.get("command_log", null) is Array:
+		return {"ok": false, "reason": "存檔缺少時鐘或重播狀態。"}
 	rules = data.rules.duplicate(true)
 	scenario = data.scenario.duplicate(true)
 	time = data.time
@@ -174,3 +186,11 @@ func load_file(path: String) -> Dictionary:
 	var data = file.get_var(false)
 	if not data is Dictionary: return {"ok": false, "reason": "存檔格式損毀。"}
 	return import_state(data)
+
+func scheduler_backlog() -> int:
+	var due = 0
+	for value in scheduled.values(): due += int(int(value) <= time)
+	due += int(world.next_deadline() <= time)
+	due += int(religion.next_deadline(self) <= time)
+	due += int(individuals.next_deadline() <= time)
+	return due

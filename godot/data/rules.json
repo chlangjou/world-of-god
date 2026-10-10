@@ -1,5 +1,5 @@
 {
-  "version": "mvp0-1",
+  "version": "mvp0-2",
   "day_seconds": 86400,
   "month_days": 30,
   "year_days": 360,
@@ -48,6 +48,7 @@
   "rain_input_per_day": 0.065,
   "rain_mastery_xp_threshold": 80.0,
   "first_listener_days": 3,
+  "saint_fallback_wait_days": 7,
   "saint_max": 1,
   "saint_min_receptivity": 0.7,
   "quota_initial": 4,

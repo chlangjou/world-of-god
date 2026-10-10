@@ -87,7 +87,7 @@ func update(s) -> void:
 	for town in s.settlements.towns: demands[town.id] = s.settlements.demand(s, town.id)
 	for p in people:
 		if not p.alive: continue
-		if hour < 8 or hour >= 20:
+		if hour < 8:
 			p.activity = "rest"
 			p.reason = "在家庭住處休息，恢復體力。"
 			p.effort = maxf(0.0, p.effort - 0.2)
@@ -96,7 +96,7 @@ func update(s) -> void:
 			p.activity = "care"
 			p.reason = "依賴家人的照護，不提供成人勞力。"
 			continue
-		if hour == 16:
+		if hour >= 16:
 			p.activity = "social"
 			p.reason = "家庭生活、交流與聆聽。"
 			var home = s.households.get_home(p.household_id)

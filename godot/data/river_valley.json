@@ -5,7 +5,7 @@
   "map_size": 64,
   "population": 32,
   "household_size": 4,
-  "initial_food_per_household": 10.0,
+  "initial_food_per_household": 5.0,
   "initial_wood_per_household": 4.0,
   "initial_stone_per_household": 2.0,
   "initial_fiber_per_household": 2.0,
@@ -14,6 +14,6 @@
   "initial_crops": 0.5,
   "initial_wild_food": 1.4,
   "believer_every": 4,
-  "initial_devotion": 65.0,
+  "initial_devotion": 70.0,
   "initial_receptivity": 0.9
 }

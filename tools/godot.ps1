@@ -17,13 +17,21 @@ if (-not $GodotPath) {
 if (-not $GodotPath -or -not (Test-Path -LiteralPath $GodotPath)) { throw 'Godot 4.x not found. Run tools/install-godot.ps1 or pass -GodotPath.' }
 $env:APPDATA = Join-Path $taskRoot '.tools/userdata'
 $projectPath = Join-Path $taskRoot 'godot'
-$arguments = @('--path', $projectPath, '--log-file', (Join-Path $taskRoot '.tools/godot.log'))
+$runLog = Join-Path $taskRoot ".tools/godot-$Mode.log"
+$arguments = @('--path', $projectPath, '--log-file', $runLog)
 switch ($Mode) {
     'editor' { $arguments += '--editor' }
-    'test' { $arguments += @('--headless', '--script', 'tests/headless.gd') }
-    'benchmark' { $arguments += @('--headless', '--script', 'tests/benchmark.gd') }
-    'capture' { $arguments += @('--', '--capture') }
+    'test' { $arguments += @('--headless', '--script', 'tests/headless.gd', '--quit-after', '2') }
+    'benchmark' { $arguments += @('--headless', '--script', 'tests/benchmark.gd', '--quit-after', '2') }
+    'capture' { $arguments += @('--script', 'tests/presentation_smoke.gd') }
 }
 if ($ExtraArgs) { $arguments += $ExtraArgs }
 & $GodotPath @arguments
-exit $LASTEXITCODE
+$processExit = $LASTEXITCODE
+if ($Mode -in @('test', 'benchmark', 'capture')) {
+    $log = $runLog
+    if (Test-Path -LiteralPath $log) {
+        if (Select-String -LiteralPath $log -Pattern 'SCRIPT ERROR:|^ERROR:' -Quiet) { $processExit = 1 }
+    }
+}
+exit $processExit

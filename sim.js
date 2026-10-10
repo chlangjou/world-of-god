@@ -151,6 +151,8 @@
   }
   function create(config = {}) {
     const rules = rulesFrom(config);
+    const agriculture = config.balanceProfile?.profileId === 'agriculture-balance-v0.1'
+      ? JSON.parse(JSON.stringify(config.balanceProfile)) : null;
     const seed = String(config.seed || 'valley-spring-01').slice(0, 100);
     const initialMoisture = clamp(num(config.moisture, .52), .2, .9);
     const s = { version: VERSION, seed, rules, rng: hash(seed), hour: 0, tick: 0,
@@ -162,9 +164,15 @@
       effects: [], nextId: 1, eventSeq: 0, events: [],
       counts: { births: 0, deaths: 0, relocations: 0, rainCasts: 0, foodFromLabor: 0 },
       environment: { phase: 'mild', totalRain: 0 }, lastFoodOutput: 0,
+      balanceProfileId: agriculture?.profileId || 'original', agriculture,
       history: { settlementFoundedHour: null, firstSaintHour: null },
       metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
     generate(s, initialMoisture);
+    if (agriculture) for (const t of s.tiles) if (t.terrain === 'field') {
+      const L=agriculture.land, cap=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
+        Math.pow(1/L.referenceMoisture,L.moistureExponent)*L.cropStockCapacityDays;
+      t.cropStock=t.crop*cap;
+    }
     s.nextId = s.people.length + 1; // prevent later born Person IDs from colliding with Genesis people
     return s;
   }
@@ -388,6 +396,22 @@
     } else h.inventory[kind] += amount;
     if (kind === 'food') { s.counts.foodFromLabor += amount; s.lastFoodOutput += amount; }
   }
+  function agricultureHarvest(s,p,h) {
+    const A=s.agriculture,L=A.land,W=A.worker;
+    const plots=s.tiles.filter(t=>t.terrain==='field'&&Math.abs(t.x-h.x)<=9&&Math.abs(t.y-h.y)<=9);
+    if(!plots.length)return 0;
+    let fertility=0,weighted=0;
+    for(const t of plots){fertility+=t.fertility;weighted+=t.fertility*Math.pow(t.moisture/L.referenceMoisture,W.environmentMoistureExponent);}
+    const skill=p.proficiency.food;
+    let capacity=W.foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment*
+      (W.skillOutputIntercept+W.skillOutputSlope*skill)*weighted/Math.max(fertility,1e-9);
+    let harvested=0;
+    plots.sort((a,b)=>b.cropStock-a.cropStock||a.y-b.y||a.x-b.x);
+    for(const t of plots){const n=Math.min(Math.max(0,t.cropStock),capacity);t.cropStock-=n;capacity-=n;harvested+=n;if(capacity<=1e-9)break;}
+    if(harvested>0)distribute(s,h,'food',harvested);
+    p.proficiency.food=1-(1-skill)*Math.exp(-1/W.learningTimeConstantActualFoodWorkdays);
+    return harvested;
+  }
   function performWork(s, p) {
     const h = householdOf(s, p);
     if (!h) return;
@@ -455,7 +479,8 @@
       const amount = Math.min(forage.forage, .6 + p.proficiency.gather * .45);
       forage.forage -= amount; distribute(s, h, 'food', amount);
     } else if (choice.name === 'farm' && field) {
-      if (field.crop >= .47) {
+      if (s.agriculture) agricultureHarvest(s,p,h);
+      else if (field.crop >= .47) {
         const amount = (1.5 + p.proficiency.food * .8) * field.crop * field.fertility * s.rules.farmYieldMultiplier;
         field.crop = Math.max(.04, field.crop - .52);
         distribute(s, h, 'food', amount);
@@ -504,6 +529,7 @@
     const rainy = seasonal < 6 || (seasonal >= 32 && seasonal < 40) || (seasonal >= 68 && seasonal < 75);
     s.environment.phase = drought ? 'dry' : rainy ? 'rainy' : 'mild';
     const naturalRain = drought ? 0 : rainy ? .015 : .005;
+    const A=s.agriculture, season=drought?'dry':rainy?'rain':'mild';
     let effectSummary = 0;
     for (const t of s.tiles) {
       if (t.terrain === 'river') continue;
@@ -513,10 +539,28 @@
         if (s.hour < e.endsAtHour && Math.hypot(t.x - e.x, t.y - e.y) <= e.radius) boost += .028 * e.intensity;
       }
       effectSummary += boost;
+      if(A) {
+        const R=A.river,C=A.seasons[season],L=A.land;
+        const d=Math.max(0,Math.abs(t.x-riverX(s,t.y))-R.riverHalfWidthCells);
+        const influence=d<=R.fullEffectThroughCells?R.nearBankInfluence:
+          d>=R.zeroEffectAtCells?0:R.nearBankInfluence*(R.zeroEffectAtCells-d)/(R.zeroEffectAtCells-R.fullEffectThroughCells);
+        const target=clamp(C.backgroundMoisture+(1-C.backgroundMoisture)*influence*C.riverWaterAvailability);
+        const tau=A.soilDynamics.referenceResponseTimeDays;
+        t.moisture=clamp(t.moisture+(target-t.moisture)*(1-Math.exp(-s.rules.tickHours/24/tau))+boost,0,1);
+        if(t.terrain==='field'){
+          const daily=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
+            Math.pow(t.moisture/L.referenceMoisture,L.moistureExponent);
+          const cap=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
+            Math.pow(1/L.referenceMoisture,L.moistureExponent)*L.cropStockCapacityDays;
+          t.cropStock=Math.min(cap,Math.max(0,t.cropStock)+daily*s.rules.tickHours/24);
+          t.crop=cap>0?clamp(t.cropStock/cap):0;
+        }
+      } else {
       t.moisture = clamp(t.moisture - (drought ? .014 : .007) + naturalRain + nearRiver*.003 + boost, .03, .98);
       if (t.terrain === 'field') {
         const growth = t.moisture > .23 ? (.006 + .029 * t.moisture) * t.fertility : -.006;
         t.crop = clamp(t.crop + growth, .02, 1);
+      }
       }
       t.forage = clamp(t.forage + .004 * t.moisture * t.fertility, 0, 1.3);
       if (t.terrain === 'forest') t.wood = Math.min(16, t.wood + .005 * t.moisture);
@@ -871,6 +915,8 @@
   }
   function validate(s) {
     const errors=[];
+    if(s?.balanceProfileId==='agriculture-balance-v0.1'&&!s.agriculture)errors.push('Agriculture Profile 遺失');
+    if(s?.agriculture)for(const t of s.tiles||[])if(t.terrain==='field'&&(!Number.isFinite(t.cropStock)||t.cropStock< -1e-8))errors.push('農田作物庫存無效');
     if(!s || s.version!==VERSION) return {ok:false,errors:['版本不相容']};
     if(!Number.isSafeInteger(s.hour)||s.hour<0 || !Number.isSafeInteger(s.tick)) errors.push('時間不正確');
     if(!Array.isArray(s.tiles)||s.tiles.length!==s.width*s.height) errors.push('地圖資料不完整');

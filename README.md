@@ -46,6 +46,35 @@ The editor project is [`godot/project.godot`](godot/project.godot). See
 [PoC handoff, evidence, and remaining acceptance](docs/POC_HANDOFF.md) before
 interpreting this prototype as full Sandbox v1 or closing Issue #11.
 
+## Web MVP-0 and shared references
+
+The independent Web MVP-0.2.1 from `web-mvp-0` is also available in this
+checkout. Open [World-of-God-Web-MVP0.html](World-of-God-Web-MVP0.html) directly
+in a browser, or use [index.html](index.html). It has a separate JavaScript
+kernel and provisional balance; its snapshot values do not replace Godot rules.
+See [Web implementation notes](docs/WEB_MVP0_NOTES.md) for its scope and results.
+
+With Node.js 18 or newer, no package installation is needed:
+
+```sh
+npm test
+npm run smoke
+npm run build
+node tools/agriculture-balance-check.mjs --check
+node tools/agriculture-climate-check.mjs --check
+```
+
+The [PoC UI Guide](docs/UI_GUIDE.md) defines fixed-viewport observation,
+contextual hints and truthful disabled Miracle states. Its applicable
+presentation requirements are shared with the Godot PoC.
+
+The [agriculture report](docs/AGRICULTURE_BALANCE.md),
+[Web default snapshot](config/balance-default.json) and
+[candidate profile](config/balance-agriculture-v0.1.json) are analysis references.
+Neither JSON is loaded by either playable runtime. Labor shares are diagnostics
+of work-capable adult time, not mandatory job quotas. Seasonal timing, soil
+response and actual crop transfers must be decided and tested before adoption.
+
 ## Design thesis
 
 The player is a god, not an RTS commander.

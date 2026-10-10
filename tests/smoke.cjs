@@ -1,0 +1,12 @@
+const W = require('../sim.js');
+const s=W.create({seed:'valley-spring-01'});
+W.advanceTicks(s, 12*3);
+const initial=W.stats(s);
+const oracle=W.issueOracle(s);
+W.advanceTicks(s, 10*3);
+const rain=W.castRain(s,{x:s.camp.x,y:s.camp.y,radius:8,intensity:1,durationDays:14});
+W.advanceTicks(s, 75*3);
+const final=W.stats(s);
+const pass=initial.settlements>0 && initial.saintId && oracle.ok && rain.ok && final.oracleInfluenced>0 && final.rainReady && W.validate(s).ok;
+console.log(JSON.stringify({pass,settlement:initial.settlements,saint:initial.saintId,oracle:oracle.ok,rain:rain.ok,changedChoices:final.oracleInfluenced,people:final.people,events:s.events.length,devotion:final.devotionWeight},null,2));
+process.exitCode=pass?0:1;

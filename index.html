@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111d1f">
+  <title>World of God — 河谷初生 · Web MVP-0</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">✧</span><div><b>WORLD OF GOD</b><small>河谷初生 · WEB MVP-0</small></div></div>
+    <div class="header-actions"><span class="build-label">獨立 PoC · v0.2.1</span><button id="helpBtn" class="btn ghost">玩法說明</button><button id="saveBtn" class="btn ghost">儲存</button><button id="loadBtn" class="btn ghost">讀取</button><button id="exportBtn" class="btn ghost">匯出</button><button id="importBtn" class="btn ghost">匯入</button><button id="resetBtn" class="btn outline">重新創世</button></div>
+  </header>
+  <main class="main">
+    <section class="intro"><div><span class="overline">神意之外，自有萬千生機</span><h1>河谷初生 <span>First Living World</span></h1><p>你是神，不是指揮官。施展神蹟改變自然，傳下神諭表達期望，再觀察居民如何自行回應。</p></div><div class="date-box"><span>模擬歷史</span><strong id="day">第 1 日</strong><small id="weather">和暖的天氣</small></div></section>
+    <section class="metric-bar" aria-label="世界摘要">
+      <div class="metric"><small>居民</small><strong id="peopleMetric">24</strong><span id="familiesMetric">8 個家戶</span></div>
+      <div class="metric"><small>聚落</small><strong id="townMetric">尚未形成</strong><span id="houseMetric">0 戶有住所</span></div>
+      <div class="metric"><small>可用糧食</small><strong id="foodMetric">—</strong><span id="stockMetric">共同儲存：0</span></div>
+      <div class="metric"><small>信徒</small><strong id="followersMetric">—</strong><span id="devotionMetric">信仰平均值</span></div>
+      <div class="metric metric-power"><small>神力 Divine Power</small><strong><span id="powerMetric">—</span><em> / 100</em></strong><div class="power-track"><i id="powerFill"></i></div><span id="powerRate">— / 模擬日</span></div>
+    </section>
+    <div class="workspace">
+      <div class="center-column">
+        <section class="map-card">
+          <div class="section-header"><div><h2>世界觀察</h2><p>居民依環境、家戶需要與自身意願做出選擇</p></div><div class="time-bar"><button id="pauseBtn" class="btn primary">▶ 開始</button><button class="btn speed active" data-speed="1">1×</button><button class="btn speed" data-speed="4">4×</button><button class="btn speed" data-speed="16">16×</button></div></div>
+          <div class="map-wrap"><canvas id="world" width="768" height="768" aria-label="世界地圖，點擊土地施展降雨或查看居民" tabindex="0"></canvas><div class="legend"><span><i class="sw river"></i>河流</span><span><i class="sw forest"></i>森林</span><span><i class="sw field"></i>農田</span><span><i class="sw homes"></i>住所</span><span><i class="sw human"></i>居民</span></div><div class="map-tip" id="mapTip">按「喚雨」，再點擊地圖選擇神蹟中心</div></div>
+          <div class="map-footer"><span id="simHint">世界已準備好。開始歷史後，居民會自行勞作與形成聚落。</span><span id="simRate">1× · 約 1 日 / 2 秒</span></div>
+        </section>
+        <section class="intervention"><div class="section-header"><div><h2>神意介入</h2><p>Miracle 改變現實；Oracle 改變理解與選擇</p></div></div>
+          <div class="action-cards"><div class="action-card rain-card"><div class="action-title"><span class="symbol">☂</span><div><strong>喚雨 Rain</strong><small>影響降水與土壤，而非直接產生糧食</small></div></div><div class="ranges"><label>範圍 <output id="radiusValue">7 格</output><input type="range" id="radius" min="2" max="14" value="7"></label><label>強度 <output id="intensityValue">0.85×</output><input type="range" id="intensity" min="30" max="120" step="5" value="85"></label><label>持續 <output id="durationValue">10 日</output><input type="range" id="duration" min="1" max="30" value="10"></label></div><div class="action-bottom"><button id="rainBtn" class="btn accent">選擇降雨位置</button><span id="rainCost">預估消耗 — DP</span></div><small id="rainCooldown" class="muted">等待施展</small></div>
+          <div class="action-card oracle-card"><div class="action-title"><span class="symbol oracle-symbol">◇</span><div><strong>糧食生產神諭</strong><small>food.produce · 經 Saint 傳播，再由居民自主行動</small></div></div><div class="saint-row"><span>接收者</span><strong id="saintName">等待第一位聆聽者出現</strong></div><div class="saint-row"><span>剩餘額度</span><strong id="saintQuota">— / 4</strong></div><div class="action-bottom"><button id="oracleBtn" class="btn accent secondary">傳下神諭</button><span id="oracleStatus">尚未發佈</span></div><small id="oracleReason" class="muted">神諭不會直接指定任何居民的職業或行動。</small><button id="concludeBtn" class="text-button" hidden>宣告當前神諭已完成（另耗 1 額度）</button></div></div>
+        </section>
+      </div>
+      <aside class="side-column">
+        <section class="panel"><div class="panel-heading"><h2>世界的訊號</h2><span class="eyebrow">PRAYERS & NEEDS</span></div><div id="needsPanel" class="content-text">當居民遇到實際需要時，祈禱會直接傳達給你。</div><div class="notice" id="weatherNotice">自然環境在變化；玩家不需要持續照顧每一個人。</div></section>
+        <section class="panel"><div class="panel-heading"><h2>聚落與家戶</h2><span class="eyebrow">SETTLEMENT</span></div><div id="townPanel" class="content-text"></div><div id="houseList" class="house-list"></div></section>
+        <section class="panel"><div class="panel-heading"><h2>居民觀察</h2><span class="eyebrow">INDIVIDUAL</span></div><p class="muted small">點選地圖上的居民或下方名單，查看其自主工作原因。</p><div id="personList" class="person-list"></div><div id="personDetail" class="person-detail"></div></section>
+        <section class="panel events-panel"><div class="panel-heading"><h2>歷史與因果</h2><span class="eyebrow">RECENT EVENTS</span></div><div id="events" class="events"></div></section>
+      </aside>
+    </div>
+    <footer>World of God · Clean-room Web MVP-0 · Simulation 與畫面分離 · 不使用舊版 PoC 的模型或平衡數值</footer>
+  </main>
+  <dialog id="infoDialog"><div class="dialog-head"><h2>如何觀察一個活著的世界</h2><button id="closeHelp" class="btn ghost">關閉</button></div><div class="help-text"><p><strong>1. 開始歷史。</strong>居民會找食物、木材、纖維，建造住所；當足夠家戶安居，聚落會自然形成，並非你放置的建築。</p><p><strong>2. 觀察乾旱。</strong>氣候會改變水分與農作物。右側會顯示居民實際產生的祈禱，並非任務提示。</p><p><strong>3. 施展喚雨。</strong>選擇範圍、強度與持續時間，按「選擇降雨位置」，再點地圖。實際產量仍依農作物、勞動與儲存決定。</p><p><strong>4. 傳下神諭。</strong>神諭由 Saint 接收、傳播；居民可能因信仰提高糧食生產優先度，也可能選擇其他迫切需要。點人名可查看決策原因。</p><p><strong>5. 調整時間。</strong>暫停、1×、4×、16× 不改變模擬規則。相同 Seed 與操作時間會產生相同結果。</p><p>這是全新小規模實驗原型。完整九種神蹟、多宗教、神殿與政治戰爭尚未實作；數值仍是可調整的第一輪設定。</p></div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <input id="importFile" type="file" accept="application/json,.json" hidden>
+  <script src="sim.js"></script><script src="app.js"></script>
+</body>
+</html>

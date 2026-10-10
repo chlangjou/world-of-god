@@ -39,6 +39,10 @@ Keyboard: **Space** Pause/Resume, **1** toggle Rain targeting, **Esc** cancel Ra
 - **food.produce** Oracle to a Saint, individual per-Saint quota (4 initial/max, replenish once per 3 simulated months), same-Saint active intent lock, transmission, autonomous choice effects, expiry/conclusion/owner death. Ordinary work success does not auto-conclude a divine calling.
 - Map, controls, God panel, compact household/settlement/person inspectors, significant event reasons and single-version save/load.
 
+## PoC UI Guide
+
+- [PoC UI Guide v0.1 — fixed viewport, Hints and Miracle disabled states](docs/UI_GUIDE.md)
+
 ## Tests
 
 No runtime dependencies. Node.js 18+ optional, only required to run automated tests:

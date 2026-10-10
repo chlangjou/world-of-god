@@ -47,3 +47,16 @@ Further game-feel iteration should be based on actual user play. Key observation
 ## Next decision point
 
 Keep Web as the rapid playtest surface until the God–World loop, pacing and basic fun are confirmed. Re-evaluate engine choice (Web or Godot) **after** player testing, rather than porting before it is necessary.
+
+## Playtest issue: food, births, event noise and decision reasons (v0.2.1)
+
+Reproduction of original release with `valley-spring-01` for **1,600 simulated days**: 0 births, 12 deaths, roughly 2,683 units of shared food remaining. These failures were traced to simulation contracts, not just tuning:
+
+1. **Disconnected food access:** `distribute` deposited into nearby community storage by spatial distance, but `consumeFood` only let registered households draw from that storage. Post-migration families could deposit food they could not receive. Both now use one physically reachable **and** socially affiliated access policy. New migration chooses suitable resource locations; isolated families may return to the settlement if survival there becomes viable. Within a community, food is rationed against household deficits instead of first-come-first-served.
+2. **Impossible conception prerequisite:** `demographic` required private food >4 while 80% of new production entered shared storage and private reserves often approached zero. Now conception considers actual accessible family food coverage, shelter, partnership/health, and postpartum recovery. The calculation apportions community stock proportionally for planning, but never reserves or duplicates it.
+3. **Noisy pseudo-history:** removed every-ten-day summaries, routine construction entries, and the ordinary repeated-prayer log. A famine/recovery headline requires sustained actual unmet meals. Birth/death, meaningful migration, settlement founding, Saints/Priests, Oracle/Miracle and attributable faith events remain.
+4. **Generic personal explanations:** `performWork` incorrectly treated private food below 7 as an emergency even if communal reserves were abundant. Now the decision engine uses reachable food coverage, person proficiency, real crops/materials, and optional Oracle pressure. Family-care work is a valid non-food choice, and the UI separately describes current rest/social actions versus the last work decision.
+
+Baseline after fix: **5 births, 0 deaths, 29 people alive at day 1,600**, with event history containing only 17 meaningful events in that run. Adjusted default values are explicitly provisional for game feel; hard famine and deaths remain possible in stressed scenarios. 23 headless tests cover the long-run baseline, access invariants, Oracle autonomy, birth, migration return, save conversion and history noise.
+
+Current save version: `mvp0-web-2`. An explicit `mvp0-web-1` conversion is supported on load; previous births/deaths are not rewritten. The change remains on experimental `web-mvp-0`, not `main`.

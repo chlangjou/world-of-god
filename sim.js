@@ -6,10 +6,10 @@
   if (root) root.WoG2 = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const VERSION = 'mvp0-web-1';
+  const VERSION = 'mvp0-web-2';
   const DEFAULT_RULES = Object.freeze({
     width: 64, height: 64, initialHouseholds: 8, tickHours: 8, daysPerMonth: 30,
-    foodNeedAdult: 0.50, foodNeedChild: 0.31, naturalDpPerDay: 0.16,
+    foodNeedAdult: 0.38, foodNeedChild: 0.25, farmYieldMultiplier: 1.18, naturalDpPerDay: 0.16,
     devotionDpPerWeightDay: 0.075, maxDp: 100, initialDp: 42,
     householdShare: 0.20, hutWood: 4, hutFiber: 2, hutWork: 3,
     settlementMinHuts: 4, settlementClusterDistance: 13,
@@ -18,7 +18,9 @@
     oracleQuota: 4, oracleRefillDays: 90, oracleDurationDays: 180,
     oracleCommunicationRadius: 13, faithThreshold: 40,
     defaultRainRadius: 7, defaultRainIntensity: 0.85, defaultRainDays: 10,
-    eventLimit: 130, prayerLimit: 18, daysPerYear: 360
+    eventLimit: 130, prayerLimit: 18, daysPerYear: 360,
+    conceptionChancePerMonth: 0.12, conceptionMinFoodDays: 6, postpartumRecoveryDays: 60,
+    familyReturnFoodDays: 2, famineAlertDays: 21, famineReliefDays: 7, isolatedFamineDays: 45
   });
   const HUMAN_NAMES = ['青禾','木川','雨生','阿岑','松遠','小滿','雲舒','柏石','穗寧','如月','望山','松原','溪明','海棠','春野','南星','芷晴','阿黎','長空','岑音','林羽','安年','初光','碧落','稻安','嵐風','稻香','晨露','南風','青木','田川','百合'];
   const FAMILY_NAMES = ['青禾家','溪畔家','松原家','山影家','白石家','風林家','雲野家','河望家','田北家','林北家'];
@@ -113,7 +115,7 @@
       const loc = nearestLand(s, hx, hy);
       const h = { id: 'h' + (i + 1), name: FAMILY_NAMES[i], x: loc.x, y: loc.y,
         members: [], inventory: { food: 9 + (i % 3) * 2, wood: 0, stone: 0, fiber: 0 },
-        home: false, buildProgress: 0, buildMaterialsPaid: false, needs: {}, migrated: 0 };
+        home: false, buildProgress: 0, buildMaterialsPaid: false, needs: {}, migrated: 0, foodShortageDays: 0 };
       s.households.push(h);
       for (let j = 0; j < 3; j++) {
         const idx = i * 3 + j;
@@ -124,11 +126,11 @@
           x: loc.x + (j - 1) * .35, y: loc.y + (j - 1) * .2, householdId: h.id, settlementId: null,
           age, stage: isChild ? 'child' : 'adult', health: 100, hunger: 0, alive: true,
           genderRole: j === 1 ? 'gestate' : 'fertilize', partnerId: isChild ? null : 'p' + (i * 3 + (j === 0 ? 2 : 1)),
-          pregnancyDueHour: null, occupation: j === 0 ? 'food_producer' : j === 1 ? 'gatherer' : 'dependent',
+          pregnancyDueHour: null, recoveryUntilHour: 0, occupation: j === 0 ? 'food_producer' : j === 1 ? 'gatherer' : 'dependent',
           proficiency: { food: .35 + rand(s) * .45, gather: .25 + rand(s) * .5, build: .18 + rand(s) * .45 },
           activity: 'rest', devotion: belief, religionId: belief >= 20 ? 'r1' : null,
           receptivity: i === 0 && j === 0 ? .98 : rand(s), lastDecision: null, lastFaithEvidence: null,
-          lastWorkHour: -1, lastOracleWorkHour: -1 };
+          lastWorkHour: -1, lastOracleWorkHour: -1, activityReason: '剛進入世界，尚未開始日常活動' };
         s.people.push(p); h.members.push(p.id);
       }
     }
@@ -164,7 +166,6 @@
       metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
     generate(s, initialMoisture);
     s.nextId = s.people.length + 1; // prevent later born Person IDs from colliding with Genesis people
-    log(s, 'world', '河谷甦醒。八個家戶正在尋找安居之所。', ['居民有各自的糧食、家庭需求與地形條件']);
     return s;
   }
   function faithfulWeight(devotion) {
@@ -351,9 +352,35 @@
     }
     return strongest;
   }
+  // Food access has exactly one source of truth: valid social membership AND physical reach.
+  // Both communal transfers and requests must use this policy. Moving out does not let
+  // a household deposit 80% at a settlement from which it cannot withdraw supplies.
+  function accessibleSettlement(s, h) {
+    return s.settlements.find(t => t.householdIds.includes(h.id) &&
+      dist(t, h) <= s.rules.settlementClusterDistance) || null;
+  }
+  function householdMembers(s, h) {
+    return h.members.map(id => s.people.find(p => p.id === id)).filter(p => p && p.alive);
+  }
+  function dailyFoodNeed(s, h) {
+    return householdMembers(s, h).reduce((total, p) =>
+      total + (p.stage === 'child' ? s.rules.foodNeedChild : s.rules.foodNeedAdult), 0);
+  }
+  function foodSecurity(s, h) {
+    const town = accessibleSettlement(s, h);
+    const need = dailyFoodNeed(s, h);
+    if (!(need > 0)) return { town, need: 0, personal: h.inventory.food, communal: 0, days: Infinity };
+    // Forecast a fair share for reproductive planning and work pressure.
+    // It is not a promise of an individual entitlement or reserved inventory.
+    const totalNeeds = town ? s.households.reduce((total, other) =>
+      total + (accessibleSettlement(s, other)?.id === town.id ? dailyFoodNeed(s, other) : 0), 0) : 0;
+    const communal = town && totalNeeds > 0 ? town.storage.food * need / totalNeeds : 0;
+    return { town, need, personal: h.inventory.food, communal,
+      days: (h.inventory.food + communal) / need };
+  }
   function distribute(s, h, kind, amount) {
     if (!(amount > 0)) return;
-    const settlement = s.settlements.find(t => dist(t, h) <= s.rules.settlementClusterDistance);
+    const settlement = accessibleSettlement(s, h);
     if (settlement) {
       const privatePart = amount * s.rules.householdShare;
       h.inventory[kind] += privatePart;
@@ -364,15 +391,16 @@
   function performWork(s, p) {
     const h = householdOf(s, p);
     if (!h) return;
-    const basic = s.settlements[0] ? s.settlements[0].workDemand : null;
-    const scarce = h.inventory.food < 7 || (basic && basic.foodPressure > .4);
+    const security = foodSecurity(s, h);
+    const basic = security.town ? security.town.workDemand : null;
+    const scarce = security.days < 4 || p.hunger > .35 || (basic && basic.foodPressure > .65);
     const field = nearestField(s, h);
     const wood = nearestResource(s, h, 'wood');
     const fiber = nearestResource(s, h, 'fiber');
     const forage = nearestResource(s, h, 'food');
     const stone = nearestResource(s, h, 'stone');
-    const publicMaterials = s.settlements[0] && s.settlements[0].storage.wood < 20;
-    const publicStone = s.settlements[0] && s.settlements[0].storage.stone < 14;
+    const publicMaterials = security.town && security.town.storage.wood < 20;
+    const publicStone = security.town && security.town.storage.stone < 14;
     const canBuild = !h.home && h.inventory.wood >= s.rules.hutWood && h.inventory.fiber >= s.rules.hutFiber;
     const call = workCalling(s, p);
     const foodBias = call.score;
@@ -383,7 +411,13 @@
     if (stone && publicStone) candidates.push({ name: 'stone', score: 6.0 + p.proficiency.gather, valid: true });
     if (fiber && !h.home) candidates.push({ name: 'fiber', score: h.inventory.fiber < s.rules.hutFiber ? 7.5 + p.proficiency.gather : 1, valid: true });
     if (!h.home && canBuild) candidates.push({ name: 'build', score: 9.3 + p.proficiency.build, valid: true });
-    if (!candidates.length) { p.activity = 'rest'; p.lastDecision = { work: 'rest', reason: '附近沒有可行的工作資源', oracleInfluence: 0 }; return; }
+    // Not every work period should be production. When accessible reserves are
+    // strong, adults can spend the work block supporting dependents and the home.
+    // Oracle pressure can redirect willing people to feasible food activities.
+    candidates.push({ name: 'care', score: 3.5 + (security.days >= 11 ? 5.0 : security.days >= 7 ? 2.7 : 0) +
+      (householdMembers(s,h).some(v=>v.stage==='child') ? .7 : 0), valid: true });
+    if (!candidates.length) { p.activity = 'rest'; p.activityReason = '附近缺少可用資源，這次無法工作';
+      p.lastDecision = { work: 'rest', hour: s.hour, reason: p.activityReason, foodDays: security.days, oracleInfluence: 0 }; return; }
     // Reasoned autonomous utility; no Oracle writes occupation, action or inventory directly.
     const specialization = n => (p.occupation === 'food_producer' && (n === 'farm' || n === 'forage') ? 1.35 : 0) +
       (p.occupation === 'gatherer' && (n === 'wood' || n === 'fiber' || n === 'stone') ? 1.1 : 0);
@@ -392,13 +426,28 @@
     const normalScores = candidates.map(x=>({name:x.name,score:x.score - ((x.name==='farm'||x.name==='forage')?foodBias:0) + specialization(x.name)}));
     normalScores.sort((a,b)=>b.score-a.score || a.name.localeCompare(b.name));
     const shifted = !!(call.oracle && (choice.name === 'farm' || choice.name === 'forage') && normalScores[0].name !== choice.name);
-    p.lastDecision = { work: choice.name, normalBest: normalScores[0].name,
+    const foodDays = Number.isFinite(security.days) ? security.days.toFixed(1) : '充足';
+    const workReasons = {
+      forage: `附近仍有可採集的野生食物；家戶可及存糧約 ${foodDays} 天`,
+      farm: `附近農田作物成熟度 ${Math.round((field?.crop || 0)*100)}%，農業熟練度 ${Math.round(p.proficiency.food*100)}%；家戶可及存糧約 ${foodDays} 天`,
+      wood: `住屋或聚落需要木材；家戶木材 ${h.inventory.wood.toFixed(1)}，附近可伐木`,
+      fiber: `尚須纖維建屋；家戶纖維 ${h.inventory.fiber.toFixed(1)}`,
+      stone: `附近可採石，公共建材需求尚未滿足`,
+      build: `家戶已備齊 ${s.rules.hutWood} 木材與 ${s.rules.hutFiber} 纖維，正在投入建屋勞力`,
+      care: `可及糧食可供約 ${foodDays} 天，選擇維持家戶生活與照顧依賴成員`
+    };
+    const modifiers = [];
+    if (scarce && (choice.name === 'farm' || choice.name === 'forage')) modifiers.push('目前糧食安全壓力提高了此工作的優先度');
+    if (specialization(choice.name)>0) modifiers.push('現有職業與技能提高了工作傾向');
+    if (shifted) modifiers.push('神諭使這次選擇有別於未收到神諭時的最高優先項目');
+    else if (foodBias>0 && (choice.name==='farm'||choice.name==='forage')) modifiers.push('神諭強化原本可行的糧食工作');
+    const reason = [workReasons[choice.name], ...modifiers].join('；');
+    p.lastDecision = { work: choice.name, hour: s.hour, normalBest: normalScores[0].name,
+      foodDays: security.days, sharedFoodAccess: !!security.town,
       oracleInfluence: (choice.name==='farm'||choice.name==='forage')?foodBias:0,
-      changedByOracle: shifted,
-      reason: shifted ? '神諭提高了糧食生產的優先度，但仍須具備工作能力' :
-        scarce ? '家戶或聚落糧食不足，優先處理實際需求' :
-        !h.home ? '衡量住屋、物資與日常食物需要' : '依照技能、作物與地方需求自主選擇' };
+      changedByOracle: shifted, reason };
     p.activity = choice.name;
+    p.activityReason = reason;
     p.lastWorkHour = s.hour;
     s.metrics.workChoices++;
     if (shifted) { s.metrics.oracleInfluencedChoices++; call.oracle.influenceWorkCount++; p.lastOracleWorkHour = s.hour; }
@@ -407,7 +456,7 @@
       forage.forage -= amount; distribute(s, h, 'food', amount);
     } else if (choice.name === 'farm' && field) {
       if (field.crop >= .47) {
-        const amount = (1.5 + p.proficiency.food * .8) * field.crop * field.fertility;
+        const amount = (1.5 + p.proficiency.food * .8) * field.crop * field.fertility * s.rules.farmYieldMultiplier;
         field.crop = Math.max(.04, field.crop - .52);
         distribute(s, h, 'food', amount);
       } else field.crop = clamp(field.crop + .035 + .04 * p.proficiency.food, 0, 1);
@@ -428,7 +477,6 @@
       h.buildProgress += 1 + p.proficiency.build * .55;
       if (h.buildProgress >= s.rules.hutWork) {
         h.home = true;
-        log(s,'housing',`${h.name} 蓋起第一間住所。`,['家戶消耗木材與纖維，居民實際投入建造活動'],[h.id,p.id]);
       }
     }
     p.x = h.x + (choice.name === 'farm' && field ? clamp(field.x - h.x,-2,2) * .28 : 0);
@@ -438,10 +486,14 @@
     const phase = s.tick % 3;
     for (const p of s.people) {
       if (!p.alive) continue;
-      if (phase === 0) p.activity = 'rest';
-      else if (phase === 2) p.activity = p.stage === 'child' ? 'family' : p.devotion >= 20 && (s.tick + Number(p.id.slice(1))) % 5 === 0 ? 'pray' : 'family';
+      if (phase === 0) { p.activity = 'rest'; p.activityReason = '每日固定的休息與恢復時段'; }
+      else if (phase === 2) {
+        p.activity = p.stage === 'child' ? 'family' : p.devotion >= 20 && (s.tick + Number(p.id.slice(1))) % 5 === 0 ? 'pray' : 'family';
+        p.activityReason = p.activity === 'pray' ? '利用非工作時段祈禱' :
+          p.stage === 'child' ? '兒童需要照顧，目前不承擔完整成人工作量' : '非工作時段，用於家戶生活及照料';
+      }
       else if (p.stage === 'adult' && p.health >= 20) performWork(s,p);
-      else p.activity = 'family';
+      else { p.activity = 'family'; p.activityReason = '目前生命階段或健康狀況不適合一般工作'; }
     }
   }
   function updateWorld(s) {
@@ -474,56 +526,121 @@
     const expired = s.effects.filter(e => s.hour >= e.endsAtHour);
     if (expired.length) {
       s.effects = s.effects.filter(e => s.hour < e.endsAtHour);
-      for (const e of expired) log(s, 'weather', '神蹟的降雨已結束；土地保留真實的濕潤或乾燥狀態。', ['只停止持續雨水輸入，沒有回溯物理後果']);
+      for (const e of expired) log(s, 'miracle', '神蹟的降雨已結束；土地保留實際濕潤或乾燥狀態。', ['停止持續雨水輸入，沒有回溯物理後果']);
     }
   }
   function updateSettlement(s) {
     if (!hasSettlement(s)) {
-      const near = s.households.filter(h=>dist(h,s.camp)<=s.rules.settlementClusterDistance);
-      const huts = near.filter(h=>h.home);
-      // Founding is derived from completed material/work-based homes and residential cluster.
+      const near = s.households.filter(h => dist(h, s.camp) <= s.rules.settlementClusterDistance);
+      const huts = near.filter(h => h.home);
       if (huts.length >= s.rules.settlementMinHuts && near.length >= 4) {
         const town = { id: 's1', name: '初穗聚落', x:s.camp.x, y:s.camp.y,
           foundedAtHour:s.hour, householdIds:near.map(h=>h.id), storage:{food:0,wood:0,stone:0,fiber:0},
-          workDemand:{foodPressure:0,housingPressure:0}, foodShortageDays:0 };
+          workDemand:{foodPressure:0,housingPressure:0}, foodShortageDays:0,
+          famineDays:0, famineReliefDays:0, famineActive:false, lastDailyUnmetFood:0 };
         s.settlements.push(town);
         for (const p of s.people) if (town.householdIds.includes(p.householdId)) p.settlementId = town.id;
         s.history.settlementFoundedHour = s.hour;
-        log(s,'settlement',`${town.name} 由 ${huts.length} 戶已建屋的家庭形成。`,['群居、土地與水源適宜；多戶已實際收集建材並完成住所']);
+        log(s,'settlement',`${town.name} 由 ${huts.length} 戶已建屋的家庭形成。`,
+          ['群居、土地與水源適宜；多戶實際收集建材並完成住所']);
       }
       return;
     }
-    const town=s.settlements[0], count=living(s).filter(p => p.settlementId===town.id).length;
-    const foodStock = town.storage.food + s.households.reduce((z,h)=>z+h.inventory.food,0);
-    const required = count * .5 * 8;
-    const foodPressure = clamp(1 - foodStock/Math.max(1,required));
-    const housingPressure = s.households.filter(h=>!h.home).length / Math.max(1,s.households.length);
-    town.workDemand = {foodPressure,housingPressure};
-    if (foodPressure > .6) town.foodShortageDays++;
-    else town.foodShortageDays = Math.max(0,town.foodShortageDays-1);
+    for (const town of s.settlements) {
+      const activeHomes = s.households.filter(h => accessibleSettlement(s,h)?.id === town.id && householdMembers(s,h).length);
+      const totalNeed = activeHomes.reduce((n,h)=>n+dailyFoodNeed(s,h),0);
+      const foodStock = town.storage.food + activeHomes.reduce((z,h)=>z+h.inventory.food,0);
+      const required = totalNeed * 8; // desired buffer, not a hard rationing or mortality threshold
+      const foodPressure = totalNeed ? clamp(1 - foodStock/Math.max(1,required)) : 0;
+      const housingPressure = activeHomes.filter(h=>!h.home).length / Math.max(1,activeHomes.length);
+      town.workDemand = {foodPressure,housingPressure};
+      if (foodPressure > .9) town.foodShortageDays++;
+      else town.foodShortageDays = Math.max(0,town.foodShortageDays-1);
+      // Famine is a meaningful transition backed by actual missed meals, not a daily stock summary.
+      town.famineDays = town.lastDailyUnmetFood > .1 ? town.famineDays + 1 : 0;
+      town.famineReliefDays = town.lastDailyUnmetFood > .1 ? 0 : (town.famineReliefDays||0) + 1;
+      if (!town.famineActive && town.famineDays >= s.rules.famineAlertDays) {
+        town.famineActive = true;
+        log(s,'famine',`${town.name} 陷入飢荒，公共與私人存糧無法滿足日常飲食。`,
+          ['多日真實缺糧與配給不足',`今日缺糧 ${town.lastDailyUnmetFood.toFixed(1)} 單位`]);
+      } else if (town.famineActive && town.famineReliefDays >= s.rules.famineReliefDays) {
+        town.famineActive = false;
+        log(s,'famine',`${town.name} 的飢荒得到緩解。`,['家戶重新獲得足夠食物，不再需要限制配給']);
+      }
+    }
+  }
+  function restoreSettlementAccess(s) {
+    // A prior migration may have placed a household at the town edge. Membership
+    // must follow actual reachable community affiliation, not an outdated ID list.
+    const town = s.settlements[0];
+    if (!town) return;
+    for (const h of s.households) {
+      if (!householdMembers(s,h).length || town.householdIds.includes(h.id)) continue;
+      if (dist(town,h) <= s.rules.settlementClusterDistance) {
+        town.householdIds.push(h.id);
+        for (const p of householdMembers(s,h)) p.settlementId = town.id;
+        log(s,'migration',`${h.name} 重新加入聚落的供應網。`,['住所仍在步行可達的聚落生活圈內']);
+      } else {
+        const dailyTownNeed = s.households.reduce((sum,other) => sum +
+          (accessibleSettlement(s,other)?.id === town.id ? dailyFoodNeed(s,other) : 0),0);
+        const safeReturn = town.storage.food >= dailyTownNeed * s.rules.familyReturnFoodDays;
+        if (safeReturn && h.foodShortageDays >= 3) {
+          const loc = nearestLand(s, town.x + 3 + (Number(h.id.slice(1)) % 3), town.y + (Number(h.id.slice(1)) % 5) - 2);
+          h.x = loc.x; h.y = loc.y; h.home = false; h.buildProgress = 0; h.buildMaterialsPaid = false;
+          town.householdIds.push(h.id);
+          for (const p of householdMembers(s,h)) { p.x=loc.x;p.y=loc.y;p.settlementId=town.id; }
+          s.counts.relocations++;
+          log(s,'migration',`${h.name} 因外地缺糧，搬回聚落附近尋求共同照顧。`,
+            ['家戶在外多日無法取得食物','聚落的可用存糧已足以提供基本支援']);
+        }
+      }
+    }
   }
   function consumeFood(s) {
-    const town=s.settlements[0];
-    for (const h of s.households) {
-      let need=0;
-      for (const pid of h.members) {
-        const p=s.people.find(x=>x.id===pid);
-        if (p && p.alive) need += p.stage === 'child' ? s.rules.foodNeedChild : s.rules.foodNeedAdult;
+    // Compute every household's real need and private meal first; distribute
+    // insufficient common stock proportionally to actual deficits (not first-come-first-served).
+    const entries = s.households.map(h => {
+      const persons = householdMembers(s,h);
+      const total = dailyFoodNeed(s,h);
+      const own = Math.min(total, h.inventory.food);
+      h.inventory.food = Math.max(0, h.inventory.food - own);
+      return {h, persons, total, own, deficit:total-own, town:accessibleSettlement(s,h), fromCommon:0};
+    });
+    for(const town of s.settlements) {
+      const residents = entries.filter(e=>e.town?.id===town.id);
+      const deficit = residents.reduce((z,e)=>z+e.deficit,0);
+      const ratio = deficit > 0 ? Math.min(1,town.storage.food/deficit) : 0;
+      for(const e of residents) {
+        e.fromCommon = e.deficit * ratio;
+        town.storage.food = Math.max(0,town.storage.food-e.fromCommon);
       }
-      const own = Math.min(need,h.inventory.food);
-      h.inventory.food = Math.max(0,h.inventory.food-own);
-      need -= own;
-      if (need > 0 && town && town.householdIds.includes(h.id)) {
-        const communal=Math.min(need,town.storage.food);
-        town.storage.food-=communal; need-=communal;
+      town.lastDailyUnmetFood = residents.reduce((z,e)=>z+e.deficit-e.fromCommon,0);
+    }
+    for(const e of entries) {
+      if(!e.persons.length) continue;
+      const {h,total} = e;
+      let meal = e.own+e.fromCommon;
+      // Prefer dependents in actual household meal allocation, not imaginary food.
+      const priority = p => p.stage==='child'?0:p.stage==='elder'?1:2;
+      const members = e.persons.slice().sort((a,b)=>priority(a)-priority(b)||a.id.localeCompare(b.id));
+      for (const p of members) {
+        const need = p.stage==='child' ? s.rules.foodNeedChild : s.rules.foodNeedAdult;
+        const received = Math.min(need,meal); meal -= received;
+        const deficitRatio = need > 0 ? 1-received/need : 0;
+        p.hunger = clamp(p.hunger + .09*deficitRatio - .07*(1-deficitRatio),0,1);
+        if (p.hunger > .7) p.health = Math.max(0,p.health-.35);
+        else p.health = Math.min(100,p.health+.08);
       }
-      const short=need;
-      for (const pid of h.members) {
-        const p=s.people.find(x=>x.id===pid);
-        if (!p || !p.alive) continue;
-        p.hunger = clamp(p.hunger + (short > 0 ? .09 : -.07),0,1);
-        if (p.hunger > .7) p.health = Math.max(0,p.health - .35);
-        else p.health = Math.min(100,p.health + .08);
+      const missing = Math.max(0, total - (e.own+e.fromCommon));
+      h.foodShortageDays = missing > .1 ? h.foodShortageDays+1 : 0;
+      if(!h.famineActive && h.foodShortageDays >= s.rules.isolatedFamineDays && !e.town &&
+        e.persons.some(p=>p.hunger>.55)) {
+        h.famineActive=true;
+        log(s,'famine',`${h.name} 與聚落糧倉失去供應連結，連續多日食物不足。`,
+          ['家戶實際缺糧','所在位置或社群歸屬使公共庫存無法直接取得']);
+      } else if(h.famineActive && h.foodShortageDays===0) {
+        h.famineActive=false;
+        log(s,'famine',`${h.name} 的糧食危機解除。`,['家戶重新獲得可食用存糧']);
       }
     }
   }
@@ -542,7 +659,7 @@
           foodProductionAtRequest:s.counts.foodFromLabor, castSeen:false, castId:null };
         s.religion.prayers.push(prayer);
         s.religion.lastPrayerHour=s.hour;
-        log(s,'prayer','河谷的祈禱傳來：土地缺雨，恐怕難以養活家人。',['居民直接祈求；祈禱不會強制神回應']);
+        // Prayer is live need/petition information, not an endlessly repeated historical headline.
       }
     }
     s.religion.prayers = s.religion.prayers.filter(p=>s.hour-p.createdAtHour<=120*24).slice(-s.rules.prayerLimit);
@@ -592,6 +709,7 @@
     }
   }
   function daily(s) {
+    restoreSettlementAccess(s);
     consumeFood(s);
     updateSettlement(s);
     updatePrayers(s);
@@ -607,11 +725,6 @@
         if (p.devotion>=20 && s.religion.priests.length && rand(s)<.3)
           p.devotion=Math.min(39,p.devotion+1); // ordinary preaching never manufactures devout status
       }
-    }
-    if (days(s)%10===0) {
-      const t=stats(s);
-      log(s,'world',`第 ${days(s)+1} 日：${t.people} 人，${t.houses} 戶有住所，糧食 ${t.food.toFixed(0)}。`,
-        ['這是由實際居民、家戶和儲存推導的摘要']);
     }
     s.lastFoodOutput=0;
   }
@@ -646,48 +759,90 @@
       if(!p.alive) continue;
       if(p.pregnancyDueHour!==null && s.hour>=p.pregnancyDueHour) {
         p.pregnancyDueHour=null;
+        p.recoveryUntilHour=s.hour+s.rules.postpartumRecoveryDays*24;
         const h=householdOf(s,p); if (!h) continue;
         const baby={...p,id:'p'+s.nextId++,name:'新生・'+HUMAN_NAMES[Math.floor(rand(s)*HUMAN_NAMES.length)],
           x:h.x,y:h.y,age:0,stage:'child',genderRole:rand(s)<.5?'gestate':'fertilize',partnerId:null,
-          occupation:'dependent',pregnancyDueHour:null,health:100,hunger:0,devotion:10,religionId:null,
-          receptivity:rand(s),activity:'family',lastDecision:null,lastFaithEvidence:null,lastWorkHour:-1,lastOracleWorkHour:-1};
+          occupation:'dependent',pregnancyDueHour:null,recoveryUntilHour:0,health:100,hunger:0,devotion:10,religionId:null,
+          receptivity:rand(s),
+          proficiency:{food:p.proficiency.food*.3,gather:p.proficiency.gather*.3,build:p.proficiency.build*.3},
+          activity:'family',activityReason:'新生兒需要家戶照護',lastDecision:null,lastFaithEvidence:null,lastWorkHour:-1,lastOracleWorkHour:-1};
         s.people.push(baby);h.members.push(baby.id);s.counts.births++;
         log(s,'birth',`${h.name} 迎來一名新生兒。`,['孕期到達，依家庭關係新增真正的 Individual']);
       }
     }
   }
+  function relocationSite(s, home, town) {
+    let best=null, bestScore=-Infinity;
+    const minDistance = s.rules.settlementClusterDistance + 3;
+    // Limited candidate sampling at demographic cadence, not per frame or full-map pathfinding.
+    for(let ring=0;ring<2;ring++) for(let i=0;i<24;i++) {
+      const a=(i+Number(home.id.slice(1))*.37)*Math.PI/12;
+      const radius=minDistance+ring*5;
+      const loc=nearestLand(s,town.x+Math.cos(a)*radius,town.y+Math.sin(a)*radius);
+      if(dist(loc,town)<=s.rules.settlementClusterDistance+1) continue;
+      if(s.households.some(h=>h.id!==home.id&&householdMembers(s,h).length&&dist(loc,h)<3)) continue;
+      const field=nearestField(s,loc), forage=nearestResource(s,loc,'food');
+      const opportunity=(field?.crop||0)*2 + (forage?.forage||0)*1.2;
+      const moisture=tile(s,loc.x,loc.y).moisture;
+      const score=opportunity+moisture*.25;
+      if(score>bestScore){bestScore=score;best=loc;}
+    }
+    return bestScore>.8?best:null;
+  }
+  function moveHousehold(s,h,next,town,leaving) {
+    h.x=next.x; h.y=next.y;
+    // Leaving a physical dwelling behind is not the same as carrying a house to a new site.
+    h.home=false; h.buildProgress=0; h.buildMaterialsPaid=false;
+    for(const p of householdMembers(s,h)){p.x=next.x;p.y=next.y;p.settlementId=leaving?null:town.id;}
+    if(leaving) town.householdIds=town.householdIds.filter(id=>id!==h.id);
+    else if(!town.householdIds.includes(h.id))town.householdIds.push(h.id);
+    h.migrated++;
+    s.counts.relocations++;
+  }
   function demographic(s) {
     const now=days(s);
     for(const p of s.people.slice()) {
       if(!p.alive) continue;
-      if(now > 0 && now % s.rules.daysPerYear === 0) {
+      if(now>0 && now%s.rules.daysPerYear===0) {
         p.age++;
-        if (p.age >= 18 && p.stage==='child') p.stage='adult';
-        if (p.age >= 66) p.stage='elder';
-        if (p.age>78 && rand(s)<clamp((p.age-76)*.025,0,.65)) die(s,p.id,'自然老化');
+        if(p.age>=18 && p.stage==='child') p.stage='adult';
+        if(p.age>=66) p.stage='elder';
+        if(p.age>78 && rand(s)<clamp((p.age-76)*.025,0,.65)) die(s,p.id,'自然老化');
       }
-      if (p.alive && p.health <= 0 && p.hunger > .9) die(s,p.id,'長期嚴重飢餓與健康惡化');
-      if (p.alive && p.stage==='adult' && p.genderRole==='gestate' && p.pregnancyDueHour===null && p.age<43 && p.age>18) {
-        const h=householdOf(s,p);
-        const partner=s.people.find(v=>v.id===p.partnerId && v.alive);
-        if (h && partner && h.home && h.inventory.food > 4 && rand(s)<.075)
+      if(p.alive && p.health<=0 && p.hunger>.9) die(s,p.id,'長期嚴重飢餓與健康惡化');
+      if(p.alive && p.stage==='adult' && p.genderRole==='gestate' &&
+        p.pregnancyDueHour===null && s.hour>=(p.recoveryUntilHour||0) &&
+        p.age>18 && p.age<43 && p.health>=35 && p.hunger<.55) {
+        const h=householdOf(s,p), partner=s.people.find(v=>v.id===p.partnerId && v.alive && v.stage==='adult');
+        if(!h||!partner||!h.home||partner.health<35)continue;
+        // Long-term food security includes physically accessible community stores.
+        // Shared reserves contribute a proportional planning signal, not a guaranteed
+        // allocation or double-counted private inventory.
+        const security=foodSecurity(s,h);
+        if(security.days<s.rules.conceptionMinFoodDays)continue;
+        const dependentCount=householdMembers(s,h).filter(v=>v.stage==='child').length;
+        const spaceFactor=clamp(1-(dependentCount-1)*.14,.4,1);
+        if(rand(s)<s.rules.conceptionChancePerMonth*spaceFactor) {
           p.pregnancyDueHour=s.hour+9*monthHours(s);
+          // Pregnancy is current private state; an ordinary conception is not a major history entry.
+        }
       }
     }
-    // Household relocation is an autonomous response to sustained home/food pressure.
-    const settlement=s.settlements[0];
-    if (settlement && settlement.workDemand.foodPressure>.9 && settlement.foodShortageDays>=30) {
-      const vulnerable=s.households.find(h=>h.migrated===0 && h.inventory.food<1);
+    // Household movement requires actual pressure AND a promising destination;
+    // moving all hungry people to the same exhausted tile is not a survival strategy.
+    const town=s.settlements[0];
+    if(town && town.workDemand.foodPressure>.9 && town.foodShortageDays>=30) {
+      const vulnerable=s.households.find(h=>h.migrated===0 && accessibleSettlement(s,h)?.id===town.id &&
+        householdMembers(s,h).length && foodSecurity(s,h).days<2);
       if(vulnerable) {
-        const old={x:vulnerable.x,y:vulnerable.y};
-        const next=nearestLand(s, riverX(s, s.camp.y + 12)+6, s.camp.y+12);
-        vulnerable.x=next.x; vulnerable.y=next.y; vulnerable.migrated++;
-        for(const pid of vulnerable.members) {
-          const p=s.people.find(v=>v.id===pid); if(p && p.alive){p.x=next.x;p.y=next.y;p.settlementId=null;}
+        const next=relocationSite(s,vulnerable,town);
+        if(next){
+          const from={x:vulnerable.x,y:vulnerable.y};
+          moveHousehold(s,vulnerable,next,town,true);
+          log(s,'migration',`${vulnerable.name} 因持續缺糧，自主搬往新的採集區。`,
+            ['舊聚落供給不足，且附近有可採集的環境資源',`原位置 ${from.x},${from.y}，新位置 ${next.x},${next.y}`]);
         }
-        settlement.householdIds=settlement.householdIds.filter(id=>id!==vulnerable.id);
-        s.counts.relocations++;
-        log(s,'migration',`${vulnerable.name} 為了尋找生機搬離聚落。`,['長期糧食壓力與家戶存糧不足觸發自主遷移',`原位置 ${old.x},${old.y}`]);
       }
     }
   }
@@ -695,7 +850,10 @@
     const p=s.people.find(v=>v.id===personId && v.alive);
     if(!p) return {ok:false,reason:'居民不存在或已死亡'};
     p.alive=false;p.activity='dead';s.counts.deaths++;
-    for(const o of s.religion.oracles) if(o.status==='active' && o.saintId===personId) o.status='saint_dead';
+    for(const o of s.religion.oracles) if(o.status==='active' && o.saintId===personId) {
+      o.status='saint_dead';
+      log(s,'oracle',`聆聽者 ${p.name} 離世，這道神諭不再傳播。`,['神諭歸屬於 Saint，不會繼承']);
+    }
     s.religion.saints=s.religion.saints.filter(id=>id!==personId);
     s.religion.priests=s.religion.priests.filter(id=>id!==personId);
     log(s,'death',`${p.name} 離世。`,[reason]);
@@ -727,12 +885,45 @@
     if(ids.size!==(s.people||[]).length) errors.push('居民 ID 重複');
     return {ok:errors.length===0, errors};
   }
+  function inspectHousehold(s, id) {
+    const h=s.households.find(x=>x.id===id);
+    if(!h)return null;
+    const access=foodSecurity(s,h);
+    return {id:h.id, settlementId:access.town?.id||null, privateFood:access.personal,
+      forecastCommonShare:access.communal, dailyFoodNeed:access.need, foodCoverageDays:access.days,
+      activeMembers:householdMembers(s,h).length, foodShortageDays:h.foodShortageDays};
+  }
   function restore(json) {
     const candidate=typeof json==='string'?JSON.parse(json):JSON.parse(JSON.stringify(json));
+    if(candidate?.version==='mvp0-web-1') {
+      // Narrow, explicit upgrade path for users who already played the first MVP.
+      // Keep all real people/deaths/history; never resurrect or overwrite outcomes.
+      candidate.version=VERSION;
+      // Preserve custom tuning while upgrading recognizable old default meal rates.
+      if(candidate.rules?.foodNeedAdult===.50) candidate.rules.foodNeedAdult=DEFAULT_RULES.foodNeedAdult;
+      if(candidate.rules?.foodNeedChild===.31) candidate.rules.foodNeedChild=DEFAULT_RULES.foodNeedChild;
+      candidate.rules=rulesFrom({rules:candidate.rules});
+      for(const h of candidate.households||[]) {
+        h.foodShortageDays=h.foodShortageDays||0;
+        h.famineActive=!!h.famineActive;
+      }
+      for(const p of candidate.people||[]) {
+        p.recoveryUntilHour=p.recoveryUntilHour||0;
+        p.activityReason=p.activityReason||'舊版存檔的日常活動，下一次更新後顯示新的決策原因';
+      }
+      for(const t of candidate.settlements||[]) {
+        t.famineDays=t.famineDays||0;
+        t.famineReliefDays=0;
+        t.famineActive=!!t.famineActive;
+        t.lastDailyUnmetFood=0;
+      }
+      candidate.events=(candidate.events||[]).filter(e=>
+        !['world','housing','weather','prayer'].includes(e.kind));
+    }
     const verdict=validate(candidate);
     if(!verdict.ok) throw new Error('無法讀取世界：'+verdict.errors.join('；'));
     return candidate;
   }
   return {VERSION,DEFAULT_RULES,create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
-    issueOracle,concludeOracle,checkOracle,die,validate,restore,days};
+    issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold};
 });

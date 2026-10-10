@@ -4,6 +4,19 @@
 
 This branch is a **fresh, independent browser-based prototype** derived from the current `main` design specifications (Issues #1–#8 and the Issue #11 MVP-0 scope), **not** a port of the earlier `web-poc` code or its balance model. It deliberately focuses on the small playable God–World feedback loop before deciding on a production engine or Codex implementation workflow.
 
+## Playtest patch — Web MVP-0.2.1 (2026-10-10)
+
+This iteration fixes four observed issues from a 1,600-simulated-day player session:
+
+- **Accessible food:** Shared stores count for family needs when socially affiliated and within reach. Households outside that range retain all their own output; they may autonomously return when isolated and a settlement has a viable reserve. Common food is rationed against real unmet needs, with dependents prioritized within households.
+- **Fertility:** Conception checks accessible food, shelter, partner, health and recovery instead of requiring a large private inventory despite the 20:80 sharing rule.
+- **Major-event history only:** Removed periodic population/food summaries and routine housing/prayer logs. Famine/recovery needs sustained deprivation; important births, deaths, migrations, settlement, Saint, Oracle and Miracle changes remain.
+- **Specific decision reasons:** Current rest/family activities and last work decisions are explained separately. Food priorities include reachable communal reserves; residents can choose non-food family care, and the UI shows when Oracle influence changed a choice.
+
+**Controlled default seed, no divine input, 1,600 simulated days:** 24 starting people → **29 alive, 5 births, 0 deaths** (previously 12 alive, 0 births, 12 deaths). This is one reproducible test fixture, not a guarantee for every seed/scenario. **23** Node.js regression tests pass.
+
+**Save compatibility:** Old `mvp0-web-1` JSON/browser saves automatically convert to `mvp0-web-2` on load. Existing deaths/world events cannot be undone, so start a new world for a clean comparison. New saves cannot be read by the older prototype.
+
 ## Play immediately
 
 1. Download **`World-of-God-Web-MVP0.html`** from this branch (or download the source ZIP).

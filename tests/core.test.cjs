@@ -11,13 +11,13 @@ function fields(s){return W.stats(s).avgMoisture;}
 test('pure browser API and clean-room game initial state',()=>{
   const s=fresh();assert.equal(s.tiles.length,4096);assert.equal(s.people.length,24);
   assert.equal(s.households.length,8);assert.equal(s.settlements.length,0);
-  assert.equal(W.stats(s).followers,3);assert.equal(W.VERSION,'mvp0-web-1');valid(s);
+  assert.equal(W.stats(s).followers,3);assert.equal(W.VERSION,'mvp0-web-2');valid(s);
 });
 test('real households autonomously build houses and establish settlement; no player intervention',()=>{
   const s=fresh();afterDays(s,90);const st=W.stats(s);
   assert.ok(st.houses>=4,'real houses should be built');assert.equal(st.settlements,1);
   assert.ok(s.history.settlementFoundedHour>0);
-  assert.ok(s.events.some(e=>e.kind==='housing'));
+  assert.equal(s.events.some(e=>e.kind==='housing'),false,'building work is routine, not a history headline');
   assert.ok(s.events.some(e=>e.kind==='settlement'));
   assert.ok(s.metrics.workChoices>0);valid(s);
 });
@@ -88,7 +88,7 @@ test('Oracle can change autonomous work decisions, never forces impossible work'
   const test=fresh();afterDays(test,4);W.issueOracle(test);
   for(const t of test.tiles){t.forage=0;t.wood=0;t.fiber=0;t.stone=0;if(t.terrain==='field')t.terrain='meadow';}
   afterDays(test,5);
-  assert.ok(test.people.filter(p=>p.stage==='adult').some(p=>p.lastDecision?.work==='rest' || p.lastDecision?.work==='build'));
+  assert.ok(test.people.filter(p=>p.stage==='adult').some(p=>p.lastDecision?.work==='rest' || p.lastDecision?.work==='build' || p.lastDecision?.work==='care'));
   valid(test);
 });
 test('Oracle lifecycle expiry and Saint death do not transfer assignments',()=>{
@@ -158,7 +158,109 @@ test('controlled food shortage can drive autonomous household relocation',()=>{
   s.settlements[0].storage.food=0;
   s.settlements[0].foodShortageDays=29;
   s.settlements[0].workDemand.foodPressure=1;
+  // Ensure an actual food opportunity exists beyond the community service radius.
+  for(let y=s.camp.y+14;y<=s.camp.y+20;y++)for(let x=s.camp.x-3;x<=s.camp.x+3;x++){
+    const t=s.tiles[y*s.width+x];if(t.terrain!=='river')t.forage=1.3;
+  }
   // Set a controlled monthly trigger while maintaining the shared clock.
   afterDays(s,16);
   assert.ok(s.counts.relocations>=1,'prolonged shortage should move a household');valid(s);
+});
+
+test('private food is zero but accessible public pantry prevents false emergency and supports conception',()=>{
+  const s=fresh();afterDays(s,30);
+  const town=s.settlements[0];assert.ok(town);
+  for(const h of s.households)h.inventory.food=0;
+  town.storage.food=300;
+  const first=s.households[0], detail=W.inspectHousehold(s,first.id);
+  assert.equal(detail.privateFood,0);
+  assert.equal(detail.settlementId,town.id);
+  assert.ok(detail.foodCoverageDays>15,'common pantry must count as feasible food access');
+  const person=s.people.find(p=>p.householdId===first.id&&p.stage==='adult');
+  afterDays(s,1);
+  assert.ok(person.lastDecision);
+  assert.ok(person.lastDecision.foodDays>10,'work priority must use reachable food, not just private stock');
+  assert.equal(person.lastDecision.reason.includes('優先處理實際需求'),false);
+  assert.equal(person.hunger,0,'a household should not starve next to stocked community storage');
+  valid(s);
+});
+
+test('out-of-service household keeps its production rather than depositing into unreachable pantry',()=>{
+  const s=fresh();afterDays(s,16);
+  const h=s.households[0],town=s.settlements[0];
+  town.householdIds=town.householdIds.filter(id=>id!==h.id);
+  h.x=s.camp.x+17;h.y=s.camp.y;
+  for(const id of h.members){const p=s.people.find(x=>x.id===id);p.x=h.x;p.y=h.y;p.settlementId=null;}
+  const detail=W.inspectHousehold(s,h.id);
+  assert.equal(detail.settlementId,null);
+  assert.equal(detail.forecastCommonShare,0);
+  h.inventory.food=0;
+  // Make local forage visibly available, without a global stock mutation by the household.
+  for(let y=h.y-2;y<=h.y+2;y++)for(let x=h.x-2;x<=h.x+2;x++){
+    const t=s.tiles[y*s.width+x];if(t.terrain!=='river')t.forage=1.2;
+  }
+  afterDays(s,1);
+  assert.ok(h.inventory.food>0,'outside household should own the entire gathered output');
+  valid(s);
+});
+
+test('stranded distant household autonomously returns if community has accessible surplus',()=>{
+  const s=fresh();afterDays(s,20);
+  const h=s.households[1],town=s.settlements[0];
+  town.householdIds=town.householdIds.filter(id=>id!==h.id);
+  h.x=2;h.y=2;h.inventory.food=0;
+  for(const id of h.members){const p=s.people.find(x=>x.id===id);p.x=h.x;p.y=h.y;p.settlementId=null;}
+  for(const t of s.tiles)if(Math.hypot(t.x-h.x,t.y-h.y)<8){t.forage=0;if(t.terrain==='field')t.terrain='meadow';}
+  town.storage.food=280;
+  afterDays(s,8);
+  assert.equal(W.inspectHousehold(s,h.id).settlementId,town.id,'realistic return, not infinite-distance rationing');
+  assert.ok(town.householdIds.includes(h.id));
+  assert.ok(h.foodShortageDays<3);
+  assert.ok(s.events.some(e=>e.kind==='migration'&&e.text.includes('搬回')));
+  assert.ok(h.members.every(id=>s.people.find(p=>p.id===id).settlementId===town.id));
+  valid(s);
+});
+
+test('autonomous pregnancy and several births occur in a normal long-running small world',()=>{
+  const s=fresh();afterDays(s,1600);
+  assert.ok(s.counts.births>=3,`expected meaningful growth, got ${s.counts.births}`);
+  assert.equal(s.counts.deaths,0,'curated normal preset should not starve people through broken food access');
+  assert.equal(W.stats(s).people,24+s.counts.births-s.counts.deaths);
+  assert.ok(s.people.some(p=>p.stage==='child'&&p.name.startsWith('新生')));
+  valid(s);
+});
+
+test('event feed contains significant history, not periodic inventory and weather diary',()=>{
+  const s=fresh();afterDays(s,1600);
+  const routineKinds=new Set(['world','housing','weather','prayer']);
+  assert.ok(s.events.every(e=>!routineKinds.has(e.kind)), 'never save routine snapshots as history');
+  assert.ok(s.events.some(e=>e.kind==='birth'));
+  assert.ok(s.events.length < 80,`unexpected event flood: ${s.events.length}`);
+  assert.ok(s.events.filter(e=>e.kind==='famine').length<12,'only sustained food crises count as major events');
+});
+
+test('work and non-work phases have distinct, specific explanations instead of universal shortage reason',()=>{
+  const s=fresh();afterDays(s,22);
+  const adults=s.people.filter(p=>p.alive&&p.stage==='adult');
+  const reasons=new Set(adults.map(p=>p.lastDecision?.reason));
+  assert.ok(reasons.size>=4,'individuals should have distinct situated reasons');
+  assert.ok(adults.every(p=>p.activityReason?.includes('休息')||p.activityReason?.includes('非工作')||p.activityReason?.includes('祈禱')));
+  assert.ok(adults.every(p=>p.lastDecision.hour>=0));
+  assert.ok(adults.every(p=>!p.lastDecision.reason.includes('優先處理實際需求')));
+  valid(s);
+});
+
+test('first MVP saves upgrade without resurrecting people or bringing back routine diary entries',()=>{
+  const s=fresh();afterDays(s,60);
+  s.version='mvp0-web-1';s.events.push({id:++s.eventSeq,hour:s.hour,kind:'world',text:'第 60 日：普通糧食摘要',reasons:[]});
+  delete s.rules.farmYieldMultiplier;
+  for(const p of s.people){delete p.recoveryUntilHour;delete p.activityReason;}
+  for(const h of s.households)delete h.foodShortageDays;
+  const oldBirths=s.counts.births, oldDeaths=s.counts.deaths;
+  const saved=W.restore(JSON.stringify(s));
+  assert.equal(saved.version,W.VERSION);
+  assert.ok(saved.events.every(e=>e.kind!=='world'));
+  assert.equal(saved.counts.births,oldBirths);assert.equal(saved.counts.deaths,oldDeaths);
+  assert.ok(saved.people.every(p=>p.recoveryUntilHour!==undefined));
+  afterDays(saved,3);valid(saved);
 });

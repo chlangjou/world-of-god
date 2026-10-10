@@ -1,6 +1,6 @@
 {
   "name": "world-of-god-web-mvp0",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Clean-room, browser-first God/World living-simulation MVP",
   "scripts": {

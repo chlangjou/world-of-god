@@ -4,7 +4,17 @@
 
 This branch is a **fresh, independent browser-based prototype** derived from the current `main` design specifications (Issues #1–#8 and the Issue #11 MVP-0 scope), **not** a port of the earlier `web-poc` code or its balance model. It deliberately focuses on the small playable God–World feedback loop before deciding on a production engine or Codex implementation workflow.
 
-## Playtest patch — Web MVP-0.2.1 (2026-10-10)
+## Current Web PoC playtest — Agriculture v0.1 & single-screen controls (2026-10-11)
+
+**New worlds default to Agriculture v0.1.** Original remains selectable in the header as a same-Seed comparison. Agriculture now includes river-influenced seasonal soil, crop-stock-conserving harvest, experience-based farming skill and tunable autonomous reserve choices (18-day relaxation / 26-day comfort thresholds). This does **not** force a farmer quota or change Miracle/Oracle authority.
+
+The screen is reorganized: the map stays visible next to a two-level **Miracle / Oracle → ability** selector. Residents, households and significant history use dropdowns, tabs and pages, not whole-page or nested-list scrolling. The Rain action is greyed/disabled while cooling down or lacking DP.
+
+**Use the downloadable single-file `World-of-God-Web-MVP0.html` for offline play.** When using the source files (`index.html`), serve the folder via `npm start` or another local HTTP server so the Agriculture JSON can be fetched. Using `file://` on `index.html` may fail to load the Profile and explicitly fall back to Original. Saved worlds keep their original Profile snapshot; **recreate the world to apply new balance values**.
+
+**No-Rain reference check:** three seeded worlds ran for 360 simulated days with about 219–226 Food by day 360, roughly 15–16% adult farm-work share and no deaths. Results are observations rather than balance guarantees. Real-browser viewport checks at 1280×720, 1366×768 and 1920×1080 are still pending.
+
+## Previous playtest patch — Web MVP-0.2.1 (2026-10-10)
 
 This iteration fixes four observed issues from a 1,600-simulated-day player session:
 
@@ -20,11 +30,11 @@ This iteration fixes four observed issues from a 1,600-simulated-day player sess
 ## Play immediately
 
 1. Download **`World-of-God-Web-MVP0.html`** from this branch (or download the source ZIP).
-2. Double-click **`World-of-God-Web-MVP0.html`** (or `index.html` in the source ZIP) in Chrome / Edge / Firefox. There is **no build step, package installation or server dependency** for gameplay.
+2. Double-click **`World-of-God-Web-MVP0.html`** in Chrome / Edge / Firefox (standalone and offline). If using source **`index.html`**, serve the folder through HTTP (`npm start`).
 3. Click **開始 / 繼續**. Use **1×, 4×, 16×** to observe settlement formation; the world can also run with no divine intervention.
-4. Inspect residents and homes. Click **選擇降雨位置**, then the map, to inject Rain into the physical world. The cast changes moisture/crop conditions; actual Food still comes from labor.
-5. When a Saint emerges, click **傳下神諭**. Residents decide how to act after social transmission. The inspector shows individual reasons and any changed priorities.
-6. Observe drought-related **Prayer**, resource changes, fulfilled need, Devotion and Divine Power. Save/load via browser storage, or export/import a JSON state.
+4. Keep the map in view and choose **Miracle → 喚雨** in the right control rail, then click **選擇施展位置** and choose a map point. Crops and labor still determine harvested Food.
+5. For Oracle, select **Oracle → 糧食生產** in the same control rail and click **傳下神諭** once a Saint emerges. The inspector has separate 需求／聚落／居民／歷史 tabs.
+6. Observe Prayer, food reserve days, Devotion and DP. The **檔案** dropdown provides save/load and JSON import/export.
 
 Keyboard: **Space** Pause/Resume, **1** toggle Rain targeting, **Esc** cancel Rain targeting.
 
@@ -43,10 +53,10 @@ Keyboard: **Space** Pause/Resume, **1** toggle Rain targeting, **Esc** cancel Ra
 
 - [PoC UI Guide v0.1 — fixed viewport, Hints and Miracle disabled states](docs/UI_GUIDE.md)
 
-## Agriculture Balance Lab (candidate only)
+## Agriculture Balance Lab (experimental runtime profile)
 
 This branch now includes reproducible agricultural capacity formulas and experimental profiles.
-**Neither JSON file is loaded by the game runtime; the actual `sim.js` rules have not changed.**
+**The Agriculture JSON is loaded by the experimental Web runtime and embedded in its offline single-file build.** The Original JSON is a reference snapshot; Original gameplay continues using the historical Web default rules.
 
 - [Actual Web PoC balance defaults (snapshot)](config/balance-default.json)
 - [Agriculture v0.1 candidate parameters](config/balance-agriculture-v0.1.json)

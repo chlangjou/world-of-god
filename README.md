@@ -1,71 +1,46 @@
-# World of God
-
-An emergent civilization and god-simulation sandbox.
-
-## Design thesis
-
-The player is a god, not an RTS commander.
+# World of God — 河谷初生 · Web MVP-0
 
 > **God expresses intent; world determines execution.**
 
-The game is intended to generate history from interacting simulation rules: individuals, households, settlements, civilizations, religion, divine intervention, and the consequences between them.
+This branch is a **fresh, independent browser-based prototype** derived from the current `main` design specifications (Issues #1–#8 and the Issue #11 MVP-0 scope), **not** a port of the earlier `web-poc` code or its balance model. It deliberately focuses on the small playable God–World feedback loop before deciding on a production engine or Codex implementation workflow.
 
-See [Core Principles](docs/CORE_PRINCIPLES.md).
+## Play immediately
 
-## Converged design specifications
+1. Download this branch or its ZIP archive.
+2. Open `index.html` in Chrome / Edge / Firefox. There is **no build step, package installation or server dependency** for gameplay.
+3. Click **開始 / 繼續**. Use **1×, 4×, 16×** to observe settlement formation; the world can also run with no divine intervention.
+4. Inspect residents and homes. Click **選擇降雨位置**, then the map, to inject Rain into the physical world. The cast changes moisture/crop conditions; actual Food still comes from labor.
+5. When a Saint emerges, click **傳下神諭**. Residents decide how to act after social transmission. The inspector shows individual reasons and any changed priorities.
+6. Observe drought-related **Prayer**, resource changes, fulfilled need, Devotion and Divine Power. Save/load via browser storage, or export/import a JSON state.
 
-- [Settlement Economy, Occupations and Food Security (Issue #4)](docs/SETTLEMENT_ECONOMY_OCCUPATIONS.md)
-- [Oracle and Divine Calling (Issue #6)](docs/ORACLE_DIVINE_CALLING.md)
-- [Religion, Saints, Priesthood, Shrines, and Temples (Issue #8)](docs/RELIGION_PRIESTHOOD_TEMPLE.md)
-- [Miracles, Mastery, and Divine Power (Issue #7)](docs/MIRACLES_DIVINE_POWER.md)
-- [Divine Presence and spatial Miracle capability (Issues #7/#8)](docs/DIVINE_PRESENCE_MIRACLES.md)
-- [Faith, Religion and Oracle historical checkpoint](docs/FAITH_RELIGION_ORACLE_DRAFT.md) (superseded where noted)
+Keyboard: **Space** Pause/Resume, **1** toggle Rain targeting, **Esc** cancel Rain targeting.
 
+## Implemented in this experimental release
 
-## Design workflow
+- Pure browser-independent deterministic `sim.js`, fixed 8-hour simulation step, seeded RNG and clock-based effects; same kernel tested with Node.js.
+- One 64×64 curated river valley, 24 real residents / 8 households, terrain, moisture, fields, food/wood/stone/fiber resources, autonomous jobs and real material-consuming housing.
+- Emergent settlement when households cluster and actually build enough housing; two inventory ownership levels and configurable 20:80 allocation on *new storable production* after settlement forms.
+- Basic life, hunger, birth/gestation, death and low-frequency household relocation under severe shortage.
+- Individual religion/Devotion (40+ followers, contribution bands 0:1:2:4:8), separate Saint vs Priest emergence, global DP with weak natural regeneration, bounded prayer/attribution.
+- **Rain** center/radius/intensity/duration, DP cost, cooldown, basic permanent Mastery and physical weather/crop consequences.
+- **food.produce** Oracle to a Saint, individual per-Saint quota (4 initial/max, replenish once per 3 simulated months), same-Saint active intent lock, transmission, autonomous choice effects, expiry/conclusion/owner death. Ordinary work success does not auto-conclude a divine calling.
+- Map, controls, God panel, compact household/settlement/person inspectors, significant event reasons and single-version save/load.
 
-During the early design phase:
+## Tests
 
-- unresolved directions are tracked as GitHub Issues;
-- each issue should converge on one coherent rule/system;
-- settled decisions are promoted into `docs/`;
-- commits may go directly to `main`;
-- Pull Requests are intentionally deferred until the project needs a review workflow.
+No runtime dependencies. Node.js 18+ optional, only required to run automated tests:
 
-## Current design backlog
-
-1. [Core God–World gameplay loop](https://github.com/chlangjou/world-of-god/issues/1)
-2. [World simulation layers and causality](https://github.com/chlangjou/world-of-god/issues/2)
-3. [Population, family, and reproduction](https://github.com/chlangjou/world-of-god/issues/3)
-4. [Settlement economy and occupations](https://github.com/chlangjou/world-of-god/issues/4)
-5. [Faith, followers, devotion, and divine power](https://github.com/chlangjou/world-of-god/issues/5)
-6. [Oracle and divine calling](https://github.com/chlangjou/world-of-god/issues/6)
-7. [Miracles, cost model, and power scaling](https://github.com/chlangjou/world-of-god/issues/7)
-8. [Religion, priesthood, doctrine, and interpretation](https://github.com/chlangjou/world-of-god/issues/8)
-9. [Civilization, politics, diplomacy, and conflict](https://github.com/chlangjou/world-of-god/issues/9)
-10. [History, event provenance, and causal explanation](https://github.com/chlangjou/world-of-god/issues/10)
-11. [First playable vertical slice (S0–S3)](https://github.com/chlangjou/world-of-god/issues/11)
-
-## First playable implementation handoff
-
-- [Issue #11 — MVP-0 implementation contract (S0–S3)](docs/FIRST_PLAYABLE_IMPLEMENTATION.md)
-
-## Current milestone direction
-
-The first meaningful playable path is expected to be:
-
-```text
-S0 Living World
-    ↓
-S1 Settlement
-    ↓
-S2 First God
-    ↓
-S3 Oracle
+```sh
+npm test         # deterministic, autonomy, rain, Oracle, demographics and save checks
+npm run smoke    # seeded complete-loop headless scenario
 ```
 
-Target experience:
+A preview may also be served with `python -m http.server 8000`, but local `index.html` normally works directly.
 
-> A small population survives, forms a settlement, begins to worship the player, generates limited divine power, receives a small miracle and an oracle, and responds through its own simulated behavior.
+## Status and deliberate limits
 
-This milestone is deliberately provisional until Issue #11 is resolved.
+This is **playable MVP-0 experimental**, not full S0–S3 product completion and not final Sandbox v1. The exact balancing (food, drought, faith acceleration and duration) is deliberately provisional. There is only **one working Miracle** and **one Oracle type**; the full design's nine Miracle types and multiple religions remain future work, not a skill/era unlock gate. No polity, wars, Temple economy, detailed ecology or completed spatial high-tier Miracle gating yet. Rendering remains basic Canvas 2D, intentionally separate from simulation.
+
+The `main` branch still holds the authoritative specifications, including [Issue #11's original implementation contract](docs/FIRST_PLAYABLE_IMPLEMENTATION.md). This **Web-first adapter** changes the *runtime choice* (browser+JS/Node versus provisional Godot+GDScript), not those gameplay invariants. See [Web MVP implementation notes](docs/WEB_MVP0_NOTES.md) for known gaps and test strategy.
+
+Do not merge this experimental branch into main without design/playtest review. The older `web-poc` branch remains untouched.

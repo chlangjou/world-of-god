@@ -141,3 +141,15 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
   .command-reason{margin-top:4px}
   .panel-heading{margin-bottom:3px;padding-bottom:3px}
 }
+
+
+/* Compact persistent file menu retains Save/Load even on narrow screens. */
+.topbar{z-index:5}
+.file-menu{position:relative;flex:0 0 auto}
+.file-menu summary{list-style:none;cursor:pointer;border:1px solid #466058;border-radius:7px;padding:6px 9px;font-size:11px;background:#213532;color:var(--text);white-space:nowrap}
+.file-menu summary::-webkit-details-marker{display:none}
+.file-menu[open] summary{border-color:var(--accent)}
+.file-menu-popover{position:absolute;z-index:20;right:0;top:calc(100% + 6px);display:grid;gap:3px;min-width:132px;padding:6px;background:#1b2e2b;border:1px solid #577165;border-radius:9px;box-shadow:0 14px 34px #0009}
+.file-menu-popover .btn{text-align:left;width:100%;display:block!important;padding:8px 10px!important;font-size:11px!important}
+@media(max-width:650px){.file-menu summary{font-size:10px;padding:4px 5px}}
+@media(max-width:500px){.brand b{display:none}.header-actions{gap:0}.profile-picker select{width:105px}.topbar{padding:0 5px}.date-box{min-width:44px}}

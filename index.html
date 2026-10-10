@@ -18,11 +18,16 @@
           <option value="original">Original</option>
         </select>
       </label>
+      <details id="fileMenu" class="file-menu">
+        <summary title="存檔、讀檔、匯出及匯入">檔案</summary>
+        <div class="file-menu-popover">
+          <button id="saveBtn" class="btn ghost" title="儲存目前世界">儲存</button>
+          <button id="loadBtn" class="btn ghost" title="讀取儲存的世界">讀取</button>
+          <button id="exportBtn" class="btn ghost" title="匯出存檔 JSON">匯出 JSON</button>
+          <button id="importBtn" class="btn ghost" title="匯入存檔 JSON">匯入 JSON</button>
+        </div>
+      </details>
       <button id="helpBtn" class="btn ghost" title="玩法及操作說明">說明</button>
-      <button id="saveBtn" class="btn ghost" title="儲存目前世界">儲存</button>
-      <button id="loadBtn" class="btn ghost" title="讀取儲存的世界">讀取</button>
-      <button id="exportBtn" class="btn ghost" title="匯出存檔 JSON">匯出</button>
-      <button id="importBtn" class="btn ghost" title="匯入存檔 JSON">匯入</button>
       <button id="resetBtn" class="btn outline" title="以目前 Profile 重新創世">重新創世</button>
     </div>
   </header>

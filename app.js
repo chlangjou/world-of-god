@@ -12,6 +12,42 @@
   const taskName = {rest:'休息',family:'家庭／社交',pray:'祈禱',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',dead:'已離世'};
   const stageName = {adult:'成年人',child:'兒童',elder:'長者'};
   const occupationName = {food_producer:'糧食生產者',gatherer:'採集者',dependent:'受扶養者'};
+  // First layer: action category; second layer: available power within that category.
+  const availablePowers={
+    miracle:[{id:'rain',label:'喚雨 Rain'}],
+    oracle:[{id:'food.produce',label:'糧食生產'}]
+  };
+  function showDivineKind(kind){
+    divineKind=kind;if(kind!=='miracle')armedRain=false;
+    $('miraclePanel').hidden=kind!=='miracle';$('oraclePanel').hidden=kind!=='oracle';
+    for(const [id,category] of [['miracleTab','miracle'],['oracleTab','oracle']]){
+      $(id).classList.toggle('active',category===kind);
+      $(id).setAttribute('aria-selected',String(category===kind));
+    }
+    $('divinePowerSelect').innerHTML=availablePowers[kind].map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+    render();
+  }
+  function showInspector(tab){
+    activeInspector=tab;
+    document.querySelectorAll('[data-inspect-tab]').forEach(b=>{
+      const selected=b.dataset.inspectTab===tab;
+      b.classList.toggle('active',selected);
+      b.setAttribute('aria-selected',String(selected));
+    });
+    document.querySelectorAll('[data-inspect-panel]').forEach(el=>el.hidden=el.dataset.inspectPanel!==tab);
+    render();
+  }
+  function toggleRainTarget(){
+    if(profileLoading)return;
+    if(divineKind!=='miracle')showDivineKind('miracle');
+    if(!armedRain){
+      const target=cursor||state.camp;
+      const result=S.evalRain(state,{x:target.x,y:target.y,...opts()});
+      if(!result.ok){say(result.reason);updateCost();return;}
+    }
+    armedRain=!armedRain;render();
+    if(armedRain)say('請點擊地圖選擇喚雨位置。Esc 可取消。');
+  }
   function say(text) { const box=$('toast');box.textContent=text;box.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>box.classList.remove('visible'),3000); }
   function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,durationDays:+$('duration').value}; }
   function storageKey() {return 'wog-mvp0-web-save';}
@@ -170,7 +206,7 @@
     if(x<0||y<0||x>=state.width||y>=state.height)return;
     if(armedRain){const r=S.castRain(state,{x,y,...opts()});say(r.ok?`降雨成功：消耗 ${r.cost} DP，世界將自行運作。`:r.reason);if(r.ok)armedRain=false;render();return;}
     let selected=null,dd=Infinity;for(const p of state.people){if(!p.alive)continue;const d=Math.hypot(p.x-x,p.y-y);if(d<dd){selected=p;dd=d;}}
-    if(selected && dd<3.2){chosen=selected.id;render();say(`正在觀察 ${selected.name} 的生活與工作選擇`);}else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
+    if(selected && dd<3.2){chosen=selected.id;showInspector('person');say(`正在觀察 ${selected.name} 的生活與工作選擇`);}else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
   }
   function animate(t) {
     const dt=Math.min(250,t-(previous||t));previous=t;
@@ -183,14 +219,22 @@
   $('pauseBtn').onclick=()=>{paused=!paused;render();};
   document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>{speed=+btn.dataset.speed;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',b===btn));render();});
   ['radius','intensity','duration'].forEach(id=>$(id).addEventListener('input',()=>{updateCost();draw();}));
-  $('rainBtn').onclick=()=>{armedRain=!armedRain;render();if(armedRain)say('請點擊地圖上的目標位置，確認施展喚雨。');};
+  $('rainBtn').onclick=toggleRainTarget;
   $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{intentType:'food.produce'});say(r.ok?'神諭已交給 Saint；居民稍後自主聆聽與回應。':r.reason);render();};
   $('concludeBtn').onclick=()=>{const o=S.stats(state).activeOracle;const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
   canvas.addEventListener('click',onMap);
   canvas.addEventListener('mousemove',e=>{const rect=canvas.getBoundingClientRect();cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};});
   canvas.addEventListener('mouseleave',()=>{cursor=null;});
-  $('personList').addEventListener('click',e=>{const p=e.target.closest('button[data-person]');if(p){chosen=p.dataset.person;render();}});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedRain){armedRain=false;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT'].includes(document.activeElement?.tagName)){armedRain=!armedRain;render();}});
+  $('residentSelect').onchange=e=>{chosen=e.target.value;render();};
+  $('housePrev').onclick=()=>{housePage=Math.max(0,housePage-1);render();};
+  $('houseNext').onclick=()=>{housePage++;render();};
+  $('historyPrev').onclick=()=>{historyPage=Math.max(0,historyPage-1);render();};
+  $('historyNext').onclick=()=>{historyPage++;render();};
+  $('miracleTab').onclick=()=>showDivineKind('miracle');
+  $('oracleTab').onclick=()=>showDivineKind('oracle');
+  $('divinePowerSelect').onchange=()=>render();
+  document.querySelectorAll('[data-inspect-tab]').forEach(button=>button.onclick=()=>showInspector(button.dataset.inspectTab));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedRain){armedRain=false;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)){toggleRainTarget();}});
   $('saveBtn').onclick=save;
   $('loadBtn').onclick=()=>{let raw=null;try{raw=localStorage.getItem(storageKey());}catch(_){}if(raw)restore(raw);else say('目前沒有本機存檔；可以匯入 JSON。');};
   $('exportBtn').onclick=exportSave;
@@ -198,5 +242,18 @@
   $('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;if(file.size>10*1024*1024){say('檔案超過 10 MB，無法匯入。');return;}restore(await file.text());e.target.value='';});
   $('resetBtn').onclick=()=>{if(!confirm('要重新開始河谷世界嗎？目前未儲存的進度會消失。'))return;newWorld();say('新世界已生成。');};
   $('helpBtn').onclick=()=>$('infoDialog').showModal();$('closeHelp').onclick=()=>$('infoDialog').close();
-  render();requestAnimationFrame(animate);
+  // New playtests start with the latest experimental Agriculture profile.
+  // Loading failure is explicit and falls back to the reproducible Original rules.
+  $('balanceProfile').disabled=true;$('resetBtn').disabled=true;
+  showDivineKind('miracle');showInspector('needs');
+  requestAnimationFrame(animate);
+  loadAgriculture().then(profile=>{
+    activeProfile=profile;newWorld();
+    say('Agriculture v0.1 已啟用；可切換 Original 進行對照。');
+  }).catch(error=>{
+    activeProfile=null;state=S.create({seed:state.seed});paused=true;
+    say('Agriculture 載入失敗，已使用 Original：'+error.message);
+  }).finally(()=>{
+    profileLoading=false;$('balanceProfile').disabled=false;$('resetBtn').disabled=false;render();
+  });
 })();

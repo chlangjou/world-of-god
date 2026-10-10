@@ -1,7 +1,7 @@
 {
   "profileId": "agriculture-balance-v0.1",
-  "status": "candidate-formula-only",
-  "loadedByRuntime": false,
+  "status": "experimental-runtime-profile",
+  "loadedByRuntime": true,
   "units": {
     "distance": "map cells from the riverbank",
     "time": "simulated days and actual full 8-hour food workdays",
@@ -14,12 +14,13 @@
     "zeroEffectAtCells": 15,
     "nearBankInfluence": 0.95,
     "falloff": "linear",
-    "meaning": "seasonal moisture contribution potential, not fixed soil moisture"
+    "meaning": "seasonal moisture contribution potential, not fixed soil moisture",
+    "riverHalfWidthCells": 1.6
   },
   "seasons": {
     "rain": {
       "backgroundMoisture": 0.76,
-      "riverWaterAvailability": 1.0,
+      "riverWaterAvailability": 1,
       "diagnosticFoodLaborShare": 0.08
     },
     "mild": {
@@ -31,19 +32,41 @@
       "backgroundMoisture": 0.12,
       "riverWaterAvailability": 0.4,
       "diagnosticFoodLaborShare": 0.5
-    }
+    },
+    "cycleDays": 160,
+    "dryWindows": [
+      [
+        14,
+        29
+      ]
+    ],
+    "rainWindows": [
+      [
+        0,
+        5
+      ],
+      [
+        32,
+        39
+      ],
+      [
+        68,
+        74
+      ]
+    ]
   },
   "land": {
     "foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture": 0.2,
     "referenceMoisture": 0.9,
     "moistureExponent": 0.8,
-    "harvestMechanic": "actual yield is limited by accumulated unharvested crop stock and worker capacity; do not create food by formula alone"
+    "harvestMechanic": "actual yield is limited by accumulated unharvested crop stock and worker capacity; do not create food by formula alone",
+    "cropStockCapacityDays": 2
   },
   "worker": {
     "foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment": 9.5,
     "skillOutputIntercept": 0.6,
     "skillOutputSlope": 0.8,
-    "environmentMoistureExponent": 3.0,
+    "environmentMoistureExponent": 3,
     "startingSkillReference": 0.45,
     "startingSkillRange": [
       0.4,

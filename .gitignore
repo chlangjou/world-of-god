@@ -1,0 +1,6 @@
+.tools/
+godot/.godot/
+godot/builds/
+godot/test-output/
+*.tmp
+

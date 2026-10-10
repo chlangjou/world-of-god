@@ -355,3 +355,14 @@ Not required initially:
 - pregnancy complications,
 - detailed infant mortality,
 - extensive kinship politics.
+
+## 20. Minimum coherent demographic prerequisites (Issue #11 playtest lesson)
+
+A fertility threshold can be tuned, but **the meaning of accessible food** is a system contract. Demographic decisions must consider realistically reachable household food and shared supplies, not private stock alone or distant/unavailable settlement totals.
+
+- Pregnancy/conception opportunity still depends on real living partners, reproductive profiles, health, gestation/recovery, housing/care and available food. Planning for a household's share of communal stock must not consume, reserve or double-count it.
+- Migration must update the household's food access, Settlement affiliation and survival choices. Genuine isolation can lead to hardship or death, but accidental deposit-only access cannot be accepted as emergence.
+- Use controlled **favorable, multi-year / approximately 1,600 simulated day** scenarios with eligible people, actual food access and shelter to show real births occur under selected deterministic seeds. This is a regression fixture, **not** a promise that every stochastic world must grow.
+- Check reasons for delayed conception (partner, food access, shelter, pregnancy/recovery, health). Do not force births, create resources or remove meaningful scarcity to satisfy a test.
+
+Low-frequency decisions remain sufficient: this does not require detailed reproduction or logistics simulation.

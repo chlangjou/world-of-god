@@ -28,12 +28,42 @@ func total_item(item: String) -> float:
 	for town in towns: result += town.storage[item]
 	return result
 
-func allocate_food(town_id: int, requests: Array) -> Dictionary:
+func food_eligible(s, town_id: int, home_id: int) -> bool:
+	var town = get_town(town_id)
+	var home = s.households.get_home(home_id)
+	if town.is_empty() or home.is_empty() or home.settlement_id != town_id or home_id not in town.households: return false
+	return can_reach_store(s, home, town)
+
+func can_reach_store(s, home: Dictionary, town: Dictionary) -> bool:
+	var origin = Vector2(home.x, home.y)
+	var destination = Vector2(town.x, town.y)
+	return origin.distance_to(destination) <= float(s.rules.settlement_cluster_radius) and s.world.reachable(origin, destination)
+
+func reaffiliate(s, home_id: int) -> void:
+	var home = s.households.get_home(home_id)
+	var chosen = 0
+	var nearest = INF
+	for town in towns:
+		town.households.erase(home_id)
+		var distance = Vector2(home.x, home.y).distance_to(Vector2(town.x, town.y))
+		if distance < nearest and can_reach_store(s, home, town):
+			chosen = town.id
+			nearest = distance
+	if chosen > 0: get_town(chosen).households.append(home_id)
+	s.households.join_settlement(home_id, chosen)
+	s.individuals.join_settlement(s, home_id, chosen)
+
+func allocate_food(s, town_id: int, requests: Array) -> Dictionary:
 	var total = 0.0
-	for request in requests: total += request.amount
+	var eligible: Array = []
+	for request in requests:
+		if request.amount > 0.0 and food_eligible(s, town_id, request.household_id):
+			eligible.append(request)
+			total += request.amount
+	if eligible.is_empty(): return {}
 	var available = take(town_id, "food", total)
 	var result = {}
-	for request in requests: result[request.household_id] = available * request.amount / maxf(0.0001, total)
+	for request in eligible: result[request.household_id] = available * request.amount / maxf(0.0001, total)
 	return result
 
 func try_form(s) -> void:
@@ -64,18 +94,23 @@ func try_form(s) -> void:
 			deposit(town.id, item, s.households.take(home_id, item, 2.0 if item == "wood" else 1.0))
 	s.record("settlement", "居民因鄰近水源、家庭聚集與居住需求，自主組成「蘆灣」。", candidates, [], {"households": candidates.size(), "available_wood": wood, "available_fiber": fiber})
 
-func demand(s, town_id: int) -> Dictionary:
+func demand(s, town_id: int, access: Dictionary = {}) -> Dictionary:
 	var town = get_town(town_id)
-	if town.is_empty(): return {"food": 1.0, "housing": 1.0, "wood": 0.0, "stone": 0.0, "fiber": 0.0, "maintenance": 0.0, "trade": 0.0}
+	if town.is_empty(): return {"food": 0.0, "housing": 0.0, "wood": 0.0, "stone": 0.0, "fiber": 0.0, "maintenance": 0.0, "trade": 0.0}
+	if access.is_empty(): access = s.households.food_access_view(s)
 	var need = 0.0
-	var stock = town.storage.food
+	var deficit = 0.0
 	var unhoused = 0
+	var active_homes = 0
 	for id_value in town.households:
 		var home = s.households.get_home(id_value)
-		need += s.households.food_need(s, home)
-		stock += home.inventory.food
+		if access[id_value].town_id != town.id or access[id_value].need <= 0.0: continue
+		var target = access[id_value].need * float(s.rules.settlement_food_target_days)
+		need += target
+		deficit += maxf(0.0, target - access[id_value].available)
+		active_homes += 1
 		unhoused += int(home.dwelling_id == 0)
-	var result = {"food": clampf(1.0 - stock / maxf(1.0, need * 6.0), 0.0, 1.0), "housing": float(unhoused) / maxf(1.0, town.households.size()), "wood": float(town.storage.wood < 12.0), "stone": float(town.storage.stone < 5.0), "fiber": float(town.storage.fiber < 5.0), "maintenance": 0.0, "trade": 0.0}
+	var result = {"food": clampf(deficit / maxf(1.0, need), 0.0, 1.0), "housing": float(unhoused) / maxf(1.0, active_homes), "wood": float(town.storage.wood < 12.0), "stone": float(town.storage.stone < 5.0), "fiber": float(town.storage.fiber < 5.0), "maintenance": 0.0, "trade": 0.0}
 	for building in town.structures: result.maintenance = maxf(result.maintenance, 1.0 - building.condition / 100.0)
 	return result
 
@@ -95,8 +130,7 @@ func start_project(s, town: Dictionary) -> void:
 	for item in recipe:
 		var spent = take(town.id, item, float(recipe[item]))
 		spent_materials[item] += spent
-	var event = s.record("construction_started", "居民投入材料，開始建造%s。" % ("共用倉庫" if kind == "storage" else "家庭住宅"), [town.id], [], {"recipe": recipe})
-	town.project = {"kind": kind, "household_id": home_id, "work": 0.0, "required_work": float(s.rules.storage_work if kind == "storage" else s.rules.housing_work), "started_at": s.time, "event_id": event}
+	town.project = {"kind": kind, "household_id": home_id, "work": 0.0, "required_work": float(s.rules.storage_work if kind == "storage" else s.rules.housing_work), "started_at": s.time, "event_id": 0}
 
 func perform_work(s, town_id: int, person_id: int, effort: float) -> float:
 	var town = get_town(town_id)
@@ -122,15 +156,15 @@ func perform_work(s, town_id: int, person_id: int, effort: float) -> float:
 		next_structure_id += 1
 		town.structures.append(building)
 		town.project = {}
-		s.record("construction", "%s落成：消耗材料與 %.1f 單位真實勞動。" % ["共用倉庫" if project.kind == "storage" else "第 %d 戶住宅" % project.household_id, project.required_work], [town.id, person_id], [project.event_id])
 	return used
 
 func update(s) -> void:
 	try_form(s)
+	var access = s.households.food_access_view(s)
 	for town in towns:
 		for building in town.structures: building.condition = maxf(0.0, building.condition - float(s.rules.maintenance_per_day))
 		start_project(s, town)
-		town.basic_demand = demand(s, town.id)
+		town.basic_demand = demand(s, town.id, access)
 		town.shortage = "severe" if town.basic_demand.food > 0.95 else ("shortage" if town.basic_demand.food > 0.7 else "normal")
 
 func state() -> Dictionary:

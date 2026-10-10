@@ -2,6 +2,7 @@ extends Control
 
 const Session = preload("res://scripts/simulation/session.gd")
 const WorldMap = preload("res://scripts/presentation/world_map.gd")
+const ObservationClock = preload("res://scripts/presentation/observation_clock.gd")
 const INK = Color("e2e6dc")
 const MUTED = Color("9eafa8")
 const GOLD = Color("ddc18b")
@@ -10,6 +11,8 @@ const ACTIVITY = {"rest": "休息", "care": "照護", "social": "家庭／交流
 const OCCUPATION = {"dependent": "受照護者", "food_producer": "食物生產者", "builder": "建造者", "gatherer": "資源採集者"}
 
 var sim = Session.new()
+var observation_clock = ObservationClock.new()
+var night_event: Dictionary = {}
 var view: Dictionary = {}
 var map: Control
 var date_label: Label
@@ -45,6 +48,8 @@ var speed_buttons: Array = []
 var last_result: Dictionary = {}
 var divine_tabs: TabContainer
 var rain_target_toggle: CheckButton
+var night_skip_toggle: CheckButton
+var clock_status: Label
 
 func _ready() -> void:
 	var system_font = SystemFont.new()
@@ -73,6 +78,7 @@ func _ready() -> void:
 	theme = ui_theme
 	build_ui()
 	sim.start()
+	observation_clock.reset(sim)
 	sim.history.archive_path = "user://history.jsonl"
 	sim.command_archive_path = "user://commands.jsonl"
 	fill_people()
@@ -176,8 +182,20 @@ func build_ui() -> void:
 	seed_input.custom_minimum_size.x = 100
 	seed_row.add_child(seed_input)
 	button("重啟", restart_world, header)
+	var stats_row = HBoxContainer.new()
+	stats_row.add_theme_constant_override("separation", 16)
+	root.add_child(stats_row)
 	stats_label = text_label("", 16, INK)
-	root.add_child(stats_label)
+	stats_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stats_row.add_child(stats_label)
+	clock_status = text_label("", 12, TEAL)
+	stats_row.add_child(clock_status)
+	night_skip_toggle = CheckButton.new()
+	night_skip_toggle.text = "夜間快進"
+	night_skip_toggle.button_pressed = true
+	night_skip_toggle.tooltip_text = "20:00–08:00 加快 8 倍；重大事件會暫停，繼續後 10 秒內不自動暫停。"
+	night_skip_toggle.toggled.connect(func(enabled): observation_clock.night_skip_enabled = enabled; refresh_view())
+	stats_row.add_child(night_skip_toggle)
 	var body = HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 12)
@@ -270,7 +288,7 @@ func build_ui() -> void:
 	map.target_changed.connect(func(_point): update_rain_preview())
 	middle.add_child(map)
 	middle.add_child(text_label("點選：觀察／設定雨心  ·  滾輪：縮放  ·  右鍵拖曳／WASD：平移", 11, MUTED))
-	middle.add_child(wrap_label("金環是聖者；小圓點是居民；虛線圓是家庭營地。住房由世界自行建造。", 11))
+	middle.add_child(wrap_label("地圖優先顯示白天活動居民；休息居民可從右側選單查看。金環是聖者；虛線圓是家庭營地。", 11))
 	var right = panel(body)
 	right.get_parent().custom_minimum_size.x = 304
 	var inspect_header = HBoxContainer.new()
@@ -300,11 +318,37 @@ func build_ui() -> void:
 	root.add_child(status_label)
 
 func _process(delta: float) -> void:
-	sim.advance_wall(delta)
+	advance_observation(delta)
 	refresh_timer += delta
 	if refresh_timer >= 0.35:
 		refresh_timer = 0.0
 		refresh_view()
+
+func advance_observation(delta: float) -> void:
+	if sim.paused: return
+	var event = observation_clock.advance_wall(sim, delta)
+	if event.is_empty(): return
+	night_event = event
+	sim.paused = true
+	map.event_people = night_event_people(night_event)
+	status_label.text = "夜間事件：%s　按「繼續」恢復觀察。" % night_event.message
+	status_label.add_theme_color_override("font_color", GOLD)
+	fill_people()
+	show_event(night_event.id)
+	refresh_view()
+
+func night_event_people(event: Dictionary) -> Array:
+	var subjects: Array = event.subjects
+	match event.kind:
+		"birth", "pregnancy": return subjects.slice(0, 2)
+		"shortage", "migration", "prayer_fulfilled":
+			return sim.households.get_home(subjects[0]).get("members", []).duplicate() if not subjects.is_empty() else []
+		"settlement":
+			var people: Array = []
+			for home_id in subjects: people.append_array(sim.households.get_home(home_id).get("members", []))
+			return people
+		"rain", "rain_ended": return []
+		_: return subjects.slice(0, 1)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
@@ -315,11 +359,20 @@ func format_date(seconds: int) -> String:
 	var days = seconds / sim.day_seconds()
 	return "第 %d 年 · %d 月 %d 日" % [days / int(sim.rules.year_days) + 1, days / int(sim.rules.month_days) % 12 + 1, days % int(sim.rules.month_days) + 1]
 
+func format_time(seconds: int) -> String:
+	var minutes = int(float(seconds % sim.day_seconds()) * 1440.0 / sim.day_seconds())
+	return "%02d:%02d" % [minutes / 60, minutes % 60]
+
 func refresh_view() -> void:
 	view = sim.snapshot()
+	map.daytime = observation_clock.is_daytime(sim)
 	map.set_snapshot(view)
+	if person_select.item_count != view.individuals.people.size() + 1: fill_people()
 	var stats = view.stats
-	date_label.text = format_date(sim.time)
+	date_label.text = format_date(sim.time) + "\n" + format_time(sim.time) + (" · 白天" if map.daytime else " · 夜間")
+	clock_status.text = "夜間事件 · 暫停" if sim.paused and not night_event.is_empty() else ("已暫停" if sim.paused else ("夜間快進 %d×" % (sim.speed * observation_clock.multiplier(sim)) if observation_clock.multiplier(sim) > 1 else "觀察 %d×" % sim.speed))
+	if not sim.paused and observation_clock.grace_remaining > 0.0:
+		clock_status.text += " · 緩衝 %d 秒" % ceili(observation_clock.grace_remaining)
 	pause_button.text = "繼續" if sim.paused else "暫停"
 	for i in speed_buttons.size(): speed_buttons[i].button_pressed = sim.speed == [1, 4, 16][i]
 	stats_label.text = "居民 %d   ·   家庭 %d   ·   聚落 %d   ·   食物 %.1f（%.1f 天）   ·   信徒 %d   ·   %s" % [stats.population, view.households.homes.size(), stats.settlements, stats.food, stats.food_days, stats.followers, view.world.weather]
@@ -356,10 +409,13 @@ func refresh_view() -> void:
 		last_feed_id = view.history.next_id
 		var lines: Array = []
 		var events = view.history.events
-		for index in range(maxi(0, events.size() - 48), events.size()):
-			var event = events[index]
+		for event in events:
+			# Retain causal intermediate records for inspection, while the feed
+			# shows major events instead of every resident's response stage.
+			if event.kind not in ObservationClock.NIGHT_EVENTS and event.kind not in ["genesis", "prayer", "oracle_received"]: continue
 			var color = "ddc18b" if event.kind in ["rain", "oracle_issued", "prayer_fulfilled", "settlement", "saint"] else "a6bab2"
-			lines.append("[color=#%s][url=event:%d]#%d  %s[/url][/color]  %s" % [color, event.id, event.id, format_date(event.time), event.message])
+			lines.append("[color=#%s][url=event:%d]#%d  %s %s[/url][/color]  %s" % [color, event.id, event.id, format_date(event.time), format_time(event.time), event.message])
+			if lines.size() > 48: lines.pop_front()
 		event_feed.text = "\n".join(lines)
 
 func fill_people() -> void:
@@ -412,6 +468,10 @@ func conclude_oracle() -> void:
 
 func toggle_pause() -> void:
 	sim.paused = not sim.paused
+	if not sim.paused:
+		observation_clock.resumed()
+		night_event.clear()
+		map.event_people.clear()
 	refresh_view()
 
 func set_speed(value: int) -> void:
@@ -420,6 +480,9 @@ func set_speed(value: int) -> void:
 
 func restart_world() -> void:
 	sim.start({}, int(seed_input.value))
+	observation_clock.reset(sim)
+	night_event.clear()
+	map.event_people.clear()
 	sim.history.archive_path = "user://history.jsonl"
 	sim.command_archive_path = "user://commands.jsonl"
 	selected_kind = "overview"
@@ -435,6 +498,9 @@ func save_world() -> void:
 func load_world() -> void:
 	var result = sim.load_file("user://river_valley.wog")
 	if result.ok:
+		observation_clock.reset(sim)
+		night_event.clear()
+		map.event_people.clear()
 		saints_in_menu = [-999]
 		prayers_in_menu = [-999]
 		last_feed_id = 0
@@ -476,6 +542,10 @@ func focus_prayer() -> void:
 func inventory_text(items: Dictionary) -> String:
 	return "食物 %.1f  木材 %.1f\n石材 %.1f  纖維 %.1f" % [items.food, items.wood, items.stone, items.fiber]
 
+func food_access_text(home: Dictionary) -> String:
+	var access = sim.households.food_access_view(sim)[home.id]
+	return "家庭 %.1f ＋ 可達共用預估份額 %.1f\n可用 %.1f（%.1f 天）；每日需求 %.2f\n%s" % [access.own, access.shared, access.available, access.available / maxf(0.1, access.need), access.need, "具備共用儲備存取資格。" if access.town_id > 0 else "目前無可達且有資格使用的共用儲備。"]
+
 func update_inspector() -> void:
 	if selected_kind == "event": return
 	var content = ""
@@ -486,8 +556,9 @@ func update_inspector() -> void:
 			var home = sim.households.get_home(p.household_id)
 			var calling = sim.religion.calling_pressure(sim, p)
 			content = "[b]%s  #%d[/b]\n%.1f 歲 · %s\n\n生命 %.1f  飢餓 %.1f\n位置 (%.1f, %.1f)\n家庭 #%d · 聚落 #%d\n\n[b]生計[/b] %s\n[b]此刻[/b] %s\n農耕 %.2f · 採集 %.2f\n建造 %.2f · 傳教 %.2f\n\n[b]決策原因[/b]\n%s\n\n[b]信仰[/b]\n%s · 虔誠 %.1f\n聖者 %s · 祭司 %s\n神諭壓力 %.2f\n\n[b]家庭庫存[/b]\n%s" % [p.name, p.id, p.age, "在世" if p.alive else "已離世", p.health, p.hunger, p.x, p.y, p.household_id, p.settlement_id, OCCUPATION.get(p.occupation, p.occupation), ACTIVITY.get(p.activity, p.activity), p.skills.agriculture, p.skills.gathering, p.skills.construction, p.skills.preaching, p.reason, "河谷之神" if p.religion_id == sim.religion.id else "尚無歸屬", p.devotion, "是" if sim.religion.eligible(sim, p.id) else "否", "是" if p.id in sim.religion.priests else "否", calling.strength, inventory_text(home.inventory)]
+			content += "\n\n[b]食物保障[/b]\n" + food_access_text(home)
 			if not p.decision.is_empty():
-				content += "\n\n[b]實際比較的工作評分[/b]"
+				content += "\n\n[b]上次工作比較[/b]\n" + format_date(p.decision.get("evaluated_at", sim.time)) + " " + format_time(p.decision.get("evaluated_at", sim.time))
 				for activity in p.decision.get("scores", {}): content += "\n%s：%.2f" % [ACTIVITY.get(activity, activity), p.decision.scores[activity]]
 		"household":
 			var home = sim.households.get_home(selected_id)
@@ -497,6 +568,7 @@ func update_inspector() -> void:
 				var p = sim.individuals.get_person(person_id)
 				content += "%s · %.1f 歲 · %s\n" % [p.name, p.age, "在世" if p.alive else "已離世"]
 			content += "\n[b]家庭庫存[/b]\n%s\n\n每日食物需求 %.2f\n可用食物 %.1f 天\n昨日食物滿足 %.0f%%\n持續不足 %d 天\n受照護者 %d\n住宅 %s\n\n家庭優先使用自有食物，缺口才向共用儲備求助。" % [inventory_text(home.inventory), sim.households.food_need(sim, home), sim.households.accessible_food(sim, home) / maxf(0.1, sim.households.food_need(sim, home)), home.satisfaction * 100, home.shortage_days, home.care_load, "尚在營地" if home.dwelling_id == 0 else "#%d" % home.dwelling_id]
+			content += "\n\n[b]存取與保障[/b]\n" + food_access_text(home)
 		"settlement":
 			var town = sim.settlements.get_town(selected_id)
 			if town.is_empty(): return
@@ -517,7 +589,7 @@ func show_event(event_id: int) -> void:
 	selected_id = event_id
 	for event in sim.history.events:
 		if event.id != event_id: continue
-		var content = "[b]事件 #%d · %s[/b]\n%s\n\n%s\n\n[b]實際父事件[/b]\n" % [event.id, event.kind, format_date(event.time), event.message]
+		var content = "[b]事件 #%d · %s[/b]\n%s %s\n\n%s\n\n[b]實際父事件[/b]\n" % [event.id, event.kind, format_date(event.time), format_time(event.time), event.message]
 		if event.parents.is_empty(): content += "未記錄直接父事件。\n"
 		for parent in event.parents: content += "[url=event:%d]查看 #%d[/url]\n" % [parent, parent]
 		if not event.reasons.is_empty(): content += "\n[b]實際使用的理由／上下文[/b]\n" + JSON.stringify(event.reasons, "  ")

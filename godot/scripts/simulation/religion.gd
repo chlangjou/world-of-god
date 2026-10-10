@@ -173,7 +173,7 @@ func note_decision(s, p: Dictionary, choice: Dictionary, production: Dictionary)
 	var response = oracle.responses.get(p.id, {"accepted": false, "deprioritized": false, "attempted": false, "outcome": false, "event_id": oracle.last_transmission})
 	var food_work = choice.activity in ["farm", "gather_food"]
 	if not food_work and not response.deprioritized:
-		var reason = "當地沒有可取得的作物或野生食物。" if not choice.feasible_food else "家庭、材料或建造工作在當前評分中更優先。"
+		var reason = "當地沒有可取得的作物或野生食物。" if not choice.feasible_food else choice.reason
 		response.event_id = s.record("oracle_deprioritized", "%s暫緩神諭：%s" % [p.name, reason], [p.id], [oracle.last_transmission], {"scores": choice.scores, "food_feasible": choice.feasible_food})
 		response.deprioritized = true
 		oracle.stages.deprioritized += 1
@@ -205,6 +205,7 @@ func note_food_evidence(s, p: Dictionary, amount: float, parent: int, source: St
 		prayer.evidence_event = s.record("attributed_harvest", "第 %d 戶見證%s相關的實際食物產出。" % [p.household_id, "降雨改善作物" if source == "rain" else "神諭影響勞動"], [p.id, p.household_id], [parent], {"food": amount, "attributable_food": attributable_amount, "source": source})
 
 func evaluate_needs(s) -> void:
+	var access = s.households.food_access_view(s)
 	for home in s.households.homes:
 		var petitioner: Dictionary = {}
 		for person_id in home.members:
@@ -213,7 +214,7 @@ func evaluate_needs(s) -> void:
 				petitioner = p
 				break
 		if petitioner.is_empty(): continue
-		var food_days = s.households.accessible_food(s, home) / maxf(0.1, s.households.food_need(s, home))
+		var food_days = s.households.accessible_food(s, home, access) / maxf(0.1, s.households.food_need(s, home))
 		var prayer = prayers.get(home.id, {})
 		if (prayer.is_empty() or prayer.status != "pending" and s.time - prayer.closed_at >= int(s.rules.prayer_repeat_days) * s.day_seconds()) and food_days < 2.5:
 			var event_id = s.record("prayer", "%s直接祈求食物保障：第 %d 戶可用儲備只剩 %.1f 天。" % [petitioner.name, home.id, food_days], [petitioner.id, home.id], [], {"food_days": food_days})

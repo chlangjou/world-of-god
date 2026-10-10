@@ -192,8 +192,15 @@ func run() -> void:
 	var first_assignment = multiple.religion.oracles[0]
 	multiple.religion.saints[receivers[0]].quota = -1
 	check(not multiple.submit_command({"type": "conclude", "oracle_id": first_assignment.id}).ok and first_assignment.status == "active", "G: conclusion below -1 rejects without ending assignment")
-	var plain = fresh({"initial_food_per_household": 80.0})
+	var plain = fresh()
 	plain.advance_by(3 * plain.day_seconds())
+	# A finite three-day communal reserve leaves real food work competing with
+	# housing. The two runs receive exactly the same fixture before Calling.
+	for home in plain.households.homes: home.inventory.food = 0.0
+	plain.settlements.towns[0].storage.food = plain.households.daily_food_need(plain) * 3.0
+	plain.households.initial.food = plain.stats().food
+	plain.households.output.food = 0.0
+	plain.households.consumed = 0.0
 	var called = Session.new()
 	called.import_state(plain.export_state())
 	called.submit_command({"type": "oracle", "saint_id": called.religion.living_saints(called)[0]})

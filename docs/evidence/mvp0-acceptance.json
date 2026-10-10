@@ -3,13 +3,13 @@
 	"evidence": [
 		{
 			"activities": {
-				"build": 380,
-				"care": 331,
-				"farm": 2854,
-				"gather_fiber": 32,
-				"gather_food": 586,
-				"gather_stone": 20,
-				"gather_wood": 117
+				"build": 366,
+				"care": 340,
+				"farm": 2744,
+				"gather_fiber": 35,
+				"gather_food": 692,
+				"gather_stone": 24,
+				"gather_wood": 119
 			},
 			"scenario": "autonomous_90_days",
 			"stats": {
@@ -18,8 +18,8 @@
 				"devotion": 25.835,
 				"dp_rate": 1.2,
 				"followers": 8,
-				"food": 134.318385311967,
-				"food_days": 7.77305470555366,
+				"food": 82.1398383152048,
+				"food_days": 4.75346286546324,
 				"hungry": 0,
 				"population": 32,
 				"settlements": 1
@@ -27,8 +27,8 @@
 			"structures": 9
 		},
 		{
-			"actual_harvest": 474.795503681694,
-			"bonus_harvest": 238.538038302674,
+			"actual_harvest": 307.033332637113,
+			"bonus_harvest": 121.984173945173,
 			"cost": 24.0,
 			"scenario": "rain_day3_to18"
 		},
@@ -41,8 +41,8 @@
 				"devotion": 24.53,
 				"dp_rate": 1.2,
 				"followers": 8,
-				"food": 628.51513708082,
-				"food_days": 36.3724037662511,
+				"food": 52.8811722130061,
+				"food_days": 3.060253021586,
 				"hungry": 0,
 				"population": 32,
 				"settlements": 1
@@ -53,8 +53,8 @@
 				"devotion": 24.53,
 				"dp_rate": 1.2,
 				"followers": 8,
-				"food": 627.590288468313,
-				"food_days": 36.3188824345089,
+				"food": 51.84,
+				"food_days": 3.0,
 				"hungry": 0,
 				"population": 32,
 				"settlements": 1
@@ -62,6 +62,6 @@
 		}
 	],
 	"failures": 0,
-	"ruleset": "mvp0-2",
+	"ruleset": "mvp0-3",
 	"seed": 1106
 }

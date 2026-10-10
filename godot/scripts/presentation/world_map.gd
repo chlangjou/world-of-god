@@ -12,6 +12,8 @@ var target = Vector2(24, 26)
 var rain_radius: float = 9.0
 var rain_mode: bool = false
 var selected_person: int = 0
+var daytime: bool = true
+var event_people: Array = []
 var dragging: bool = false
 var map_texture: ImageTexture
 var font: Font
@@ -48,6 +50,9 @@ func world_to_screen(point: Vector2) -> Vector2:
 func screen_to_world(point: Vector2) -> Vector2:
 	return (point - size * 0.5) / (tile_size * zoom) + camera
 
+func person_visible(p: Dictionary) -> bool:
+	return p.alive and ((daytime and p.activity != "rest") or p.id == selected_person or p.id in event_people)
+
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color("14282e"))
 	if view.is_empty() or not map_texture: return
@@ -83,11 +88,14 @@ func _draw() -> void:
 			draw_rect(Rect2(center + Vector2(-9, -7), Vector2(18, 14)), Color("d8bf86"), false, 1)
 			draw_line(center + Vector2(-8, 11), center + Vector2(-8 + 16 * town.project.work / town.project.required_work, 11), Color("dfc48b"), 3)
 		draw_string(font, center + Vector2(-20, -30), town.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("efe4c7"))
+	if not daytime:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.06, 0.10, 0.20, 0.30))
 	for p in view.individuals.people:
-		if not p.alive: continue
+		if not person_visible(p): continue
 		var point = world_to_screen(Vector2(p.x, p.y))
 		var color = Color("e5d7ae") if p.age >= 16 else Color("b5c1a1")
 		if p.hunger > 30: color = Color("e89572")
+		if p.activity == "rest" and p.id not in event_people: color.a = 0.55
 		if view.religion.saints.has(p.id):
 			draw_arc(point, 8.0 * zoom, 0, TAU, 20, Color("e5c37c"), 1.5)
 		if p.id == selected_person: draw_circle(point, 9.0 * zoom, Color(0.85, 0.98, 0.94, 0.3))
@@ -134,7 +142,7 @@ func _gui_input(event: InputEvent) -> void:
 			var entity_id = 0
 			var nearest = 10.0
 			for p in view.individuals.people:
-				if not p.alive: continue
+				if not person_visible(p): continue
 				var distance = world_to_screen(Vector2(p.x, p.y)).distance_to(event.position)
 				if distance < nearest:
 					nearest = distance

@@ -47,35 +47,43 @@ func relocate_household(s, home_id: int, target: Vector2) -> void:
 			p.x = target.x
 			p.y = target.y
 
-func choose_activity(s, p: Dictionary, demand: Dictionary) -> Dictionary:
+func choose_activity(s, p: Dictionary, demand: Dictionary, access: Dictionary = {}) -> Dictionary:
 	var home = s.households.get_home(p.household_id)
+	if access.is_empty(): access = s.households.food_access_view(s)
 	var pos = Vector2(p.x, p.y)
 	var own_need = s.households.food_need(s, home)
-	var food_days = s.households.accessible_food(s, home) / maxf(0.1, own_need)
+	var food_days = s.households.accessible_food(s, home, access) / maxf(0.1, own_need)
 	var pressure = s.religion.calling_pressure(s, p)
 	var crop = s.world.find_resource(pos, "crops")
 	var wild = s.world.find_resource(pos, "wild_food")
-	var food_score = maxf(0.0, 4.5 - food_days) + float(demand.food) * 3.0 + p.hunger * 0.045
-	var choices: Array = [{"activity": "care", "score": 0.8 + home.care_load * 0.1, "target": {}, "item": "", "reason": "照顧家庭與休息。"}]
+	var target_days = float(s.rules.household_food_target_days)
+	var urgency = clampf(maxf(1.0 - food_days / target_days, float(demand.food)), 0.0, 1.0)
+	var effective_calling = pressure.strength * urgency
+	var food_score = maxf(0.0, target_days - food_days) + float(demand.food) * 3.0 + p.hunger * 0.045
+	var context = "可用糧食 %.1f 天（家庭目標 %.1f）；公共缺口 %.2f；食物急迫 %.2f；神諭壓力 %.2f（實際 %.2f）。" % [food_days, target_days, demand.food, urgency, pressure.strength, effective_calling]
+	var choices: Array = [{"activity": "care", "score": 0.8 + home.care_load * 0.1, "target": {}, "item": "", "reason": ("糧食保障已足，選擇照護家人與休息。" if urgency == 0.0 else "比較可行工作後，家庭照護更優先。") + context}]
 	if not crop.is_empty():
-		choices.append({"activity": "farm", "score": food_score + p.skills.agriculture * 1.5 + pressure.strength, "target": crop, "item": "crops", "reason": "家庭糧食 %.1f 天；公共糧食需求 %.2f；農耕能力 %.2f；神諭壓力 %.2f。" % [food_days, demand.food, p.skills.agriculture, pressure.strength]})
+		choices.append({"activity": "farm", "score": food_score + p.skills.agriculture * 1.5 * urgency + effective_calling, "target": crop, "item": "crops", "reason": context + "農耕能力 %.2f。" % p.skills.agriculture})
 	if not wild.is_empty():
-		choices.append({"activity": "gather_food", "score": food_score + p.skills.gathering + pressure.strength * 0.8, "target": wild, "item": "wild_food", "reason": "可採集野生食物，補充家庭與共用儲備。"})
-	var town = s.settlements.get_town(p.settlement_id)
+		choices.append({"activity": "gather_food", "score": food_score + p.skills.gathering * urgency + effective_calling * 0.8, "target": wild, "item": "wild_food", "reason": context + "附近可採食物；採集能力 %.2f。" % p.skills.gathering})
+	var town = s.settlements.get_town(access[home.id].town_id)
 	if not town.is_empty() and (not town.project.is_empty() or demand.maintenance > 0.02):
-		choices.append({"activity": "build", "score": demand.housing * 3.0 + p.skills.construction * 1.6 + 1.0 + demand.maintenance, "target": {}, "item": "", "reason": "有可施工的公共建案，且具備建造能力。"})
+		choices.append({"activity": "build", "score": demand.housing * 3.0 + p.skills.construction * 1.6 + 1.0 + demand.maintenance, "target": {}, "item": "", "reason": context + "可施工／維護；住房需求 %.2f；建造能力 %.2f；維護需求 %.2f。" % [demand.housing, p.skills.construction, demand.maintenance]})
 	if not town.is_empty():
 		for item in ["wood", "stone", "fiber"]:
 			if demand[item] <= 0.0: continue
 			var resource = s.world.find_resource(pos, item, 6)
 			if resource.is_empty(): continue
-			choices.append({"activity": "gather_" + item, "score": 1.3 + demand[item] * 2.0 + p.skills.gathering + demand.housing * 0.4, "target": resource, "item": item, "reason": "住房／倉庫需求存在；附近有可取得的%s。" % item})
+			choices.append({"activity": "gather_" + item, "score": 1.3 + demand[item] * 2.0 + p.skills.gathering + demand.housing * 0.4, "target": resource, "item": item, "reason": context + "%s需求 %.2f；採集能力 %.2f；住房需求 %.2f。" % [item, demand[item], p.skills.gathering, demand.housing]})
 	var best = choices[0]
 	for choice in choices:
 		if choice.score > best.score: best = choice
 	best = best.duplicate(true)
 	best.calling = pressure
 	best.food_days = food_days
+	best.evaluated_at = s.time
+	best.food_urgency = urgency
+	best.effective_calling = effective_calling
 	best.feasible_food = not crop.is_empty() or not wild.is_empty()
 	best.scores = {}
 	for choice in choices: best.scores[choice.activity] = choice.score
@@ -83,8 +91,9 @@ func choose_activity(s, p: Dictionary, demand: Dictionary) -> Dictionary:
 
 func update(s) -> void:
 	var hour = int((s.time % s.day_seconds()) * 24 / s.day_seconds())
+	var access = s.households.food_access_view(s)
 	var demands = {}
-	for town in s.settlements.towns: demands[town.id] = s.settlements.demand(s, town.id)
+	for town in s.settlements.towns: demands[town.id] = s.settlements.demand(s, town.id, access)
 	for p in people:
 		if not p.alive: continue
 		if hour < 8:
@@ -102,8 +111,8 @@ func update(s) -> void:
 			var home = s.households.get_home(p.household_id)
 			move_person(s, p, Vector2(home.x, home.y), 4.0)
 			continue
-		var demand = demands.get(p.settlement_id, {"food": 1.0, "housing": 1.0, "wood": 0.0, "stone": 0.0, "fiber": 0.0, "maintenance": 0.0, "trade": 0.0})
-		var choice = choose_activity(s, p, demand)
+		var demand = demands.get(access[p.household_id].town_id, {"food": 0.0, "housing": 0.0, "wood": 0.0, "stone": 0.0, "fiber": 0.0, "maintenance": 0.0, "trade": 0.0})
+		var choice = choose_activity(s, p, demand, access)
 		p.decision = choice.duplicate(true)
 		p.activity = choice.activity
 		p.reason = choice.reason
@@ -198,7 +207,9 @@ func demography(s) -> void:
 		p.stage = "infant" if p.age < 2.0 else ("child" if p.age < float(s.rules.adult_age) else ("elder" if p.age >= float(s.rules.elder_age) else "adult"))
 		if p.age >= float(s.rules.lifespan_years):
 			die(s, p.id, "高齡")
-			continue
+	var access = s.households.food_access_view(s)
+	for p in people:
+		if not p.alive: continue
 		if p.partner_id == 0 and p.age >= float(s.rules.reproduction_min_age):
 			# Bounded, local opportunity; exclude siblings and existing partners.
 			for candidate_id in s.households.get_home(p.household_id).members:
@@ -214,7 +225,7 @@ func demography(s) -> void:
 		var partner = get_person(p.partner_id)
 		if partner.is_empty() or not partner.alive or not partner.profile.can_fertilize: continue
 		var home = s.households.get_home(p.household_id)
-		var security = clampf(s.households.accessible_food(s, home) / maxf(1.0, s.households.food_need(s, home) * 4.0), 0.0, 1.0)
+		var security = clampf(s.households.accessible_food(s, home, access) / maxf(1.0, s.households.food_need(s, home) * 4.0), 0.0, 1.0)
 		var housing = 1.0 if home.dwelling_id > 0 else 0.15
 		var chance = float(s.rules.conception_monthly_chance) * security * housing * (p.health / 100.0) * p.profile.fertility / (1.0 + home.care_load * 0.25)
 		if s.rng.randf() < chance:

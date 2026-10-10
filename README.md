@@ -22,11 +22,25 @@ Use the left panel's **降雨 / 神諭 / 祈求** tabs. Scroll to zoom, drag wit
 mouse button to pan, and select residents to inspect their decisions. Space
 pauses the simulation. There are no mundane unit/job/building commands.
 
+Night skip is enabled by default: 20:00–08:00 advances at 8 times the selected
+speed, then returns to the selected speed at 08:00. Significant nighttime events
+pause for inspection; press Resume to continue with a 10-second grace period
+that records events without pausing again. Toggle **夜間快進** off to watch
+the night at normal speed. The map favors active daytime residents; resting
+residents remain inspectable through the resident menu.
+
 ```powershell
 ./tools/godot.ps1 -Mode test       # deterministic headless acceptance checks
+./tools/godot.ps1 -Mode economy    # food access, sufficiency and 1,600-day population checks
 ./tools/godot.ps1 -Mode benchmark  # 32 / 1,000 / 10,000 population probes
 ./tools/godot.ps1 -Mode capture    # real-renderer UI smoke checks + screenshot
 ```
+
+Residents compare accessible household/common food with real needs. Once
+supplies are sufficient, food skills and `food.produce` no longer keep pushing
+harvesting; existing construction, material gathering and family care can take
+priority. A food deficit raises food-work priority again. Fertility, yields,
+consumption and the 20:80 new-output split retain their existing values.
 
 The editor project is [`godot/project.godot`](godot/project.godot). See
 [PoC handoff, evidence, and remaining acceptance](docs/POC_HANDOFF.md) before

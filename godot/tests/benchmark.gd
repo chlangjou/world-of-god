@@ -6,10 +6,12 @@ func _initialize() -> void:
 
 func run() -> void:
 	var reports: Array = []
+	var ruleset = ""
 	for count in [32, 1000, 10000]:
 		var sim = Session.new()
 		var setup_start = Time.get_ticks_usec()
 		sim.start({"population": count}, 1106)
+		ruleset = sim.rules.version
 		var setup_ms = float(Time.get_ticks_usec() - setup_start) / 1000.0
 		var days = 90 if count == 32 else 3
 		var start = Time.get_ticks_usec()
@@ -20,5 +22,5 @@ func run() -> void:
 		print("BENCHMARK: ", JSON.stringify(report))
 	DirAccess.make_dir_recursive_absolute("res://test-output")
 	var file = FileAccess.open("res://test-output/benchmark.json", FileAccess.WRITE)
-	file.store_string(JSON.stringify({"engine": Engine.get_version_info(), "ruleset": "mvp0-2", "seed": 1106, "probes": reports}, "\t"))
+	file.store_string(JSON.stringify({"engine": Engine.get_version_info(), "ruleset": ruleset, "seed": 1106, "probes": reports}, "\t"))
 	quit(0)

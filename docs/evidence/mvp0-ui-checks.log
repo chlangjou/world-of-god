@@ -1,0 +1,30 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 26.8.1.260806 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon RX 6800 XT
+
+UI PASS: Rain button calls real shared kernel
+UI PASS: Oracle button addresses real eligible Saint
+UI PASS: Inspector exposes real decision and environmental consequence
+UI PASS: manual save/load buttons preserve exact state
+UI PASS: map zoom handler
+UI PASS: Pause/Resume button uses shared clock
+UI PASS: night acceleration stops at 08:00 and spends the remaining frame at daytime speed
+UI PASS: night pacing preserves exact kernel state and every scheduled update
+UI PASS: manual pause also freezes the observation clock
+UI PASS: night skip can be disabled for normal nighttime observation
+UI PASS: 20:00 boundary accelerates only the nighttime part of a frame
+UI PASS: nighttime birth interrupts even 16x exactly at the event deadline
+UI PASS: interruption observes an actual kernel birth
+UI PASS: night interruption preserves the user's speed and exposes the paused state
+UI PASS: night event participants stay visible while unrelated resting residents are hidden
+UI PASS: a resting resident remains available through the resident inspector
+UI PASS: Continue resumes without replaying the same nighttime event
+UI PASS: daytime view shows actual active residents
+UI PASS: visibility and refresh do not change authoritative residents or resources
+UI PASS: Resume grants ten real seconds without pausing for the actual founding event
+UI PASS: resume grace is exposed in the observation status
+UI PASS: manual pause does not consume resume grace
+UI PASS: another manual Resume grants a fresh grace period
+UI PASS: grace expires by real elapsed time without replaying suppressed events
+UI PASS: a genuinely new nighttime birth pauses again after resume grace
+UI PASS: events observed during grace remain in History
+UI RESULT: 26 checks, 0 failures

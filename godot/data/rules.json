@@ -1,5 +1,5 @@
 {
-  "version": "mvp0-2",
+  "version": "mvp0-3",
   "day_seconds": 86400,
   "month_days": 30,
   "year_days": 360,
@@ -10,6 +10,8 @@
   "religion_interval": 86400,
   "history_limit": 240,
   "household_output_share": 0.2,
+  "household_food_target_days": 4.5,
+  "settlement_food_target_days": 6.0,
   "food_per_adult": 0.6,
   "food_per_child": 0.36,
   "crop_growth": 0.16,

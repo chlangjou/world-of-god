@@ -70,16 +70,18 @@ func advance_wall(delta: float) -> void:
 func advance_by(seconds: int) -> void:
 	advance_to(time + maxi(0, seconds))
 
+func next_update_time() -> int:
+	var due = 9223372036854775807
+	for value in scheduled.values(): due = mini(due, int(value))
+	due = mini(due, world.next_deadline())
+	due = mini(due, religion.next_deadline(self))
+	return mini(due, individuals.next_deadline())
+
 func advance_to(target: int) -> void:
 	if target < time:
 		return
 	while true:
-		var due = target + 1
-		for value in scheduled.values():
-			due = mini(due, int(value))
-		due = mini(due, world.next_deadline())
-		due = mini(due, religion.next_deadline(self))
-		due = mini(due, individuals.next_deadline())
+		var due = next_update_time()
 		if due > target:
 			break
 		time = due
@@ -156,13 +158,19 @@ func export_state() -> Dictionary:
 	return {"format": 1, "rules": rules.duplicate(true), "scenario": scenario.duplicate(true), "time": time, "rng_state": rng.state, "scheduled": scheduled.duplicate(), "command_log": command_log.duplicate(true), "world": world.state(), "individuals": individuals.state(), "households": households.state(), "settlements": settlements.state(), "religion": religion.state(), "divine": divine.state(), "history": history.state()}
 
 func import_state(data: Dictionary) -> Dictionary:
-	if data.get("format", 0) != 1 or not data.get("rules", {}) is Dictionary or data.get("rules", {}).get("version", "") != "mvp0-2":
+	if data.get("format", 0) != 1 or not data.get("rules", {}) is Dictionary or data.get("rules", {}).get("version", "") not in ["mvp0-2", "mvp0-3"]:
 		return {"ok": false, "reason": "不支援的存檔版本。"}
 	for key in ["scenario", "scheduled", "world", "individuals", "households", "settlements", "religion", "divine", "history"]:
 		if not data.get(key, null) is Dictionary: return {"ok": false, "reason": "存檔缺少必要的狀態：%s。" % key}
 	if not data.get("time", null) is int or not data.get("rng_state", null) is int or not data.get("command_log", null) is Array:
 		return {"ok": false, "reason": "存檔缺少時鐘或重播狀態。"}
 	rules = data.rules.duplicate(true)
+	var upgraded = rules.version == "mvp0-2"
+	if upgraded:
+		var current_rules: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/rules.json"))
+		current_rules.merge(rules, true)
+		rules = current_rules
+		rules.version = "mvp0-3"
 	scenario = data.scenario.duplicate(true)
 	time = data.time
 	rng.state = data.rng_state
@@ -172,7 +180,7 @@ func import_state(data: Dictionary) -> Dictionary:
 		get(system).restore(data[system])
 	history.limit = int(rules.history_limit)
 	wall_remainder = 0.0
-	return {"ok": true, "reason": "存檔已載入。"}
+	return {"ok": true, "reason": "存檔已載入；食物決策與存取規則升級為 mvp0-3。" if upgraded else "存檔已載入。"}
 
 func save_file(path: String) -> Dictionary:
 	var file = FileAccess.open(path, FileAccess.WRITE)

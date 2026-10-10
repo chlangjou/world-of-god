@@ -41,6 +41,7 @@ func deposit_output(s, household_id: int, item: String, amount: float) -> void:
 	output[item] += amount
 	var home = get_home(household_id)
 	var town = s.settlements.get_town(home.settlement_id)
+	if not s.settlements.food_eligible(s, home.settlement_id, home.id): town = {}
 	var retained = amount if town.is_empty() else amount * float(s.rules.household_output_share)
 	home.inventory[item] += retained
 	if not town.is_empty(): s.settlements.deposit(town.id, item, amount - retained)
@@ -62,31 +63,52 @@ func daily_food_need(s) -> float:
 	for home in homes: result += food_need(s, home)
 	return result
 
-func accessible_food(s, home: Dictionary) -> float:
-	var town = s.settlements.get_town(home.settlement_id)
-	var portion = 0.0 if town.is_empty() else town.storage.food / maxf(1.0, town.households.size())
-	return home.inventory.food + portion
+func food_access_view(s) -> Dictionary:
+	# Planning shares do not move or reserve inventory. Their sum never exceeds
+	# real communal stock, and larger dependent households receive larger shares.
+	var access: Dictionary = {}
+	var groups: Dictionary = {}
+	for home in homes:
+		var need = food_need(s, home)
+		var town_id = home.settlement_id if s.settlements.food_eligible(s, home.settlement_id, home.id) else 0
+		access[home.id] = {"need": need, "own": home.inventory.food, "shared": 0.0, "available": home.inventory.food, "town_id": town_id}
+		if town_id > 0 and need > 0.0:
+			if not groups.has(town_id): groups[town_id] = {"need": 0.0, "homes": []}
+			groups[town_id].need += need
+			groups[town_id].homes.append(home.id)
+	for town_id in groups:
+		var group = groups[town_id]
+		var stock = s.settlements.get_town(town_id).storage.food
+		for home_id in group.homes:
+			access[home_id].shared = stock * access[home_id].need / group.need
+			access[home_id].available += access[home_id].shared
+	return access
+
+func accessible_food(s, home: Dictionary, access: Dictionary = {}) -> float:
+	if access.is_empty(): access = food_access_view(s)
+	return access[home.id].available
 
 func consume(s) -> void:
 	# First consume household goods, then ask the actual common store for deficits.
 	var requests: Dictionary = {}
 	var supplied: Dictionary = {}
+	var access = food_access_view(s)
 	for home in homes:
 		var need = food_need(s, home)
 		var own = take(home.id, "food", need)
 		consumed += own
 		supplied[home.id] = own
-		if need > own and home.settlement_id > 0:
+		if need > own and access[home.id].town_id > 0:
 			if not requests.has(home.settlement_id): requests[home.settlement_id] = []
 			requests[home.settlement_id].append({"household_id": home.id, "amount": need - own})
 	for town_id in requests:
-		var allocation = s.settlements.allocate_food(town_id, requests[town_id])
+		var allocation = s.settlements.allocate_food(s, town_id, requests[town_id])
 		for home_id in allocation:
 			supplied[home_id] += allocation[home_id]
 			consumed += allocation[home_id]
 	for home in homes:
 		var need = food_need(s, home)
-		home.satisfaction = supplied[home.id] / maxf(0.01, need)
+		home.satisfaction = supplied[home.id] / need if need > 0.0 else 1.0
 		home.care_load = 0
 		for id_value in home.members:
 			var p = s.individuals.get_person(id_value)
@@ -106,6 +128,7 @@ func relocate(s, household_id: int, target: Vector2) -> bool:
 	home.relocated_at = s.time
 	home.dwelling_id = 0
 	home.shortage_days = 0
+	s.settlements.reaffiliate(s, household_id)
 	migrations += 1
 	s.individuals.relocate_household(s, household_id, target)
 	s.record("migration", "第 %d 戶因食物與居住壓力搬到河谷的另一處。" % household_id, [household_id], [], {"from": [previous.x, previous.y], "to": [target.x, target.y]})

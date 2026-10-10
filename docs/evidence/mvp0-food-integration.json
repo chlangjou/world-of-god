@@ -1,0 +1,190 @@
+{
+	"checks": 21,
+	"evidence": [
+		{
+			"activities": {
+				"build": 366,
+				"care": 340,
+				"farm": 2744,
+				"gather_fiber": 35,
+				"gather_food": 692,
+				"gather_stone": 24,
+				"gather_wood": 119
+			},
+			"scenario": "default_food_trajectory",
+			"seed": 1106,
+			"stats": {
+				"births": 0,
+				"deaths": 0,
+				"devotion": 25.835,
+				"dp_rate": 1.2,
+				"followers": 8,
+				"food": 82.1398383152048,
+				"food_days": 4.75346286546324,
+				"hungry": 0,
+				"population": 32,
+				"settlements": 1
+			},
+			"trajectory": [
+				{
+					"coverage_days": 1.31611210778004,
+					"day": 30,
+					"food": 22.7424172224392
+				},
+				{
+					"coverage_days": 2.85848563867878,
+					"day": 60,
+					"food": 49.3946318363694
+				},
+				{
+					"coverage_days": 4.75346286546324,
+					"day": 90,
+					"food": 82.1398383152048
+				}
+			]
+		},
+		{
+			"preset": {
+				"initial_food_per_household": 80.0
+			},
+			"scenario": "favorable_1600_days",
+			"seed": 1106,
+			"stats": {
+				"births": 12,
+				"deaths": 0,
+				"devotion": 20.0,
+				"dp_rate": 1.56,
+				"followers": 16,
+				"food": 14.6074578693628,
+				"food_days": 0.676271197655687,
+				"hungry": 0,
+				"population": 44,
+				"settlements": 1
+			},
+			"trajectory": [
+				{
+					"day": 200,
+					"stats": {
+						"births": 0,
+						"deaths": 0,
+						"devotion": 27.485,
+						"dp_rate": 1.2,
+						"followers": 8,
+						"food": 85.8359100296607,
+						"food_days": 4.96735590449426,
+						"hungry": 0,
+						"population": 32,
+						"settlements": 1
+					}
+				},
+				{
+					"day": 400,
+					"stats": {
+						"births": 5,
+						"deaths": 0,
+						"devotion": 23.7837837837838,
+						"dp_rate": 1.56,
+						"followers": 16,
+						"food": 85.2581451246485,
+						"food_days": 4.46845624343022,
+						"hungry": 0,
+						"population": 37,
+						"settlements": 1
+					}
+				},
+				{
+					"day": 600,
+					"stats": {
+						"births": 8,
+						"deaths": 0,
+						"devotion": 22.0,
+						"dp_rate": 1.56,
+						"followers": 16,
+						"food": 79.8916451039742,
+						"food_days": 3.96287922142729,
+						"hungry": 0,
+						"population": 40,
+						"settlements": 1
+					}
+				},
+				{
+					"day": 800,
+					"stats": {
+						"births": 8,
+						"deaths": 0,
+						"devotion": 22.0,
+						"dp_rate": 1.56,
+						"followers": 16,
+						"food": 92.6707700695896,
+						"food_days": 4.5967643883725,
+						"hungry": 0,
+						"population": 40,
+						"settlements": 1
+					}
+				},
+				{
+					"day": 1000,
+					"stats": {
+						"births": 10,
+						"deaths": 0,
+						"devotion": 20.952380952381,
+						"dp_rate": 1.56,
+						"followers": 16,
+						"food": 26.0561425360632,
+						"food_days": 1.24789954674632,
+						"hungry": 0,
+						"population": 42,
+						"settlements": 1
+					}
+				},
+				{
+					"day": 1200,
+					"stats": {
+						"births": 11,
+						"deaths": 0,
+						"devotion": 20.4651162790698,
+						"dp_rate": 1.56,
+						"followers": 16,
+						"food": 21.8105830486333,
+						"food_days": 1.02686360869272,
+						"hungry": 0,
+						"population": 43,
+						"settlements": 1
+					}
+				},
+				{
+					"day": 1400,
+					"stats": {
+						"births": 12,
+						"deaths": 0,
+						"devotion": 20.0,
+						"dp_rate": 1.56,
+						"followers": 16,
+						"food": 0.0,
+						"food_days": 0.0,
+						"hungry": 0,
+						"population": 44,
+						"settlements": 1
+					}
+				},
+				{
+					"day": 1600,
+					"stats": {
+						"births": 12,
+						"deaths": 0,
+						"devotion": 20.0,
+						"dp_rate": 1.56,
+						"followers": 16,
+						"food": 14.6074578693628,
+						"food_days": 0.676271197655687,
+						"hungry": 0,
+						"population": 44,
+						"settlements": 1
+					}
+				}
+			]
+		}
+	],
+	"failures": 0,
+	"ruleset": "mvp0-3"
+}

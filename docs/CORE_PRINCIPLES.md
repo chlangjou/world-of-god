@@ -75,7 +75,8 @@ More and stronger devotion should enable more divine intervention.
 
 The preferred direction is a hybrid resource model:
 
-- worship generates a shared **Divine Power** pool;
+- worship is the main renewable input to each God's shared, world-wide **Divine Power** pool, with a **small natural recovery** even without followers;
+- Miracle types start available in Sandbox v1, with each type's **independent permanent Lv1–Lv5 Mastery** improving effect per DP and cooldown;
 - each Miracle has its own cooldown;
 - Faith/Devotion may accelerate cooldown recovery;
 - cooldown acceleration should be capped or sublinear so large religions cannot eliminate local action limits.

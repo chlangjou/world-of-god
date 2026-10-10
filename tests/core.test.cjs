@@ -287,3 +287,40 @@ test('optional Agriculture v0.1 profile is deterministic and crop stock remains 
   assert.deepEqual(play(),play());
   assert.equal(W.create({seed:'calm-river'}).balanceProfileId,'original');
 });
+
+test('Agriculture keeps autonomous food reserves through seasons without Rain Miracle',()=>{
+  const profile=require('../config/balance-agriculture-v0.1.json');
+  for(const seed of ['valley-spring-01','calm-river','river-dawn-01']){
+    const s=W.create({seed,balanceProfile:profile});
+    let farm=0,work=0,foodAt90=0;
+    for(let day=1;day<=360;day++){
+      W.advanceTicks(s,3);
+      const st=W.stats(s);
+      const need=s.people.filter(p=>p.alive).reduce((sum,p)=>sum+(p.stage==='child'?s.rules.foodNeedChild:s.rules.foodNeedAdult),0);
+      assert.ok(st.food>=need*4,`${seed}: food shortage at day ${day}`);
+      farm+=s.people.filter(p=>p.alive&&p.stage==='adult'&&p.lastDecision?.work==='farm').length;
+      work+=s.people.filter(p=>p.alive&&p.stage==='adult').length;
+      if(day===90)foodAt90=st.food;
+    }
+    assert.ok(foodAt90>150,`${seed}: expected reasonable pre-drought reserves`);
+    const share=farm/work;
+    assert.ok(share>=.08&&share<=.30,`${seed}: farm work is autonomous, got ${share}`);
+    assert.equal(s.counts.deaths,0);
+    assert.equal(s.counts.rainCasts,0);
+    assert.equal(W.validate(s).ok,true);
+  }
+});
+test('Agriculture crop regeneration exactly accounts for unharvested stock plus harvest',()=>{
+  const profile=require('../config/balance-agriculture-v0.1.json');
+  const s=W.create({seed:'calm-river',balanceProfile:profile});
+  for(const t of s.tiles){t.forage=0;if(t.terrain==='field'){t.cropStock=0;t.crop=0;}}
+  const before=s.counts.foodFromLabor;
+  W.advanceTicks(s,1);
+  const L=profile.land;
+  const generated=s.tiles.filter(t=>t.terrain==='field').reduce((sum,t)=>
+    sum+L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
+    (t.moisture/L.referenceMoisture)**L.moistureExponent*s.rules.tickHours/24,0);
+  const remaining=s.tiles.filter(t=>t.terrain==='field').reduce((sum,t)=>sum+t.cropStock,0);
+  assert.ok(Math.abs(generated-remaining-(s.counts.foodFromLabor-before))<1e-7,'No harvested Food may arise without crop-stock transfer');
+  assert.equal(W.validate(s).ok,true);
+});

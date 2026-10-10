@@ -82,6 +82,17 @@ For suitable *storable new material output*, the **initial allocation policy** i
 - **Normal -> shortage -> severe shortage** are *derived conditions* from actual supply, expected needs and available stocks; they are not an independent expensive simulation FSM. In shortage: conserve/ration, reasonably prioritize dependent survival; in severe shortage: raise food-work, trade and voluntary migration pressure. Death is a consequence of prolonged severe stress, not an immediate penalty for one deficit.
 - No complete monetary economy, wages, property-law simulation, wealth distributions, tax bureaucracy or complicated household-to-household market required for v1.
 
+
+### Minimum viable food-access and household loop
+
+The agreed household/shared storage model needs a **coherent path**, not detailed logistics: production -> eligible allocation -> reachable withdrawal -> actual consumption -> work, reproduction and migration outcomes.
+
+- Food security means a household's own stock **plus realistically reachable and allocable** shared food. Distant, ineligible or already allocated stocks must not count as free household reserves.
+- Deposit and withdrawal can intentionally have different rules; they must not accidentally disagree because one path checks distance and the other checks Settlement affiliation. Migration/rejoining must update both sides consistently.
+- Hunger, Work Demand, reproductive intent, rationing, hardship and relocation must use compatible **effective accessible food** rather than contradictory private-only thresholds.
+- Real isolation and famine may still cause deaths, with inspectable causes and possible autonomous adaptation. Avoid conjuring food, forcing births or making shared stores magically universal.
+- MVP requires only simple deterministic distribution/eligibility logic; a full commodity market or item logistics simulator is unnecessary. The 20:80 split alone does not make this system playable.
+
 ## 6. Bounded resources and recipe-driven production
 
 Maintain a **small shared resource catalog**, data-driven recipes, and only limited processing depth. Initial concept: roughly **10 raw/base inputs, 5 processed inputs and 2 general-purpose products**; these are a *design budget, not mandatory fixed database columns*.
@@ -166,6 +177,8 @@ Rule parameters should allow playtest adjustment without changing state ownershi
 5. A plausible rain Miracle delivers meaningful local disaster relief; a wider world may still be too large to rescue completely; deliberate Drought Miracle produces physical consequences by World rules.
 6. Adjustable numeric parameters and playtest difficulty profiles do not mandate a deep simulation or a hard-coded historic era/technology tree.
 7. Godot implementation retains separable simulation ownership and can be performance-tested at multiple population scales and fast-forward speeds.
+8. Households with zero private food but genuinely accessible public stores can consume and make coherent work/reproductive decisions, conserving actual stocks.
+9. Remote/migrated households use consistent access rules; a controlled favorable multi-year population scenario can produce real births rather than being blocked by private-inventory-only thresholds.
 
 **Explicitly deferred:** calibrated balance values, large-scale economy benchmarks, deep trade/market physics, full NPC logistics, modern/firearm-era warfare, obligatory technology tree, complete religion/politics economy. Cold/early metal weapons are sufficient initial warfare content, while weapon technologies/recipes can later expand without replacing the economic model.
 

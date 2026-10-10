@@ -204,7 +204,7 @@ Persistence.save/load(versioned_state)
 ### Persistence and causal history
 
 - Preserve simulated time, ruleset/version, RNG state, entity/inventory state, active Rain inputs, DP/cooldown, Saint quotas, Oracle assignments/deadlines and pending events in a basic save/load.
-- Significant HistoryEvent examples: Settlement formed, home built, prolonged shortage, birth/death/migration, Miracle cast, prayer fulfilled, Oracle reception/transmission/result/expiry and consequential faith change.
+- Significant HistoryEvent examples: Settlement founded, sustained famine/recovery, birth/death/meaningful migration, Miracle, attributable prayer fulfillment, Oracle reception/meaningful outcome/expiry and consequential faith change. Routine building and periodic food/population summaries belong in the inspector/telemetry, not History.
 - Record **actual** direct parents and decision reasons; do not invent precise causes retrospectively. For example: Rain → moisture changed → crop output improved → food deficit reduced → attributable need fulfilled.
 - Keep recent events bounded in RAM with a persistence seam. Full Issue #10 historical graph/search can wait.
 
@@ -218,6 +218,13 @@ godot/scripts/presentation/    # UI, map, inspector, visible proxies
 godot/data/                    # scenarios and tunable rules
 godot/tests/                   # headless deterministic scenarios
 ~~~
+
+
+### Mechanism readiness gate: end-to-end function, not isolated fields
+
+MVP-0 must have **minimally coherent dependencies** for any mechanic influencing survival, births or decisions. For Household Inventory + Settlement Shared Storage verify: real production -> eligible new-output 20:80 allocation -> reachable/authorized withdrawal -> actual consumption/rationing -> consistent Work Demand, conception and migration responses. An eligible family with no private food may still have usable public food; an isolated household cannot use distant stock. Starvation from genuinely unavailable supplies remains valid, but membership/deposit/withdraw bugs must not create false shortages.
+
+Test households with zero private food and accessible shared stores, remote households, migration in/out, severe actual shortage and a favorable ~1,600-simulated-day reproduction scenario. **Fix missing access/decision paths before changing fertility, yields or food ratios.** Player-facing History contains significant events (birth/death, sustained famine/recovery, founding, notable migration, Miracle/Oracle and meaningful religious changes), not periodic no-event or food-balance logs. Inspectors may display live resource totals. Personal decision explanations must reflect the actual inputs used.
 
 ## 4. Minimal UI / player observability
 
@@ -250,6 +257,9 @@ Use controlled seeded scenarios. Claims apply to **those test fixtures**, not al
 - [ ] **L — Performance evidence:** record CPU time per system, sim-days/wall-second, population, memory and backlog for gameplay 24–40; measure separate exploratory **1,000 and 10,000** population probes. No 10k real-time guarantee is implied.
 - [ ] **M — Human playtest:** from the default preset, in roughly 5–10 real minutes, a player can observe self-directed life/settlement, intervene with Rain, send food.produce through a Saint, inspect a **real environmental/economic consequence**, see **real autonomous decision influence** and understand related Faith/DP feedback. No fabricated scripted outcomes or manual unit commands.
 
+- [ ] **N — Accessible food integration:** a member household with no private stores can consume reachable communal food; remote or ineligible families do not receive phantom stock. Deposit, withdrawal and migration policy are coherent and inventories conserve resources. Hunger, work, reproduction and hardship reflect the same effective accessibility.
+- [ ] **O — Long-horizon and history quality:** favorable controlled ~1,600-simulated-day runs with eligible couples, real food and housing produce some actual births without a forced population target; non-favorable worlds may decline. Logs contain no periodic empty-day or resource-balance entries, and personal decision reasons match real evaluated conditions.
+
 M is a qualitative product gate, **not** a fixed machine-performance or guaranteed-win condition.
 
 ## 6. Implementation stages for Codex
@@ -258,10 +268,10 @@ M is a qualitative product gate, **not** a fixed machine-performance or guarante
 | --- | --- | --- |
 | P0 Foundation | Godot project, rules/preset loader, IDs, simulated clock/scheduler, seeded RNG, headless runner, minimal map | Pause/time/seed deterministic smoke test |
 | P1 S0 | Terrain/moisture/crop state, Person/Household, hunger and gathering/work/rest, inspector | A + beginning of C |
-| P2 S1 | Settlement emergence, housing/materials/storage, Basic Work Demand, demographic events | B/C/D |
+| P2 S1 | Settlement emergence, housing/materials/storage, Basic Work Demand, demographic events | B/C/D/N |
 | P3 S2 | First Listener, Faith/DP, Prayer, Rain cast/effect, God UI | E/F + early M |
 | P4 S3 | Per-Saint quota/Oracle assignments, propagation, Calling integrated in Individual decisions, reason/event trace | G/H + complete M |
-| P5 Stabilize | Save/load, headless regressions, time control, benchmarks and 5–10-minute pacing review | I/J/K/L/M |
+| P5 Stabilize | Save/load, headless regressions, time control, benchmarks and 5–10-minute pacing review | I/J/K/L/M/N/O |
 
 Each step should remain runnable and testable. Attach concise implementation notes and actual test commands/results to Codex's handoff. Do not stop at data schema scaffolding or substitute a hard-coded animated story for autonomous simulation.
 

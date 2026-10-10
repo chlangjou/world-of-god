@@ -122,11 +122,26 @@ For example, a war may record:
 
 The ability to reconstruct the causes of history is intended to become a defining feature of the game.
 
+Player-facing History captures **major events and sustained transitions**, not periodic food/population status or no-event messages. Routine metrics belong in inspectors/diagnostics. Displayed decision reasons must reflect the actual decision inputs rather than generic statements unrelated to available resources or Oracle influence.
+
 ### 10. The simulation core should remain separable from presentation
 
 The long-term architecture should allow the world simulation to run independently of rendering.
 
 A headless simulation should eventually be possible for balancing, regression testing, long-duration runs, and causal analysis.
+
+
+### 11. Minimum coherent mechanics before simulation detail
+
+**Tunable values are not optional correctness contracts.** If a rule affects survival, reproduction, work, migration or religious outcomes, its minimum supporting dependencies must work together before it is treated as playable.
+
+- Identify ownership, input/production, eligibility and physical access, allocation, consumption, consequences, adaptive responses and player-facing explanation.
+- Use a **consistent effective-access model** in all dependent decisions. For example, a household may have no private food yet have a real claim on reachable communal stores; distant or ineligible stock cannot be treated as available. Do not double-count planned allocations.
+- A household/common inventory system is not complete merely because both counters exist. Deposits, withdrawals, settlement affiliation and relocation must be coherent. Starvation despite genuinely reachable, allocable food caused by incompatible rules is a defect, not emergence; genuine isolation can still have consequences.
+- When the supporting loop is too costly for the current PoC, explicitly simplify or defer the feature rather than ship a half-connected penalty. Keep the agreed full-v1 design intact.
+- Test the connected behavior at edge cases and over long simulated periods **before** tuning coefficients. Do not conceal a missing mechanism through forced births, conjured food or artificial immunity.
+
+> Prefer a small complete and observable causal loop over a more detailed but partially connected simulation.
 
 ## Current conceptual simulation layers
 

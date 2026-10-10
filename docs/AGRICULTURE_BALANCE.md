@@ -149,3 +149,14 @@ npm test  # game regression suite (run independently; no game logic changes)
 ```
 
 The historical numbers in this report were generated using the analytical scripts. The selectable runtime profile now exists on `web-mvp-0`; validate actual gameplay separately via seeded no-Miracle runs and the Web PoC.
+
+
+## PoC playability correction (2026-10-11)
+
+The first integrated version could naturally settle around only **7–11 days of food** because the autonomous `care` activity received high utility once accessible reserves exceeded 7/11 days. This made the HUD repeatedly display roughly 50–100 Food for a 24-person world, even when the equilibrium crop capacity could be sufficient. The normal food supply target is **not** a mandatory job quota.
+
+The experimental Agriculture Profile now exposes `workDemand.reserveRelaxDays=18`, `reserveComfortDays=26` and `reserveTargetDays=18`. These adjust the *relative appeal* of food work as genuine, accessible reserves grow. They do **not** force anyone to farm, alter God–World authority, spawn inventory, or change Original behavior.
+
+A short, no-Rain, no-Oracle deterministic Web Kernel probe (360 days) on `valley-spring-01`, `calm-river`, and `river-dawn-01` found about **219–226 Food** at day 360, **15–16%** of adult workdays spent farming, no deaths and no severe shortages. These are reference-seed observations and not guarantees for every randomized world or a requirement to fine-tune further.
+
+**Playtesting:** new Web PoC worlds default to Agriculture v0.1; users can choose Original for comparison. Saved worlds retain their *saved profile snapshot*, so loading an older Agriculture save will not silently inherit this newer reserve policy. Recreate the world to test the updated numbers.

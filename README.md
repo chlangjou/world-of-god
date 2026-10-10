@@ -2,6 +2,36 @@
 
 An emergent civilization and god-simulation sandbox.
 
+## Run the Godot MVP-0
+
+The S0–S3 core-mechanism PoC is now playable. Its scope follows
+[FIRST_PLAYABLE_IMPLEMENTATION.md](docs/FIRST_PLAYABLE_IMPLEMENTATION.md): one
+river valley, autonomous individuals/households/settlement, Rain and
+`food.produce`. Numbers and presentation are provisional validation tools.
+
+On this Windows checkout, double-click **[Play.cmd](Play.cmd)** to play or
+**[Open-Editor.cmd](Open-Editor.cmd)** to develop in Godot. Godot 4.7.2 is available
+locally under the Git-ignored `.tools/godot/` directory. For a fresh checkout:
+
+```powershell
+./tools/install-godot.ps1
+./tools/godot.ps1 -Mode play
+```
+
+Use the left panel's **降雨 / 神諭 / 祈求** tabs. Scroll to zoom, drag with the right
+mouse button to pan, and select residents to inspect their decisions. Space
+pauses the simulation. There are no mundane unit/job/building commands.
+
+```powershell
+./tools/godot.ps1 -Mode test       # deterministic headless acceptance checks
+./tools/godot.ps1 -Mode benchmark  # 32 / 1,000 / 10,000 population probes
+./tools/godot.ps1 -Mode capture    # real-renderer UI smoke checks + screenshot
+```
+
+The editor project is [`godot/project.godot`](godot/project.godot). See
+[PoC handoff, evidence, and remaining acceptance](docs/POC_HANDOFF.md) before
+interpreting this prototype as full Sandbox v1 or closing Issue #11.
+
 ## Design thesis
 
 The player is a god, not an RTS commander.
@@ -68,4 +98,5 @@ Target experience:
 
 > A small population survives, forms a settlement, begins to worship the player, generates limited divine power, receives a small miracle and an oracle, and responds through its own simulated behavior.
 
-This milestone is deliberately provisional until Issue #11 is resolved.
+The implemented MVP-0 remains subject to the acceptance gates in Issue #11;
+the human playability gate has not been declared passed by automated tests.

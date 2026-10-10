@@ -1,0 +1,74 @@
+{
+	"engine": {
+		"build": "official",
+		"hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+		"hex": 263938,
+		"major": 4,
+		"minor": 7,
+		"patch": 2,
+		"status": "stable",
+		"string": "4.7.2-stable (official)",
+		"timestamp": 0
+	},
+	"probes": [
+		{
+			"hot_history_events": 33,
+			"living_population": 32,
+			"population_requested": 32,
+			"scheduler_backlog": 0,
+			"setup_ms": 16.404,
+			"sim_days": 90,
+			"sim_days_per_wall_second": 9.80221312189597,
+			"static_memory_bytes_process": 31722876,
+			"system_cpu_us": {
+				"demography": 870,
+				"divine": 20087,
+				"economy": 37720,
+				"individuals": 2173756,
+				"religion": 6859,
+				"world": 6909448
+			},
+			"wall_seconds": 9.1816
+		},
+		{
+			"hot_history_events": 240,
+			"living_population": 1000,
+			"population_requested": 1000,
+			"scheduler_backlog": 0,
+			"setup_ms": 32.909,
+			"sim_days": 3,
+			"sim_days_per_wall_second": 1.49468862397471,
+			"static_memory_bytes_process": 39473136,
+			"system_cpu_us": {
+				"demography": 0,
+				"divine": 14157,
+				"economy": 30907,
+				"individuals": 1736897,
+				"religion": 8381,
+				"world": 203777
+			},
+			"wall_seconds": 2.007107
+		},
+		{
+			"hot_history_events": 240,
+			"living_population": 10000,
+			"population_requested": 10000,
+			"scheduler_backlog": 0,
+			"setup_ms": 188.368,
+			"sim_days": 3,
+			"sim_days_per_wall_second": 0.163849332019043,
+			"static_memory_bytes_process": 108456704,
+			"system_cpu_us": {
+				"demography": 0,
+				"divine": 214596,
+				"economy": 444822,
+				"individuals": 17043568,
+				"religion": 123352,
+				"world": 227837
+			},
+			"wall_seconds": 18.309504
+		}
+	],
+	"ruleset": "mvp0-2",
+	"seed": 1106
+}

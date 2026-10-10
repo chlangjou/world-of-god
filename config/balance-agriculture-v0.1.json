@@ -1,0 +1,90 @@
+{
+  "profileId": "agriculture-balance-v0.1",
+  "status": "candidate-formula-only",
+  "loadedByRuntime": false,
+  "units": {
+    "distance": "map cells from the riverbank",
+    "time": "simulated days and actual full 8-hour food workdays",
+    "food": "existing abstract Food units"
+  },
+  "description": "Independent Agriculture Balance v0.1 analytical candidate. Does not replace sim.js or change existing gameplay until explicitly integrated and tested.",
+  "river": {
+    "distanceOrigin": "river bank (map centerline distance minus half-width of 1.6 cells, clamped to zero)",
+    "fullEffectThroughCells": 5,
+    "zeroEffectAtCells": 15,
+    "nearBankInfluence": 0.95,
+    "falloff": "linear",
+    "meaning": "seasonal moisture contribution potential, not fixed soil moisture"
+  },
+  "seasons": {
+    "rain": {
+      "backgroundMoisture": 0.76,
+      "riverWaterAvailability": 1.0,
+      "diagnosticFoodLaborShare": 0.08
+    },
+    "mild": {
+      "backgroundMoisture": 0.46,
+      "riverWaterAvailability": 0.54,
+      "diagnosticFoodLaborShare": 0.15
+    },
+    "dry": {
+      "backgroundMoisture": 0.12,
+      "riverWaterAvailability": 0.4,
+      "diagnosticFoodLaborShare": 0.5
+    }
+  },
+  "land": {
+    "foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture": 0.2,
+    "referenceMoisture": 0.9,
+    "moistureExponent": 0.8,
+    "harvestMechanic": "actual yield is limited by accumulated unharvested crop stock and worker capacity; do not create food by formula alone"
+  },
+  "worker": {
+    "foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment": 9.5,
+    "skillOutputIntercept": 0.6,
+    "skillOutputSlope": 0.8,
+    "environmentMoistureExponent": 3.0,
+    "startingSkillReference": 0.45,
+    "startingSkillRange": [
+      0.4,
+      0.5
+    ],
+    "learningTimeConstantActualFoodWorkdays": 550,
+    "learningRule": "S(n) = 1 - (1 - S0) * exp(-n / tau); n counts food workdays, not calendar days"
+  },
+  "soilDynamics": {
+    "referenceResponseTimeDays": 3,
+    "status": "scenario-dependent exploratory choice; not yet accepted as a season timing rule",
+    "shortRainCaveat": "6-8 day rainy spells can have lower realized harvest than steady-state rain potential"
+  },
+  "calibration": {
+    "referenceSeed": "calm-river",
+    "population": 40,
+    "workCapableAdults": 16,
+    "dependents": 24,
+    "adultFoodNeedPerDay": 0.38,
+    "dependentFoodNeedPerDay": 0.25,
+    "totalFoodNeedPerDay": 12.08,
+    "landSupplyRatioTargets": {
+      "rain": 1.5,
+      "mild": 1.15,
+      "dryMin": 0.6,
+      "dryMax": 0.8
+    },
+    "laborShareTargetsOfWorkCapablePopulation": {
+      "rainMin": 0.06,
+      "rainMax": 0.08,
+      "mildMin": 0.1,
+      "mildMax": 0.2,
+      "dryStressMin": 0.4,
+      "dryStressMax": 0.5
+    },
+    "targetInterpretation": "reference scenario diagnostics, not jobs quotas, hard gameplay gates, or guarantees for random world seeds"
+  },
+  "reproducibility": {
+    "report": "docs/AGRICULTURE_BALANCE.md",
+    "calculator": "tools/agriculture-balance-check.mjs",
+    "sampleMapAccess": "farm tile within +/-9 cells X/Y of at least one initial household; excludes later migrations and dynamically farmed land",
+    "sourceSimulatorGitBlob": "52b73c277b1a6111fa787374aeb5d300747d2e9f"
+  }
+}

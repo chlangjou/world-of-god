@@ -43,6 +43,17 @@ Keyboard: **Space** Pause/Resume, **1** toggle Rain targeting, **Esc** cancel Ra
 
 - [PoC UI Guide v0.1 — fixed viewport, Hints and Miracle disabled states](docs/UI_GUIDE.md)
 
+## Agriculture Balance Lab (candidate only)
+
+This branch now includes reproducible agricultural capacity formulas and experimental profiles.
+**Neither JSON file is loaded by the game runtime; the actual `sim.js` rules have not changed.**
+
+- [Actual Web PoC balance defaults (snapshot)](config/balance-default.json)
+- [Agriculture v0.1 candidate parameters](config/balance-agriculture-v0.1.json)
+- [Calculation report, assumptions and results](docs/AGRICULTURE_BALANCE.md)
+- Run `node tools/agriculture-balance-check.mjs --check` and `node tools/agriculture-climate-check.mjs --check` to reproduce the capacity and climate-lag calculations.
+
+Labor targets use the **work-capable population** as denominator; they are diagnostic targets, never mandatory NPC job quotas.
 ## Tests
 
 No runtime dependencies. Node.js 18+ optional, only required to run automated tests:

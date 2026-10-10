@@ -4,7 +4,10 @@ const path = require('node:path');
 const root = __dirname;
 const read = name => fs.readFileSync(path.join(root, name), 'utf8');
 const css = '<style>\n' + read('style.css') + '\n</style>';
-const scripts = '<script>\n' + read('sim.js') + '\n</script><script>\n' + read('app.js') + '\n</script>';
+const inlineProfile = '<script>window.WOG_AGRICULTURE_PROFILE='+
+  JSON.stringify(JSON.parse(read('config/balance-agriculture-v0.1.json'))).replace(/</g,'\\u003c')+
+  ';<'+ '/script>';
+const scripts = inlineProfile + '<script>\\n' + read('sim.js') + '\\n</script><script>\\n' + read('app.js') + '\\n</script>';
 const source = read('index.html');
 const result = source.replace('<link rel="stylesheet" href="style.css">', css)
   .replace('<script src="sim.js"></script><script src="app.js"></script>', scripts);

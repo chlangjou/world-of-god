@@ -19,8 +19,11 @@ locally under the Git-ignored `.tools/godot/` directory. For a fresh checkout:
 ```
 
 Use the left panel's **降雨 / 神諭 / 祈求** tabs. Scroll to zoom, drag with the right
-mouse button to pan, and select residents to inspect their decisions. Space
-pauses the simulation. There are no mundane unit/job/building commands.
+mouse button to pan, and select residents to inspect their decisions. Residents,
+inspection details and History use pages instead of vertical scrolling; **?**
+opens contextual help. Space pauses; **1** toggles valid Rain targeting and
+**Esc** cancels it. Cooldown greys out both Rain controls and shows simulated
+time remaining. There are no mundane unit/job/building commands.
 
 Night skip is enabled by default: 20:00–08:00 advances at 8 times the selected
 speed, then returns to the selected speed at 08:00. Significant nighttime events

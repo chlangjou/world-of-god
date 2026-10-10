@@ -33,7 +33,7 @@ func run() -> void:
 	scene.sim.advance_to(9 * scene.sim.day_seconds() + scene.sim.day_seconds() / 3)
 	scene.refresh_view()
 	scene.select_entity("person", scene.sim.religion.living_saints(scene.sim)[0], Vector2.ZERO)
-	check(scene.inspector.text.contains("神諭壓力") and scene.sim.world.rain_bonus_harvest > 0, "Inspector exposes real decision and environmental consequence")
+	check(scene.inspector_pages.content.contains("神諭壓力") and scene.sim.world.rain_bonus_harvest > 0, "Inspector exposes real decision and environmental consequence")
 	var before = var_to_bytes(scene.sim.export_state())
 	scene.save_world()
 	scene.sim.advance_by(scene.sim.day_seconds())
@@ -52,6 +52,7 @@ func run() -> void:
 	check(scene.sim.time > before_time, "Pause/Resume button uses shared clock")
 	scene.toggle_pause()
 	await check_observation(scene)
+	await check_ui_guide(scene)
 	scene.map.zoom = zoom_before
 	scene.map.camera = Vector2(29, 29)
 	scene.refresh_view()
@@ -63,6 +64,138 @@ func run() -> void:
 	image.save_png("res://test-output/ui-preview.png")
 	print("UI RESULT: ", checks, " checks, ", failures, " failures")
 	quit(1 if failures > 0 else 0)
+
+func controls_fit(node: Node, bounds: Rect2) -> bool:
+	if node is Window: return true
+	if node is Control:
+		if not node.is_visible_in_tree(): return true
+		if not bounds.grow(1.0).encloses(node.get_global_rect()):
+			print("UI BOUNDS: ", node.get_path(), " ", node.get_global_rect(), " viewport ", bounds)
+			return false
+	for child in node.get_children():
+		if not controls_fit(child, bounds): return false
+	return true
+
+func pages_fit(pager) -> bool:
+	var original_page = pager.page
+	for index in pager.pages.size():
+		pager.page = index
+		pager.display_page()
+		if pager.body.get_content_height() > pager.body.size.y + 1.0: return false
+	pager.page = original_page
+	pager.display_page()
+	return not pager.body.scroll_active
+
+func check_ui_guide(scene) -> void:
+	var original_sim = scene.sim
+	var original_result = scene.last_result.duplicate(true)
+	var original_state = var_to_bytes(original_sim.export_state())
+	scene.sim = Session.new()
+	scene.sim.start({"population": 120})
+	scene.sim.advance_to(3 * scene.sim.day_seconds())
+	scene.sim.paused = true
+	scene.observation_clock.reset(scene.sim)
+	scene.night_event.clear()
+	scene.fill_people()
+	scene.refresh_view()
+	scene.quick_rain()
+	scene.rain_button.pressed.emit()
+	check(scene.last_result.ok and scene.rain_button.disabled and scene.rain_target_toggle.disabled and not scene.map.rain_mode, "successful Rain greys out cast and targeting and clears armed state")
+	var shortcut = InputEventKey.new()
+	shortcut.keycode = KEY_1
+	shortcut.pressed = true
+	scene._unhandled_key_input(shortcut)
+	check(not scene.map.rain_mode and not scene.last_result.ok, "Rain shortcut cannot arm a cooling-down Miracle")
+	var cooldown_label = scene.rain_button.text
+	scene.advance_observation(20.0)
+	scene.refresh_view()
+	check(scene.rain_button.text == cooldown_label, "paused UI keeps the simulated cooldown constant")
+	scene.sim.advance_to(scene.sim.divine.skills.rain.cooldown_until - 1)
+	scene.refresh_view()
+	check(scene.rain_button.disabled, "Rain remains unavailable one simulated second before cooldown expiry")
+	scene.sim.advance_by(1)
+	scene.refresh_view()
+	check(not scene.rain_button.disabled and not scene.rain_target_toggle.disabled, "Rain targeting and cast recover at the exact simulation cooldown deadline")
+	var saint = scene.sim.religion.living_saints(scene.sim)[0]
+	scene.sim.religion.saints[saint].quota = 0
+	scene.refresh_view()
+	check(scene.oracle_button.disabled and scene.oracle_summary.text.contains("配額不足"), "Oracle uses authoritative quota evaluation and a distinct visible reason")
+	scene.sim.divine.dp = 0.0
+	scene.sim.divine.last_accrual = scene.sim.time
+	scene.update_rain_preview()
+	check(scene.rain_button.disabled and scene.rain_preview.text.contains("神力不足"), "insufficient DP blocks both Rain controls with the actual reason")
+	scene.map.target = Vector2(-1, -1)
+	scene.update_rain_preview()
+	check(scene.rain_button.disabled and scene.rain_preview.text.contains("超出河谷"), "invalid target displays the simulator's actual capability reason")
+	scene.map.target = Vector2(24, 26)
+	scene.refresh_view()
+	var fixture_state = var_to_bytes(scene.sim.export_state())
+	var all_people = {}
+	for group in ceili(float(scene.sim.individuals.people.size()) / scene.PEOPLE_PER_PAGE):
+		scene.people_page = group
+		scene.fill_people()
+		for index in range(1, scene.person_select.item_count): all_people[scene.person_select.get_item_id(index)] = true
+	check(all_people.size() == 120 and scene.person_select.item_count <= 9, "all 120 real residents remain selectable through bounded non-scrolling groups")
+	scene.select_entity("person", 120, Vector2.ZERO)
+	var stress_lines: Array[String] = []
+	for index in 150: stress_lines.append("[url=event:%d]測試文字 #%d[/url] · 這是介面分頁測試，不寫入世界歷史。" % [index, index])
+	scene.history_pages.set_content("\n".join(stress_lines), true)
+	for resolution in [Vector2i(1280, 720), Vector2i(1366, 768), Vector2i(1920, 1080)]:
+		root.size = resolution
+		for tab in 3:
+			scene.divine_tabs.current_tab = tab
+			await process_frame
+			await process_frame
+			await process_frame
+			check(controls_fit(scene, Rect2(Vector2.ZERO, Vector2(root.size))) and scene.map.size.x >= 260 and scene.map.size.y >= 210, "fixed viewport keeps map and tab %d controls visible at %s" % [tab, resolution])
+		check(pages_fit(scene.inspector_pages) and pages_fit(scene.history_pages), "all inspection and 150-entry history pages fit without vertical scrolling at %s" % resolution)
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("res://test-output/ui-%dx%d.png" % [resolution.x, resolution.y])
+	var ids: Array[int] = []
+	for value in 300: ids.append(value)
+	var raw_context = JSON.stringify(ids)
+	scene.inspector_pages.set_content(raw_context, false, true)
+	await process_frame
+	await process_frame
+	var recovered = ""
+	for index in scene.inspector_pages.pages.size():
+		scene.inspector_pages.page = index
+		scene.inspector_pages.display_page()
+		recovered += scene.inspector.get_parsed_text()
+	check(recovered.replace("\n", "").replace(" ", "") == raw_context.replace(" ", "") and pages_fit(scene.inspector_pages), "long bracketed context retains every ID across fitted pages")
+	scene.history_pages.page = scene.history_pages.pages.size() - 1
+	scene.history_pages.previous.pressed.emit()
+	var selected_history_page = scene.history_pages.page
+	scene.history_pages.reflow()
+	check(scene.history_pages.page == selected_history_page, "history reflow preserves a user-selected older page")
+	scene.show_hint("降雨說明", "雨增加土壤水分。\n食物仍需作物生長與實際收穫。\n暫停會停止模擬冷卻倒數。")
+	await process_frame
+	await process_frame
+	check(scene.hint_dialog.visible and pages_fit(scene.hint_pages), "contextual help is available through a focusable click/keyboard dialog")
+	scene.hint_dialog.hide()
+	scene.advanced.visible = true
+	scene.rain_settings.popup_centered(Vector2i(410, 240))
+	await process_frame
+	await process_frame
+	check(scene.rain_settings.visible and controls_fit(scene.advanced, Rect2(Vector2.ZERO, Vector2(scene.rain_settings.size))), "all advanced Rain settings remain reachable in a discrete dialog")
+	scene.rain_settings.hide()
+	scene.show_result({"ok": false, "reason": "測試操作回饋"})
+	scene._process(5.1)
+	check(scene.status_label.text.is_empty() and scene.rain_button.disabled and scene.rain_preview.text.contains("神力不足"), "transient command feedback expires while the current blocking reason stays visible")
+	check(var_to_bytes(scene.sim.export_state()) == fixture_state, "pagination, hints and resizing preserve authoritative simulation state")
+	scene.sim = original_sim
+	root.size = Vector2i(1440, 900)
+	scene.observation_clock.reset(scene.sim)
+	scene.saints_in_menu = [-999]
+	scene.prayers_in_menu = [-999]
+	scene.last_feed_id = 0
+	scene.fill_people()
+	scene.divine_tabs.current_tab = 0
+	scene.select_entity("person", original_sim.religion.living_saints(original_sim)[0], Vector2.ZERO)
+	scene.refresh_view()
+	scene.show_result(original_result)
+	check(scene.oracle_button.disabled and not scene.active_oracle().is_empty(), "same-Saint active intent lock is visible independently of Miracle cooldown")
+	check(var_to_bytes(original_sim.export_state()) == original_state, "UI guide tests leave the original world unchanged")
 
 func check_observation(scene) -> void:
 	var original_sim = scene.sim
@@ -115,7 +248,7 @@ func check_observation(scene) -> void:
 	var unrelated = scene.sim.individuals.people[5]
 	check(scene.map.person_visible(child) and not scene.map.person_visible(unrelated), "night event participants stay visible while unrelated resting residents are hidden")
 	scene.select_entity("person", unrelated.id, Vector2.ZERO)
-	check(scene.map.person_visible(unrelated) and scene.inspector.text.contains("休息"), "a resting resident remains available through the resident inspector")
+	check(scene.map.person_visible(unrelated) and scene.inspector_pages.content.contains("休息"), "a resting resident remains available through the resident inspector")
 	scene.select_entity("overview", 0, Vector2.ZERO)
 	scene.show_event(scene.night_event.id)
 	scene.refresh_view()

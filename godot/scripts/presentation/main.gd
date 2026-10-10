@@ -3,6 +3,7 @@ extends Control
 const Session = preload("res://scripts/simulation/session.gd")
 const WorldMap = preload("res://scripts/presentation/world_map.gd")
 const ObservationClock = preload("res://scripts/presentation/observation_clock.gd")
+const PagedText = preload("res://scripts/presentation/paged_text.gd")
 const INK = Color("e2e6dc")
 const MUTED = Color("9eafa8")
 const GOLD = Color("ddc18b")
@@ -41,6 +42,7 @@ var selected_kind: String = "overview"
 var selected_id: int = 0
 var selected_cell = Vector2(24, 26)
 var refresh_timer: float = 0.0
+var feedback_remaining: float = 0.0
 var saints_in_menu: Array = []
 var prayers_in_menu: Array = []
 var last_feed_id: int = 0
@@ -50,8 +52,20 @@ var divine_tabs: TabContainer
 var rain_target_toggle: CheckButton
 var night_skip_toggle: CheckButton
 var clock_status: Label
+var inspector_pages
+var history_pages
+var rain_settings: AcceptDialog
+var hint_dialog: AcceptDialog
+var hint_pages
+var people_page: int = 0
+var people_count: int = 0
+var people_page_label: Label
+var people_previous: Button
+var people_next: Button
+const PEOPLE_PER_PAGE = 8
 
 func _ready() -> void:
+	get_window().min_size = Vector2i(1280, 720)
 	var system_font = SystemFont.new()
 	system_font.font_names = PackedStringArray(["Microsoft JhengHei", "Noto Sans TC", "Noto Sans", "sans-serif"])
 	var ui_theme = Theme.new()
@@ -118,7 +132,7 @@ func panel(parent: Control) -> VBoxContainer:
 	shell.add_theme_stylebox_override("panel", style)
 	parent.add_child(shell)
 	var column = VBoxContainer.new()
-	column.add_theme_constant_override("separation", 9)
+	column.add_theme_constant_override("separation", 7)
 	shell.add_child(column)
 	return column
 
@@ -147,13 +161,23 @@ func rich(parent: Control, height: float = 0.0) -> RichTextLabel:
 	parent.add_child(label)
 	return label
 
+func hint_button(parent: Control, title: String, explanation: String) -> Button:
+	var item = button("?", show_hint.bind(title, explanation), parent)
+	item.tooltip_text = explanation
+	return item
+
+func show_hint(title: String, explanation: String) -> void:
+	hint_dialog.title = title
+	hint_pages.set_content(explanation, false, true)
+	hint_dialog.popup_centered(Vector2i(460, 300))
+
 func build_ui() -> void:
 	var margin = MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 16)
 	add_child(margin)
 	var root = VBoxContainer.new()
-	root.add_theme_constant_override("separation", 12)
+	root.add_theme_constant_override("separation", 8)
 	margin.add_child(root)
 	var header = HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
@@ -161,8 +185,8 @@ func build_ui() -> void:
 	var title = VBoxContainer.new()
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
-	title.add_child(text_label("WORLD OF GOD", 22, GOLD))
-	title.add_child(text_label("河谷初聲  /  核心機制 PoC · S0—S3", 12, MUTED))
+	title.add_child(text_label("WORLD OF GOD", 18, GOLD))
+	hint_button(header, "河谷初聲 · 核心機制 PoC", "觀察居民自主形成聚落。\n在居民附近選擇雨心，預覽成本並施放降雨。\n聖者出現後，可傳達糧食神諭。\n點選居民、家庭或世界紀錄，查看真實決策與因果。\n\n地圖：滾輪縮放、右鍵拖曳或 WASD 平移。\n空白鍵：暫停／繼續；1：降雨選點；Esc：取消選點。\n\n範圍：一個河谷、Rain、food.produce。")
 	date_label = text_label("", 14, INK)
 	header.add_child(date_label)
 	pause_button = button("暫停", toggle_pause, header)
@@ -200,31 +224,29 @@ func build_ui() -> void:
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 12)
 	root.add_child(body)
-	var left_scroll = ScrollContainer.new()
-	left_scroll.custom_minimum_size.x = 280
-	left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body.add_child(left_scroll)
-	var left = panel(left_scroll)
-	left.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.add_child(text_label("神意", 19, GOLD))
+	var left = panel(body)
+	left.get_parent().custom_minimum_size.x = 260
+	left.add_child(text_label("神意", 16, GOLD))
 	dp_label = wrap_label("", 16, TEAL)
 	left.add_child(dp_label)
 	faith_label = wrap_label("")
 	left.add_child(faith_label)
 	left.add_child(HSeparator.new())
-	left.add_child(text_label("01  降雨 Rain", 16, GOLD))
-	left.add_child(wrap_label("雨增加水分，作物仍需生長與收穫。"))
+	left.add_child(text_label("降雨 · 改善土地水分", 14, GOLD))
+	hint_button(left, "降雨 Rain", "雨增加土壤水分；食物仍需作物生長與居民實際收穫。\n神力成本與冷卻由模擬評估，取決於半徑、強度、持續時間與熟練度。\n中心必須有當地信仰臨在。暫停時冷卻倒數也停止。")
 	rain_target_toggle = CheckButton.new()
 	rain_target_toggle.text = "在地圖選擇降雨中心"
-	rain_target_toggle.toggled.connect(func(value): map.rain_mode = value; map.queue_redraw())
+	rain_target_toggle.toggled.connect(set_rain_targeting)
 	left.add_child(rain_target_toggle)
 	var quick_row = HBoxContainer.new()
 	left.add_child(quick_row)
 	button("快速設定", quick_rain, quick_row)
-	button("進階設定", func(): advanced.visible = not advanced.visible, quick_row)
+	button("進階設定", func(): advanced.visible = true; rain_settings.popup_centered(Vector2i(410, 240)), quick_row)
+	rain_settings = AcceptDialog.new()
+	rain_settings.title = "降雨參數"
+	add_child(rain_settings)
 	advanced = VBoxContainer.new()
-	advanced.visible = false
-	left.add_child(advanced)
+	rain_settings.add_child(advanced)
 	radius_input = spin(advanced, "半徑（格）", 2, 14, 1, 9)
 	intensity_input = spin(advanced, "強度", 0.25, 2, 0.25, 1)
 	duration_input = spin(advanced, "持續（天）", 1, 30, 1, 12)
@@ -233,8 +255,8 @@ func build_ui() -> void:
 	left.add_child(rain_preview)
 	rain_button = button("施放降雨", cast_rain, left)
 	left.add_child(HSeparator.new())
-	left.add_child(text_label("02  神諭 Oracle", 16, GOLD))
-	left.add_child(wrap_label("food.produce：提高糧食生產優先序。聖者傳達，居民自行判斷。"))
+	left.add_child(text_label("神諭 · food.produce", 14, GOLD))
+	hint_button(left, "糧食神諭", "聖者接收、地方傳播，居民自行比較可行工作。\n神諭使用聖者配額，不消耗 DP；同一聖者不能同時接收相同意圖。\n初始配額 4，每三個模擬月補充 1。\n普通成功不會自動結束；宣告結束消耗 1 配額。")
 	saint_select = OptionButton.new()
 	left.add_child(saint_select)
 	saint_select.item_selected.connect(func(_index): refresh_view())
@@ -251,19 +273,24 @@ func build_ui() -> void:
 	# Keep both core interventions reachable without scrolling past the other.
 	var left_children = left.get_children()
 	divine_tabs = TabContainer.new()
-	divine_tabs.custom_minimum_size.y = 360
 	divine_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(divine_tabs)
-	for section in [{"name": "降雨", "from": 4, "to": 11}, {"name": "神諭", "from": 12, "to": 19}, {"name": "祈求", "from": 20, "to": 23}]:
+	for section in [{"name": "降雨", "from": 4, "to": 10}, {"name": "神諭", "from": 11, "to": 18}, {"name": "祈求", "from": 19, "to": 22}]:
 		var tab_column = VBoxContainer.new()
 		tab_column.name = section.name
 		tab_column.add_theme_constant_override("separation", 8)
 		divine_tabs.add_child(tab_column)
+		var heading = HBoxContainer.new()
+		if section.name != "祈求": tab_column.add_child(heading)
 		for index in range(section.from, section.to):
 			var child = left_children[index]
 			left.remove_child(child)
-			tab_column.add_child(child)
-	for index in [11, 19]:
+			if section.name != "祈求" and index < section.from + 2:
+				heading.add_child(child)
+				if index == section.from: child.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			else: tab_column.add_child(child)
+		if section.name == "祈求": heading.free()
+	for index in [10, 18]:
 		left.remove_child(left_children[index])
 		left_children[index].queue_free()
 	var middle = panel(body)
@@ -282,13 +309,12 @@ func build_ui() -> void:
 	map = WorldMap.new()
 	map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	map.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	map.custom_minimum_size = Vector2(320, 300)
+	map.custom_minimum_size = Vector2(260, 210)
 	map.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	map.selected.connect(select_entity)
 	map.target_changed.connect(func(_point): update_rain_preview())
 	middle.add_child(map)
-	middle.add_child(text_label("點選：觀察／設定雨心  ·  滾輪：縮放  ·  右鍵拖曳／WASD：平移", 11, MUTED))
-	middle.add_child(wrap_label("地圖優先顯示白天活動居民；休息居民可從右側選單查看。金環是聖者；虛線圓是家庭營地。", 11))
+	map.tooltip_text = "點選居民／土地；滾輪縮放；右鍵拖曳或 WASD 平移。金環是聖者，虛線圓是家庭。休息居民可由右側選單查看。"
 	var right = panel(body)
 	right.get_parent().custom_minimum_size.x = 304
 	var inspect_header = HBoxContainer.new()
@@ -302,23 +328,43 @@ func build_ui() -> void:
 		var person_id = person_select.get_item_id(index)
 		if person_id > 0: select_entity("person", person_id, Vector2.ZERO))
 	right.add_child(person_select)
+	var people_navigation = HBoxContainer.new()
+	right.add_child(people_navigation)
+	people_previous = button("上一組", change_people_page.bind(-1), people_navigation)
+	people_page_label = text_label("", 12, MUTED)
+	people_page_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	people_page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	people_navigation.add_child(people_page_label)
+	people_next = button("下一組", change_people_page.bind(1), people_navigation)
 	var inspect_actions = HBoxContainer.new()
 	right.add_child(inspect_actions)
 	button("家庭", focus_household, inspect_actions)
 	button("聚落", focus_settlement, inspect_actions)
-	inspector = rich(right, 280)
+	inspector_pages = PagedText.new()
+	inspector_pages.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(inspector_pages)
+	inspector = inspector_pages.body
 	inspector.meta_clicked.connect(func(meta): show_event(int(str(meta).trim_prefix("event:"))))
 	var bottom = panel(root)
-	bottom.get_parent().custom_minimum_size.y = 190
+	bottom.get_parent().custom_minimum_size.y = 140
 	bottom.add_child(text_label("世界紀錄  /  點選事件查看實際因果與決策輸入", 14, GOLD))
-	event_feed = rich(bottom, 108)
-	event_feed.scroll_following = true
+	history_pages = PagedText.new()
+	history_pages.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	bottom.add_child(history_pages)
+	event_feed = history_pages.body
 	event_feed.meta_clicked.connect(func(meta): show_event(int(str(meta).trim_prefix("event:"))))
-	status_label = wrap_label("觀察居民形成聚落，選地降雨，再向聖者傳達神意。空白鍵可暫停。", 12, TEAL)
+	status_label = wrap_label("觀察世界 · 空白鍵暫停／繼續", 12, TEAL)
 	root.add_child(status_label)
+	hint_dialog = AcceptDialog.new()
+	add_child(hint_dialog)
+	hint_pages = PagedText.new()
+	hint_dialog.add_child(hint_pages)
 
 func _process(delta: float) -> void:
 	advance_observation(delta)
+	if feedback_remaining > 0.0:
+		feedback_remaining = maxf(0.0, feedback_remaining - delta)
+		if feedback_remaining == 0.0 and night_event.is_empty(): status_label.text = ""
 	refresh_timer += delta
 	if refresh_timer >= 0.35:
 		refresh_timer = 0.0
@@ -329,6 +375,7 @@ func advance_observation(delta: float) -> void:
 	var event = observation_clock.advance_wall(sim, delta)
 	if event.is_empty(): return
 	night_event = event
+	feedback_remaining = 0.0
 	sim.paused = true
 	map.event_people = night_event_people(night_event)
 	status_label.text = "夜間事件：%s　按「繼續」恢復觀察。" % night_event.message
@@ -351,8 +398,12 @@ func night_event_people(event: Dictionary) -> Array:
 		_: return subjects.slice(0, 1)
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
-		toggle_pause()
+	if event is InputEventKey and event.pressed and not event.echo:
+		match event.keycode:
+			KEY_SPACE: toggle_pause()
+			KEY_1: set_rain_targeting(not map.rain_mode)
+			KEY_ESCAPE: set_rain_targeting(false)
+			_: return
 		get_viewport().set_input_as_handled()
 
 func format_date(seconds: int) -> String:
@@ -367,7 +418,7 @@ func refresh_view() -> void:
 	view = sim.snapshot()
 	map.daytime = observation_clock.is_daytime(sim)
 	map.set_snapshot(view)
-	if person_select.item_count != view.individuals.people.size() + 1: fill_people()
+	if people_count != view.individuals.people.size(): fill_people()
 	var stats = view.stats
 	date_label.text = format_date(sim.time) + "\n" + format_time(sim.time) + (" · 白天" if map.daytime else " · 夜間")
 	clock_status.text = "夜間事件 · 暫停" if sim.paused and not night_event.is_empty() else ("已暫停" if sim.paused else ("夜間快進 %d×" % (sim.speed * observation_clock.multiplier(sim)) if observation_clock.multiplier(sim) > 1 else "觀察 %d×" % sim.speed))
@@ -376,8 +427,8 @@ func refresh_view() -> void:
 	pause_button.text = "繼續" if sim.paused else "暫停"
 	for i in speed_buttons.size(): speed_buttons[i].button_pressed = sim.speed == [1, 4, 16][i]
 	stats_label.text = "居民 %d   ·   家庭 %d   ·   聚落 %d   ·   食物 %.1f（%.1f 天）   ·   信徒 %d   ·   %s" % [stats.population, view.households.homes.size(), stats.settlements, stats.food, stats.food_days, stats.followers, view.world.weather]
-	dp_label.text = "%.1f / %.0f DP\n恢復 +%.2f / 模擬天" % [view.divine.dp, view.divine.cap, view.divine.rate]
-	faith_label.text = "信徒門檻：虔誠 40+\n祈求已改善：%d  ·  雨熟練 Lv%d" % [view.religion.fulfilled_count, view.divine.skills.rain.mastery]
+	dp_label.text = "%.1f / %.0f DP · +%.2f/天" % [view.divine.dp, view.divine.cap, view.divine.rate]
+	faith_label.tooltip_text = "信徒需虔誠 40+。神力恢復按在世信仰居民的虔誠級距計算。"
 	var saints = sim.religion.living_saints(sim)
 	if saints != saints_in_menu:
 		saints_in_menu = saints.duplicate()
@@ -388,16 +439,22 @@ func refresh_view() -> void:
 		for index in saints.size():
 			var person_id = saint_select.get_item_id(index)
 			saint_select.set_item_text(index, "%s · 配額 %d/4" % [sim.individuals.get_person(person_id).name, sim.religion.saints[person_id].quota])
-	oracle_button.disabled = saints.is_empty()
+	var oracle_evaluation = sim.religion.evaluate_oracle(sim, oracle_parameters())
+	oracle_button.disabled = not oracle_evaluation.ok
+	oracle_button.tooltip_text = oracle_evaluation.reason
 	conclude_button.disabled = active_oracle().is_empty()
 	var current = active_oracle()
-	if current.is_empty(): oracle_summary.text = "每位聖者獨立配額：初始 4；\n每三個月 +1。成功不會自動結束。"
+	if current.is_empty(): oracle_summary.text = oracle_evaluation.reason
 	else:
 		var stages = current.stages
-		oracle_summary.text = "神諭 #%d · 尚餘 %.1f 天\n收到 %d → 聽見 %d → 接受 %d\n嘗試 %d → 取得食物 %d 人\n實際食物 %.1f；成功後仍有效。" % [current.id, float(current.expires_at - sim.time) / sim.day_seconds(), stages.received, stages.heard, stages.accepted, stages.attempted, stages.outcome, current.food_output]
+		oracle_summary.text = "有效神諭 #%d · 尚餘 %.1f 天\n聽見 %d · 接受 %d · 嘗試 %d\n取得食物 %d 人 · 實際 %.1f\n同類型已鎖定；成功後仍有效。" % [current.id, float(current.expires_at - sim.time) / sim.day_seconds(), stages.heard, stages.accepted, stages.attempted, stages.outcome, current.food_output]
 	var pending: Array = []
 	for home_id in view.religion.prayers:
 		if view.religion.prayers[home_id].status == "pending": pending.append(home_id)
+	var shortages = 0
+	for home in view.households.homes:
+		if home.shortage_days >= 3 and home.satisfaction < 0.85: shortages += 1
+	faith_label.text = "祈求待回 %d · 已改善 %d\n缺糧 %d 戶 · 雨熟練 Lv%d" % [pending.size(), view.religion.fulfilled_count, shortages, view.divine.skills.rain.mastery]
 	if pending != prayers_in_menu:
 		prayers_in_menu = pending.duplicate()
 		prayer_select.clear()
@@ -416,12 +473,25 @@ func refresh_view() -> void:
 			var color = "ddc18b" if event.kind in ["rain", "oracle_issued", "prayer_fulfilled", "settlement", "saint"] else "a6bab2"
 			lines.append("[color=#%s][url=event:%d]#%d  %s %s[/url][/color]  %s" % [color, event.id, event.id, format_date(event.time), format_time(event.time), event.message])
 			if lines.size() > 48: lines.pop_front()
-		event_feed.text = "\n".join(lines)
+		history_pages.set_content("\n".join(lines), true)
 
 func fill_people() -> void:
+	people_count = sim.individuals.people.size()
+	var page_count = maxi(1, ceili(float(people_count) / PEOPLE_PER_PAGE))
+	people_page = clampi(people_page, 0, page_count - 1)
 	person_select.clear()
 	person_select.add_item("選擇居民…", 0)
-	for p in sim.individuals.people: person_select.add_item("#%d %s" % [p.id, p.name], p.id)
+	for index in range(people_page * PEOPLE_PER_PAGE, mini(people_count, (people_page + 1) * PEOPLE_PER_PAGE)):
+		var p = sim.individuals.people[index]
+		person_select.add_item("#%d %s" % [p.id, p.name], p.id)
+		if selected_kind == "person" and p.id == selected_id: person_select.select(person_select.item_count - 1)
+	people_page_label.text = "%d / %d 組" % [people_page + 1, page_count]
+	people_previous.disabled = people_page == 0
+	people_next.disabled = people_page == page_count - 1
+
+func change_people_page(change: int) -> void:
+	people_page += change
+	fill_people()
 
 func rain_parameters() -> Dictionary:
 	return {"type": "rain", "x": map.target.x, "y": map.target.y, "radius": radius_input.value, "intensity": intensity_input.value, "days": duration_input.value}
@@ -430,27 +500,44 @@ func update_rain_preview() -> void:
 	if not is_instance_valid(map) or sim.rules.is_empty(): return
 	map.rain_radius = radius_input.value
 	var preview = sim.divine.evaluate(sim, rain_parameters())
-	rain_preview.text = "中心 (%.1f, %.1f) · 半徑 %.0f\n強度 %.2f · 持續 %.0f 天\n預估 %.1f DP · 冷卻 %.1f 天\n中心臨在 %.2f\n%s" % [map.target.x, map.target.y, radius_input.value, intensity_input.value, duration_input.value, preview.cost, preview.cooldown_days, preview.presence.weighted, preview.reason]
+	rain_preview.text = "中心 (%.0f, %.0f) · 半徑 %.0f\n強度 %.2f · 持續 %.0f 天\n成本 %.1f DP · 臨在 %.2f\n%s" % [map.target.x, map.target.y, radius_input.value, intensity_input.value, duration_input.value, preview.cost, preview.presence.weighted, preview.reason]
 	rain_preview.add_theme_color_override("font_color", INK if preview.ok else Color("d6a584"))
 	rain_button.disabled = not preview.ok
+	rain_target_toggle.disabled = not preview.ok
+	var cooldown = maxf(0.0, float(sim.divine.skills.rain.cooldown_until - sim.time) / sim.day_seconds())
+	rain_button.text = "冷卻中 · %.1f 天" % cooldown if cooldown > 0.0 else ("施放降雨" if preview.ok else "降雨不可用")
+	if not preview.ok:
+		rain_target_toggle.set_pressed_no_signal(false)
+		map.rain_mode = false
 	map.queue_redraw()
+
+func set_rain_targeting(enabled: bool) -> void:
+	if not is_instance_valid(map) or sim.rules.is_empty(): return
+	var evaluation = sim.divine.evaluate(sim, rain_parameters())
+	map.rain_mode = enabled and evaluation.ok
+	rain_target_toggle.set_pressed_no_signal(map.rain_mode)
+	map.queue_redraw()
+	if enabled and not evaluation.ok: show_result(evaluation)
 
 func quick_rain() -> void:
 	radius_input.value = sim.rules.rain_standard_radius
 	intensity_input.value = 1
 	duration_input.value = sim.rules.rain_standard_days
-	advanced.visible = false
-	rain_target_toggle.button_pressed = true
+	rain_settings.hide()
+	set_rain_targeting(true)
 	update_rain_preview()
 
 func show_result(result: Dictionary) -> void:
 	last_result = result
+	feedback_remaining = 5.0
 	status_label.text = result.reason
 	status_label.add_theme_color_override("font_color", TEAL if result.ok else Color("e0ac86"))
 	refresh_view()
 
 func cast_rain() -> void:
-	show_result(sim.submit_command(rain_parameters()))
+	var result = sim.submit_command(rain_parameters())
+	if result.ok: set_rain_targeting(false)
+	show_result(result)
 
 func active_oracle() -> Dictionary:
 	if saint_select.item_count == 0: return {}
@@ -459,8 +546,11 @@ func active_oracle() -> Dictionary:
 		if oracle.status == "active" and oracle.saint_id == person_id: return oracle
 	return {}
 
+func oracle_parameters() -> Dictionary:
+	return {"type": "oracle", "saint_id": saint_select.get_selected_id(), "intent": "food.produce", "months": oracle_duration.value}
+
 func issue_oracle() -> void:
-	show_result(sim.submit_command({"type": "oracle", "saint_id": saint_select.get_selected_id(), "intent": "food.produce", "months": oracle_duration.value}))
+	show_result(sim.submit_command(oracle_parameters()))
 
 func conclude_oracle() -> void:
 	var oracle = active_oracle()
@@ -472,6 +562,8 @@ func toggle_pause() -> void:
 		observation_clock.resumed()
 		night_event.clear()
 		map.event_people.clear()
+		status_label.text = ""
+		feedback_remaining = 0.0
 	refresh_view()
 
 func set_speed(value: int) -> void:
@@ -513,6 +605,11 @@ func select_entity(kind: String, id_value: int, cell: Vector2) -> void:
 	selected_id = id_value
 	selected_cell = cell
 	map.selected_person = id_value if kind == "person" else 0
+	inspector_pages.page = 0
+	inspector_pages.queue_reflow()
+	if kind == "person":
+		people_page = (id_value - 1) / PEOPLE_PER_PAGE
+		fill_people()
 	update_inspector()
 	map.queue_redraw()
 
@@ -581,8 +678,8 @@ func update_inspector() -> void:
 			if cell.is_empty(): return
 			content = "[b]土地 (%d, %d)[/b]\n地貌 %s\n\n土壤適性 %.2f\n離河道 %.1f 格\n濕度 %.2f\n作物 %.2f（未收穫）\n其中降雨改善的生長 %.2f\n野生食物 %.2f\n木材 %.2f · 石材 %.2f\n纖維 %.2f\n\n作物與自然資源都要經過居民的真實勞動，才會進入庫存。" % [cell.x, cell.y, cell.terrain, cell.soil, cell.water_distance, cell.moisture, cell.crops, cell.rain_bonus, cell.wild_food, cell.wood, cell.stone, cell.fiber]
 		_:
-			content = "[b]核心機制觀察[/b]\n\n1. 讓時間前進，觀察家庭生活與聚落形成。\n\n2. 查看食物祈求，在居民附近選擇雨心，預覽成本並施放。\n\n3. 聖者出現後，傳達 food.produce 神諭。\n\n4. 點選居民，查看神諭壓力、工作評分、可行資源與實際行動。\n\n5. 點選世界紀錄，查看降雨、生長、勞動、祈求改善與信仰的真實關聯。\n\n[b]目前實作邊界[/b]\n一個河谷、Rain、food.produce。\n參數與畫面均為驗證用。\n\n[b]世界自行演化[/b]\n出生 %d · 離世 %d\n家庭搬遷 %d\n實際收穫 %.1f\n降雨改善的收穫 %.1f" % [sim.individuals.births, sim.individuals.deaths, sim.households.migrations, sim.world.harvest_total, sim.world.rain_bonus_harvest]
-	inspector.text = content
+			content = "[b]河谷 · 世界總覽[/b]\n\n居民 %d · 家庭 %d · 聚落 %d\n食物 %.1f（%.1f 天）\n待回應祈求 %d\n\n[b]世界自行演化[/b]\n出生 %d · 離世 %d\n家庭搬遷 %d\n實際收穫 %.1f\n降雨改善的收穫 %.1f\n\n點選居民、家庭或紀錄查看原因。\n操作與規則說明可由「?」開啟。" % [sim.stats().population, sim.households.homes.size(), sim.settlements.towns.size(), sim.stats().food, sim.stats().food_days, prayers_in_menu.size(), sim.individuals.births, sim.individuals.deaths, sim.households.migrations, sim.world.harvest_total, sim.world.rain_bonus_harvest]
+	inspector_pages.set_content(content)
 
 func show_event(event_id: int) -> void:
 	selected_kind = "event"
@@ -594,6 +691,6 @@ func show_event(event_id: int) -> void:
 		for parent in event.parents: content += "[url=event:%d]查看 #%d[/url]\n" % [parent, parent]
 		if not event.reasons.is_empty(): content += "\n[b]實際使用的理由／上下文[/b]\n" + JSON.stringify(event.reasons, "  ")
 		content += "\n\n對象 IDs：" + str(event.subjects)
-		inspector.text = content
+		inspector_pages.set_content(content, false, true)
 		return
-	inspector.text = "事件 #%d 已離開最近 %d 筆的記憶體視窗。舊紀錄保存在 history.jsonl。" % [event_id, sim.rules.history_limit]
+	inspector_pages.set_content("事件 #%d 已離開最近 %d 筆的記憶體視窗。舊紀錄保存在 history.jsonl。" % [event_id, sim.rules.history_limit], false, true)

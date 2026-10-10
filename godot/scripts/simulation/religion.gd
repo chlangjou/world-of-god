@@ -99,7 +99,7 @@ func process_deadlines(s) -> void:
 		if oracle.status == "active" and oracle.expires_at <= s.time:
 			end_assignment(s, oracle, "expired", "神諭期限到了；停止神諭壓力，保留已發生的世界結果。")
 
-func issue_oracle(s, command: Dictionary) -> Dictionary:
+func evaluate_oracle(s, command: Dictionary) -> Dictionary:
 	var saint_id = int(command.get("saint_id", -1))
 	var intent = command.get("intent", "food.produce")
 	var months = command.get("months", s.rules.oracle_default_months)
@@ -110,6 +110,15 @@ func issue_oracle(s, command: Dictionary) -> Dictionary:
 		if existing.status == "active" and existing.saint_id == saint_id and existing.intent_type == intent: return {"ok": false, "reason": "這位聖者已有同類型的有效神諭。"}
 	var saint = saints[saint_id]
 	if saint.quota < int(s.rules.quota_issue_cost): return {"ok": false, "reason": "聖者接收配額不足；每三個模擬月恢復 1。"}
+	return {"ok": true, "reason": "可傳達糧食神諭；消耗 1 聖者配額。"}
+
+func issue_oracle(s, command: Dictionary) -> Dictionary:
+	var evaluation = evaluate_oracle(s, command)
+	if not evaluation.ok: return evaluation
+	var saint_id = int(command.get("saint_id", -1))
+	var intent = command.get("intent", "food.produce")
+	var months = command.get("months", s.rules.oracle_default_months)
+	var saint = saints[saint_id]
 	saint.quota -= int(s.rules.quota_issue_cost)
 	var person = s.individuals.get_person(saint_id)
 	var issued = s.record("oracle_issued", "你向聖者%s傳達「增加糧食生產」；配額剩餘 %d。" % [person.name, saint.quota], [saint_id], [], {"canonical_intent": intent})

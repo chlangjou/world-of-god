@@ -27,4 +27,33 @@ UI PASS: another manual Resume grants a fresh grace period
 UI PASS: grace expires by real elapsed time without replaying suppressed events
 UI PASS: a genuinely new nighttime birth pauses again after resume grace
 UI PASS: events observed during grace remain in History
-UI RESULT: 26 checks, 0 failures
+UI PASS: successful Rain greys out cast and targeting and clears armed state
+UI PASS: Rain shortcut cannot arm a cooling-down Miracle
+UI PASS: paused UI keeps the simulated cooldown constant
+UI PASS: Rain remains unavailable one simulated second before cooldown expiry
+UI PASS: Rain targeting and cast recover at the exact simulation cooldown deadline
+UI PASS: Oracle uses authoritative quota evaluation and a distinct visible reason
+UI PASS: insufficient DP blocks both Rain controls with the actual reason
+UI PASS: invalid target displays the simulator's actual capability reason
+UI PASS: all 120 real residents remain selectable through bounded non-scrolling groups
+UI PASS: fixed viewport keeps map and tab 0 controls visible at (1280, 720)
+UI PASS: fixed viewport keeps map and tab 1 controls visible at (1280, 720)
+UI PASS: fixed viewport keeps map and tab 2 controls visible at (1280, 720)
+UI PASS: all inspection and 150-entry history pages fit without vertical scrolling at (1280, 720)
+UI PASS: fixed viewport keeps map and tab 0 controls visible at (1366, 768)
+UI PASS: fixed viewport keeps map and tab 1 controls visible at (1366, 768)
+UI PASS: fixed viewport keeps map and tab 2 controls visible at (1366, 768)
+UI PASS: all inspection and 150-entry history pages fit without vertical scrolling at (1366, 768)
+UI PASS: fixed viewport keeps map and tab 0 controls visible at (1920, 1080)
+UI PASS: fixed viewport keeps map and tab 1 controls visible at (1920, 1080)
+UI PASS: fixed viewport keeps map and tab 2 controls visible at (1920, 1080)
+UI PASS: all inspection and 150-entry history pages fit without vertical scrolling at (1920, 1080)
+UI PASS: long bracketed context retains every ID across fitted pages
+UI PASS: history reflow preserves a user-selected older page
+UI PASS: contextual help is available through a focusable click/keyboard dialog
+UI PASS: all advanced Rain settings remain reachable in a discrete dialog
+UI PASS: transient command feedback expires while the current blocking reason stays visible
+UI PASS: pagination, hints and resizing preserve authoritative simulation state
+UI PASS: same-Saint active intent lock is visible independently of Miracle cooldown
+UI PASS: UI guide tests leave the original world unchanged
+UI RESULT: 55 checks, 0 failures

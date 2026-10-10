@@ -15,7 +15,8 @@ if (-not $GodotPath) {
     }
 }
 if (-not $GodotPath -or -not (Test-Path -LiteralPath $GodotPath)) { throw 'Godot 4.x not found. Run tools/install-godot.ps1 or pass -GodotPath.' }
-$env:APPDATA = Join-Path $taskRoot '.tools/userdata'
+$dataRoot = if ($Mode -in @('test', 'economy', 'benchmark', 'capture')) { '.tools/test-userdata' } else { '.tools/userdata' }
+$env:APPDATA = Join-Path $taskRoot $dataRoot
 $projectPath = Join-Path $taskRoot 'godot'
 $runLog = Join-Path $taskRoot ".tools/godot-$Mode.log"
 $arguments = @('--path', $projectPath, '--log-file', $runLog)

@@ -264,3 +264,26 @@ test('first MVP saves upgrade without resurrecting people or bringing back routi
   assert.ok(saved.people.every(p=>p.recoveryUntilHour!==undefined));
   afterDays(saved,3);valid(saved);
 });
+
+test('optional Agriculture v0.1 profile is deterministic and crop stock remains physical',()=>{
+  const fs=require('node:fs');
+  const path=require('node:path');
+  const profile=JSON.parse(fs.readFileSync(path.join(__dirname,'../config/balance-agriculture-v0.1.json'),'utf8'));
+  const play=()=>{
+    const world=W.create({seed:'calm-river',balanceProfile:profile});
+    assert.equal(world.balanceProfileId,profile.profileId);
+    const before=world.people.map(p=>p.proficiency.food);
+    afterDays(world,160);
+    valid(world);
+    const fields=world.tiles.filter(t=>t.terrain==='field');
+    assert.ok(fields.every(t=>Number.isFinite(t.cropStock)&&t.cropStock>=0));
+    assert.ok(fields.some(t=>t.cropStock>0));
+    assert.ok(world.counts.foodFromLabor>0);
+    assert.ok(world.people.some((p,i)=>p.proficiency.food>before[i]),'actual agricultural work improves skill');
+    const restored=W.restore(JSON.stringify(world));
+    assert.deepEqual(restored,world);
+    return world;
+  };
+  assert.deepEqual(play(),play());
+  assert.equal(W.create({seed:'calm-river'}).balanceProfileId,'original');
+});

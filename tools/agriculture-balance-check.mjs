@@ -16,7 +16,7 @@ const baseline = JSON.parse(readFileSync(resolve(root, 'config/balance-default.j
 const candidate = JSON.parse(readFileSync(resolve(root, 'config/balance-agriculture-v0.1.json'), 'utf8'));
 
 assert.deepEqual(Game.DEFAULT_RULES, baseline.rules, 'The reference baseline must match the actual sim.js DEFAULT_RULES');
-assert.equal(candidate.loadedByRuntime, false, 'Candidate profile must remain experiment-only');
+assert.equal(candidate.loadedByRuntime, true, 'Agriculture profile must be available to Web runtime');
 
 const clamp01 = x => Math.max(0, Math.min(1, x));
 const round = (x, places = 2) => Number(x.toFixed(places));
@@ -106,7 +106,7 @@ const output={kind:'candidate-analytical-capacity-only',sourceSimulatorVersion:G
   seedCases:cases, additionalSeedCount:extra.length, additionalSeedSummary:seasonSummary};
 if (process.argv.includes('--json')) console.log(JSON.stringify(output,null,2));
 else {
-  console.log(`PoC agriculture candidate: ${output.profileId}; actual gameplay unchanged`);
+  console.log(`PoC agriculture candidate: ${output.profileId}; gameplay now supports optional runtime integration`);
   console.log(`Daily need=${output.populationDemandPerDay}, farm-workday skill:`,output.experience);
   console.table(cases.map(r=>({seed:r.seed,season:r.season,plots:r.plots,landPct:r.landCoveragePct,workerDay:r.workerFoodPerWorkday,laborPct:r.foodLaborSharePct,actualPct:r.sustainableCoveragePct})));
   console.table(seasonSummary);

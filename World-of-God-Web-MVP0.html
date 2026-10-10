@@ -14,7 +14,7 @@
 <body>
   <header class="topbar">
     <div class="brand"><span class="brand-icon" aria-hidden="true">✧</span><div><b>WORLD OF GOD</b><small>河谷初生 · WEB MVP-0</small></div></div>
-    <div class="header-actions"><span class="build-label">獨立 PoC · v0.2.1</span><button id="helpBtn" class="btn ghost">玩法說明</button><button id="saveBtn" class="btn ghost">儲存</button><button id="loadBtn" class="btn ghost">讀取</button><button id="exportBtn" class="btn ghost">匯出</button><button id="importBtn" class="btn ghost">匯入</button><button id="resetBtn" class="btn outline">重新創世</button></div>
+    <div class="header-actions"><span class="build-label">獨立 PoC · v0.2.1</span><label title="切換後會重新創世；原始設定可用於 A/B 比較" style="font-size:.8rem">Balance <select id="balanceProfile" aria-label="Balance Profile"><option value="original">Original</option><option value="agriculture">Agriculture v0.1</option></select></label><button id="helpBtn" class="btn ghost">玩法說明</button><button id="saveBtn" class="btn ghost">儲存</button><button id="loadBtn" class="btn ghost">讀取</button><button id="exportBtn" class="btn ghost">匯出</button><button id="importBtn" class="btn ghost">匯入</button><button id="resetBtn" class="btn outline">重新創世</button></div>
   </header>
   <main class="main">
     <section class="intro"><div><span class="overline">神意之外，自有萬千生機</span><h1>河谷初生 <span>First Living World</span></h1><p>你是神，不是指揮官。施展神蹟改變自然，傳下神諭表達期望，再觀察居民如何自行回應。</p></div><div class="date-box"><span>模擬歷史</span><strong id="day">第 1 日</strong><small id="weather">和暖的天氣</small></div></section>
@@ -49,7 +49,7 @@
   <dialog id="infoDialog"><div class="dialog-head"><h2>如何觀察一個活著的世界</h2><button id="closeHelp" class="btn ghost">關閉</button></div><div class="help-text"><p><strong>1. 開始歷史。</strong>居民會找食物、木材、纖維，建造住所；當足夠家戶安居，聚落會自然形成，並非你放置的建築。</p><p><strong>2. 觀察乾旱。</strong>氣候會改變水分與農作物。右側會顯示居民實際產生的祈禱，並非任務提示。</p><p><strong>3. 施展喚雨。</strong>選擇範圍、強度與持續時間，按「選擇降雨位置」，再點地圖。實際產量仍依農作物、勞動與儲存決定。</p><p><strong>4. 傳下神諭。</strong>神諭由 Saint 接收、傳播；居民可能因信仰提高糧食生產優先度，也可能選擇其他迫切需要。點人名可查看決策原因。</p><p><strong>5. 調整時間。</strong>暫停、1×、4×、16× 不改變模擬規則。相同 Seed 與操作時間會產生相同結果。</p><p>這是全新小規模實驗原型。完整九種神蹟、多宗教、神殿與政治戰爭尚未實作；數值仍是可調整的第一輪設定。</p></div></dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <input id="importFile" type="file" accept="application/json,.json" hidden>
-  <script>
+  <script>window.WOG_AGRICULTURE_PROFILE={"profileId":"agriculture-balance-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"units":{"distance":"map cells from the riverbank","time":"simulated days and actual full 8-hour food workdays","food":"existing abstract Food units"},"description":"Independent Agriculture Balance v0.1 analytical candidate. Does not replace sim.js or change existing gameplay until explicitly integrated and tested.","river":{"distanceOrigin":"river bank (map centerline distance minus half-width of 1.6 cells, clamped to zero)","fullEffectThroughCells":5,"zeroEffectAtCells":15,"nearBankInfluence":0.95,"falloff":"linear","meaning":"seasonal moisture contribution potential, not fixed soil moisture","riverHalfWidthCells":1.6},"seasons":{"rain":{"backgroundMoisture":0.76,"riverWaterAvailability":1,"diagnosticFoodLaborShare":0.08},"mild":{"backgroundMoisture":0.46,"riverWaterAvailability":0.54,"diagnosticFoodLaborShare":0.15},"dry":{"backgroundMoisture":0.12,"riverWaterAvailability":0.4,"diagnosticFoodLaborShare":0.5},"cycleDays":160,"dryWindows":[[14,29]],"rainWindows":[[0,5],[32,39],[68,74]]},"land":{"foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture":0.2,"referenceMoisture":0.9,"moistureExponent":0.8,"harvestMechanic":"actual yield is limited by accumulated unharvested crop stock and worker capacity; do not create food by formula alone","cropStockCapacityDays":2},"worker":{"foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment":9.5,"skillOutputIntercept":0.6,"skillOutputSlope":0.8,"environmentMoistureExponent":3,"startingSkillReference":0.45,"startingSkillRange":[0.4,0.5],"learningTimeConstantActualFoodWorkdays":550,"learningRule":"S(n) = 1 - (1 - S0) * exp(-n / tau); n counts food workdays, not calendar days"},"soilDynamics":{"referenceResponseTimeDays":3,"status":"scenario-dependent exploratory choice; not yet accepted as a season timing rule","shortRainCaveat":"6-8 day rainy spells can have lower realized harvest than steady-state rain potential"},"calibration":{"referenceSeed":"calm-river","population":40,"workCapableAdults":16,"dependents":24,"adultFoodNeedPerDay":0.38,"dependentFoodNeedPerDay":0.25,"totalFoodNeedPerDay":12.08,"landSupplyRatioTargets":{"rain":1.5,"mild":1.15,"dryMin":0.6,"dryMax":0.8},"laborShareTargetsOfWorkCapablePopulation":{"rainMin":0.06,"rainMax":0.08,"mildMin":0.1,"mildMax":0.2,"dryStressMin":0.4,"dryStressMax":0.5},"targetInterpretation":"reference scenario diagnostics, not jobs quotas, hard gameplay gates, or guarantees for random world seeds"},"reproducibility":{"report":"docs/AGRICULTURE_BALANCE.md","calculator":"tools/agriculture-balance-check.mjs","sampleMapAccess":"farm tile within +/-9 cells X/Y of at least one initial household; excludes later migrations and dynamically farmed land","sourceSimulatorGitBlob":"52b73c277b1a6111fa787374aeb5d300747d2e9f"}};</script><script>
 /* World of God — Web-first MVP-0. Standalone deterministic simulation, no DOM or wall clock. */
 (function (root, factory) {
   'use strict';
@@ -179,7 +179,7 @@
           age, stage: isChild ? 'child' : 'adult', health: 100, hunger: 0, alive: true,
           genderRole: j === 1 ? 'gestate' : 'fertilize', partnerId: isChild ? null : 'p' + (i * 3 + (j === 0 ? 2 : 1)),
           pregnancyDueHour: null, recoveryUntilHour: 0, occupation: j === 0 ? 'food_producer' : j === 1 ? 'gatherer' : 'dependent',
-          proficiency: { food: .35 + rand(s) * .45, gather: .25 + rand(s) * .5, build: .18 + rand(s) * .45 },
+          proficiency: { food: s.agriculture ? s.agriculture.worker.startingSkillRange[0] + rand(s) * (s.agriculture.worker.startingSkillRange[1]-s.agriculture.worker.startingSkillRange[0]) : .35 + rand(s) * .45, gather: .25 + rand(s) * .5, build: .18 + rand(s) * .45 },
           activity: 'rest', devotion: belief, religionId: belief >= 20 ? 'r1' : null,
           receptivity: i === 0 && j === 0 ? .98 : rand(s), lastDecision: null, lastFaithEvidence: null,
           lastWorkHour: -1, lastOracleWorkHour: -1, activityReason: '剛進入世界，尚未開始日常活動' };
@@ -203,6 +203,8 @@
   }
   function create(config = {}) {
     const rules = rulesFrom(config);
+    const agriculture = config.balanceProfile?.profileId === 'agriculture-balance-v0.1'
+      ? JSON.parse(JSON.stringify(config.balanceProfile)) : null;
     const seed = String(config.seed || 'valley-spring-01').slice(0, 100);
     const initialMoisture = clamp(num(config.moisture, .52), .2, .9);
     const s = { version: VERSION, seed, rules, rng: hash(seed), hour: 0, tick: 0,
@@ -214,9 +216,15 @@
       effects: [], nextId: 1, eventSeq: 0, events: [],
       counts: { births: 0, deaths: 0, relocations: 0, rainCasts: 0, foodFromLabor: 0 },
       environment: { phase: 'mild', totalRain: 0 }, lastFoodOutput: 0,
+      balanceProfileId: agriculture?.profileId || 'original', agriculture,
       history: { settlementFoundedHour: null, firstSaintHour: null },
       metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
     generate(s, initialMoisture);
+    if (agriculture) for (const t of s.tiles) if (t.terrain === 'field') {
+      const L=agriculture.land, cap=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
+        Math.pow(1/L.referenceMoisture,L.moistureExponent)*L.cropStockCapacityDays;
+      t.cropStock=t.crop*cap;
+    }
     s.nextId = s.people.length + 1; // prevent later born Person IDs from colliding with Genesis people
     return s;
   }
@@ -440,6 +448,22 @@
     } else h.inventory[kind] += amount;
     if (kind === 'food') { s.counts.foodFromLabor += amount; s.lastFoodOutput += amount; }
   }
+  function agricultureHarvest(s,p,h) {
+    const A=s.agriculture,L=A.land,W=A.worker;
+    const plots=s.tiles.filter(t=>t.terrain==='field'&&Math.abs(t.x-h.x)<=9&&Math.abs(t.y-h.y)<=9);
+    if(!plots.length)return 0;
+    let fertility=0,weighted=0;
+    for(const t of plots){fertility+=t.fertility;weighted+=t.fertility*Math.pow(t.moisture/L.referenceMoisture,W.environmentMoistureExponent);}
+    const skill=p.proficiency.food;
+    let capacity=W.foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment*
+      (W.skillOutputIntercept+W.skillOutputSlope*skill)*weighted/Math.max(fertility,1e-9);
+    let harvested=0;
+    plots.sort((a,b)=>b.cropStock-a.cropStock||a.y-b.y||a.x-b.x);
+    for(const t of plots){const n=Math.min(Math.max(0,t.cropStock),capacity);t.cropStock-=n;capacity-=n;harvested+=n;if(capacity<=1e-9)break;}
+    if(harvested>0)distribute(s,h,'food',harvested);
+    p.proficiency.food=1-(1-skill)*Math.exp(-1/W.learningTimeConstantActualFoodWorkdays);
+    return harvested;
+  }
   function performWork(s, p) {
     const h = householdOf(s, p);
     if (!h) return;
@@ -507,7 +531,8 @@
       const amount = Math.min(forage.forage, .6 + p.proficiency.gather * .45);
       forage.forage -= amount; distribute(s, h, 'food', amount);
     } else if (choice.name === 'farm' && field) {
-      if (field.crop >= .47) {
+      if (s.agriculture) agricultureHarvest(s,p,h);
+      else if (field.crop >= .47) {
         const amount = (1.5 + p.proficiency.food * .8) * field.crop * field.fertility * s.rules.farmYieldMultiplier;
         field.crop = Math.max(.04, field.crop - .52);
         distribute(s, h, 'food', amount);
@@ -551,11 +576,14 @@
   function updateWorld(s) {
     const day = days(s);
     // Coarse, bounded weather stress; default drought is temporary, not a forced multi-year catastrophe.
-    const seasonal = day % 160;
-    const drought = seasonal >= 14 && seasonal <= 29;
-    const rainy = seasonal < 6 || (seasonal >= 32 && seasonal < 40) || (seasonal >= 68 && seasonal < 75);
+    const climate=s.agriculture?.seasons;
+    const seasonal = day % (climate?.cycleDays || 160);
+    const inWindows = (windows) => windows.some(([lo,hi])=>seasonal>=lo&&seasonal<=hi);
+    const drought = climate ? inWindows(climate.dryWindows) : seasonal >= 14 && seasonal <= 29;
+    const rainy = climate ? inWindows(climate.rainWindows) : seasonal < 6 || (seasonal >= 32 && seasonal < 40) || (seasonal >= 68 && seasonal < 75);
     s.environment.phase = drought ? 'dry' : rainy ? 'rainy' : 'mild';
     const naturalRain = drought ? 0 : rainy ? .015 : .005;
+    const A=s.agriculture, season=drought?'dry':rainy?'rain':'mild';
     let effectSummary = 0;
     for (const t of s.tiles) {
       if (t.terrain === 'river') continue;
@@ -565,10 +593,28 @@
         if (s.hour < e.endsAtHour && Math.hypot(t.x - e.x, t.y - e.y) <= e.radius) boost += .028 * e.intensity;
       }
       effectSummary += boost;
+      if(A) {
+        const R=A.river,C=A.seasons[season],L=A.land;
+        const d=Math.max(0,Math.abs(t.x-riverX(s,t.y))-R.riverHalfWidthCells);
+        const influence=d<=R.fullEffectThroughCells?R.nearBankInfluence:
+          d>=R.zeroEffectAtCells?0:R.nearBankInfluence*(R.zeroEffectAtCells-d)/(R.zeroEffectAtCells-R.fullEffectThroughCells);
+        const target=clamp(C.backgroundMoisture+(1-C.backgroundMoisture)*influence*C.riverWaterAvailability);
+        const tau=A.soilDynamics.referenceResponseTimeDays;
+        t.moisture=clamp(t.moisture+(target-t.moisture)*(1-Math.exp(-s.rules.tickHours/24/tau))+boost,0,1);
+        if(t.terrain==='field'){
+          const daily=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
+            Math.pow(t.moisture/L.referenceMoisture,L.moistureExponent);
+          const cap=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
+            Math.pow(1/L.referenceMoisture,L.moistureExponent)*L.cropStockCapacityDays;
+          t.cropStock=Math.min(cap,Math.max(0,t.cropStock)+daily*s.rules.tickHours/24);
+          t.crop=cap>0?clamp(t.cropStock/cap):0;
+        }
+      } else {
       t.moisture = clamp(t.moisture - (drought ? .014 : .007) + naturalRain + nearRiver*.003 + boost, .03, .98);
       if (t.terrain === 'field') {
         const growth = t.moisture > .23 ? (.006 + .029 * t.moisture) * t.fertility : -.006;
         t.crop = clamp(t.crop + growth, .02, 1);
+      }
       }
       t.forage = clamp(t.forage + .004 * t.moisture * t.fertility, 0, 1.3);
       if (t.terrain === 'forest') t.wood = Math.min(16, t.wood + .005 * t.moisture);
@@ -923,6 +969,8 @@
   }
   function validate(s) {
     const errors=[];
+    if(s?.balanceProfileId==='agriculture-balance-v0.1'&&!s.agriculture)errors.push('Agriculture Profile 遺失');
+    if(s?.agriculture)for(const t of s.tiles||[])if(t.terrain==='field'&&(!Number.isFinite(t.cropStock)||t.cropStock< -1e-8))errors.push('農田作物庫存無效');
     if(!s || s.version!==VERSION) return {ok:false,errors:['版本不相容']};
     if(!Number.isSafeInteger(s.hour)||s.hour<0 || !Number.isSafeInteger(s.tick)) errors.push('時間不正確');
     if(!Array.isArray(s.tiles)||s.tiles.length!==s.width*s.height) errors.push('地圖資料不完整');
@@ -986,6 +1034,7 @@
   const S = window.WoG2;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
+  let activeProfile = null;
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedRain = false, cursor = null, chosen = 'p1', lastEventId = 0, toastTimeout;
   const ticksPerRealSecond = 12 / 8;
@@ -997,8 +1046,30 @@
   function say(text) { const box=$('toast');box.textContent=text;box.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>box.classList.remove('visible'),3000); }
   function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,durationDays:+$('duration').value}; }
   function storageKey() {return 'wog-mvp0-web-save';}
+  async function loadAgriculture() {
+    if (window.WOG_AGRICULTURE_PROFILE) return window.WOG_AGRICULTURE_PROFILE;
+    const response=await fetch('config/balance-agriculture-v0.1.json');
+    if (!response.ok) throw new Error('Agriculture Profile 無法載入');
+    return response.json();
+  }
+  function newWorld() {
+    state=S.create(activeProfile?{balanceProfile:activeProfile}:{});
+    $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
+    paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;armedRain=false;
+    document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
+    render();
+  }
+  $('balanceProfile').addEventListener('change',async e=>{
+    const desired=e.target.value;
+    if (!confirm('切換平衡設定將重新建立世界，尚未儲存的進度會消失。')) {
+      e.target.value=activeProfile?'agriculture':'original';return;
+    }
+    try { activeProfile=desired==='agriculture'?await loadAgriculture():null;newWorld();
+      say(activeProfile?'已啟用 Agriculture v0.1':'已切換 Original'); }
+    catch(err){e.target.value=activeProfile?'agriculture':'original';say('Profile 載入失敗：'+err.message);}
+  });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
-  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;render();say(converted?'舊版存檔已升級；既有死亡不會倒轉，建議新開世界測試修正。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;render();say(converted?'舊版存檔已升級；既有死亡不會倒轉，建議新開世界測試修正。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost() {
     $('radiusValue').textContent=$('radius').value+' 格';$('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';$('durationValue').textContent=$('duration').value+' 日';
@@ -1125,7 +1196,7 @@
   $('exportBtn').onclick=exportSave;
   $('importBtn').onclick=()=>$('importFile').click();
   $('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;if(file.size>10*1024*1024){say('檔案超過 10 MB，無法匯入。');return;}restore(await file.text());e.target.value='';});
-  $('resetBtn').onclick=()=>{if(!confirm('要重新開始河谷世界嗎？目前未儲存的進度會消失。'))return;state=S.create();paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;armedRain=false;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));render();say('新世界已生成。');};
+  $('resetBtn').onclick=()=>{if(!confirm('要重新開始河谷世界嗎？目前未儲存的進度會消失。'))return;newWorld();say('新世界已生成。');};
   $('helpBtn').onclick=()=>$('infoDialog').showModal();$('closeHelp').onclick=()=>$('infoDialog').close();
   render();requestAnimationFrame(animate);
 })();

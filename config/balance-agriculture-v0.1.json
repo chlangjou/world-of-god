@@ -7,7 +7,7 @@
     "time": "simulated days and actual full 8-hour food workdays",
     "food": "existing abstract Food units"
   },
-  "description": "Independent Agriculture Balance v0.1 analytical candidate. Does not replace sim.js or change existing gameplay until explicitly integrated and tested.",
+  "description": "Selectable experimental Agriculture v0.1 Web PoC balance: physical river/soil/crop-stock production and autonomous work response; numerical parameters are tunable.",
   "river": {
     "distanceOrigin": "river bank (map centerline distance minus half-width of 1.6 cells, clamped to zero)",
     "fullEffectThroughCells": 5,
@@ -109,5 +109,11 @@
     "calculator": "tools/agriculture-balance-check.mjs",
     "sampleMapAccess": "farm tile within +/-9 cells X/Y of at least one initial household; excludes later migrations and dynamically farmed land",
     "sourceSimulatorGitBlob": "52b73c277b1a6111fa787374aeb5d300747d2e9f"
+  },
+  "workDemand": {
+    "reserveTargetDays": 18,
+    "reserveRelaxDays": 18,
+    "reserveComfortDays": 26,
+    "explanation": "Comfort/relaxation scores influence autonomous work decisions based on physically accessible household and settlement reserves; not job quotas."
   }
 }

@@ -1,0 +1,33 @@
+{
+  "profileId": "opponent-v0.2",
+  "status": "experimental-runtime-profile",
+  "loadedByRuntime": true,
+  "description": "World-first Genesis: two distant god origins among three pre-existing, unaffiliated native villages; neither deity initially owns the entire land.",
+  "enabled": true,
+  "name": "暮影信仰",
+  "originMode": "separated-native",
+  "initialHouseholdIndexes": [
+    4,
+    5,
+    6,
+    7
+  ],
+  "nativeVillages": 3,
+  "nativeHouseholdsPerVillage": 3,
+  "minimumOriginDistance": 29,
+  "championDevotion": 53,
+  "familyDevotion": 29,
+  "initialDp": 42,
+  "startDay": 14,
+  "decisionIntervalDays": 12,
+  "spreadOracleDurationDays": 150,
+  "offensiveEveryTurns": 4,
+  "semantics": {
+    "genesis": "Player and AI start on separate sides of the map as real existing families (four each, no extra god-owned population); three pre-existing neutral villages hold nine native families total (27 unaffiliated residents).",
+    "nativeCommunities": "Native homes and existing cultivated fields are pre-game world resources, not divine powers, and their residents have religionId=null, devotion=10. They autonomously work, build, pray only after adopting a faith, and can become new believers naturally.",
+    "settlements": "Native villages exist from day 0 with independent membership, food reserves and construction rules. Each God's families can establish their own town through real house completion, not forced incorporation into nearby natives.",
+    "competition": "Neither side begins in the other's household or town. Expansion into native communities happens through in-world sermons, exchange, Oracle propagation and later demographic movements; no instant mass conversions.",
+    "ai": "Rival Saint, Priest, Divine Power and Miracle/Oracle use existing fairness checks; no difficulty tier or optimized search policy yet.",
+    "legacy": "Existing opponent-v0.1 saves retain their historical mixed-family positions. A no-opponent new browser world still has native populations; legacy saves remain unchanged."
+  }
+}

@@ -1707,7 +1707,47 @@
       }
     }
   }
-  function opponentTurn(s) { /* AI decision policy is evaluated after daily social state. */ }
+  function opponentTurn(s){
+    const ai=s.opponent;
+    if(!ai?.enabled)return;
+    const day=days(s);
+    if(day<ai.startDay||day%ai.decisionIntervalDays!==0||ai.lastActionDay===day)return;
+    ai.lastActionDay=day;ai.turns++;
+    const faith=s.opponentReligion,adherents=living(s).filter(p=>
+      p.religionId===faith.id&&p.devotion>=20);
+    if(!adherents.length)return;
+    const saint=faith.saints.map(id=>adherents.find(p=>p.id===id)).find(Boolean);
+    if(saint&&!faith.oracles.some(o=>o.status==='active'&&o.intentType==='religion.spread'))
+      issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
+        intentType:'religion.spread',durationDays:ai.spreadOracleDurationDays});
+    // Real followers, physical farmland and local faith determine every target.
+    const priests=faith.priests.map(id=>adherents.find(p=>p.id===id)).filter(Boolean);
+    const candidate=priests[0]||saint||adherents.sort((a,b)=>b.devotion-a.devotion||a.id.localeCompare(b.id))[0];
+    const center={x:candidate.x,y:candidate.y};
+    const localFields=rayCells(s,center,7).filter(t=>t.terrain==='field');
+    const wet=localFields.reduce((sum,t)=>sum+t.moisture,0)/Math.max(1,localFields.length);
+    const weak=adherents.filter(p=>dist(p,center)<=6&&p.health<85);
+    const choices=[];
+    if(ai.turns%ai.offensiveEveryTurns===0){
+      const enemyPriest=s.religion.priests.map(id=>living(s).find(p=>p.id===id))
+        .filter(Boolean).sort((a,b)=>dist(a,center)-dist(b,center))[0];
+      if(enemyPriest&&dist(enemyPriest,center)<12)
+        choices.push(['confusion',{x:enemyPriest.x,y:enemyPriest.y,radius:5,
+          intensity:.7,durationDays:7}]);
+    }
+    if(localFields.length&&wet<.45)
+      choices.push(['rain',{...center,radius:7,intensity:.8,durationDays:7}]);
+    if(localFields.length)choices.push(['ripening',{...center,radius:7,intensity:1,durationDays:9}]);
+    if(weak.length)choices.push(['heal',{...center,radius:6,intensity:1}]);
+    if(adherents.some(p=>dist(p,center)<=7&&p.devotion>=40))
+      choices.push(['efficiency',{...center,radius:7,intensity:.85,durationDays:10}]);
+    for(const [type,args] of choices){
+      const input={...args,godId:s.opponentGod.id};
+      if(!evaluateMiracle(s,type,input).ok)continue;
+      const cast=castMiracle(s,type,input);
+      if(cast.ok){ai.casts++;break;}
+    }
+  }
   function daily(s) {
     restoreSettlementAccess(s);
     consumeFood(s);
@@ -1986,6 +2026,12 @@
     if(!Array.isArray(s.tiles)||s.tiles.length!==s.width*s.height) errors.push('地圖資料不完整');
     if(!Array.isArray(s.people)||!Array.isArray(s.households)||!Array.isArray(s.settlements)) errors.push('人口資料不完整');
     if(!s.god || !Number.isFinite(s.god.dp)||s.god.dp<0||s.god.dp>s.rules.maxDp+.001) errors.push('神力不正確');
+    if(s.opponent?.enabled){
+      if(!s.opponentGod||!s.opponentReligion||s.opponentReligion.id===s.religion.id||
+        !Number.isFinite(s.opponentGod.dp)||s.opponentGod.dp<0||
+        s.opponentGod.dp>s.opponentGod.cap+.001)errors.push('對手神力或宗教狀態不正確');
+      if(!Number.isSafeInteger(s.opponentRng))errors.push('對手亂數狀態不正確');
+    }
     for(const h of s.households||[]) for(const value of Object.values(h.inventory||{}))
       if(!Number.isFinite(value)||value<-.00001) errors.push(`家戶 ${h.id} 庫存無效`);
     for(const t of s.settlements||[]) {

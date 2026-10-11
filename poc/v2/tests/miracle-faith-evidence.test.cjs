@@ -73,6 +73,20 @@ test('unaffiliated healed person accumulates bounded god-specific interest befor
   good(s);
 });
 
+test('a receptive unaligned person can personally adopt after witnessed healing evidence',()=>{
+  const s=fresh(true),native=s.people.find(p=>p.nativeOrigin&&p.religionId===null);
+  native.receptivity=.99;native.health=30;
+  const source=s.people.find(p=>p.religionId==='r1');
+  source.x=native.x;source.y=native.y;
+  assert.ok(W.castMiracle(s,'heal',{x:native.x,y:native.y,radius:2,intensity:1}).ok);
+  assert.equal(native.religionId,null,'healing does not directly order conversion');
+  advance(s,21);
+  assert.equal(native.religionId,'r1','credible benefit should have a real autonomous adoption path');
+  assert.ok(native.devotion>=20&&native.devotion<40);
+  assert.ok((s.counts.miracleAdoptions||0)>=1);
+  good(s);
+});
+
 test('credible opponent Heal reducing a player belief raises the existing fast-forward alarm',()=>{
   const s=fresh(true),player=s.people[0],enemy=s.people.find(p=>p.religionId==='r2');
   player.health=40;player.devotion=61;

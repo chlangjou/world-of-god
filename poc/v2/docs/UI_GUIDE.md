@@ -148,3 +148,12 @@ Suggested rollout: (1) fixed viewport and map-first layout; (2) compact panels, 
 - **Divine interaction:** location selection merely guides God; no DP charge, auto-cast or change in underlying Faith/World state. Until the pointer enters the map, the selected center may be used for Miracle preview. The final map click is still independently validated and must remain explicit.
 - **Source precision:** a settlement-aggregated need is marked at its *evaluation center*, not advertised as an individual person's exact live location. Old founding-area water requests that lack stored centers use the original camp-based evaluation center.
 - **Functional checks:** tests cover three distinct water needs, source switching, additional-page navigation, Priest bubble navigation, expiration cleanup, crop evaluation radius, unchanged DP, and save-format compatibility. The three desktop viewport sizes remain subject to real-browser visual checks.
+
+## 11. Sticky Miracle controls (2026-10-11)
+
+- Every Miracle has **its own independent last-used radius, intensity and duration settings**. Moving to another Miracle and back restores the values last entered for that skill, not its defaults. Casting does **not** reset them; the next permitted cast can reuse the same parameters.
+- Keep the last selected Miracle and Oracle separately when the player switches tabs. The slider setup of a timed Miracle must survive visiting an instant Miracle with the duration control hidden.
+- First selection of a never-edited ability uses its ruleset defaults. Restored values are clamped to that ability's current range, duration and intensity limits when a ruleset/Profile changes.
+- The preferences are **presentation-only, in-memory for the open browser page**, including world reset/load within that page. They are not Divine state, do not alter DP/cooldown/Mastery, are not written into the deterministic world save, and do not claim persistence across a browser refresh.
+- Interaction acceptance covers multiple Miracle round trips, instant/timed switching, Miracle/Oracle tab switches, direct cast with restored parameters, world reset/load and changed upper bounds. No A/B balance experiment is involved.
+

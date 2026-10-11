@@ -70,3 +70,22 @@ test('Priest and Saint are distinct map roles; only collected petitions display 
  assert.ok(viewport.includes('.priest-prayer-nav')&&viewport.includes('.sw.priest'));
  assert.ok(viewport.includes('html,body{height:100%;max-height:100%;overflow:hidden}'));
 });
+
+test('the selected Divine Power is routed through typed Miracle and Oracle actions',()=>{
+  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+  const app=fs.readFileSync(path.join(root,'src/app.js'),'utf8');
+  const profile=require('../config/divine-powers-v0.1.json');
+  assert.equal(profile.profileId,'divine-powers-v0.1');
+  assert.equal(Object.keys(profile.powers).length,8);
+  for(const id of ['miracleName','miracleHint','oracleName','oracleHint','durationLabel'])
+    assert.ok(html.includes('id="'+id+'"'),'missing live power UI '+id);
+  for(const type of ['ripening','harvest','heal','efficiency','drought','lightning','confusion','blindness','religion.spread'])
+    assert.ok(app.includes(type),'power option is missing '+type);
+  assert.ok(app.includes("S.castMiracle(state,id,{x,y,...opts()})"),'map cast must use selected type');
+  assert.ok(app.includes("S.issueOracle(state,{saintId:selectedSaintId,intentType:selectedPower()})"),
+    'Oracle issuer must use the selected intent');
+  assert.ok(app.includes("S.evaluateMiracle(state,id"),'preview must match selected Miracle');
+  assert.ok(app.includes("loadDivine()"),'runtime must load separate Divine Profile');
+  assert.ok(fs.readFileSync(path.join(root,'tools/build-single.cjs'),'utf8').includes('WOG_DIVINE_PROFILE'),
+    'standalone export must bundle tunable power parameters');
+});

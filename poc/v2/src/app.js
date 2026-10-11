@@ -150,7 +150,7 @@
     const left=Math.max(0,(state.god.skills[id]?.readyAtHour||0)-state.hour);
     if(armedMiracle&&armedMiracle!==id)armedMiracle=null;
     if(armedMiracle&&left>0)armedMiracle=null;
-    $('rainCost').textContent=`預估 ${preview.cost??'—'} DP`;
+    $('rainCost').textContent=`Lv${state.god.skills[id]?.level||1} · 預估 ${preview.cost??'—'} DP`;
     $('rainCooldown').textContent=left?`冷卻中 · 剩餘 ${Math.ceil(left/24)} 模擬日`:
       preview.reason||'已就緒 · 指定地圖中心；最終條件以實際點選位置判斷';
     $('rainBtn').textContent=armedMiracle?'取消選擇位置':'選擇施展位置';

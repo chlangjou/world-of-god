@@ -25,7 +25,7 @@
 
 
   // Independent, data-configurable first-batch Miracle skills. Rain retains its v2
-  // public API and original cost/cooldown; everything else shares one typed path.
+  // public API and original cost; cooldowns now scale with each cast's workload.
   const POWER_DEFAULTS=Object.freeze({
     ripening:{label:'促熟 Ripening',baseCost:8,cooldownDays:12,defaultRadius:7,defaultIntensity:1,defaultDurationDays:12,maxDays:30,maxIntensity:2.5,instant:false},
     harvest:{label:'豐收 Harvest',baseCost:10,cooldownDays:13,defaultRadius:7,defaultIntensity:1,defaultDurationDays:0,maxDays:0,maxIntensity:2,instant:true},
@@ -48,6 +48,9 @@
       }
     }
     return {profileId:POWER_PROFILE_ID,powers,
+      // A short cast still has a modest nonzero cooldown; the rest scales with
+      // requested duration so wide 5-day weather never inherits 30-day cooldown.
+      cooldownDurationFloorFraction:clamp(num(source.cooldownDurationFloorFraction,.18),.05,.45),
       destructiveMinWeighted:clamp(num(source.destructiveMinWeighted,4),0,100),
       ripeningGrowthPerIntensity:clamp(num(source.ripeningGrowthPerIntensity,2.3),.1,6),
       harvestExtraPerIntensity:clamp(num(source.harvestExtraPerIntensity,.9),.1,2.5),
@@ -307,14 +310,33 @@
     }
     return { density: weighted / (Math.PI * 13 * 13), share: weighted > 0 ? 1 : 0, weighted };
   }
+  // The same cooldown policy is used for Rain and all newly added Miracles:
+  // - duration is an independent, monotonic dimension for timed effects,
+  //   even when a wide/strong short cast has high area workload;
+  // - larger area and stronger intensity change cooldown moderately;
+  // - each skill has its own configurable base, its own Mastery and clock.
+  // Return the actual whole-simulation-tick cooldown displayed to the player.
+  function castCooldownDays(s,{baseDays,radius,intensity,referenceRadius,
+    referenceIntensity,durationDays,maxDays,instant,level}){
+    const floor=s.divinePowers?.cooldownDurationFloorFraction??.18;
+    const durationFactor=instant?1:floor+(1-floor)*clamp(durationDays/Math.max(1,maxDays),0,1);
+    const reference=Math.max(1e-8,referenceRadius*referenceRadius*referenceIntensity);
+    const scopeFactor=clamp(Math.pow(radius*radius*intensity/reference,.25),.65,1.5);
+    const masteryFactor=1+(level-1)*.12;
+    const rawDays=Math.max(1,baseDays*durationFactor*scopeFactor/masteryFactor);
+    const ticks=Math.max(1,Math.ceil(rawDays*24/s.rules.tickHours-1e-9));
+    return ticks*s.rules.tickHours/24;
+  }
   function evalRain(s, input = {}) {
     const x = num(input.x, NaN), y = num(input.y, NaN);
     const radius = num(input.radius, s.rules.defaultRainRadius);
     const intensity = num(input.intensity, s.rules.defaultRainIntensity);
     const durationDays = num(input.durationDays, s.rules.defaultRainDays);
     const cost = Math.ceil((7 + .09 * radius * radius + 6 * intensity + .4 * durationDays) / (1 + (s.god.skills.rain.level - 1) * .14));
-    const workload = radius * radius * intensity * durationDays;
-    const cooldownDays = s.rules.rainBaseCooldownDays * Math.max(.5, Math.min(1, workload / (7*7*.85*10))) / (1 + (s.god.skills.rain.level - 1) * .12);
+    const cooldownDays=castCooldownDays(s,{baseDays:s.rules.rainBaseCooldownDays,
+      radius,intensity,referenceRadius:s.rules.defaultRainRadius,
+      referenceIntensity:s.rules.defaultRainIntensity,durationDays,
+      maxDays:s.rules.rainMaxDays,instant:false,level:s.god.skills.rain.level});
     let reason = null;
     if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x >= s.width || y >= s.height) reason = '降雨中心不在地圖內';
     else if (!(radius >= 2 && radius <= s.rules.rainRadiusMax)) reason = '範圍不在可施展界線內';
@@ -381,11 +403,12 @@
     const intensity=num(input.intensity,def.defaultIntensity);
     const durationDays=def.instant?0:num(input.durationDays,def.defaultDurationDays);
     const center={x,y},skill=skillState(s,type);
-    const workload=radius*radius*intensity*(def.instant?1:Math.max(1,durationDays/10));
     const cost=Math.max(1,Math.ceil((def.baseCost+.045*radius*radius+3*intensity+
       (def.instant?0:.17*durationDays))/(1+(skill.level-1)*.14)));
-    const cooldownDays=def.cooldownDays*Math.max(.6,Math.min(1.5,workload/(def.defaultRadius**2*def.defaultIntensity)))/
-      (1+(skill.level-1)*.12);
+    const cooldownDays=castCooldownDays(s,{baseDays:def.cooldownDays,
+      radius,intensity,referenceRadius:def.defaultRadius,
+      referenceIntensity:def.defaultIntensity,durationDays,maxDays:def.maxDays,
+      instant:!!def.instant,level:skill.level});
     const validCenter=Number.isFinite(x)&&Number.isFinite(y)&&x>=0&&y>=0&&x<s.width&&y<s.height;
     const inArea=p=>validCenter&&p.alive&&dist(p,center)<=radius;
     const fields=validCenter&&['ripening','harvest'].includes(type)?rayCells(s,center,radius).filter(t=>

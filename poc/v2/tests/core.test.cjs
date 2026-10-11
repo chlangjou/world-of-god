@@ -21,6 +21,24 @@ test('real households autonomously build houses and establish settlement; no pla
   assert.ok(s.events.some(e=>e.kind==='settlement'));
   assert.ok(s.metrics.workChoices>0);valid(s);
 });
+test('abundant private reserves do not indefinitely stall shelter work or settlement founding',()=>{
+  const latest=require('../config/balance-agriculture-v0.1.json');
+  for(const legacy of [false,true]){
+    const profile=clone(latest);
+    if(legacy)delete profile.workDemand.unhousedMaterialPriorityBonus; // older embedded-save profile
+    const world=W.create({seed:'valley-spring-01',balanceProfile:profile});
+    // Represents an old overstocked private-food save; the fixture changes no building materials.
+    for(const h of world.households)h.inventory.food=1600;
+    const s=W.restore(JSON.stringify(world));
+    afterDays(s,60);
+    const st=W.stats(s);
+    assert.ok(st.houses>=4,`${legacy?'legacy':'current'} profile: food surplus must not indefinitely block housing`);
+    assert.equal(st.settlements,1,'real completed houses must allow settlement to form');
+    assert.ok(s.households.filter(h=>h.home).every(h=>h.buildMaterialsPaid),'houses must use real materials');
+    valid(s);
+  }
+});
+
 test('world food production is independent of god inputs and inventory never becomes negative',()=>{
   const s=fresh();afterDays(s,100);
   assert.ok(s.counts.foodFromLabor>0);assert.ok(W.stats(s).food>=0);

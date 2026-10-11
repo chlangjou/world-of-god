@@ -121,7 +121,8 @@
     "reserveRelaxDays": 18,
     "reserveComfortDays": 26,
     "explanation": "Comfort/relaxation scores influence autonomous work decisions based on physically accessible household and settlement reserves; not job quotas.",
-    "comfortableCareBonus": 8
+    "comfortableCareBonus": 8,
+    "unhousedMaterialPriorityBonus": 2
   },
   "familyExpansion": {
     "enabled": true,

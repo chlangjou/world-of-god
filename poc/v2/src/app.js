@@ -224,11 +224,13 @@
     if(armedMiracle&&armedMiracle!==id)armedMiracle=null;
     if(armedMiracle&&left>0)armedMiracle=null;
     $('rainCost').textContent=`Lv${state.god.skills[id]?.level||1} · 預估 ${preview.cost??'—'} DP`;
+    const forecast=Number.isFinite(preview.cooldownDays)?
+      `本次預計冷卻 ${format(preview.cooldownDays,1)} 模擬日`:'無法估算冷卻';
     $('rainCooldown').textContent=left?`冷卻中 · 剩餘 ${Math.ceil(left/24)} 模擬日`:
-      preview.reason||'已就緒 · 指定地圖中心；最終條件以實際點選位置判斷';
+      preview.reason||`已就緒 · ${forecast}`;
     $('rainBtn').textContent=armedMiracle?'取消選擇位置':'選擇施展位置';
     $('rainBtn').disabled=profileLoading||left>0||state.god.dp+1e-8<(preview.cost??Infinity);
-    $('rainBtn').title=preview.reason||'點擊後選擇施展中心';
+    $('rainBtn').title=preview.reason||`點圖施放將重新驗證；${forecast}`;
     $('rainBtn').classList.toggle('secondary',!!armedMiracle);
   }
   function render() {

@@ -146,5 +146,14 @@
     "outpostMinHouseholds": 3,
     "outpostMinHuts": 3,
     "outpostClusterRadius": 9
+  },
+  "granary": {
+    "woodRequired": 6,
+    "stoneRequired": 4,
+    "workRequired": 6,
+    "materialWorkPriority": 13,
+    "constructionPriority": 14,
+    "minimumFoodDays": 4,
+    "explanation": "Public granary is autonomously built from locally owned public Wood/Stone and actual adult work. Existing shared food remains usable as temporary communal stock while unbuilt. No free inventories or automatic building."
   }
 }

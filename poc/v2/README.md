@@ -31,10 +31,13 @@ npm start
 | `assets/file-menu.css` | 檔案與窄螢幕操作 |
 | `config/balance-agriculture-v0.1.json` | 目前可用的 Agriculture、成家、拓荒實驗數值 |
 | `config/religion-propagation-v0.1.json` | 居民閒暇傳道、家庭教育及聚落宗教傳播參數 |
+| `config/balance-agriculture-v0.1.json` → `granary` | 各聚落自治糧倉建造的建材、勞力及優先度 |
 | `config/balance-default.json` | Original 的唯讀快照；核心預設仍在 `src/sim.js` |
 | `docs/` | Architecture、UI Guide、Agriculture 驗算紀錄 |
 | `tests/` | 核心回歸、資產分離驗證及 Smoke |
 | `tools/` | 跨平台 HTTP server、離線打包、獨立驗算 |
+
+每個聚落可利用當地共享木材、石材與居民勞力自行興建實體糧倉；未完工前，原有公共糧食仍能作為臨時共享儲備領用。[糧倉 PoC 說明](docs/GRANARY.md)。
 
 Religion Propagation v0.1 讓成人信徒在空閒時間傳道、兒童從虔誠家庭逐步形成信仰、鄰近聚落自然交流，並讓 Priest 轉傳 Saint 的 Oracle；宗教狀態可在聚落檢視。[詳細機制](docs/RELIGION_PROPAGATION.md)。
 

@@ -137,3 +137,6 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
   .command-reason{margin-top:4px}
   .panel-heading{margin-bottom:3px;padding-bottom:3px}
 }
+
+/* Finished settlement granaries are distinguished from ordinary homes on the map. */
+.sw.granary{background:#d7a75e;border:1px solid #885f3a}

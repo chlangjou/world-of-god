@@ -714,6 +714,14 @@
     const stone = nearestResource(s, h, 'stone');
     const publicMaterials = security.town && security.town.storage.wood < 20;
     const publicStone = security.town && security.town.storage.stone < 14;
+    const town=security.town, granary=town?ensureGranary(s,town):null, G=granaryRules(s);
+    const granaryNeeded=granary&&!granary.built;
+    const granaryWoodNeeded=granaryNeeded&&!granary.materialsPaid&&town.storage.wood+1e-9<G.woodRequired;
+    const granaryStoneNeeded=granaryNeeded&&!granary.materialsPaid&&town.storage.stone+1e-9<G.stoneRequired;
+    const granaryReady=granaryNeeded&&(granary.materialsPaid||
+      (town.storage.wood+1e-9>=G.woodRequired&&town.storage.stone+1e-9>=G.stoneRequired));
+    const canBuildGranary=granaryReady&&security.days>=G.minimumFoodDays&&
+      p.hunger<.55&&!(town?.famineActive);
     const canBuild = !h.home && h.inventory.wood >= s.rules.hutWood && h.inventory.fiber >= s.rules.hutFiber;
     const call = workCalling(s, p);
     const foodBias = call.score;
@@ -726,10 +734,11 @@
     if (field||canCultivate) candidates.push({ name: 'farm',
       score:4.4+(field?.crop||0)*2.5+(scarce?2.2:0)+p.proficiency.food+foodBias+
         (canCultivate?(L.pioneerCultivationBonus??4.5):0),valid:true });
-    if (wood && (!h.home || publicMaterials || (basic && basic.housingPressure > .2))) candidates.push({ name: 'wood', score: (!h.home && h.inventory.wood < s.rules.hutWood ? 8.0 + shelterMaterialBonus : publicMaterials ? 6.5 : 2.6) + p.proficiency.gather, valid: true });
-    if (stone && publicStone) candidates.push({ name: 'stone', score: 6.0 + p.proficiency.gather, valid: true });
+    if (wood && (!h.home || publicMaterials || (basic && basic.housingPressure > .2))) candidates.push({ name: 'wood', score: (granaryWoodNeeded?G.materialWorkPriority:!h.home && h.inventory.wood < s.rules.hutWood ? 8.0 + shelterMaterialBonus : publicMaterials ? 6.5 : 2.6) + p.proficiency.gather, valid: true });
+    if (stone && (publicStone||granaryStoneNeeded)) candidates.push({ name: 'stone', score: (granaryStoneNeeded?G.materialWorkPriority:6.0) + p.proficiency.gather, valid: true });
     if (fiber && !h.home) candidates.push({ name: 'fiber', score: h.inventory.fiber < s.rules.hutFiber ? 7.5 + shelterMaterialBonus + p.proficiency.gather : 1, valid: true });
     if (!h.home && canBuild) candidates.push({ name: 'build', score: 9.3 + p.proficiency.build, valid: true });
+    if(canBuildGranary)candidates.push({name:'build_granary',score:G.constructionPriority+p.proficiency.build,valid:true});
     // Not every work period should be production. When accessible reserves are
     // strong, adults can spend the work block supporting dependents and the home.
     // Oracle pressure can redirect willing people to feasible food activities.
@@ -753,6 +762,7 @@
       fiber: `尚須纖維建屋；家戶纖維 ${h.inventory.fiber.toFixed(1)}`,
       stone: `附近可採石，公共建材需求尚未滿足`,
       build: `家戶已備齊 ${s.rules.hutWood} 木材與 ${s.rules.hutFiber} 纖維，正在投入建屋勞力`,
+      build_granary: `${town?.name||'聚落'}具備建材及存糧，正在投入公共糧倉建設`,
       care: `可及糧食可供約 ${foodDays} 天，選擇維持家戶生活與照顧依賴成員`
     };
     const modifiers = [];
@@ -789,7 +799,23 @@
     } else if (choice.name === 'fiber' && fiber) {
       const amt = Math.min(fiber.fiber, 1.4 + p.proficiency.gather * .7);
       fiber.fiber -= amt; distribute(s, h, 'fiber', amt);
-    } else if (choice.name === 'build') {
+    } else if(choice.name==='build_granary'&&town&&granary&&!granary.built) {
+      if(!granary.materialsPaid) {
+        if(town.storage.wood+1e-9<G.woodRequired||town.storage.stone+1e-9<G.stoneRequired)
+          throw Error('糧倉建造前的公共建材不足');
+        town.storage.wood=Math.max(0,town.storage.wood-G.woodRequired);
+        town.storage.stone=Math.max(0,town.storage.stone-G.stoneRequired);
+        granary.materialsPaid=true;
+      }
+      granary.progress+=1+p.proficiency.build*.55;
+      if(granary.progress>=G.workRequired) {
+        granary.built=true;
+        log(s,'settlement',`${town.name} 的公共糧倉完工，居民可更有組織地儲存共同物資。`,
+          [`使用本聚落公共木材 ${G.woodRequired}、石材 ${G.stoneRequired}`,
+           `居民自主投入 ${granary.progress.toFixed(1)} 單位建造勞力`,
+           '糧倉不會額外生成糧食，原有共享儲備保留']);
+      }
+    } else if(choice.name==='build') {
       if (!h.buildMaterialsPaid) {
         h.inventory.wood -= s.rules.hutWood; h.inventory.fiber -= s.rules.hutFiber;
         h.buildMaterialsPaid = true;
@@ -879,6 +905,34 @@
     }
   }
 
+  // A planned Granary is physical infrastructure; shared food remains accessible
+  // as temporary communal stock before it is built. Construction never mints food.
+  function granaryRules(s) {
+    const p=s.agriculture?.granary || {};
+    return {woodRequired:clamp(num(p.woodRequired,6),1,50),
+      stoneRequired:clamp(num(p.stoneRequired,4),1,50),
+      workRequired:clamp(num(p.workRequired,6),1,50),
+      materialWorkPriority:clamp(num(p.materialWorkPriority,13),9,20),
+      constructionPriority:clamp(num(p.constructionPriority,14),9,20),
+      minimumFoodDays:clamp(num(p.minimumFoodDays,4),0,90)};
+  }
+  function ensureGranary(s,town) {
+    if(!town.granary) {
+      // Choose a nearby unoccupied meadow for this physical building.
+      let pos=null, score=-Infinity;
+      for(let y=Math.max(1,Math.round(town.y)-5);y<=Math.min(s.height-2,Math.round(town.y)+5);y++)
+        for(let x=Math.max(1,Math.round(town.x)-5);x<=Math.min(s.width-2,Math.round(town.x)+5);x++){
+          if(tile(s,x,y).terrain!=='meadow')continue;
+          if(s.households.some(h=>householdMembers(s,h).length&&Math.hypot(x-h.x,y-h.y)<1.6))continue;
+          if(s.settlements.some(v=>v.granary&&Math.hypot(x-v.granary.x,y-v.granary.y)<1.6))continue;
+          const rating=-Math.hypot(x-town.x,y-town.y);
+          if(rating>score){pos={x,y};score=rating;}
+        }
+      const loc=pos||nearestLand(s,town.x+2,town.y+1);
+      town.granary={x:loc.x,y:loc.y,built:false,progress:0,materialsPaid:false};
+    }
+    return town.granary;
+  }
   function establishOutpost(s){
     const F=s.agriculture?.familyExpansion;
     if(!F?.enabled||!s.settlements.length)return;
@@ -893,15 +947,16 @@
       if(s.settlements.some(t=>dist(t,center)<=s.rules.settlementClusterDistance))continue;
       const id='s'+(s.settlements.reduce((n,t)=>Math.max(n,Number(t.id.slice(1))||0),0)+1);
       const town={id,name:'新拓聚落 '+id.slice(1),x:center.x,y:center.y,foundedAtHour:s.hour,
-        householdIds:group.map(h=>h.id),storage:{food:0,wood:0,stone:0,fiber:0},
+        householdIds:group.map(h=>h.id),storage:{food:0,wood:0,stone:0,fiber:0},granary:null,
         workDemand:{foodPressure:0,housingPressure:0},foodShortageDays:0,
         famineDays:0,famineReliefDays:0,famineActive:false,lastDailyUnmetFood:0};
+      ensureGranary(s,town);
       s.settlements.push(town);
       for(const h of group)for(const person of householdMembers(s,h))person.settlementId=id;
       s.counts.newSettlements=(s.counts.newSettlements||0)+1;
       log(s,'settlement',town.name+'由 '+finished.length+' 戶已建屋的居民形成。',
         ['家戶自願向外定居','附近至少 '+F.outpostMinHuts+' 戶完成真實住屋',
-         '獨立的共同糧倉從零開始；沒有憑空新增物資']);
+         '獨立共享儲備從零開始；糧倉須由居民另外實際建造']);
       return;
     }
   }
@@ -911,9 +966,10 @@
       const huts = near.filter(h => h.home);
       if (huts.length >= s.rules.settlementMinHuts && near.length >= 4) {
         const town = { id: 's1', name: '初穗聚落', x:s.camp.x, y:s.camp.y,
-          foundedAtHour:s.hour, householdIds:near.map(h=>h.id), storage:{food:0,wood:0,stone:0,fiber:0},
+          foundedAtHour:s.hour, householdIds:near.map(h=>h.id), storage:{food:0,wood:0,stone:0,fiber:0},granary:null,
           workDemand:{foodPressure:0,housingPressure:0}, foodShortageDays:0,
           famineDays:0, famineReliefDays:0, famineActive:false, lastDailyUnmetFood:0 };
+        ensureGranary(s,town);
         s.settlements.push(town);
         for (const p of s.people) if (town.householdIds.includes(p.householdId)) p.settlementId = town.id;
         s.history.settlementFoundedHour = s.hour;
@@ -924,6 +980,7 @@
     }
     establishOutpost(s);
     for (const town of s.settlements) {
+      ensureGranary(s,town);
       const activeHomes = s.households.filter(h => accessibleSettlement(s,h)?.id === town.id && householdMembers(s,h).length);
       const totalNeed = activeHomes.reduce((n,h)=>n+dailyFoodNeed(s,h),0);
       const foodStock = town.storage.food + activeHomes.reduce((z,h)=>z+h.inventory.food,0);
@@ -1381,8 +1438,17 @@
     if(!s.god || !Number.isFinite(s.god.dp)||s.god.dp<0||s.god.dp>s.rules.maxDp+.001) errors.push('神力不正確');
     for(const h of s.households||[]) for(const value of Object.values(h.inventory||{}))
       if(!Number.isFinite(value)||value<-.00001) errors.push(`家戶 ${h.id} 庫存無效`);
-    for(const t of s.settlements||[]) for(const value of Object.values(t.storage||{}))
-      if(!Number.isFinite(value)||value<-.00001) errors.push(`聚落 ${t.id} 庫存無效`);
+    for(const t of s.settlements||[]) {
+      for(const value of Object.values(t.storage||{}))
+        if(!Number.isFinite(value)||value<-.00001) errors.push(`聚落 ${t.id} 庫存無效`);
+      if(t.granary) {
+        if(!Number.isFinite(t.granary.progress)||t.granary.progress<0)errors.push(`聚落 ${t.id} 糧倉工期無效`);
+        if(!Number.isFinite(t.granary.x)||!Number.isFinite(t.granary.y)||
+          t.granary.x<0||t.granary.y<0||t.granary.x>=s.width||t.granary.y>=s.height)
+          errors.push(`聚落 ${t.id} 糧倉位置無效`);
+        if(t.granary.built&&!t.granary.materialsPaid)errors.push(`聚落 ${t.id} 糧倉未投入建材`);
+      }
+    }
     for(const p of s.people||[]) if(!s.households.some(h=>h.id===p.householdId && h.members.includes(p.id))) errors.push(`居民 ${p.id} 家戶不一致`);
     const ids=new Set((s.people||[]).map(p=>p.id));
     if(ids.size!==(s.people||[]).length) errors.push('居民 ID 重複');
@@ -1441,6 +1507,7 @@
     candidate.counts.socialAdoptions ||= 0;
     candidate.counts.interSettlementAdoptions ||= 0;
     for(const o of candidate.religion.oracles||[])o.reachedSettlements ||= {};
+    for(const town of candidate.settlements||[])ensureGranary(candidate,town);
     const verdict=validate(candidate);
     if(!verdict.ok) throw new Error('無法讀取世界：'+verdict.errors.join('；'));
     return candidate;

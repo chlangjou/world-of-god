@@ -654,6 +654,9 @@
     activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
     activeDivineProfile=divine.status==='fulfilled'?divine.value:null;
     activeOpponentProfile=opponent.status==='fulfilled'?opponent.value:S.OPPONENT_DEFAULTS;
+    // The initial unconfigured render displays the single-God placeholder.
+    // Explicitly opt new browser worlds into the AI mode after profiles load.
+    $('opponentMode').value='ai';
     newWorld();
     const failures=[agriculture,religion,divine,opponent].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     say(failures.length?'Profile 載入失敗，採用內建預設：'+failures.join('；'):

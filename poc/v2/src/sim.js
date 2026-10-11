@@ -388,7 +388,7 @@
     genesisFieldPatches(s,s.opponentCamp);
     const sites=[
       {x:Math.min(s.width-7,s.camp.x+17),y:Math.min(s.height-8,s.camp.y+8)},
-      {x:Math.max(6,s.opponentCamp.x-12),y:Math.min(s.height-8,s.opponentCamp.y+18)},
+      {x:Math.max(6,s.opponentCamp.x-12),y:Math.min(s.height-8,s.opponentCamp.y+8)},
       {x:Math.round((s.camp.x+s.opponentCamp.x)/2)-5,
         y:Math.round((s.camp.y+s.opponentCamp.y)/2)+10},
       {x:Math.round(s.width*.5),y:Math.round(s.height*.85)}

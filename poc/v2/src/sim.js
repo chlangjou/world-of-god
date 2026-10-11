@@ -899,12 +899,16 @@
     const cells=['harvest','lightning'].includes(type)?rayCells(s,center,radius):[];
     const tuning=s.divinePowers;
     let applied=0,actual=0;
+    const healedPeople=[];
     const threatened=enemy&&['drought','lightning','confusion','blindness'].includes(type)?
       people.filter(p=>p.religionId===s.religion.id&&p.devotion>=20):[];
     if(type==='heal'){
       for(const p of people)if(p.health<100){
         const healed=Math.min(100-p.health,30*intensity*Math.max(.45,1-dist(p,center)/Math.max(1,radius)*.5));
         p.health+=healed;actual+=healed;applied++;
+        if(healed>=s.religionPropagation.healMinRecovery)
+          healedPeople.push({person:p,amount:Math.round(
+            s.religionPropagation.healDirectDevotion*Math.min(1.3,.6+healed/25))});
       }
     }else if(type==='harvest'){
       for(const t of cells)if(t.terrain==='field'){
@@ -956,6 +960,12 @@
     while(skill.level<5&&skill.xp>=skill.level*skill.level*30)skill.level++;
     s.counts.miracleCasts ||= {};
     s.counts.miracleCasts[type]=(s.counts.miracleCasts[type]||0)+1;
+    if(type==='heal'&&healedPeople.length)
+      miraclePersonalEvidence(s,faith,'heal',healedPeople,
+        s.religionPropagation.healWitnessDevotion);
+    if(type==='harvest'&&actual>.75)
+      miracleAgriculturalEvidence(s,faith,'harvest',center,
+        s.religionPropagation.harvestWitnessDevotion);
     if(threatened.length){
       const subject=threatened[0];
       alertPlayer(s,'pause','attack',
@@ -1475,6 +1485,13 @@
   function performWork(s, p) {
     const h = householdOf(s, p);
     if (!h) return;
+    const blessed=p.divineStatuses?.efficiency;
+    const statusActive=blessed&&activeStatus(s,p,'efficiency')>0&&!blessed.faithCredited;
+    const priorFood=statusActive?s.counts.foodFromLabor:0;
+    const priorMaterials=statusActive?['wood','stone','fiber'].reduce((n,k)=>
+      n+h.inventory[k]+(accessibleSettlement(s,h)?.storage[k]||0),0):0;
+    const priorBuild=statusActive?h.buildProgress:0;
+    const priorGranary=statusActive?(accessibleSettlement(s,h)?.granary?.progress||0):0;
     const security = foodSecurity(s, h);
     const basic = security.town ? security.town.workDemand : null;
     const scarce = security.days < 4 || p.hunger > .35 || (basic && basic.foodPressure > .65);
@@ -1632,6 +1649,22 @@
     }
     p.x = h.x + (choice.name === 'farm' && field ? clamp(field.x - h.x,-2,2) * .28 : 0);
     p.y = h.y + (choice.name === 'farm' && field ? clamp(field.y - h.y,-2,2) * .28 : 0);
+    if(statusActive){
+      const currentTown=accessibleSettlement(s,h);
+      const currentMaterials=['wood','stone','fiber'].reduce((n,k)=>
+        n+h.inventory[k]+(currentTown?.storage[k]||0),0);
+      const productive=(s.counts.foodFromLabor-priorFood)+
+        Math.max(0,currentMaterials-priorMaterials)+
+        Math.max(0,h.buildProgress-priorBuild)+
+        Math.max(0,(currentTown?.granary?.progress||0)-priorGranary);
+      if(productive>.15){
+        blessed.faithCredited=true;
+        const faith=allFaiths(s).find(f=>f.godId===blessed.godId);
+        if(faith)miraclePersonalEvidence(s,faith,'efficiency',
+          [{person:p,amount:s.religionPropagation.efficiencyDirectDevotion}],
+          s.religionPropagation.efficiencyWitnessDevotion);
+      }
+    }
   }
   function updatePeople(s) {
     const phase = s.tick % 3;
@@ -1680,14 +1713,16 @@
     for (const t of s.tiles) {
       if (t.terrain === 'river') continue;
       const nearRiver = clamp(1-Math.abs(t.x-riverX(s,t.y))/10);
-      let boost = 0, droughtPressure=0, ripeningFactor=1;
+      let boost = 0, droughtPressure=0, ripeningFactor=1, ripeningSource=null;
       for (const e of s.effects) {
         if(s.hour>=e.endsAtHour||Math.hypot(t.x-e.x,t.y-e.y)>e.radius)continue;
         const kind=e.type||'rain';
         if(kind==='rain')boost+=.028*e.intensity;
         else if(kind==='drought')droughtPressure=Math.max(droughtPressure,e.intensity);
-        else if(kind==='ripening')ripeningFactor=Math.max(ripeningFactor,
-          1+e.intensity*s.divinePowers.ripeningGrowthPerIntensity);
+        else if(kind==='ripening'){
+          const factor=1+e.intensity*s.divinePowers.ripeningGrowthPerIntensity;
+          if(factor>ripeningFactor){ripeningFactor=factor;ripeningSource=e;}
+        }
       }
       effectSummary+=boost;
       if(A) {
@@ -1707,13 +1742,24 @@
           // the normal renewal cap. Keep that real stock until harvested; do not refill above it.
           const before=Math.max(0,t.cropStock);
           t.cropStock=Math.min(Math.max(cap,before),before+daily*ripeningFactor*s.rules.tickHours/24);
+          if(ripeningSource&&!ripeningSource.faithCredited){
+            const natural=Math.min(Math.max(cap,before),
+              before+daily*s.rules.tickHours/24);
+            const extra=Math.max(0,t.cropStock-natural);
+            ripeningSource.evidenceCropGain=(ripeningSource.evidenceCropGain||0)+extra;
+          }
           t.crop=cap>0?clamp(t.cropStock/cap):0;
         }
       } else {
       t.moisture = clamp(t.moisture - (drought ? .014 : .007) + naturalRain + nearRiver*.003 + boost-.018*droughtPressure, .03, .98);
       if (t.terrain === 'field') {
-        const growth = t.moisture > .23 ? (.006 + .029 * t.moisture) * t.fertility*ripeningFactor : -.006;
+        const base=t.moisture > .23 ? (.006 + .029*t.moisture)*t.fertility : -.006;
+        const growth=base>0?base*ripeningFactor:base;
+        const before=t.crop;
         t.crop = clamp(t.crop + growth, .02, 1);
+        if(ripeningSource&&!ripeningSource.faithCredited)
+          ripeningSource.evidenceCropGain=(ripeningSource.evidenceCropGain||0)+
+            Math.max(0,t.crop-clamp(before+base,.02,1));
       }
       }
       t.forage = clamp(t.forage + .004 * t.moisture * t.fertility, 0, 1.3);
@@ -1721,6 +1767,14 @@
       if (t.terrain === 'meadow') t.fiber = Math.min(8, t.fiber + .012 * t.moisture);
     }
     s.environment.totalRain += effectSummary;
+    for(const effect of s.effects){
+      if(effect.type!=='ripening'||effect.faithCredited||
+        (effect.evidenceCropGain||0)<s.religionPropagation.ripeningEvidenceMinimumCrop)continue;
+      effect.faithCredited=true;
+      const faith=allFaiths(s).find(f=>f.godId===effect.godId);
+      if(faith)miracleAgriculturalEvidence(s,faith,'ripening',effect,
+        s.religionPropagation.ripeningWitnessDevotion);
+    }
     const expired = s.effects.filter(e => s.hour >= e.endsAtHour);
     if (expired.length) {
       s.effects = s.effects.filter(e => s.hour < e.endsAtHour);

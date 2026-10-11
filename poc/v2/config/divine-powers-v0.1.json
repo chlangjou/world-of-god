@@ -1,0 +1,89 @@
+{
+  "profileId": "divine-powers-v0.1",
+  "status": "experimental-runtime-profile",
+  "loadedByRuntime": true,
+  "description": "Data tuning for first-batch Miracle/Oracle effects; no forced production quotas, no direct conversion, separate Mastery/cooldown.",
+  "destructiveMinWeighted": 4,
+  "eligibilityNote": "Current single-God PoC only approximates destructive local strength by weighted own-faith Presence. Full rival-Dominance assessment is deferred to multi-God.",
+  "ripeningGrowthPerIntensity": 2.3,
+  "harvestExtraPerIntensity": 0.9,
+  "harvestMaxExtraCapRatio": 1.5,
+  "efficiencyWorkBonus": 0.55,
+  "confusionScoreNoise": 5,
+  "blindnessReachReduction": 0.7,
+  "spreadSermonBonus": 0.24,
+  "powers": {
+    "ripening": {
+      "baseCost": 8,
+      "cooldownDays": 12,
+      "defaultRadius": 7,
+      "defaultIntensity": 1,
+      "defaultDurationDays": 12,
+      "maxDays": 30,
+      "maxIntensity": 2.5
+    },
+    "harvest": {
+      "baseCost": 10,
+      "cooldownDays": 13,
+      "defaultRadius": 7,
+      "defaultIntensity": 1,
+      "defaultDurationDays": 0,
+      "maxDays": 0,
+      "maxIntensity": 2
+    },
+    "heal": {
+      "baseCost": 7,
+      "cooldownDays": 9,
+      "defaultRadius": 6,
+      "defaultIntensity": 1,
+      "defaultDurationDays": 0,
+      "maxDays": 0,
+      "maxIntensity": 2
+    },
+    "efficiency": {
+      "baseCost": 10,
+      "cooldownDays": 16,
+      "defaultRadius": 7,
+      "defaultIntensity": 1,
+      "defaultDurationDays": 14,
+      "maxDays": 30,
+      "maxIntensity": 2
+    },
+    "drought": {
+      "baseCost": 16,
+      "cooldownDays": 30,
+      "defaultRadius": 7,
+      "defaultIntensity": 1,
+      "defaultDurationDays": 12,
+      "maxDays": 30,
+      "maxIntensity": 2
+    },
+    "lightning": {
+      "baseCost": 14,
+      "cooldownDays": 18,
+      "defaultRadius": 3,
+      "defaultIntensity": 1,
+      "defaultDurationDays": 0,
+      "maxDays": 0,
+      "maxIntensity": 2
+    },
+    "confusion": {
+      "baseCost": 11,
+      "cooldownDays": 19,
+      "defaultRadius": 7,
+      "defaultIntensity": 1,
+      "defaultDurationDays": 12,
+      "maxDays": 30,
+      "maxIntensity": 2
+    },
+    "blindness": {
+      "baseCost": 11,
+      "cooldownDays": 19,
+      "defaultRadius": 7,
+      "defaultIntensity": 1,
+      "defaultDurationDays": 12,
+      "maxDays": 30,
+      "maxIntensity": 2
+    }
+  }
+}

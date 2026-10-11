@@ -631,6 +631,33 @@
       for (const e of expired) log(s, 'miracle', '神蹟的降雨已結束；土地保留實際濕潤或乾燥狀態。', ['停止持續雨水輸入，沒有回溯物理後果']);
     }
   }
+
+  function establishOutpost(s){
+    const F=s.agriculture?.familyExpansion;
+    if(!F?.enabled||!s.settlements.length)return;
+    // New settlement is derived from real already-built homes, never placed by God.
+    const free=s.households.filter(h=>householdMembers(s,h).length&&!s.settlements.some(t=>t.householdIds.includes(h.id)));
+    for(const anchor of free.filter(h=>h.home)){
+      const group=free.filter(h=>Math.hypot(h.x-anchor.x,h.y-anchor.y)<=F.outpostClusterRadius);
+      const finished=group.filter(h=>h.home);
+      if(group.length<F.outpostMinHouseholds||finished.length<F.outpostMinHuts)continue;
+      const center={x:Math.round(finished.reduce((n,h)=>n+h.x,0)/finished.length),
+                    y:Math.round(finished.reduce((n,h)=>n+h.y,0)/finished.length)};
+      if(s.settlements.some(t=>dist(t,center)<=s.rules.settlementClusterDistance))continue;
+      const id='s'+(s.settlements.reduce((n,t)=>Math.max(n,Number(t.id.slice(1))||0),0)+1);
+      const town={id,name:'新拓聚落 '+id.slice(1),x:center.x,y:center.y,foundedAtHour:s.hour,
+        householdIds:group.map(h=>h.id),storage:{food:0,wood:0,stone:0,fiber:0},
+        workDemand:{foodPressure:0,housingPressure:0},foodShortageDays:0,
+        famineDays:0,famineReliefDays:0,famineActive:false,lastDailyUnmetFood:0};
+      s.settlements.push(town);
+      for(const h of group)for(const person of householdMembers(s,h))person.settlementId=id;
+      s.counts.newSettlements=(s.counts.newSettlements||0)+1;
+      log(s,'settlement',town.name+'由 '+finished.length+' 戶已建屋的居民形成。',
+        ['家戶自願向外定居','附近至少 '+F.outpostMinHuts+' 戶完成真實住屋',
+         '獨立的共同糧倉從零開始；沒有憑空新增物資']);
+      return;
+    }
+  }
   function updateSettlement(s) {
     if (!hasSettlement(s)) {
       const near = s.households.filter(h => dist(h, s.camp) <= s.rules.settlementClusterDistance);
@@ -648,6 +675,7 @@
       }
       return;
     }
+    establishOutpost(s);
     for (const town of s.settlements) {
       const activeHomes = s.households.filter(h => accessibleSettlement(s,h)?.id === town.id && householdMembers(s,h).length);
       const totalNeed = activeHomes.reduce((n,h)=>n+dailyFoodNeed(s,h),0);
@@ -672,6 +700,33 @@
     }
   }
   function restoreSettlementAccess(s) {
+    if(s.agriculture?.familyExpansion?.enabled){
+      // Membership follows distance and a single community's ownership; no
+      // free food access across separated settlements.
+      for(const h of s.households){
+        if(!householdMembers(s,h).length||s.settlements.some(t=>t.householdIds.includes(h.id)))continue;
+        const town=s.settlements.filter(t=>dist(t,h)<=s.rules.settlementClusterDistance)
+          .sort((a,b)=>dist(a,h)-dist(b,h)||a.id.localeCompare(b.id))[0];
+        if(town){
+          town.householdIds.push(h.id);
+          for(const p of householdMembers(s,h))p.settlementId=town.id;
+          continue;
+        }
+        if(h.foodShortageDays<3)continue;
+        const refuges=s.settlements.filter(t=>{
+          const need=s.households.reduce((n,v)=>n+(accessibleSettlement(s,v)?.id===t.id?dailyFoodNeed(s,v):0),0);
+          return t.storage.food>=need*s.rules.familyReturnFoodDays;
+        }).sort((a,b)=>dist(a,h)-dist(b,h)||a.id.localeCompare(b.id));
+        const refuge=refuges[0];if(!refuge)continue;
+        const loc=nearestLand(s,refuge.x+3+(Number(h.id.slice(1))%3),refuge.y+(Number(h.id.slice(1))%5)-2);
+        h.x=loc.x;h.y=loc.y;h.home=false;h.buildProgress=0;h.buildMaterialsPaid=false;
+        refuge.householdIds.push(h.id);h.migrated++;s.counts.relocations++;
+        for(const person of householdMembers(s,h)){person.x=h.x;person.y=h.y;person.settlementId=refuge.id;}
+        log(s,'migration',h.name+'因無法維持外地生活，回到可供應的聚落。',
+          ['實際缺糧持續','可及聚落的共同存糧足以提供救濟']);
+      }
+      return;
+    }
     // A prior migration may have placed a household at the town edge. Membership
     // must follow actual reachable community affiliation, not an outdated ID list.
     const town = s.settlements[0];
@@ -982,7 +1037,10 @@
         needs:{},migrated:0,foodShortageDays:0};
       ah.members=ah.members.filter(id=>id!==a.id);bh.members=bh.members.filter(id=>id!==partner.id);
       s.households.push(h);a.partnerId=partner.id;partner.partnerId=a.id;
-      const town=s.settlements.find(t=>dist(t,h)<=s.rules.settlementClusterDistance)||null;
+      const sourceTown=accessibleSettlement(s,ah);
+      const town=sourceTown&&dist(sourceTown,h)<=s.rules.settlementClusterDistance?sourceTown:
+        s.settlements.filter(t=>dist(t,h)<=s.rules.settlementClusterDistance)
+        .sort((x,y)=>dist(x,h)-dist(y,h)||x.id.localeCompare(y.id))[0]||null;
       if(town)town.householdIds.push(h.id);
       for(const p of [a,partner]){
         p.householdId=h.id;p.settlementId=town?.id||null;p.x=site.x;p.y=site.y;

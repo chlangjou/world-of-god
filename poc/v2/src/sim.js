@@ -382,13 +382,64 @@
     genesisFieldPatches(s,center);
   }
   function nativeGenesisSites(s,otherCamp){
-    return [
-      {x:Math.min(s.width-7,s.camp.x+17),y:Math.min(s.height-8,s.camp.y+8)},
-      {x:Math.max(6,otherCamp.x-12),y:Math.min(s.height-8,otherCamp.y+8)},
-      {x:Math.round((s.camp.x+otherCamp.x)/2)-5,
-        y:Math.round((s.camp.y+otherCamp.y)/2)+10},
-      {x:Math.round(s.width*.5),y:Math.round(s.height*.85)}
+    // Three native villages: one near each God and one genuinely balanced
+    // frontier. Choose traversable, fertile locations near river-bank water.
+    // This is terrain-aware genesis, not an ownership or conversion assignment.
+    const midpoint={x:(s.camp.x+otherCamp.x)/2,y:(s.camp.y+otherCamp.y)/2};
+    const candidates=[];
+    const sample=(x,y)=>{
+      let resources=0;
+      for(let oy=-6;oy<=6;oy+=3)for(let ox=-6;ox<=6;ox+=3){
+        const t=tile(s,x+ox,y+oy);
+        if(t.terrain==='meadow'||t.terrain==='forest')resources+=.055;
+      }
+      return resources;
+    };
+    for(let y=7;y<s.height-7;y++)for(let x=7;x<s.width-7;x++){
+      const t=tile(s,x,y);
+      if(t.terrain!=='meadow')continue;
+      const center={x,y},dp=dist(center,s.camp),da=dist(center,otherCamp);
+      const bank=Math.max(0,Math.abs(x-riverX(s,y))-1.6);
+      if(bank>10)continue;
+      const quality=sample(x,y)+t.fertility*.4+t.moisture*.22-
+        Math.max(0,bank-5)*.25;
+      candidates.push({x,y,dp,da,bank,quality,fromMid:dist(center,midpoint)});
+    }
+    const pick=(role,others,relaxed=false)=>{
+      let winner=null,best=-Infinity;
+      for(const p of candidates){
+        if(others.some(o=>dist(p,o)<(relaxed?8:11.5)))continue;
+        const own=role==='player'?p.dp:p.da;
+        const opposite=role==='player'?p.da:p.dp;
+        const valid=role==='center'?
+          Math.abs(p.dp-p.da)<=(relaxed?5:3)&&
+            p.dp>=12&&p.da>=12:
+          own>=(relaxed?9:12)&&own<=23&&
+            opposite-own>=(relaxed?3:7)&&
+            (role!=='player'||relaxed||p.y>=s.camp.y-2);
+        if(!valid)continue;
+        const score=p.quality-(role==='center'?
+          p.fromMid*.12+Math.abs(p.dp-p.da)*.32:
+          Math.abs(own-16)*.1);
+        if(score>best){best=score;winner=p;}
+      }
+      return winner;
+    };
+    const center=pick('center',[]);
+    const player=pick('player',[center].filter(Boolean));
+    const enemy=pick('enemy',[center,player].filter(Boolean));
+    const chosen=[player,enemy,center];
+    const fallbacks=[
+      {x:Math.min(s.width-7,s.camp.x+15),y:Math.min(s.height-8,s.camp.y+7)},
+      {x:Math.max(6,otherCamp.x-8),y:Math.max(6,otherCamp.y+9)},
+      midpoint
     ];
+    for(let i=0;i<3;i++)if(!chosen[i]){
+      chosen[i]=pick(['player','enemy','center'][i],chosen.filter(Boolean),true)||
+        nearestLand(s,fallbacks[i].x,fallbacks[i].y);
+    }
+    return [...chosen.map(p=>({x:p.x,y:p.y})),
+      {x:Math.round(s.width*.5),y:Math.round(s.height*.85)}];
   }
   function populateNativeVillages(s,sites,villages=3,homes=3){
     for(let i=0;i<villages;i++){

@@ -1402,6 +1402,35 @@
     const first=(prayer.by||[]).map(id=>s.people.find(p=>p.id===id&&p.alive)).find(Boolean);
     return first?personSettlement(s,first):null;
   }
+  // A prayer's location is a source/measurement center, NOT a promise that
+  // every cell in the circle needs intervention. Founding-area petitions in
+  // older saves had no explicit center; their evaluation was based on s.camp.
+  function prayerLocation(s,prayerId){
+    const prayer=typeof prayerId==='string'?
+      s.religion.prayers.find(p=>p.id===prayerId):prayerId;
+    if(!prayer)return null;
+    const recorded=prayer.center;
+    const settlement=prayerSettlement(s,prayer);
+    const valid=point=>point&&Number.isFinite(point.x)&&Number.isFinite(point.y)&&
+      point.x>=0&&point.y>=0&&point.x<s.width&&point.y<s.height;
+    let center=recorded,source='recorded';
+    if(!valid(center)){
+      if(prayer.settlementId&&settlement){
+        center=settlement;source='settlement-fallback';
+      }else if(prayer.type==='food-water'&&!prayer.settlementId){
+        center=s.camp;source='founding-fallback';
+      }else return null;
+    }
+    if(!valid(center))return null;
+    const regional=!!prayer.settlementId;
+    return {id:prayer.id,type:prayer.type,center:{x:center.x,y:center.y},
+      // The water petition samples real fields within 11 world cells.
+      radius:prayer.type==='food-water'?11:0,
+      settlementId:settlement?.id||prayer.settlementId||null,
+      locationName:settlement?.name||(regional?'原聚落':'創始河谷'),
+      source,locationMeaning:prayer.type==='food-water'?'農田需求評估中心':
+        regional?'聚落需求評估中心':'祈求來源位置'};
+  }
   function priestPetitions(s,priestId){
     const priest=s.people.find(p=>p.id===priestId&&p.alive);
     if(!priest||!s.religion.priests.includes(priestId))return [];
@@ -1414,7 +1443,8 @@
           settlementName:region?.name||'尚未形成聚落',
           createdAtHour:prayer.createdAtHour,
           receivedAtHour:prayer.collectedAtHour,
-          supporterCount:new Set(prayer.by||[]).size};
+          supporterCount:new Set(prayer.by||[]).size,
+          location:prayerLocation(s,prayer)};
       }).sort((a,b)=>b.createdAtHour-a.createdAtHour||a.id.localeCompare(b.id));
   }
   function collectPrayers(s){
@@ -1491,7 +1521,8 @@
       const supporters=living(s).filter(p=>p.religionId===s.religion.id && p.devotion>=20 && dist(p,s.camp)<13);
       if (supporters.length) {
         const prayer={ id:'need-'+s.nextId++, type:'food-water', createdAtHour:s.hour, status:'open',
-          by:supporters.slice(0,12).map(p=>p.id), beforeMoisture:wet, foodAtRequest:stats(s).food,
+          by:supporters.slice(0,12).map(p=>p.id),
+          center:{x:s.camp.x,y:s.camp.y},beforeMoisture:wet,foodAtRequest:stats(s).food,
           foodProductionAtRequest:s.counts.foodFromLabor, castSeen:false, castId:null };
         s.religion.prayers.push(prayer);
         s.religion.lastPrayerHour=s.hour;
@@ -1916,5 +1947,5 @@
   return {VERSION,DEFAULT_RULES,POWER_DEFAULTS,create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
     evaluateMiracle,castMiracle,activeStatus,
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
-    settlementReligionStats,priestPetitions};
+    settlementReligionStats,priestPetitions,prayerLocation};
 });

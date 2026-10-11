@@ -189,7 +189,8 @@
     $('radiusValue').textContent=$('radius').value+' 格';
     $('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';
     $('durationValue').textContent=$('durationLabel').hidden?'即時':$('duration').value+' 日';
-    const target=cursor||state.camp,preview=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
+    const target=cursor||currentNeed()?.location?.center||state.camp,
+      preview=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
     const left=Math.max(0,(state.god.skills[id]?.readyAtHour||0)-state.hour);
     if(armedMiracle&&armedMiracle!==id)armedMiracle=null;
     if(armedMiracle&&left>0)armedMiracle=null;
@@ -202,6 +203,8 @@
     $('rainBtn').classList.toggle('secondary',!!armedMiracle);
   }
   function render() {
+    if(selectedNeedId&&!currentNeed())selectedNeedId=null;
+    const located=currentNeed();
     const st=S.stats(state), current=state.people.find(p=>p.id===chosen);
     $('day').textContent=`第 ${st.day} 日`;
     $('weather').textContent=st.phase==='dry'?'乾旱期':st.phase==='rainy'?'雨季':'和暖時節';
@@ -219,9 +222,13 @@
     $('pauseBtn').disabled=profileLoading;
     $('balanceProfile').value=state.agriculture?'agriculture':'original';
     $('applyAgricultureBtn').disabled=profileLoading||!state.agriculture;
-    $('mapStatus').textContent=profileLoading?'載入平衡設定中…':state.agriculture?'Agriculture v0.1 · 河流、季節與實際農作物':'Original · 原始平衡對照';
+    $('mapStatus').textContent=profileLoading?'載入平衡設定中…':located?.location?
+      `已定位 ${needTitles[located.prayer.type]||'需求'} · ${located.location.locationName} (${format(located.location.center.x)}, ${format(located.location.center.y)})`:
+      state.agriculture?'Agriculture v0.1 · 河流、季節與實際農作物':'Original · 原始平衡對照';
     $('mapTip').hidden=!armedMiracle;
-    $('simHint').textContent=armedMiracle?('已選擇'+(powerMeta('miracle',armedMiracle)?.label||'神蹟')+'：點擊地圖施展（Esc 取消）'):st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。';
+    $('simHint').textContent=armedMiracle?('已選擇'+(powerMeta('miracle',armedMiracle)?.label||'神蹟')+'：點擊地圖施展（Esc 取消）'):
+      located?.location?'需求中心已標示於地圖；缺雨虛線圈是農田評估範圍，不會自動施展神蹟。':
+      st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。';
     $('simRate').textContent=`${speed}× · 約 ${format(2/speed,2)} 秒 / 模擬日`;
     updateCost();
     const saints=state.religion.saints.map(id=>state.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
@@ -442,7 +449,32 @@
       }
       c.restore();
     }
-    if(armedMiracle) {const target=cursor||state.camp;c.save();c.strokeStyle='#ffdda7';c.lineWidth=3;c.setLineDash([7,4]);c.beginPath();c.arc(target.x*size,target.y*size,+$('radius').value*size,0,Math.PI*2);c.stroke();c.restore();}
+    const source=currentNeed();
+    if(source?.location){
+      const loc=source.location,x=(loc.center.x+.5)*size,y=(loc.center.y+.5)*size;
+      const isWater=source.prayer.type==='food-water';
+      c.save();
+      if(isWater){
+        c.strokeStyle='#ffe4a6';c.lineWidth=2;c.setLineDash([8,5]);
+        c.beginPath();c.arc(x,y,loc.radius*size,0,Math.PI*2);c.stroke();c.setLineDash([]);
+      }
+      c.fillStyle='#16272a';c.strokeStyle='#ffe4a6';c.lineWidth=2.5;
+      c.beginPath();c.arc(x,y,Math.max(7,size*.85),0,Math.PI*2);c.fill();c.stroke();
+      c.strokeStyle='#ffffff';c.lineWidth=2;c.beginPath();
+      c.moveTo(x-12,y);c.lineTo(x+12,y);c.moveTo(x,y-12);c.lineTo(x,y+12);c.stroke();
+      const label=`${needTitles[source.prayer.type]||'需求'} (${format(loc.center.x)}, ${format(loc.center.y)})`;
+      const labelX=Math.max(4,Math.min(canvas.width-194,x+size*2));
+      const labelY=Math.max(24,Math.min(canvas.height-8,y-16));
+      c.fillStyle='#182b2be8';c.fillRect(labelX-4,labelY-18,194,24);
+      c.fillStyle='#fff4c9';c.font='bold 12px system-ui';c.textAlign='left';
+      c.fillText(label,labelX,labelY-2);
+      c.restore();
+    }
+    if(armedMiracle) {
+      const target=cursor||source?.location?.center||state.camp;
+      c.save();c.strokeStyle='#ffdda7';c.lineWidth=3;c.setLineDash([7,4]);
+      c.beginPath();c.arc(target.x*size,target.y*size,+$('radius').value*size,0,Math.PI*2);c.stroke();c.restore();
+    }
   }
   function onMap(e) {
     const rect=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-rect.left)*state.width/rect.width), y=Math.floor((e.clientY-rect.top)*state.height/rect.height);
@@ -466,8 +498,14 @@
     if(marked){
       if(activePriestId!==marked.id)priestPetitionIndex=0;
       activePriestId=marked.id;showInspector('needs');
-      say(`查看 ${marked.name} 彙整的信徒祈求。`);
+      selectedNeedId=S.priestPetitions(state,activePriestId)[priestPetitionIndex]?.id||null;
+      cursor=null;render();
+      say(`查看 ${marked.name} 彙整的信徒祈求與來源位置。`);
       return;
+    }
+    const marker=currentNeed();
+    if(marker?.location&&Math.hypot(x-marker.location.center.x,y-marker.location.center.y)<=1.6){
+      showInspector('needs');return;
     }
     let selected=null,dd=Infinity;for(const p of state.people){if(!p.alive)continue;const d=Math.hypot(p.x-x,p.y-y);if(d<dd){selected=p;dd=d;}}
     if(selected && dd<3.2){chosen=selected.id;showInspector('person');say(`正在觀察 ${selected.name} 的生活與工作選擇`);}else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
@@ -497,8 +535,8 @@
   $('miracleTab').onclick=()=>showDivineKind('miracle');
   $('oracleTab').onclick=()=>showDivineKind('oracle');
   $('divinePowerSelect').onchange=()=>{armedMiracle=null;if(divineKind==='miracle')configureMiracle(selectedPower());render();};
-  document.querySelectorAll('[data-inspect-tab]').forEach(button=>button.onclick=()=>{if(button.dataset.inspectTab==='needs'){activePriestId=null;priestPetitionIndex=0;}showInspector(button.dataset.inspectTab);});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedMiracle){armedMiracle=null;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)){toggleMiracleTarget();}});
+  document.querySelectorAll('[data-inspect-tab]').forEach(button=>button.onclick=()=>{if(button.dataset.inspectTab==='needs'){activePriestId=null;priestPetitionIndex=0;needPage=0;}showInspector(button.dataset.inspectTab);});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedMiracle){armedMiracle=null;render();}else if(e.key==='Escape'&&selectedNeedId){selectedNeedId=null;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)){toggleMiracleTarget();}});
   $('saveBtn').onclick=save;
   $('loadBtn').onclick=()=>{let raw=null;try{raw=localStorage.getItem(storageKey()) || localStorage.getItem('wog-mvp0-web-save');}catch(_){}if(raw)restore(raw);else say('目前沒有本機存檔；可以匯入 JSON。');};
   $('exportBtn').onclick=exportSave;

@@ -96,3 +96,27 @@ test('old single-God save restores without enabling an unrequested enemy',()=>{
   after(restored,40);
   good(restored);
 });
+
+test('a former believer cannot remain a Priest after falling below the faith threshold',()=>{
+  const state=fresh();
+  after(state,60);
+  const oldPriest=state.opponentReligion.priests[0];
+  assert.ok(oldPriest);
+  const person=state.people.find(p=>p.id===oldPriest);
+  person.devotion=19;
+  after(state,1);
+  assert.ok(!state.opponentReligion.priests.includes(oldPriest),
+    'abandoned offices must not block appointment of a legitimate Priest');
+  good(state);
+});
+
+test('casting Miracle does not bypass existing faith evidence or auto-convert residents',()=>{
+  const state=fresh(),target=state.people.find(p=>p.religionId==='r2');
+  const before=state.people.map(p=>[p.religionId,p.devotion]);
+  const cast=W.castMiracle(state,'rain',{godId:'g2',
+    x:target.x,y:target.y,radius:5,intensity:.8,durationDays:6});
+  assert.equal(cast.ok,true);
+  assert.deepEqual(state.people.map(p=>[p.religionId,p.devotion]),before,
+    'Miracle casting by itself must not modify belief without observed consequence');
+  good(state);
+});

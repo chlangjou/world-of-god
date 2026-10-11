@@ -420,7 +420,15 @@
       const statusText=Object.entries(p.divineStatuses||{}).filter(([,v])=>v.endsAtHour>state.hour)
         .map(([key,v])=>(S.POWER_DEFAULTS[key]?.label||key)+` · 剩餘 ${Math.ceil((v.endsAtHour-state.hour)/24)} 日`).join('／');
       const activeReason=p.activityReason?`<div class="reason" title="${html(p.activityReason)}" tabindex="0"><b>此刻行動：</b>${html(p.activityReason)}</div>`:'';
-      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'}${nativeInfo} · ${religious}</div>${roleInfo}${statusText?`<div class="divine-status">限時狀態：${html(statusText)}</div>`:''}<div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${activeReason}<div class="reason" title="${html(dec?.reason||'尚未進行工作決策')}" tabindex="0">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
+      const evidence=p.lastFaithEvidence&&state.hour-p.lastFaithEvidence.hour<=90*24?
+        `<div class="reason" title="真實神蹟或神諭成果造成的信仰改變；並非施法就直接改宗" tabindex="0"><b>最近的信仰證據：</b>${html(p.lastFaithEvidence.cause)}${p.lastFaithEvidence.change?
+          ' · '+(p.lastFaithEvidence.change>0?'+':'')+format(p.lastFaithEvidence.change):''}</div>`:'';
+      const impressions=Object.entries(p.miracleInterest||{}).filter(([,record])=>
+        record.expiresAtHour>state.hour&&record.score>0).map(([godId,record])=>
+        (godId===state.god.id?state.religion.name:state.opponentReligion?.name||godId)+
+        ' '+format(record.score)).join('／');
+      const impressionHint=impressions?`<div title="對神蹟的暫時印象會影響個人日後自行接受宗教的可能；尚不等於改宗">神蹟印象：${html(impressions)}</div>`:'';
+      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'}${nativeInfo} · ${religious}</div>${roleInfo}${statusText?`<div class="divine-status">限時狀態：${html(statusText)}</div>`:''}<div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${evidence}${impressionHint}${activeReason}<div class="reason" title="${html(dec?.reason||'尚未進行工作決策')}" tabindex="0">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
     }
     // History alone scrolls inside the fixed-size inspector; newest events stay first.
     const feed=$('events');

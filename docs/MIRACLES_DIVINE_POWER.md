@@ -1,6 +1,6 @@
 # Miracles and Divine Power — v1 Contract
 
-Status: **Issue #7 design converged (2026-10-10)**. This is a gameplay/architecture contract, **not** a claim of implementation or calibrated balance. Exact numerical coefficients remain configurable and subject to playtesting.
+Status: **Issue #7 design converged (2026-10-10); Accelerate renamed and narrowed to Ripening (2026-10-11)**. This is a gameplay/architecture contract, **not** a claim of implementation or calibrated balance. Exact numerical coefficients remain configurable and subject to playtesting.
 
 Related authoritative contracts: [Core Principles](CORE_PRINCIPLES.md), [Gameplay Loop](GAMEPLAY_LOOP.md), [Faith / Religion checkpoint](FAITH_RELIGION_ORACLE_DRAFT.md) (#5 remains the owner of the base Devotion economy), [Spatial Divine Presence](DIVINE_PRESENCE_MIRACLES.md) (#7/#8), [Religion v1](RELIGION_PRIESTHOOD_TEMPLE.md) (#8), [Oracle v1](ORACLE_DIVINE_CALLING.md) (#6), and [Settlement Economy v1](SETTLEMENT_ECONOMY_OCCUPATIONS.md) (#4).
 
@@ -12,7 +12,7 @@ Related authoritative contracts: [Core Principles](CORE_PRINCIPLES.md), [Gamepla
 - In **Sandbox v1**, the initial Miracle catalog is **entirely available from the start**. There is **no Miracle unlock tree**, per-skill prerequisite, civilization-era gate, or faith threshold that locks a catalog entry.
 - The nine entries are an initial bounded vocabulary, **not a claim that the eventual Miracle taxonomy or relationships are complete**.
 - If later added, an individual Miracle's unlock policy must remain independently configurable and a granted unlock remains permanent. Story/Scenario Mode may add custom civilization, discovery, or special-event conditions without changing Sandbox's core contract.
-- Civilization/environment may determine what an effect can act upon: Harvest requires crops to benefit; Accelerate requires an applicable process. This is world feasibility, **not a civilization unlock**.
+- Civilization/environment may determine what an effect can act upon: Harvest requires existing crops to increase attainable yield; Ripening requires an existing crop maturation process to advance. This is world feasibility, **not a civilization unlock**.
 - Separate three concerns: permanent ability ownership; current **Divine Power (DP)** to pay for a cast; **Local Divine Presence** to authorize the selected cast at its center.
 
 ## 2. Initial nine-Miracle catalog
@@ -22,14 +22,16 @@ These are distinct player-facing skills with **independent Mastery, experience a
 | Miracle | Direct effect / simulation input | Initial design role |
 | --- | --- | --- |
 | Rain | Add rainfall / water input over an area and duration | Usually rescue/support; extreme direct rainfall can be destructive |
-| Harvest | Increase existing crop growth/yield potential or reduce crop failure | Support |
+| Harvest（豐收） | Increase the attainable final yield of existing crops or reduce crop loss, **without directly bringing forward their maturity date** | Support |
 | Heal | Improve health/recovery of valid living targets | Support; no automatic resurrection |
-| Accelerate | Speed up applicable growth/production/recovery processes | Support; does not conjure inputs or command workers |
+| Ripening（促熟） | Advance **existing crops' maturation**, bringing their harvest-ready time forward without directly multiplying final yield | Support; no human speed/work-efficiency bonus or conjured resources |
 | Protect | Reduce relevant incoming harm over an area/time | Support |
 | Drought | Suppress rainfall / water replenishment for an interval | Environmental/destructive intervention |
 | Lightning | Cause a localized lightning strike | Usually offensive; fire/secondary damage follow World rules |
 | Wildfire | Ignite susceptible material/vegetation | Usually destructive; propagation follows fire/World rules |
 | Storm | Create a selected combination of intense weather effects | Often destructive; depends on direct selected effect |
+
+**Naming decision (2026-10-11):** The former general-sounding **Accelerate** is renamed to **Ripening（促熟）** (future canonical key `ripening`; no implemented legacy key to migrate). It is **not a generic speed-up spell**. Harvest raises attainable crop yield, Ripening advances crop maturity, and a separate Efficiency blessing—planned in Web PoC v2—improves followers' actual work/action efficiency. Ripening does not speed up people, construction work, generic manufacturing or injury recovery (Heal owns health). Implement Ripening only once the crop simulation can distinguish crop maturity from harvestable stock/yield; otherwise defer instead of faking a second Harvest. The three powers may combine through ordinary World processes, with resource constraints still applying.
 
 Rain, Drought and Storm may share climate simulation code but **do not share skill progression**. Rain at extreme settings may cause flooding, but it does not automatically gain Storm's wind effects. Future abilities (resurrection, creation of life, meteor, parting seas, large-scale terrain change, etc.) are content expansion rather than v1 prerequisites.
 
@@ -83,7 +85,7 @@ Each player cast supplies: **Miracle type, cast center, target area/radius, inte
 - Miracles do **not** mutually exclude or automatically dispel one another. Concurrent Rain/Drought, multiple Rain casts, Harvest during Drought, or Protect with Lightning all act through their common underlying simulation state/rules.
 - Outcome is determined by physical state, availability of inputs and relevant system behavior, not special pairwise anti-Miracle rules.
 - A successful Rain cast really produces its specified rainfall; it does **not** guarantee a harvest, prevent flood, ensure a city's survival or force anyone to worship.
-- Harvest/Accelerate improve applicable processes within resource feasibility: no free food/materials, forced work or magical inventory fabrication from a mundane blessing.
+- Harvest/Ripening affect separate crop dimensions (yield potential vs. time to maturity) within resource feasibility. Neither manufactures stored Food/materials, bypasses missing water/inputs, commands workers, or substitutes for a human work-efficiency buff.
 - Simulation ownership stays with **World** for physical/climate changes, **Individual** for health, **Settlement** for economy/inventory, **Religion/Individual** for belief/attribution, etc.; the Divine actor injects validated events/requests, not untracked cross-layer writes.
 - Significant outcomes may be captured in History with real causal provenance; avoid per-frame/per-person persistent Miracle logs.
 
@@ -101,7 +103,7 @@ Each player cast supplies: **Miracle type, cast center, target area/radius, inte
 - **Every Miracle is manually cast by the player.** No automated rescue, auto-attack, auto-defense or priority policy in v1.
 - Support **Quick Cast** presets (e.g. small / current-Mastery standard) and **Advanced Cast** customization (radius, intensity, duration / estimated DP). The player can freely cast without a prayer, or locate relevant places through Prayer/Collective Petition.
 - Before confirmation, show **direct effect**, expected area/duration, DP cost, projected cooldown, current Mastery, and Local Presence eligibility / reason if blocked. Predictions of downstream benefit or risk must not be presented as guaranteed outcomes.
-- Favor **one or a few effective rescue casts** over repetitive maintenance clicks. Rain, Harvest, Heal, and Accelerate should be useful and affordable by default. Prolonged multi-year natural droughts should be uncommon in default climate presets (#4); challenging scenarios may differ.
+- Favor **one or a few effective rescue casts** over repetitive maintenance clicks. Rain, Harvest, Heal, and Ripening should be useful and affordable by default. Prolonged multi-year natural droughts should be uncommon in default climate presets (#4); challenging scenarios may differ.
 - Time acceleration and passive observation remain valid play styles. The world does not require continuous divine micromanagement.
 
 ## 10. Scope and future extension

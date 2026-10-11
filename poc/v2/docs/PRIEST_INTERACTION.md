@@ -53,6 +53,17 @@ All three fixture seeds retained the committed Devotion-65 foreign affiliation u
 - Existing saves upgrade recognized legacy Priest join default `0.075` to the new `0.24` candidate parameter and fill missing Priest/rival metrics. All actual people, private and shared stock, stored prayers and history are preserved.
 - No complete Church hierarchy, detailed mobility model, real rival God, multi-purpose Miracle catalog or Temple mechanics are introduced.
 
+## Prayer source location in the Needs UI (2026-10-11)
+
+Open petitions are now **click-to-locate**. The Needs inspector shows three compact request cards per page (with additional requests reachable through page controls), including petition type, source settlement, map coordinates and short reason. Clicking a card places a persistent crosshair at its actual recorded request evaluation center. **Food-water** petitions additionally show the 11-cell local-field evaluation radius as a dashed *reference* circle: this is not a guaranteed Rain cast footprint or an automatic cast.
+
+A Priest's collected petitions use the **same original prayer IDs and centers**, not the Priest's current position. Clicking a Priest's prayer bubble opens the related petition and highlights its center; moving through the Priest's individual petitions updates the highlight. An answered/resolved/lapsed/deleted petition automatically releases the pin. The highlight is an ephemeral presentation selection, not saved authoritative World state, not a prayer requirement, and never spends DP or casts.
+
+- Newly created founding-area food-water prayers record `center=s.camp`; legacy saves that omitted `center` resolve to that same historical evaluation anchor. Settlement-generated requests already carry their local settlement evaluation center.
+- `prayerLocation(state, id)` is the one shared location interpretation API. `priestPetitions` exposes its derived `location` as an additional field, while preserving existing supporter counts, selection and local priest scope.
+- Other settlement prayer types show the **settlement demand evaluation center**, not a claim of a precise injured person's current location or a guarantee that one Miracle reaches every petitioner. No continuous person-tracking or per-prayer map history is introduced.
+- No world/faith/resource or balance formula changes are needed for this UI improvement. Bounded fixed-viewport layout, Miracle targeting confirmation, and Priest prayer autonomy remain unchanged.
+
 ## Acceptance
 
 `npm test` runs `tests/priest.test.cjs` for authentic collective prayers, bubble removal after fulfillment, cross-Settlement localization, same-seed ablation, weak foreign faith response, stable foreign faith protection and save/restore determinism. Other economic / religious regressions must stay intact.

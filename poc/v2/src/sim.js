@@ -728,7 +728,20 @@
     const delta=Math.min(doubt,Math.max(0,p.devotion-1));
     p.devotion-=delta;
     recordDivineInterest(s,p,faith,magnitude);
-    if(delta)p.lastFaithEvidence={hour:s.hour,cause:type+' 異教神蹟證據',change:-delta,godId:faith.godId};
+    if(delta){
+      p.lastFaithEvidence={hour:s.hour,cause:type+' 異教神蹟證據',
+        change:-delta,godId:faith.godId};
+      if(faith===s.opponentReligion&&p.religionId===s.religion.id){
+        const last=s.attention?.lastPreachingHour??-Infinity;
+        if(role==='direct'||s.hour-last>=14*24){
+          alertPlayer(s,'pause','divine-persuasion',
+            faith.name+'的'+(POWER_DEFAULTS[type]?.label||type)+
+            '成果使 '+p.name+' 的原有信仰動搖',p,
+            {personId:p.id,actorGodId:faith.godId});
+          s.attention.lastPreachingHour=s.hour;
+        }
+      }
+    }
     return delta>0;
   }
   function miracleWitnesses(s,faith,type,centers,exclude,amount){
@@ -750,7 +763,8 @@
       if(applyMiracleFaith(s,faith,person,amount,type,'direct'))recipients++;
     const witnesses=miracleWitnesses(s,faith,type,centers,excluded,witnessAmount);
     if(recipients||witnesses)
-      log(s,'faith',faith.name+'的'+type+'成果獲得見證：'+recipients+
+      log(s,'faith',faith.name+'的'+(POWER_DEFAULTS[type]?.label||type)+
+        '成果獲得見證：'+recipients+
         ' 位直接受益者、'+witnesses+' 位附近居民受到信仰影響。',
         ['只有具體改善或自主工作成果才能構成證據',
          '觀察者需有可信的本宗教來源；不會在施法時強制改宗']);
@@ -759,7 +773,8 @@
   function miracleAgriculturalEvidence(s,faith,type,center,amount){
     const witness=miracleWitnesses(s,faith,type,[center],new Set(),amount);
     if(witness)
-      log(s,'faith',faith.name+'的'+type+'成果在農地被見證；'+
+      log(s,'faith',faith.name+'的'+(POWER_DEFAULTS[type]?.label||type)+
+        '成果在農地被見證；'+
         witness+' 位附近居民受到小幅度信仰影響。',
         ['只根據實際存在的作物改善；沒有直接的人體神蹟受益者']);
     return witness;
@@ -2694,6 +2709,7 @@
     if(!Number.isSafeInteger(candidate.religionRng))candidate.religionRng=hash(candidate.seed+'|religion-v0.1');
     candidate.religion.reachedSettlements ||= {};
     candidate.religion.regionalPrayerAt ||= {};
+    candidate.metrics ||= {workChoices:0,oracleInfluencedChoices:0};
     candidate.metrics.foodProductionByTown ||= {};
     candidate.counts.newBelievers ||= 0;
     candidate.counts.householdAdoptions ||= 0;

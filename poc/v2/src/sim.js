@@ -387,10 +387,10 @@
     }
     genesisFieldPatches(s,s.opponentCamp);
     const sites=[
-      {x:Math.min(s.width-7,s.camp.x+13),y:Math.min(s.height-7,s.camp.y+3)},
-      {x:Math.max(6,s.opponentCamp.x-10),y:Math.min(s.height-7,s.opponentCamp.y+3)},
-      {x:Math.round((s.camp.x+s.opponentCamp.x)/2)-6,
-        y:Math.round((s.camp.y+s.opponentCamp.y)/2)+4},
+      {x:Math.min(s.width-7,s.camp.x+17),y:Math.min(s.height-8,s.camp.y+8)},
+      {x:Math.max(6,s.opponentCamp.x-12),y:Math.min(s.height-8,s.opponentCamp.y+18)},
+      {x:Math.round((s.camp.x+s.opponentCamp.x)/2)-5,
+        y:Math.round((s.camp.y+s.opponentCamp.y)/2)+10},
       {x:Math.round(s.width*.5),y:Math.round(s.height*.85)}
     ];
     for(let i=0;i<opponent.nativeVillages;i++){
@@ -1473,6 +1473,10 @@
     // New settlement is derived from real already-built homes, never placed by God.
     const free=s.households.filter(h=>householdMembers(s,h).length&&!s.settlements.some(t=>t.householdIds.includes(h.id)));
     for(const anchor of free.filter(h=>h.home)){
+      // Player's Genesis families are reserved for the authentic first settlement,
+      // not prematurely relabelled as the rival's outpost s2.
+      if(s.opponent?.originMode==='separated-native'&&
+        dist(anchor,s.camp)<=s.rules.settlementClusterDistance)continue;
       const group=free.filter(h=>Math.hypot(h.x-anchor.x,h.y-anchor.y)<=F.outpostClusterRadius);
       const finished=group.filter(h=>h.home);
       if(group.length<F.outpostMinHouseholds||finished.length<F.outpostMinHuts)continue;
@@ -1498,7 +1502,10 @@
   function updateSettlement(s) {
     const separated=s.opponent?.originMode==='separated-native';
     if (!hasSettlement(s)||(separated&&!s.settlements.some(t=>t.id==='s1'))) {
-      const near = s.households.filter(h => dist(h, s.camp) <= s.rules.settlementClusterDistance);
+      const near = s.households.filter(h => dist(h, s.camp) <= s.rules.settlementClusterDistance&&
+        // A native settlement cannot simultaneously belong to a new faith's
+        // settlement merely because its residents live next door.
+        !s.settlements.some(t=>t.householdIds.includes(h.id)));
       const huts = near.filter(h => h.home);
       if (huts.length >= s.rules.settlementMinHuts && near.length >= 4) {
         const town = { id: 's1', name: '初穗聚落', x:s.camp.x, y:s.camp.y,
@@ -1548,7 +1555,13 @@
       // free food access across separated settlements.
       for(const h of s.households){
         if(!householdMembers(s,h).length||s.settlements.some(t=>t.householdIds.includes(h.id)))continue;
-        const town=s.settlements.filter(t=>dist(t,h)<=s.rules.settlementClusterDistance)
+        const originIndex=Number(h.id.slice(1))-1;
+        const foundingFamily=s.opponent?.originMode==='separated-native'&&
+          originIndex>=0&&originIndex<s.rules.initialHouseholds&&h.migrated===0;
+        const homeCamp=foundingFamily&&s.opponent.initialHouseholdIndexes.includes(originIndex)?
+          s.opponentCamp:s.camp;
+        const town=s.settlements.filter(t=>dist(t,h)<=s.rules.settlementClusterDistance&&
+          (!foundingFamily||(!t.native&&dist(t,homeCamp)<=s.rules.settlementClusterDistance)))
           .sort((a,b)=>dist(a,h)-dist(b,h)||a.id.localeCompare(b.id))[0];
         if(town){
           town.householdIds.push(h.id);
@@ -2188,6 +2201,13 @@
       }
     }
     for(const p of s.people||[]) if(!s.households.some(h=>h.id===p.householdId && h.members.includes(p.id))) errors.push(`居民 ${p.id} 家戶不一致`);
+    if(s.opponent?.originMode==='separated-native'){
+      const assigned=new Set();
+      for(const town of s.settlements||[])for(const h of town.householdIds){
+        if(assigned.has(h))errors.push('家戶同時隸屬不同聚落：'+h);
+        assigned.add(h);
+      }
+    }
     const ids=new Set((s.people||[]).map(p=>p.id));
     if(ids.size!==(s.people||[]).length) errors.push('居民 ID 重複');
     return {ok:errors.length===0, errors};

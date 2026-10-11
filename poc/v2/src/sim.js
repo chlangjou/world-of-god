@@ -1115,19 +1115,24 @@
       if(faith===s.opponentReligion&&p.religionId===s.religion.id)
         pressuredPlayer.push({person:p,converted:true});
       p.religionId=id;p.devotion=20+Math.floor(clamp(p.receptivity,0,1)*4);
+      if(p.miracleInterest)delete p.miracleInterest[faith.godId];
       if(faith===s.religion){
         s.counts.newBelievers=(s.counts.newBelievers||0)+1;
         const field=cause==='family'?'householdAdoptions':cause==='exchange'?'interSettlementAdoptions':
           cause==='priest'||cause==='rival'?'priestAdoptions':'socialAdoptions';
         s.counts[field]=(s.counts[field]||0)+1;
         if(cause==='rival')s.counts.rivalConversions=(s.counts.rivalConversions||0)+1;
+        if(cause==='miracle')s.counts.miracleAdoptions=(s.counts.miracleAdoptions||0)+1;
       }else{
         s.counts.opponentNewBelievers=(s.counts.opponentNewBelievers||0)+1;
         if(cause==='rival')s.counts.opponentConversions=(s.counts.opponentConversions||0)+1;
+        if(cause==='miracle')s.counts.opponentMiracleAdoptions=(s.counts.opponentMiracleAdoptions||0)+1;
       }
     };
     for(const p of people){
       const rival=p.religionId!==null&&p.religionId!==id;
+      const impressed=divineInterest(s,p,faith);
+      const convincing=impressed>=r.miracleInterestThreshold;
       if(rival&&p.devotion>=s.rules.faithThreshold)continue;
       if(p.stage==='child'&&p.age<r.minimumChildAge)continue;
       const house=homes.get(p.householdId)||[];
@@ -1176,16 +1181,17 @@
         if(other.id!==town.id&&remoteSources.has(other.id)&&
           dist(town,other)<=r.interSettlementReach){exchange=true;break;}
       }
-      if(!family&&!social&&!priest&&!exchange)continue;
+      if(!family&&!social&&!priest&&!exchange&&!convincing)continue;
       const sensitivity=.6+.8*p.receptivity;
       if(rival){
         // Only a locally preaching Priest can challenge another affiliation in
         // this single-God PoC. 40+ rival devotion is protected above. Lower bands
         // first weaken over repeated credible encounters, then may freely convert.
-        if(!priest)continue;
+        if(!priest&&!convincing)continue;
         if(p.devotion>=20){
           const clear=nearbyPriests.some(q=>!activeStatus(s,q,'confusion'))?1:.5;
-          const doubt=clamp(r.priestRivalDoubtChance*sensitivity*sermonAmplification*clear,0,.9);
+          const doubt=priest?clamp(r.priestRivalDoubtChance*sensitivity*
+            sermonAmplification*clear*(1+(convincing?.25:0)),0,.9):0;
           if(religionRand(s,faith)<doubt){
             p.devotion=Math.max(19,p.devotion-r.priestRivalDoubtStep);
             if(faith===s.opponentReligion&&p.religionId===s.religion.id)
@@ -1193,8 +1199,11 @@
             const counter=faith===s.religion?'rivalDoubts':'opponentDoubts';
             s.counts[counter]=(s.counts[counter]||0)+1;
           }
-        }else if(religionRand(s,faith)<clamp(r.priestRivalConversionChance*sensitivity*sermonAmplification,0,.8)){
-          adopt(p,'rival');
+        }else if(religionRand(s,faith)<clamp(
+          (priest?r.priestRivalConversionChance*sermonAmplification:0)+
+          (convincing?r.miracleInterestJoinChance*Math.min(2.2,impressed/r.miracleInterestThreshold):0),
+          0,.8)*sensitivity){
+          adopt(p,convincing&&!priest?'miracle':'rival');
         }
         continue;
       }
@@ -1209,15 +1218,22 @@
       }else{
         // Priests add a *separate* recruitment opportunity. Even when there is
         // already family/social exposure, the clergy bonus is not overwritten by it.
+        // Spread Oracle must provide a distinct persuasion opportunity in a
+        // real sermon; it never broadcasts faith or issues automatic converts.
+        const oracleOpportunity=nearbySpread>0&&social?
+          r.spreadOracleJoinBonus*nearbySpread/(nearbySpread+2):0;
         const baseline=clamp(((family?r.householdJoinChance:0)+
           (social?r.socialJoinChance*(1+s.divinePowers.spreadSermonBonus*nearbySpread):0)+
-           (exchange?r.settlementVisitChance:0))*sensitivity,0,.65);
+           (exchange?r.settlementVisitChance:0)+oracleOpportunity)*sensitivity,0,.65);
         const confusedPriest=nearbyPriests.length&&nearbyPriests.every(q=>activeStatus(s,q,'confusion')>0);
         const preacherClarity=confusedPriest?.45:1;
         const priestBonus=priest?r.priestJoinChance*sensitivity*sermonAmplification*preacherClarity:0;
+        const evidenceBonus=convincing?
+          r.miracleInterestJoinChance*Math.min(2.3,impressed/r.miracleInterestThreshold)*sensitivity:0;
         const rolled=religionRand(s,faith);
-        if(rolled<clamp(baseline+priestBonus,0,.85)){
-          const cause=rolled>=baseline?'priest':family?'family':social?'social':'exchange';
+        if(rolled<clamp(baseline+priestBonus+evidenceBonus,0,.85)){
+          const cause=rolled>=baseline+priestBonus?'miracle':
+            rolled>=baseline?'priest':family?'family':social?'social':'exchange';
           adopt(p,cause);
         }
       }
@@ -1237,8 +1253,8 @@
         s.attention.lastPreachingHour=s.hour;
       }
     }
-    // One bounded social-pulse accounting window; no per-person lifelong sermon histories.
-    for(const p of people)p.spreadSermonsSincePulse=0;
+    // Each religion must see the same complete sermon window; reset only once
+    // after both religion pulses in daily(), not after the first faith.
     // Settlement attribution is derived from real residents (migration included), not a border buff.
     const reached=faith.reachedSettlements ||= {};
     for(const town of s.settlements){
@@ -2204,6 +2220,7 @@
       if(s.opponent?.enabled&&Math.floor(days(s)/s.religionPropagation.pulseDays)%2===1)
         faiths.reverse();
       for(const faith of faiths)socialReligionPulse(s,faith);
+      for(const p of living(s))p.spreadSermonsSincePulse=0;
       for(const faith of allFaiths(s))relayOracles(s,faith);
     }
     opponentTurn(s);

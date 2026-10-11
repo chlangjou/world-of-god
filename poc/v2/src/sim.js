@@ -450,22 +450,25 @@
         const valid=role==='center'?
           Math.abs(p.dp-p.da)<=(relaxed?5:3)&&
             p.dp>=12&&p.da>=12:
-          own>=(relaxed?9:14)&&own<=23&&
-            opposite-own>=(relaxed?3:7)&&
-            (role!=='enemy'||relaxed||!others[1]||
-              Math.abs(own-others[1].dp)<=3.5)&&
-            (role!=='player'||relaxed||p.y>=s.camp.y-2);
+          own>=(relaxed?9:13)&&own<=23&&
+            opposite-own>=(relaxed?3:7);
         if(!valid)continue;
+        // Match not only near-side travel distance, but also the
+        // distance *advantage* over the rival. Otherwise the human side
+        // gets an exclusive village while the AI gets a contested one.
+        const sideMatch=role==='player'&&others[1]?
+          Math.abs((p.da-p.dp)-(others[1].dp-others[1].da))*.6+
+          Math.abs(p.dp-others[1].da)*.13:0;
         const score=p.quality-(role==='center'?
           p.fromMid*.12+Math.abs(p.dp-p.da)*.32:
-          Math.abs(own-16)*.1);
+          Math.abs(own-16)*.1+sideMatch);
         if(score>best){best=score;winner=p;}
       }
       return winner;
     };
     const center=pick('center',[]);
-    const player=pick('player',[center].filter(Boolean));
-    const enemy=pick('enemy',[center,player].filter(Boolean));
+    const enemy=pick('enemy',[center].filter(Boolean));
+    const player=pick('player',[center,enemy].filter(Boolean));
     const chosen=[player,enemy,center];
     const fallbacks=[
       {x:Math.min(s.width-7,s.camp.x+15),y:Math.min(s.height-8,s.camp.y+7)},

@@ -39,10 +39,10 @@ The History feed records actual major faith evidence; the resident inspector rev
 
 ## Tunables / compatibility
 
-All parameters are in `config/religion-propagation-v0.1.json` as new optional numeric fields. The profile's original ID is retained for backward compatibility, even though this behavior is named Religion Competition v0.3. `restore()` normalizes absent values and opponent prayer fields without relocating people or regenerating resources. New-world v0.2 separated origins and optional older v0.1 mixed competition both remain supported. AI decision policy is still the simple one from Opponent v0.2; the faith evidence rules themselves are symmetric.
+All parameters are in `config/religion-propagation-v0.1.json` as new optional numeric fields. The profile's original ID is retained for backward compatibility, even though this behavior is named Religion Competition v0.3. `restore()` normalizes absent values and opponent prayer fields without relocating people or regenerating resources. New-world v0.2 separated origins and optional older v0.1 mixed competition both remain supported. AI decision policy remains a simple fixed-interval heuristic (with injury-first triage and occasional Efficiency preference), not an optimized difficulty profile; the faith evidence rules themselves are symmetric.
 
 ## Tests and limitations
 
-`tests/miracle-faith-evidence.test.cjs` contains ten targeted cases for significant vs trivial Heal, nearby witnesses, conditional 40+ rival doubt, unaffiliated miracle interest, player alarms, productive Efficiency, physical Harvest and delayed Ripening, matched Rain (including AI), and deterministic save/replay. Existing religion/priest/divine/opponent/native-world regressions continue to apply.
+`tests/miracle-faith-evidence.test.cjs` contains eleven targeted cases for significant vs trivial Heal, nearby witnesses, conditional 40+ rival doubt, unaffiliated miracle interest, player alarms, productive Efficiency, physical Harvest and delayed Ripening, matched Rain (including AI), and deterministic save/replay. Existing religion/priest/divine/opponent/native-world regressions continue to apply.
 
 Deferred: richer long-range missionary travel; nuanced recognition of which deity caused an unheralded miracle; multi-God claims over the same answered request; Temple rituals; prayer UI for the AI itself; explicit confidence overlays / Religion×Region Fervor; full AI difficulty profiles and formal browser usability playtesting. No `Miracle: cast` command changes Faith merely because the player pressed a button.

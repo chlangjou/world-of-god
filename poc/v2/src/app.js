@@ -33,7 +33,21 @@
       {id:'religion.spread',label:'傳教',hint:'Saint 動員傳教意願，Priest 保留原本自然佈道'}
     ]
   };
+  // Purely presentational input presets: each Miracle retains its last chosen
+  // radius, intensity and duration; Oracle selection is remembered separately.
+  // No presets are written into the deterministic World state or save schema.
+  const rememberedPower={miracle:'rain',oracle:'food.produce'};
+  const miracleSettings=Object.create(null);
+  let configuredMiracleId=null;
   const selectedPower=()=> $('divinePowerSelect').value;
+  function rememberMiracleSettings(){
+    if(!configuredMiracleId)return;
+    const current=opts();
+    if(Object.values(current).every(Number.isFinite))
+      miracleSettings[configuredMiracleId]=current;
+  }
+  const bounded=(value,fallback,min,max)=>
+    Math.min(max,Math.max(min,Number.isFinite(value)?value:fallback));
   const powerMeta=(kind=divineKind,id=selectedPower())=>
     availablePowers[kind]?.find(p=>p.id===id)||availablePowers[kind]?.[0];
   function configureMiracle(id){
@@ -43,12 +57,19 @@
       maxIntensity:state.rules.rainSupportMaxIntensity,maxDays:state.rules.rainMaxDays,instant:false
     }:state.divinePowers?.powers?.[id]||S.POWER_DEFAULTS[id];
     if(!rule)return;
-    $('radius').value=Math.min(14,rule.defaultRadius);
-    $('intensity').max=String(Math.round(rule.maxIntensity*100));
-    $('intensity').value=String(Math.round(rule.defaultIntensity*100));
-    $('duration').max=String(Math.max(1,rule.maxDays));
-    $('duration').value=String(Math.max(1,rule.defaultDurationDays||1));
+    const prior=miracleSettings[id];
+    const radius=$('radius'),intensity=$('intensity'),duration=$('duration');
+    const maxIntensity=Math.round(rule.maxIntensity*100),maxDays=Math.max(1,rule.maxDays);
+    radius.value=String(bounded(prior?.radius,rule.defaultRadius,Number(radius.min)||2,14));
+    intensity.max=String(maxIntensity);
+    intensity.value=String(bounded(
+      prior?.intensity*100,Math.round(rule.defaultIntensity*100),
+      Number(intensity.min)||30,maxIntensity));
+    duration.max=String(maxDays);
+    duration.value=String(bounded(
+      prior?.durationDays,rule.defaultDurationDays||1,Number(duration.min)||1,maxDays));
     $('durationLabel').hidden=!!rule.instant;
+    configuredMiracleId=id;
     $('miracleName').textContent=powerMeta('miracle',id)?.label||rule.label;
     $('miracleHint').textContent=powerMeta('miracle',id)?.hint||'神蹟改變現實，後續由世界決定';
     $('miracleHint').title=$('miracleHint').textContent;
@@ -104,13 +125,19 @@
     });
   }
   function showDivineKind(kind){
+    if(divineKind==='miracle')rememberMiracleSettings();
+    else rememberedPower.oracle=selectedPower();
     divineKind=kind;if(kind!=='miracle')armedMiracle=null;
     $('miraclePanel').hidden=kind!=='miracle';$('oraclePanel').hidden=kind!=='oracle';
     for(const [id,category] of [['miracleTab','miracle'],['oracleTab','oracle']]){
       $(id).classList.toggle('active',category===kind);
       $(id).setAttribute('aria-selected',String(category===kind));
     }
-    $('divinePowerSelect').innerHTML=availablePowers[kind].map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+    const picker=$('divinePowerSelect');
+    picker.innerHTML=availablePowers[kind].map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+    picker.value=availablePowers[kind].some(p=>p.id===rememberedPower[kind])?
+      rememberedPower[kind]:availablePowers[kind][0].id;
+    rememberedPower[kind]=picker.value;
     if(kind==='miracle')configureMiracle(selectedPower());
     render();
   }
@@ -526,7 +553,9 @@
   }
   $('pauseBtn').onclick=()=>{paused=!paused;render();};
   document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>{speed=+btn.dataset.speed;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',b===btn));render();});
-  ['radius','intensity','duration'].forEach(id=>$(id).addEventListener('input',()=>{updateCost();draw();}));
+  ['radius','intensity','duration'].forEach(id=>$(id).addEventListener('input',()=>{
+    rememberMiracleSettings();updateCost();draw();
+  }));
   $('rainBtn').onclick=toggleMiracleTarget;
   $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{saintId:selectedSaintId,intentType:selectedPower()});say(r.ok?'神諭已交給 Saint；居民稍後自主聆聽與回應。':r.reason);render();};
   $('concludeBtn').onclick=()=>{const o=state.religion.oracles.find(v=>v.status==='active'&&v.saintId===selectedSaintId&&v.intentType===selectedPower());const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
@@ -540,7 +569,15 @@
   $('houseNext').onclick=()=>{housePage++;render();};
   $('miracleTab').onclick=()=>showDivineKind('miracle');
   $('oracleTab').onclick=()=>showDivineKind('oracle');
-  $('divinePowerSelect').onchange=()=>{armedMiracle=null;if(divineKind==='miracle')configureMiracle(selectedPower());render();};
+  $('divinePowerSelect').onchange=()=>{
+    armedMiracle=null;
+    if(divineKind==='miracle'){
+      rememberMiracleSettings();
+      rememberedPower.miracle=selectedPower();
+      configureMiracle(selectedPower());
+    }else rememberedPower.oracle=selectedPower();
+    render();
+  };
   document.querySelectorAll('[data-inspect-tab]').forEach(button=>button.onclick=()=>{if(button.dataset.inspectTab==='needs'){activePriestId=null;priestPetitionIndex=0;needPage=0;}showInspector(button.dataset.inspectTab);});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedMiracle){armedMiracle=null;render();}else if(e.key==='Escape'&&selectedNeedId){selectedNeedId=null;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)){toggleMiracleTarget();}});
   $('saveBtn').onclick=save;

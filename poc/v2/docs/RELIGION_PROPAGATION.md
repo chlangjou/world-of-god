@@ -34,3 +34,14 @@ Full multi-God rival faith competition (beyond the limited low-Devotion person-s
 ## Tests
 
 `npm test` includes a distinct `religion.test.cjs` covering non-work preaching, family faith formation, no ex nihilo conversions, adult 40+ stability, priest autonomy, connected/disconnected Oracle relay, old-save upgrades and deterministic replay. `npm run smoke` and `npm run check:agriculture` remain the baseline regressions.
+
+## Religion Competition v0.3 amendment (2026-10-12)
+
+The original v0.1 religion-specific sermon mechanics are still valid; they now
+operate alongside [attributable Miracle evidence](RELIGION_COMPETITION_V0_3.md).
+
+- Keep the ordinary Priest protection for 40+; **credible positive rival miracles** can lower even an established affiliation when the acting God has real nearby religious attribution.
+- Significant healed individuals and productive Efficiency recipients gain appreciable Devotion from real benefit. Nearby witnesses receive only minor signs. Unaligned civilians keep an expiring God-specific impression and make their own later adoption choice; a cast never commands conversion.
+- Rain needs actual matching local prayers and local harvest; Harvest and Ripening generate at most small agricultural witness credit and only after physical crop improvements.
+- Spread Oracle now includes a separate capped persuasion opportunity when **actual local** Oracle-inspired preaching occurs. Both Gods resolve their weekly sermon opportunities before counters are cleared, repairing an old update-order asymmetry.
+- The same faith-evidence engine applies to both Gods. AI regional petitions are stateful but not displayed in the player prayer inspector. New parameters live in the same `religion-propagation-v0.1.json` for safe save compatibility.

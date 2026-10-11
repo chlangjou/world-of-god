@@ -33,6 +33,7 @@ npm start
 | `assets/file-menu.css` | 檔案與窄螢幕操作 |
 | `config/balance-agriculture-v0.1.json` | 目前可用的 Agriculture、成家、拓荒實驗數值 |
 | `config/religion-propagation-v0.1.json` | 居民閒暇傳道、家庭教育及聚落宗教傳播參數 |
+| `config/divine-powers-v0.1.json` | 8 種新增神蹟的 DP／冷卻／強度／持續期及傳教反應參數 |
 | `config/balance-agriculture-v0.1.json` → `granary` | 各聚落自治糧倉建造的建材、勞力及優先度 |
 | `config/balance-default.json` | Original 的唯讀快照；核心預設仍在 `src/sim.js` |
 | `docs/` | Architecture、UI Guide、Agriculture 驗算紀錄 |
@@ -45,15 +46,17 @@ Religion Propagation v0.1 讓成人信徒在空閒時間傳道、兒童從虔誠
 
 Priest Interaction v0.2 加入 Priest／Saint 專屬地圖顏色、祭司彙整信徒真實祈願的可點選泡泡，以及對無信仰／低 Devotion 異教徒的加強傳道。 [互動與對照說明](docs/PRIEST_INTERACTION.md)。
 
-Miracle / Oracle 下一批擴充已確認為 **Ripening、Harvest、Heal、Efficiency、Drought、Lightning、Confusion、Blindness、Religion Spread**（八種神蹟、一種神諭）。其中 **Ripening（促熟）優先於 Harvest（豐收）**：現有 Agriculture 的作物存量 `cropStock` 容易被收割清空，促熟直接加快現有作物的生長／補充速度，不增加成熟作物的存量上限。豐收必須展示不同的單次收成效果，若做不到真正差異則單獨暫緩。Efficiency 暫時強化己方信徒的實際行動效率；Confusion 干擾決策與協調；Blindness 影響資源感知與可行行動，三者不可只是相同的生產力倍率。`Food Reserve` 因現階段難以與已存在的 `food.produce`／自治儲糧形成可觀察的玩法差異而暫緩，不列入 UI。[擴充規格與驗收界線](docs/DIVINE_POWERS_EXPANSION_V0_1.md)。此為**已確認待實作範圍**，目前尚未宣稱能在試玩版施放。
+Miracle / Oracle 擴充 v0.1 **已實作** **Ripening、Harvest、Heal、Efficiency、Drought、Lightning、Confusion、Blindness、Religion Spread**（八種新增神蹟、一種新增神諭），保留原有 Rain 與 Food Production。其中 **Ripening（促熟）優先於 Harvest（豐收）**：現有 Agriculture 的作物存量 `cropStock` 容易被收割清空，促熟直接加快現有作物的生長／補充速度，不增加成熟作物的存量上限。豐收必須展示不同的單次收成效果，若做不到真正差異則單獨暫緩。Efficiency 暫時強化己方信徒的實際行動效率；Confusion 干擾決策與協調；Blindness 影響資源感知與可行行動，三者不可只是相同的生產力倍率。`Food Reserve` 因現階段難以與已存在的 `food.produce`／自治儲糧形成可觀察的玩法差異而暫緩，不列入 UI。[擴充規格與驗收界線](docs/DIVINE_POWERS_EXPANSION_V0_1.md)。能力已接上遊戲地圖施展／Saint 發佈、模擬狀態與保存恢復；數值仍是 PoC 初始值。實際視窗尺寸及遊戲手感仍須由本機瀏覽器試玩確認。
 
-正式 Miracle 規格中原稱 **Accelerate** 的能力已改名為 **Ripening（促熟）**：負責作物提早成熟／現有農田更快補充可收割作物，與提高單次實際收成的 Harvest、提升信徒工作效率的 Efficiency 分開。**Ripening 已改列第一批優先能力**：現有連續式作物存量模型即可直接進行對照驗證，毋須先新增複雜的離散成熟階段。
+正式 Miracle 規格中原稱 **Accelerate** 的能力已改名為 **Ripening（促熟）**：負責作物提早成熟／現有農田更快補充可收割作物，與提高單次實際收成的 Harvest、提升信徒工作效率的 Efficiency 分開。**Ripening 已列第一批並完成實作**：直接強化現有連續式作物存量的補充過程，毋須新增複雜的離散成熟階段。這輪不進行額外 A/B 平衡試驗。
 
 正式規格： [Core Principles](../../docs/CORE_PRINCIPLES.md)、
 [Population](../../docs/POPULATION_MODEL.md)、
 [Settlement Economy](../../docs/SETTLEMENT_ECONOMY_OCCUPATIONS.md)。
 
 ## 基本檢查
+
+基本操作：選 **Miracle** 後挑選能力，調整範圍、強度及（持續型能力的）天數，再按「選擇施展位置」並點地圖。選 **Oracle → 傳教**，指定 Saint 後發佈；自然 Priest 傳教不需 Oracle 仍持續進行。受影響居民可在地圖標記及居民檢視看到限時狀態。按 Esc 取消選點。每項神蹟有自己的 Cooldown。
 
 ```sh
 npm test
@@ -62,7 +65,7 @@ npm run check:agriculture
 npm run build:standalone  # 可選，dist/ 不入庫
 ```
 
-測試涵蓋 4,000 日農業、土地資源守恆、自主成家、多聚落、宗教家庭傳承、傳道、Oracle 接力與可重現性；
+測試包括 8 種新增 Miracle 與 Religion Spread 的直接功能檢查，並保留 4,000 日農業、土地資源守恆、自主成家、多聚落、宗教家庭傳承、傳道、Oracle 接力與可重現性的既有回歸；
 仍需實際瀏覽器檢查 1280×720／1366×768／1920×1080 佈局。
 
 ## 存檔

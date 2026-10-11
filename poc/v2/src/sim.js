@@ -935,11 +935,12 @@
   }
   function workCalling(s, p) {
     let strongest = { score: 0, oracle: null };
-    if (p.religionId !== s.religion.id || p.devotion < 20) return strongest;
-    for (const o of s.religion.oracles) {
+    const faith=faithOf(s,p.religionId);
+    if(!faith||p.devotion<20)return strongest;
+    for(const o of faith.oracles){
       if (o.status !== 'active' || o.intentType!=='food.produce' || o.propagatedAtHour === null) continue;
       const saint = s.people.find(v => v.id === o.saintId && v.alive);
-      const transmission=oracleContact(s,p,o);
+      const transmission=oracleContact(s,p,o,faith);
       if(!transmission)continue;
       const ageDays = (s.hour - o.issuedAtHour)/24;
       const half = Math.max(30, (o.expiresAtHour-o.issuedAtHour)/24 * .58);
@@ -1225,10 +1226,11 @@
       if (!p.alive) continue;
       if (phase === 0) { p.activity = 'rest'; p.activityReason = '每日固定的休息與恢復時段'; }
       else if (phase === 2) {
-        const priest=s.religion.priests.includes(p.id);
-        const believer=p.religionId===s.religion.id&&p.devotion>=20;
+        const faith=faithOf(s,p.religionId);
+        const priest=!!faith?.priests.includes(p.id);
+        const believer=!!faith&&p.devotion>=20;
         const pray=believer&&(days(s)+hash(p.id))%5===0;
-        const spread=believer?spreadCalling(s,p):{score:0,oracle:null};
+        const spread=believer?spreadCalling(s,p,faith):{score:0,oracle:null};
         const cadence=spread.score>=.25?(priest?2:4):(priest?3:7);
         const preach=believer&&p.stage==='adult'&&!pray&&
           (days(s)+hash(p.id))%cadence===0;
@@ -1705,6 +1707,7 @@
       }
     }
   }
+  function opponentTurn(s) { /* AI decision policy is evaluated after daily social state. */ }
   function daily(s) {
     restoreSettlementAccess(s);
     consumeFood(s);
@@ -1714,17 +1717,23 @@
     checkFulfillment(s);
     const rate=stats(s).dpRateDay;
     s.god.dp=Math.min(s.god.cap,s.god.dp+rate);
-    ensureSaint(s);
-    ensurePriest(s);
+    if(s.opponent?.enabled)s.opponentGod.dp=Math.min(s.opponentGod.cap,
+      s.opponentGod.dp+faithDpRate(s,s.opponentReligion));
+    for(const faith of allFaiths(s)){ensureSaint(s,faith);ensurePriest(s,faith);}
     collectPrayers(s);
     if(days(s)>0&&days(s)%s.religionPropagation.pulseDays===0){
-      socialReligionPulse(s);
-      relayOracles(s);
+      const faiths=allFaiths(s);
+      if(s.opponent?.enabled&&Math.floor(days(s)/s.religionPropagation.pulseDays)%2===1)
+        faiths.reverse();
+      for(const faith of faiths)socialReligionPulse(s,faith);
+      for(const faith of allFaiths(s))relayOracles(s,faith);
     }
+    opponentTurn(s);
     s.lastFoodOutput=0;
   }
   function processOracles(s) {
-    for(const o of s.religion.oracles) {
+    for(const faith of allFaiths(s)){
+    for(const o of faith.oracles) {
       if (o.status!=='active') continue;
       const owner=s.people.find(p=>p.id===o.saintId && p.alive);
       if(!owner) {
@@ -1737,17 +1746,18 @@
         o.propagatedAtHour=s.hour;
         const town=personSettlement(s,owner);
         if(town)(o.reachedSettlements ||= {})[town.id]={hour:s.hour,via:'saint'};
-        o.heardCount=living(s).filter(p=>oracleContact(s,p,o)>0).length;
+        o.heardCount=living(s).filter(p=>oracleContact(s,p,o,faith)>0).length;
         log(s,'oracle',`${owner.name} 開始向附近居民講述${o.intentType==='religion.spread'?'傳教':'糧食'}神諭；${o.heardCount} 人有機會聽見。`,
           ['Saint 接收內容可靠','傳播受個人距離與社群影響，不是向全地圖強制廣播']);
       }
     }
     // Independent quota refill from simulation time, including overdraft debt.
-    for(const record of Object.values(s.religion.saintQuota||{})) {
+    for(const record of Object.values(faith.saintQuota||{})) {
       while(s.hour>=record.nextRefillHour) {
         record.quota=Math.min(s.rules.oracleQuota,record.quota+1);
         record.nextRefillHour+=s.rules.oracleRefillDays*24;
       }
+    }
     }
   }
   function processScheduledBirths(s) {
@@ -1946,12 +1956,14 @@
     const p=s.people.find(v=>v.id===personId && v.alive);
     if(!p) return {ok:false,reason:'居民不存在或已死亡'};
     p.alive=false;p.activity='dead';s.counts.deaths++;
-    for(const o of s.religion.oracles) if(o.status==='active' && o.saintId===personId) {
+    for(const faith of allFaiths(s))for(const o of faith.oracles) if(o.status==='active' && o.saintId===personId) {
       o.status='saint_dead';
       log(s,'oracle',`聆聽者 ${p.name} 離世，這道神諭不再傳播。`,['神諭歸屬於 Saint，不會繼承']);
     }
-    s.religion.saints=s.religion.saints.filter(id=>id!==personId);
-    s.religion.priests=s.religion.priests.filter(id=>id!==personId);
+    for(const faith of allFaiths(s)){
+      faith.saints=faith.saints.filter(id=>id!==personId);
+      faith.priests=faith.priests.filter(id=>id!==personId);
+    }
     log(s,'death',`${p.name} 離世。`,[reason]);
     return {ok:true};
   }

@@ -127,6 +127,7 @@
           age, stage: isChild ? 'child' : 'adult', health: 100, hunger: 0, alive: true,
           genderRole: j === 1 ? 'gestate' : 'fertilize', partnerId: isChild ? null : 'p' + (i * 3 + (j === 0 ? 2 : 1)),
           pregnancyDueHour: null, recoveryUntilHour: 0, occupation: j === 0 ? 'food_producer' : j === 1 ? 'gatherer' : 'dependent',
+          ...(s.agriculture?.familyExpansion?.enabled?{parentIds:isChild?['p'+(i*3+1),'p'+(i*3+2)]:[],originHouseholdId:h.id}:{}),
           proficiency: { food: s.agriculture ? s.agriculture.worker.startingSkillRange[0] + rand(s) * (s.agriculture.worker.startingSkillRange[1]-s.agriculture.worker.startingSkillRange[0]) : .35 + rand(s) * .45, gather: .25 + rand(s) * .5, build: .18 + rand(s) * .45 },
           activity: 'rest', devotion: belief, religionId: belief >= 20 ? 'r1' : null,
           receptivity: i === 0 && j === 0 ? .98 : rand(s), lastDecision: null, lastFaithEvidence: null,
@@ -168,7 +169,7 @@
       history: { settlementFoundedHour: null, firstSaintHour: null },
       metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
     generate(s, initialMoisture);
-    if (agriculture) s.counts.newFields=0;
+    if (agriculture) {s.counts.newFields=0;s.counts.newFamilies=0;s.counts.newSettlements=0;}
     if (agriculture) for (const t of s.tiles) if (t.terrain === 'field') {
       const L=agriculture.land, cap=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
         Math.pow(1/L.referenceMoisture,L.moistureExponent)*L.cropStockCapacityDays;
@@ -199,6 +200,7 @@
       devotionWeight: devWeight, dpRateDay: s.rules.naturalDpPerDay + devWeight * s.rules.devotionDpPerWeightDay,
       food: foodPrivate + common, commonFood: common, privateFood: foodPrivate, avgMoisture: wet, avgCrop: crop,
       farmFields:s.tiles.reduce((n,t)=>n+(t.terrain==='field'),0), newFields:s.counts.newFields||0,
+      newFamilies:s.counts.newFamilies||0, newSettlements:s.counts.newSettlements||0,
       saintId: s.religion.saints[0] || null, activeOracle: activeOracle || null,
       rainReady: s.hour >= s.god.skills.rain.readyAtHour, rainReadyHour: s.god.skills.rain.readyAtHour,
       phase: s.environment.phase, births: s.counts.births, deaths: s.counts.deaths,
@@ -863,6 +865,7 @@
         const h=householdOf(s,p); if (!h) continue;
         const baby={...p,id:'p'+s.nextId++,name:'新生・'+HUMAN_NAMES[Math.floor(rand(s)*HUMAN_NAMES.length)],
           x:h.x,y:h.y,age:0,stage:'child',genderRole:rand(s)<.5?'gestate':'fertilize',partnerId:null,
+          ...(s.agriculture?.familyExpansion?.enabled?{parentIds:[p.id,p.partnerId].filter(Boolean),originHouseholdId:h.id}:{}),
           occupation:'dependent',pregnancyDueHour:null,recoveryUntilHour:0,health:100,hunger:0,devotion:10,religionId:null,
           receptivity:rand(s),
           proficiency:{food:p.proficiency.food*.3,gather:p.proficiency.gather*.3,build:p.proficiency.build*.3},
@@ -906,7 +909,11 @@
       if(!p.alive) continue;
       if(now>0 && now%s.rules.daysPerYear===0) {
         p.age++;
-        if(p.age>=18 && p.stage==='child') p.stage='adult';
+        if(p.age>=18 && p.stage==='child'){
+          p.stage='adult';
+          if(s.agriculture?.familyExpansion?.enabled&&p.occupation==='dependent')
+            p.occupation=p.proficiency.food>=p.proficiency.gather?'food_producer':'gatherer';
+        }
         if(p.age>=66) p.stage='elder';
         if(p.age>78 && rand(s)<clamp((p.age-76)*.025,0,.65)) die(s,p.id,'自然老化');
       }

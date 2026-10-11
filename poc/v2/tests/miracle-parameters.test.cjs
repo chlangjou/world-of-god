@@ -1,0 +1,141 @@
+'use strict';
+const {test}=require('node:test'), assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const W=require('../src/sim.js');
+const ag=require('../config/balance-agriculture-v0.1.json');
+const religion=require('../config/religion-propagation-v0.1.json');
+const divine=require('../config/divine-powers-v0.1.json');
+
+class Element {
+  constructor(id){
+    this.id=id;this.hidden=false;this.disabled=false;this.dataset={};this.style={};
+    const slider={radius:{min:'2',max:'14',value:'7'},
+      intensity:{min:'30',max:'120',value:'85'},
+      duration:{min:'1',max:'30',value:'10'}}[id];
+    this.min=slider?.min||'1';this.max=slider?.max||'30';this.value=slider?.value||'';
+    this._html='';this.title='';this.textContent='';this.scrollTop=0;this.children=[];
+    this.listeners={};this.classList={toggle(){},add(){},remove(){}};
+  }
+  get innerHTML(){return this._html;}
+  set innerHTML(value){
+    this._html=value;
+    if(['divinePowerSelect','saintSelect','residentSelect','settlementSelect'].includes(this.id))
+      this.value=/<option value="([^"]+)"/.exec(value)?.[1]||'';
+  }
+  get firstElementChild(){return this.children[0]||null;}
+  insertAdjacentHTML(position,html){this._html+=html;}
+  setAttribute(){}
+  addEventListener(kind,fn){this.listeners[kind]=fn;}
+  getBoundingClientRect(){return {left:0,top:0,width:768,height:768};}
+  querySelectorAll(){return [];}
+}
+
+async function boot(){
+  const elements=new Map(),get=id=>{
+    if(!elements.has(id))elements.set(id,new Element(id));
+    return elements.get(id);
+  };
+  const canvas=get('world');canvas.width=768;canvas.height=768;
+  const ctx=new Proxy({},{
+    set(object,key,value){object[key]=value;return true;},
+    get(object,key){return key in object?object[key]:()=>{};}
+  });
+  canvas.getContext=()=>ctx;
+  const doc={getElementById:get,querySelectorAll:()=>[],addEventListener(){},
+    activeElement:{tagName:'BODY'}};
+  const win={WoG2:W,WOG_AGRICULTURE_PROFILE:ag,
+    WOG_RELIGION_PROFILE:religion,WOG_DIVINE_PROFILE:divine};
+  const memory=new Map(),storage={
+    setItem(key,value){memory.set(key,value);},
+    getItem(key){return memory.get(key)||null;}
+  };
+  const original=fs.readFileSync(path.join(__dirname,'../src/app.js'),'utf8');
+  const source=original.replace(/\}\)\(\);\s*$/,'window.__getWorld=()=>state;})();');
+  assert.notEqual(original,source,'test instrumentation must attach to actual browser code');
+  new Function('window','document','performance','requestAnimationFrame','setTimeout',
+    'clearTimeout','confirm','localStorage','URL','Blob','fetch',source)(
+    win,doc,{now:()=>0},()=>1,()=>1,()=>{},()=>true,storage,
+    {createObjectURL(){return 'blob:test'},revokeObjectURL(){}},
+    class FakeBlob{},()=>Promise.reject(new Error('unexpected profile fetch')));
+  await new Promise(resolve=>setImmediate(resolve));
+  return {
+    el:get,canvas,world:()=>win.__getWorld(),
+    choose:id=>{get('divinePowerSelect').value=id;get('divinePowerSelect').onchange();},
+    set:(id,value)=>{get(id).value=String(value);get(id).listeners.input();},
+    values:()=>({radius:+get('radius').value,intensity:+get('intensity').value,
+      duration:+get('duration').value})
+  };
+}
+
+test('Miracle radius, intensity and duration return to the values entered for each skill',async()=>{
+  const ui=await boot(),world=ui.world();
+  assert.equal(ui.el('divinePowerSelect').value,'rain');
+  const initialDp=world.god.dp;
+  ui.set('radius',11);ui.set('intensity',110);ui.set('duration',18);
+  ui.choose('ripening');
+  assert.deepEqual(ui.values(),{radius:7,intensity:100,duration:12},
+    'an untouched Miracle initially uses its own defaults');
+  ui.set('radius',5);ui.set('intensity',165);ui.set('duration',23);
+  ui.choose('harvest');
+  assert.equal(ui.el('durationLabel').hidden,true,'instant Miracle hides duration');
+  ui.set('radius',9);ui.set('intensity',150);
+  ui.choose('ripening');
+  assert.deepEqual(ui.values(),{radius:5,intensity:165,duration:23});
+  assert.equal(ui.el('durationLabel').hidden,false);
+  ui.choose('harvest');
+  assert.equal(ui.el('radius').value,'9');
+  assert.equal(ui.el('intensity').value,'150');
+  assert.equal(ui.el('durationLabel').hidden,true);
+  ui.choose('rain');
+  assert.deepEqual(ui.values(),{radius:11,intensity:110,duration:18});
+  assert.equal(world.god.dp,initialDp,'switching powers never charges Divine Power');
+
+  // Actually cast after returning, verifying simulator receives retained inputs.
+  world.god.dp=world.god.cap;
+  ui.el('rainBtn').onclick();
+  const camp=world.camp,unit=768/world.width;
+  ui.canvas.listeners.click({clientX:(camp.x+.25)*unit,clientY:(camp.y+.25)*unit});
+  const cast=world.effects.find(e=>(e.type||'rain')==='rain');
+  assert.ok(cast,'the chosen Miracle is actually cast');
+  assert.equal(cast.radius,11);
+  assert.equal(cast.intensity,1.1);
+  assert.equal((cast.endsAtHour-cast.startsAtHour)/24,18);
+});
+
+test('Miracle and Oracle tabs remember selected powers and sliders across world reset and load',async()=>{
+  const ui=await boot();
+  ui.choose('efficiency');
+  ui.set('radius',8);ui.set('intensity',125);ui.set('duration',16);
+  ui.el('oracleTab').onclick();
+  assert.equal(ui.el('divinePowerSelect').value,'food.produce');
+  ui.choose('religion.spread');
+  ui.el('miracleTab').onclick();
+  assert.equal(ui.el('divinePowerSelect').value,'efficiency');
+  assert.deepEqual(ui.values(),{radius:8,intensity:125,duration:16});
+  ui.el('miracleTab').onclick(); // reselecting the current tab should be harmless
+  assert.deepEqual(ui.values(),{radius:8,intensity:125,duration:16});
+  ui.el('resetBtn').onclick();
+  assert.equal(ui.el('divinePowerSelect').value,'efficiency');
+  assert.deepEqual(ui.values(),{radius:8,intensity:125,duration:16});
+  ui.el('saveBtn').onclick();
+  ui.el('loadBtn').onclick();
+  assert.deepEqual(ui.values(),{radius:8,intensity:125,duration:16});
+  ui.el('oracleTab').onclick();
+  assert.equal(ui.el('divinePowerSelect').value,'religion.spread');
+  ui.el('miracleTab').onclick();
+  assert.equal(ui.el('divinePowerSelect').value,'efficiency');
+});
+
+test('remembered Miracle presets remain within changed profile maxima',async()=>{
+  const ui=await boot();
+  ui.set('radius',12);ui.set('intensity',115);ui.set('duration',25);
+  ui.choose('heal');
+  const world=ui.world();
+  world.rules.rainSupportMaxIntensity=.70;
+  world.rules.rainMaxDays=6;
+  ui.choose('rain');
+  assert.deepEqual(ui.values(),{radius:12,intensity:70,duration:6});
+  assert.equal(ui.el('intensity').max,'70');
+  assert.equal(ui.el('duration').max,'6');
+  assert.equal(ui.el('durationLabel').hidden,false);
+});

@@ -163,3 +163,12 @@ Suggested rollout: (1) fixed viewport and map-first layout; (2) compact panels, 
 - A successful cast starts the cooldown immediately. The remaining counter uses the **authoritative** `readyAtHour` and keeps running on simulated time, not wall time or the duration of the World effect. Preview values come from the same simulation evaluator and are quantized to the actual simulation tick.
 - Cooldown-active buttons remain disabled; changing the duration does not override an existing cooldown, reset a clock or trigger a cast. Instant effects have no duration-based cooldown scaling. Separate skills still have separate clocks.
 
+
+## 13. Fast-forward interruption for actual player concerns (2026-10-11)
+
+- Accelerated playback advances in **8-hour simulation ticks** with an attention check after every tick; stop on the triggering tick rather than at the end of a long catch-up batch. The kernel reports factual notices; only `src/app.js` changes playback speed.
+- An open petition from one of the player's real believers slows 4× / 16× to **1×**, shows the Needs tab and pinpoints the prayer source. No automatic Miracle or Divine Power spend.
+- An enemy's destructive / interfering Miracle overlapping living player believers, or an opposing Priest actually reducing a player's believer's Devotion or causing conversion, **pauses**. Highlight the map position and show the affected resident when possible.
+- Mere enemy talk without actual faith change, normal food labor, routine births and other nonurgent history should **not** stop accelerated playback. Repeat hostile preaching warnings can be throttled; a new conversion remains urgent.
+- The stopped speed is synchronized with speed buttons; old save history must not re-interrupt when loaded. Esc dismisses a previous hostile event marker. Existing viewport/pager and Miracle control requirements remain intact.
+- This incremental fast-forward change did **not** request additional dedicated simulations or tests. See [Indigenous World Genesis](WORLD_GENESIS_NATIVE_V0_2.md) for conditions and data ownership.

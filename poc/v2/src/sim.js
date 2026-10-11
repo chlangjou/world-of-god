@@ -432,7 +432,6 @@
     const skill = god.skills.rain;
     while (skill.level < 5 && skill.xp >= skill.level * skill.level * 30) skill.level++;
     s.counts.rainCasts++;
-    creditWitnesses(s,faith,test.center,test.radius,'rain');
     log(s, 'miracle', `${enemy?faith.name+'的神明':'你'}向河谷施展降雨，雨雲將停留約 ${test.durationDays} 日。`,
       [`直接效果：選定範圍增加降雨；不保證豐收`, `神力 -${test.cost}，喚雨冷卻 ${Math.round(test.cooldownDays)} 日`]);
     return { ...test, effectId: effect.id };
@@ -573,25 +572,12 @@
     while(skill.level<5&&skill.xp>=skill.level*skill.level*30)skill.level++;
     s.counts.miracleCasts ||= {};
     s.counts.miracleCasts[type]=(s.counts.miracleCasts[type]||0)+1;
-    if(applied>0)creditWitnesses(s,faith,center,radius,type);
     log(s,'miracle',(enemy?faith.name+'的神明':'你')+'施展 '+tuning.powers[type].label+'，作用於 '+applied+' 個目標。',
       ['直接作用於世界或居民；實際後續結果仍由模擬決定',
        '神力 -'+check.cost+'，冷卻約 '+Math.round(check.cooldownDays)+' 日']);
     return {...check,applied,actual};
   }
 
-  function creditWitnesses(s,faith,center,radius,type){
-    // Attributed real beneficial intervention affects existing believers only;
-    // casting does not fabricate food, people or instant conversions.
-    if(!['rain','ripening','harvest','heal','efficiency'].includes(type))return;
-    for(const p of s.people)if(p.alive&&p.religionId===faith.id&&p.devotion>=20&&
-      dist(p,center)<=radius){
-      const old=p.devotion;
-      p.devotion=Math.min(100,p.devotion+(type==='heal'?2:1));
-      if(p.devotion>old)p.lastFaithEvidence={hour:s.hour,
-        cause:faith.name+'神蹟的直接見證',change:p.devotion-old};
-    }
-  }
   function personSettlement(s,p){
     const town=s.settlements.find(t=>t.id===p.settlementId);
     return town && town.householdIds.includes(p.householdId) &&

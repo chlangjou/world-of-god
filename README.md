@@ -55,6 +55,23 @@ The editor project is [`godot/project.godot`](godot/project.godot). See
 [PoC handoff, evidence, and remaining acceptance](docs/POC_HANDOFF.md) before
 interpreting this prototype as full Sandbox v1 or closing Issue #11.
 
+## Modular Web PoC v2
+
+The current experimental browser PoC is organized under [**poc/v2/**](poc/v2/README.md).
+Simulation, browser UI, CSS, adjustable balance profiles, guides and tests are
+maintained as separate files; the single-file HTML is an optional generated artifact.
+Formal design contracts and Godot remain unchanged.
+
+```sh
+cd poc/v2
+npm start         # http://localhost:8000
+npm test
+npm run smoke
+npm run check:agriculture
+```
+
+The root-level MVP-0 below stays available as a historical baseline.
+
 ## Web MVP-0 and shared references
 
 The independent Web MVP-0.2.1 from `web-mvp-0` is also available in this

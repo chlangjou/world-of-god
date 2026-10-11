@@ -155,5 +155,17 @@
     "constructionPriority": 14,
     "minimumFoodDays": 4,
     "explanation": "Public granary is autonomously built from locally owned public Wood/Stone and actual adult work. Existing shared food remains usable as temporary communal stock while unbuilt. No free inventories or automatic building."
+  },
+  "nativeResilience": {
+    "enabled": true,
+    "explanation": "Pre-existing native villages hold plausible pre-game stores. Farther from river-bank influence autonomously stockpile more food; no free food is created during simulation and no forced worker quotas are assigned.",
+    "dryRiskStartsAtRiverBankCells": 3,
+    "dryRiskFullAtRiverBankCells": 16,
+    "initialReserveDaysNearRiver": 15,
+    "initialReserveExtraDaysFarRiver": 19,
+    "activeReserveExtraDaysFarRiver": 20,
+    "relaxReserveExtraDaysFarRiver": 18,
+    "comfortableReserveExtraDaysFarRiver": 20,
+    "units": "Food days of actual local living population; river distance in map cells"
   }
 }

@@ -108,6 +108,7 @@
     $('pauseBtn').textContent=paused?'▶ 開始 / 繼續':'Ⅱ 暫停';
     $('pauseBtn').disabled=profileLoading;
     $('balanceProfile').value=state.agriculture?'agriculture':'original';
+    $('applyAgricultureBtn').disabled=profileLoading||!state.agriculture;
     $('mapStatus').textContent=profileLoading?'載入平衡設定中…':state.agriculture?'Agriculture v0.1 · 河流、季節與實際農作物':'Original · 原始平衡對照';
     $('mapTip').hidden=!armedRain;
     $('simHint').textContent=armedRain?'已選擇降雨：點擊地圖施展（Esc 取消）':st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。';
@@ -126,7 +127,7 @@
     const answered=state.religion.prayers.filter(p=>p.status==='answered').slice(-1);
     $('needsPanel').innerHTML=prayers.length?prayers.slice(-2).map(p=>`<div class="need-item"><strong>缺雨與糧食的祈禱</strong><small>第 ${Math.floor(p.createdAtHour/24)+1} 日 · ${p.by.length} 位信徒提出實際需要</small><small>請觀察雨後是否真的改善耕作，而非只看施法次數。</small></div>`).join(''):
       answered.length?'<div class="need-item"><strong>最近的祈求已獲得回應</strong><small>土地、勞動與食物真的出現變化；對應信徒的信仰已更新。</small></div>':'目前沒有迫切的祈禱。當水分、作物或糧食受到壓力，居民可能主動祈求。';
-    $('weatherNotice').textContent=`農田平均含水 ${format(st.avgMoisture*100)}% · 作物生長 ${format(st.avgCrop*100)}% · ${st.phase==='dry'?'土地正失水，乾旱是有限的自然變化。':'降水、地力與居民的勞動共同決定糧食。'}`;
+    $('weatherNotice').textContent=`農田 ${st.farmFields} 格${st.newFields?` · 新開墾 ${st.newFields} 格`:''} · 含水 ${format(st.avgMoisture*100)}% · ${st.phase==='dry'?'旱季，土地與工作效率降低':'農業依土壤、作物與實際勞動運作'}`;
     const town=state.settlements[0];
     $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
       `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
@@ -240,7 +241,19 @@
   $('exportBtn').onclick=exportSave;
   $('importBtn').onclick=()=>$('importFile').click();
   $('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;if(file.size>10*1024*1024){say('檔案超過 10 MB，無法匯入。');return;}restore(await file.text());e.target.value='';});
-  $('resetBtn').onclick=()=>{if(!confirm('要重新開始河谷世界嗎？目前未儲存的進度會消失。'))return;newWorld();say('新世界已生成。');};
+  $('applyAgricultureBtn').onclick=async()=>{
+    if(profileLoading)return;
+    if(!state.agriculture){say('目前使用 Original；請先選擇 Agriculture 世界。');return;}
+    if(!confirm('更新目前世界的 Agriculture 平衡參數？會保留人口、食物庫存、已開墾農田及歷史，不會重新創世。建議先儲存或匯出備份。'))return;
+    try{
+      const latest=await loadAgriculture();
+      const r=S.applyAgricultureProfile(state,latest);
+      if(!r.ok){say(r.reason);return;}
+      activeProfile=state.agriculture;
+      render();say('已套用最新農業產能與擴張規則；世界歷史與食物存量完整保留。');
+    }catch(e){say('更新失敗：'+e.message);}
+  };
+    $('resetBtn').onclick=()=>{if(!confirm('要重新開始河谷世界嗎？目前未儲存的進度會消失。'))return;newWorld();say('新世界已生成。');};
   $('helpBtn').onclick=()=>$('infoDialog').showModal();$('closeHelp').onclick=()=>$('infoDialog').close();
   // New playtests start with the latest experimental Agriculture profile.
   // Loading failure is explicit and falls back to the reproducible Original rules.

@@ -384,7 +384,8 @@ test('a 4,000-day Agriculture save can adopt current profile without inventory c
 test('adult partners can form new households without conjured housing or transferred food',()=>{
   const profile=require('../config/balance-agriculture-v0.1.json');
   const s=W.create({seed:'valley-spring-01',balanceProfile:profile});
-  afterDays(s,299);
+  // The original village normally completes settlement founding after day 300.
+  afterDays(s,389);
   const a=s.people.find(p=>p.id==='p3'),b=s.people.find(p=>p.id==='p6');
   for(const p of [a,b]){p.age=22;p.stage='adult';p.health=100;p.hunger=0;p.partnerId=null;}
   b.genderRole='gestate';a.genderRole='fertilize';

@@ -12,8 +12,9 @@ cd poc/v2
 npm start
 ```
 
-開啟 **http://localhost:8000/**。新世界預設 Agriculture v0.1，
-可選 Original 做 A/B。因為 JSON Profile 由瀏覽器 `fetch` 載入，
+開啟 **http://localhost:8000/**。新世界預設 Agriculture v0.1、三座已有人口的
+**原生村落**，以及位於不同區域的 AI 神。可關閉 AI（新世界仍有原住民），
+或選 Original 做 A/B。因為 JSON Profile 由瀏覽器 `fetch` 載入，
 **不要直接使用 `file://` 雙擊原始 `index.html`**。
 
 「歷史」面板改為獨立的垂直捲動區，最新事件排在最上方；預設保留最近 **200** 筆重大事件（超過後刪除最舊者），不影響整頁無捲動原則。舊版預設 130 筆的存檔載入後會升級上限，但已遭截斷的歷史無法還原。
@@ -34,7 +35,9 @@ npm start
 | `config/balance-agriculture-v0.1.json` | 目前可用的 Agriculture、成家、拓荒實驗數值 |
 | `config/religion-propagation-v0.1.json` | 居民閒暇傳道、家庭教育及聚落宗教傳播參數 |
 | `config/divine-powers-v0.1.json` | 8 種新增神蹟的 DP／冷卻／強度／持續期及傳教反應參數 |
-| `config/opponent-v0.1.json` | 單一 AI 對手神的初始信徒、神力、決策間隔及傳教神諭參數 |
+| `config/opponent-v0.1.json` | 歷史混居型對手 Profile（供舊存檔與既有測試相容） |
+| `config/opponent-v0.2.json` | **新世界預設**的兩神分隔起始地、原生村數量及對手策略 |
+| `config/balance-agriculture-v0.1.json` → `nativeResilience` | 遠離水源的原生村初始存糧和自主儲糧天數目標 |
 | `config/balance-agriculture-v0.1.json` → `granary` | 各聚落自治糧倉建造的建材、勞力及優先度 |
 | `config/balance-default.json` | Original 的唯讀快照；核心預設仍在 `src/sim.js` |
 | `docs/` | Architecture、UI Guide、Agriculture 驗算紀錄 |
@@ -46,6 +49,17 @@ npm start
 Religion Propagation v0.1 讓成人信徒在空閒時間傳道、兒童從虔誠家庭逐步形成信仰、鄰近聚落自然交流，並讓 Priest 轉傳 Saint 的 Oracle；宗教狀態可在聚落檢視。[詳細機制](docs/RELIGION_PROPAGATION.md)。
 
 Opponent v0.1 **已導入單一 AI 神（暮影信仰）**：新世界預設開啟，與玩家共用真實人口、聚落、農地及農業運算，但雙方各自擁有神力、技能／冷卻、Saint、Priest、Oracle；AI 會自主傳教、發佈神諭、施展支援型神蹟，條件允許時嘗試干擾對方 Priest。居民在 40 以上不因一般傳教而動搖，低於 40 才能逐步失信，低於 20 才可能改宗。頂端可切換「對手 AI 神／無對手」，切換會重新創世；**讀取舊存檔不會強制新增 AI**。地圖珊瑚色標記為對手居民，聚落面板顯示雙宗教人數。 [機制、參數與驗證](docs/OPPONENT_V0_1.md)。
+
+**World Genesis / Opponent v0.2 已實作：** 玩家與 AI 神分別從河谷不同位置開始，
+彼此不在出生時爭奪同一群家戶；三座原生村原本就有居民、住屋、農田及既有存糧，
+初始未歸屬任何神明。選址不再採固定座標，而是檢查距離、水源與資源，
+讓玩家／AI 一側各有一座機會相近的原生村，中央村則接近雙方等距。
+遠河聚落會自主提高儲糧目標，而非憑空在運作時生成食物。
+快進中出現玩家信徒的祈禱會切回 **1×** 並定位；
+AI 神蹟傷害或有效動搖玩家信眾會**暫停**並標出受影響位置。
+這些中斷只影響瀏覽器播放，不改寫模擬時間及運算規則。
+[世界創生、事件中斷與可調參數](docs/WORLD_GENESIS_NATIVE_V0_2.md)。
+v0.1 的原始混居模式仍可經舊存檔讀取，不會強制遷移原有人口。
 
 Priest Interaction v0.2 加入 Priest／Saint 專屬地圖顏色、祭司彙整信徒真實祈願的可點選泡泡，以及對無信仰／低 Devotion 異教徒的加強傳道。 [互動與對照說明](docs/PRIEST_INTERACTION.md)。
 
@@ -70,7 +84,7 @@ npm run check:agriculture
 npm run build:standalone  # 可選，dist/ 不入庫
 ```
 
-測試包括對手神的獨立神力、冷卻、宗教角色、傳教、神諭、神蹟和 deterministic replay；以及 8 種新增 Miracle 與 Religion Spread 的直接功能檢查，並保留 4,000 日農業、土地資源守恆、自主成家、多聚落、宗教家庭傳承、傳道、Oracle 接力與可重現性的既有回歸；
+測試包括新增原生村公平性、地理水源風險、自主儲糧、延長旱季生存和 deterministic replay；對手神的獨立神力、冷卻、宗教角色、傳教、神諭、神蹟和 deterministic replay；以及 8 種新增 Miracle 與 Religion Spread 的直接功能檢查，並保留 4,000 日農業、土地資源守恆、自主成家、多聚落、宗教家庭傳承、傳道、Oracle 接力與可重現性的既有回歸；
 已加入「三筆需求定位／翻頁／Priest 定位／自動清除」直接互動測試；仍需實際瀏覽器檢查 1280×720／1366×768／1920×1080 佈局。
 
 ## 存檔

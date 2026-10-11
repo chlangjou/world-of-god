@@ -369,6 +369,27 @@
     s.settlements.push(t);
     genesisFieldPatches(s,center);
   }
+  function nativeGenesisSites(s,otherCamp){
+    return [
+      {x:Math.min(s.width-7,s.camp.x+17),y:Math.min(s.height-8,s.camp.y+8)},
+      {x:Math.max(6,otherCamp.x-12),y:Math.min(s.height-8,otherCamp.y+8)},
+      {x:Math.round((s.camp.x+otherCamp.x)/2)-5,
+        y:Math.round((s.camp.y+otherCamp.y)/2)+10},
+      {x:Math.round(s.width*.5),y:Math.round(s.height*.85)}
+    ];
+  }
+  function populateNativeVillages(s,sites,villages=3,homes=3){
+    for(let i=0;i<villages;i++){
+      const site=nearestLand(s,sites[i].x,sites[i].y);
+      addNativeVillage(s,i,site,homes);
+    }
+  }
+  function generateSoloNativeWorld(s){
+    // A single God still enters an already populated world, not a vacant map.
+    // Neutral villages do not depend on an opposing deity.
+    const distant=locateOpponentOrigin(s,29);
+    populateNativeVillages(s,nativeGenesisSites(s,distant));
+  }
   function generateSeparatedOrigins(s,opponent){
     s.opponentCamp=locateOpponentOrigin(s,opponent.minimumOriginDistance);
     const ids=opponent.initialHouseholdIndexes;
@@ -386,17 +407,8 @@
       }
     }
     genesisFieldPatches(s,s.opponentCamp);
-    const sites=[
-      {x:Math.min(s.width-7,s.camp.x+17),y:Math.min(s.height-8,s.camp.y+8)},
-      {x:Math.max(6,s.opponentCamp.x-12),y:Math.min(s.height-8,s.opponentCamp.y+8)},
-      {x:Math.round((s.camp.x+s.opponentCamp.x)/2)-5,
-        y:Math.round((s.camp.y+s.opponentCamp.y)/2)+10},
-      {x:Math.round(s.width*.5),y:Math.round(s.height*.85)}
-    ];
-    for(let i=0;i<opponent.nativeVillages;i++){
-      const site=nearestLand(s,sites[i].x,sites[i].y);
-      addNativeVillage(s,i,site,opponent.nativeHouseholdsPerVillage);
-    }
+    populateNativeVillages(s,nativeGenesisSites(s,s.opponentCamp),
+      opponent.nativeVillages,opponent.nativeHouseholdsPerVillage);
   }
   function create(config = {}) {
     const rules = rulesFrom(config);
@@ -407,9 +419,11 @@
     const divinePowers=divinePowerRules(config.divineProfile);
     const opponent=opponentRules(config.opponentProfile);
     const initialMoisture = clamp(num(config.moisture, .52), .2, .9);
+    const nativeWorld=config.worldGenesisMode==='native'||
+      opponent?.originMode==='separated-native';
     const s = { version: VERSION, seed, rules, rng: hash(seed), religionRng:hash(seed+'|religion-v0.1'), hour: 0, tick: 0,
       width: rules.width, height: rules.height, tiles: [], people: [], households: [], settlements: [],
-      camp: null, religionPropagation, divinePowers,
+      camp: null, nativeWorld, religionPropagation, divinePowers,
       opponent:opponent?{...opponent,lastActionDay:-1,turns:0,casts:0,oracleIssues:0}:null,
       opponentRng:opponent?hash(seed+'|opponent-v0.1'):null,
       opponentReligion:opponent?{id:'r2',godId:'g2',name:opponent.name,
@@ -432,6 +446,7 @@
       metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
     generate(s, initialMoisture);
     if(opponent?.originMode==='separated-native')generateSeparatedOrigins(s,opponent);
+    else if(!opponent&&nativeWorld)generateSoloNativeWorld(s);
     else if(opponent){
       // Preserve previous v0.1 mixed-religion genesis for existing experiments.
       for(const i of opponent.initialHouseholdIndexes){
@@ -1475,15 +1490,14 @@
     for(const anchor of free.filter(h=>h.home)){
       // Player's Genesis families are reserved for the authentic first settlement,
       // not prematurely relabelled as the rival's outpost s2.
-      if(s.opponent?.originMode==='separated-native'&&
-        dist(anchor,s.camp)<=s.rules.settlementClusterDistance)continue;
+      if(s.nativeWorld&&dist(anchor,s.camp)<=s.rules.settlementClusterDistance)continue;
       const group=free.filter(h=>Math.hypot(h.x-anchor.x,h.y-anchor.y)<=F.outpostClusterRadius);
       const finished=group.filter(h=>h.home);
       if(group.length<F.outpostMinHouseholds||finished.length<F.outpostMinHuts)continue;
       const center={x:Math.round(finished.reduce((n,h)=>n+h.x,0)/finished.length),
                     y:Math.round(finished.reduce((n,h)=>n+h.y,0)/finished.length)};
       if(s.settlements.some(t=>dist(t,center)<=s.rules.settlementClusterDistance))continue;
-      const id='s'+Math.max(s.opponent?.originMode==='separated-native'?2:1,
+      const id='s'+Math.max(s.nativeWorld?2:1,
         s.settlements.reduce((n,t)=>Math.max(n,/^s\d+$/.test(t.id)?Number(t.id.slice(1)):0),0)+1);
       const town={id,name:'新拓聚落 '+id.slice(1),x:center.x,y:center.y,foundedAtHour:s.hour,
         householdIds:group.map(h=>h.id),storage:{food:0,wood:0,stone:0,fiber:0},granary:null,
@@ -1500,7 +1514,7 @@
     }
   }
   function updateSettlement(s) {
-    const separated=s.opponent?.originMode==='separated-native';
+    const separated=!!s.nativeWorld;
     if (!hasSettlement(s)||(separated&&!s.settlements.some(t=>t.id==='s1'))) {
       const near = s.households.filter(h => dist(h, s.camp) <= s.rules.settlementClusterDistance&&
         // A native settlement cannot simultaneously belong to a new faith's
@@ -1556,9 +1570,10 @@
       for(const h of s.households){
         if(!householdMembers(s,h).length||s.settlements.some(t=>t.householdIds.includes(h.id)))continue;
         const originIndex=Number(h.id.slice(1))-1;
-        const foundingFamily=s.opponent?.originMode==='separated-native'&&
-          originIndex>=0&&originIndex<s.rules.initialHouseholds&&h.migrated===0;
-        const homeCamp=foundingFamily&&s.opponent.initialHouseholdIndexes.includes(originIndex)?
+        const foundingFamily=s.nativeWorld&&originIndex>=0&&
+          originIndex<s.rules.initialHouseholds&&h.migrated===0;
+        const homeCamp=foundingFamily&&s.opponent?.originMode==='separated-native'&&
+          s.opponent.initialHouseholdIndexes.includes(originIndex)?
           s.opponentCamp:s.camp;
         const town=s.settlements.filter(t=>dist(t,h)<=s.rules.settlementClusterDistance&&
           (!foundingFamily||(!t.native&&dist(t,homeCamp)<=s.rules.settlementClusterDistance)))
@@ -2201,7 +2216,7 @@
       }
     }
     for(const p of s.people||[]) if(!s.households.some(h=>h.id===p.householdId && h.members.includes(p.id))) errors.push(`居民 ${p.id} 家戶不一致`);
-    if(s.opponent?.originMode==='separated-native'){
+    if(s.nativeWorld){
       const assigned=new Set();
       for(const town of s.settlements||[])for(const h of town.householdIds){
         if(assigned.has(h))errors.push('家戶同時隸屬不同聚落：'+h);

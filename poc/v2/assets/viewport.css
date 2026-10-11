@@ -195,3 +195,4 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
 
 /* Opponent identity is visible without extending the fixed-height UI. */
 .sw.rival{background:#cf7775}
+.sw.native{background:#bcd9d2}

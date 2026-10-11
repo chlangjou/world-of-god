@@ -414,8 +414,10 @@
         const valid=role==='center'?
           Math.abs(p.dp-p.da)<=(relaxed?5:3)&&
             p.dp>=12&&p.da>=12:
-          own>=(relaxed?9:12)&&own<=23&&
+          own>=(relaxed?9:14)&&own<=23&&
             opposite-own>=(relaxed?3:7)&&
+            (role!=='enemy'||relaxed||!others[1]||
+              Math.abs(own-others[1].dp)<=3.5)&&
             (role!=='player'||relaxed||p.y>=s.camp.y-2);
         if(!valid)continue;
         const score=p.quality-(role==='center'?

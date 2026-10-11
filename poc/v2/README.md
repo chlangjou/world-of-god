@@ -34,6 +34,7 @@ npm start
 | `config/balance-agriculture-v0.1.json` | 目前可用的 Agriculture、成家、拓荒實驗數值 |
 | `config/religion-propagation-v0.1.json` | 居民閒暇傳道、家庭教育及聚落宗教傳播參數 |
 | `config/divine-powers-v0.1.json` | 8 種新增神蹟的 DP／冷卻／強度／持續期及傳教反應參數 |
+| `config/opponent-v0.1.json` | 單一 AI 對手神的初始信徒、神力、決策間隔及傳教神諭參數 |
 | `config/balance-agriculture-v0.1.json` → `granary` | 各聚落自治糧倉建造的建材、勞力及優先度 |
 | `config/balance-default.json` | Original 的唯讀快照；核心預設仍在 `src/sim.js` |
 | `docs/` | Architecture、UI Guide、Agriculture 驗算紀錄 |
@@ -43,6 +44,8 @@ npm start
 每個聚落可利用當地共享木材、石材與居民勞力自行興建實體糧倉；未完工前，原有公共糧食仍能作為臨時共享儲備領用。[糧倉 PoC 說明](docs/GRANARY.md)。
 
 Religion Propagation v0.1 讓成人信徒在空閒時間傳道、兒童從虔誠家庭逐步形成信仰、鄰近聚落自然交流，並讓 Priest 轉傳 Saint 的 Oracle；宗教狀態可在聚落檢視。[詳細機制](docs/RELIGION_PROPAGATION.md)。
+
+Opponent v0.1 **已導入單一 AI 神（暮影信仰）**：新世界預設開啟，與玩家共用真實人口、聚落、農地及農業運算，但雙方各自擁有神力、技能／冷卻、Saint、Priest、Oracle；AI 會自主傳教、發佈神諭、施展支援型神蹟，條件允許時嘗試干擾對方 Priest。居民在 40 以上不因一般傳教而動搖，低於 40 才能逐步失信，低於 20 才可能改宗。頂端可切換「對手 AI 神／無對手」，切換會重新創世；**讀取舊存檔不會強制新增 AI**。地圖珊瑚色標記為對手居民，聚落面板顯示雙宗教人數。 [機制、參數與驗證](docs/OPPONENT_V0_1.md)。
 
 Priest Interaction v0.2 加入 Priest／Saint 專屬地圖顏色、祭司彙整信徒真實祈願的可點選泡泡，以及對無信仰／低 Devotion 異教徒的加強傳道。 [互動與對照說明](docs/PRIEST_INTERACTION.md)。
 
@@ -67,7 +70,7 @@ npm run check:agriculture
 npm run build:standalone  # 可選，dist/ 不入庫
 ```
 
-測試包括 8 種新增 Miracle 與 Religion Spread 的直接功能檢查，並保留 4,000 日農業、土地資源守恆、自主成家、多聚落、宗教家庭傳承、傳道、Oracle 接力與可重現性的既有回歸；
+測試包括對手神的獨立神力、冷卻、宗教角色、傳教、神諭、神蹟和 deterministic replay；以及 8 種新增 Miracle 與 Religion Spread 的直接功能檢查，並保留 4,000 日農業、土地資源守恆、自主成家、多聚落、宗教家庭傳承、傳道、Oracle 接力與可重現性的既有回歸；
 已加入「三筆需求定位／翻頁／Priest 定位／自動清除」直接互動測試；仍需實際瀏覽器檢查 1280×720／1366×768／1920×1080 佈局。
 
 ## 存檔

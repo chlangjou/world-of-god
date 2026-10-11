@@ -45,7 +45,7 @@ Religion Propagation v0.1 讓成人信徒在空閒時間傳道、兒童從虔誠
 
 Priest Interaction v0.2 加入 Priest／Saint 專屬地圖顏色、祭司彙整信徒真實祈願的可點選泡泡，以及對無信仰／低 Devotion 異教徒的加強傳道。 [互動與對照說明](docs/PRIEST_INTERACTION.md)。
 
-Miracle / Oracle 下一批擴充已確認為 **Harvest、Heal、Drought、Lightning、Religion Spread**（四種神蹟、一種神諭）。`Food Reserve` 因現階段難以與已存在的 `food.produce`／自治儲糧形成可觀察的玩法差異而暫緩，不列入 UI。[擴充規格與驗收界線](docs/DIVINE_POWERS_EXPANSION_V0_1.md)。此為**已確認待實作範圍**，目前尚未宣稱能在試玩版施放。
+Miracle / Oracle 下一批擴充已確認為 **Harvest、Heal、Efficiency、Drought、Lightning、Confusion、Blindness、Religion Spread**（七種神蹟、一種神諭）。其中 Efficiency 暫時強化己方信徒的實際行動效率；Confusion 干擾決策與協調；Blindness 影響資源感知與可行行動，三者不可只是相同的生產力倍率。`Food Reserve` 因現階段難以與已存在的 `food.produce`／自治儲糧形成可觀察的玩法差異而暫緩，不列入 UI。[擴充規格與驗收界線](docs/DIVINE_POWERS_EXPANSION_V0_1.md)。此為**已確認待實作範圍**，目前尚未宣稱能在試玩版施放。
 
 正式規格： [Core Principles](../../docs/CORE_PRINCIPLES.md)、
 [Population](../../docs/POPULATION_MODEL.md)、

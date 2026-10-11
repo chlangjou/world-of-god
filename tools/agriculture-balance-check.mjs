@@ -95,9 +95,12 @@ assert.equal(riverInfluence(10), 0.475);
 assert.ok(Math.abs(skillAfter(1080) - 0.923) < 0.003);
 assert.equal(sample[0].plots, 118);
 if (process.argv.includes('--check')) {
-  const expected = {rain:143.8, mild:110.9, dry:70.2};
+  // The historical q=0.20 reference is retained in documentation.
+  // Land-only capacity should scale linearly with the active q parameter.
+  const scale=candidate.land.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture/0.20;
+  const expected = {rain:143.8*scale, mild:110.9*scale, dry:70.2*scale};
   for (const r of sample) assert.ok(Math.abs(r.landCoveragePct-expected[r.season]) <= 0.25, `Unexpected ${r.season} land coverage`);
-  const expectedMeans={rain:151,mild:117,dry:74};
+  const expectedMeans={rain:151*scale,mild:117*scale,dry:74*scale};
   for (const s of ['rain','mild','dry']) assert.ok(Math.abs(seasonSummary[s].landCoverageAvgPct-expectedMeans[s])<3,`Unexpected ${s} 40-map mean`);
 }
 const output={kind:'candidate-analytical-capacity-only',sourceSimulatorVersion:Game.VERSION,profileId:candidate.profileId,
@@ -106,7 +109,7 @@ const output={kind:'candidate-analytical-capacity-only',sourceSimulatorVersion:G
   seedCases:cases, additionalSeedCount:extra.length, additionalSeedSummary:seasonSummary};
 if (process.argv.includes('--json')) console.log(JSON.stringify(output,null,2));
 else {
-  console.log(`PoC agriculture candidate: ${output.profileId}; gameplay now supports optional runtime integration`);
+  console.log(`PoC agriculture: ${output.profileId}; land coefficient=${candidate.land.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture} (historical 0.20)`);
   console.log(`Daily need=${output.populationDemandPerDay}, farm-workday skill:`,output.experience);
   console.table(cases.map(r=>({seed:r.seed,season:r.season,plots:r.plots,landPct:r.landCoveragePct,workerDay:r.workerFoodPerWorkday,laborPct:r.foodLaborSharePct,actualPct:r.sustainableCoveragePct})));
   console.table(seasonSummary);

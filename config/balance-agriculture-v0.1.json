@@ -7,7 +7,7 @@
     "time": "simulated days and actual full 8-hour food workdays",
     "food": "existing abstract Food units"
   },
-  "description": "Selectable experimental Agriculture v0.1 Web PoC balance: physical river/soil/crop-stock production and autonomous work response; numerical parameters are tunable.",
+  "description": "High-growth experimental Agriculture v0.1: 4× land yield and expandable cultivated area. No imposed farming quotas or conjured Food; all numeric tuning remains in this profile.",
   "river": {
     "distanceOrigin": "river bank (map centerline distance minus half-width of 1.6 cells, clamped to zero)",
     "fullEffectThroughCells": 5,
@@ -56,11 +56,16 @@
     ]
   },
   "land": {
-    "foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture": 0.2,
+    "foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture": 0.8,
     "referenceMoisture": 0.9,
     "moistureExponent": 0.8,
     "harvestMechanic": "actual yield is limited by accumulated unharvested crop stock and worker capacity; do not create food by formula alone",
-    "cropStockCapacityDays": 2
+    "cropStockCapacityDays": 2,
+    "normalSeasonLandCapacityTargetRatio": 1.6,
+    "autonomousExpansionEnabled": true,
+    "minimumCultivationFertility": 0.45,
+    "workReachCells": 9,
+    "expansionNotes": "Autonomous agricultural work may cultivate one suitable reachable meadow when mild-season field potential is under population need × target ratio; this consumes the work shift and yields no Food until crops regrow."
   },
   "worker": {
     "foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment": 9.5,
@@ -114,6 +119,7 @@
     "reserveTargetDays": 18,
     "reserveRelaxDays": 18,
     "reserveComfortDays": 26,
-    "explanation": "Comfort/relaxation scores influence autonomous work decisions based on physically accessible household and settlement reserves; not job quotas."
+    "explanation": "Comfort/relaxation scores influence autonomous work decisions based on physically accessible household and settlement reserves; not job quotas.",
+    "comfortableCareBonus": 8
   }
 }

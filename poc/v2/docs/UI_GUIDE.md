@@ -157,3 +157,9 @@ Suggested rollout: (1) fixed viewport and map-first layout; (2) compact panels, 
 - The preferences are **presentation-only, in-memory for the open browser page**, including world reset/load within that page. They are not Divine state, do not alter DP/cooldown/Mastery, are not written into the deterministic world save, and do not claim persistence across a browser refresh.
 - Interaction acceptance covers multiple Miracle round trips, instant/timed switching, Miracle/Oracle tab switches, direct cast with restored parameters, world reset/load and changed upper bounds. No A/B balance experiment is involved.
 
+## 12. Per-cast cooldown preview (2026-10-11)
+
+- The Miracle panel displays **projected cooldown in simulated days before casting**, updating with radius, intensity, duration, selected skill and its Mastery. A wide 5-day Rain cast may have a longer cooldown than a tiny one, but it must be meaningfully shorter than an otherwise identical 30-day cast at usable settings.
+- A successful cast starts the cooldown immediately. The remaining counter uses the **authoritative** `readyAtHour` and keeps running on simulated time, not wall time or the duration of the World effect. Preview values come from the same simulation evaluator and are quantized to the actual simulation tick.
+- Cooldown-active buttons remain disabled; changing the duration does not override an existing cooldown, reset a clock or trigger a cast. Instant effects have no duration-based cooldown scaling. Separate skills still have separate clocks.
+

@@ -1,0 +1,149 @@
+{
+  "profileId": "agriculture-balance-v0.1",
+  "status": "experimental-runtime-profile",
+  "loadedByRuntime": true,
+  "units": {
+    "distance": "map cells from the riverbank",
+    "time": "simulated days and actual full 8-hour food workdays",
+    "food": "existing abstract Food units"
+  },
+  "description": "High-growth experimental Agriculture v0.1: 4× land yield and expandable cultivated area. No imposed farming quotas or conjured Food; all numeric tuning remains in this profile.",
+  "river": {
+    "distanceOrigin": "river bank (map centerline distance minus half-width of 1.6 cells, clamped to zero)",
+    "fullEffectThroughCells": 5,
+    "zeroEffectAtCells": 15,
+    "nearBankInfluence": 0.95,
+    "falloff": "linear",
+    "meaning": "seasonal moisture contribution potential, not fixed soil moisture",
+    "riverHalfWidthCells": 1.6
+  },
+  "seasons": {
+    "rain": {
+      "backgroundMoisture": 0.76,
+      "riverWaterAvailability": 1,
+      "diagnosticFoodLaborShare": 0.08
+    },
+    "mild": {
+      "backgroundMoisture": 0.46,
+      "riverWaterAvailability": 0.54,
+      "diagnosticFoodLaborShare": 0.15
+    },
+    "dry": {
+      "backgroundMoisture": 0.12,
+      "riverWaterAvailability": 0.4,
+      "diagnosticFoodLaborShare": 0.5
+    },
+    "cycleDays": 160,
+    "dryWindows": [
+      [
+        14,
+        29
+      ]
+    ],
+    "rainWindows": [
+      [
+        0,
+        5
+      ],
+      [
+        32,
+        39
+      ],
+      [
+        68,
+        74
+      ]
+    ]
+  },
+  "land": {
+    "foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture": 0.8,
+    "referenceMoisture": 0.9,
+    "moistureExponent": 0.8,
+    "harvestMechanic": "actual yield is limited by accumulated unharvested crop stock and worker capacity; do not create food by formula alone",
+    "cropStockCapacityDays": 2,
+    "normalSeasonLandCapacityTargetRatio": 1.6,
+    "autonomousExpansionEnabled": true,
+    "minimumCultivationFertility": 0.45,
+    "workReachCells": 9,
+    "expansionNotes": "Autonomous agricultural work may cultivate one suitable reachable meadow when mild-season field potential is under population need × target ratio; this consumes the work shift and yields no Food until crops regrow.",
+    "pioneerCultivationBonus": 4.5
+  },
+  "worker": {
+    "foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment": 9.5,
+    "skillOutputIntercept": 0.6,
+    "skillOutputSlope": 0.8,
+    "environmentMoistureExponent": 3,
+    "startingSkillReference": 0.45,
+    "startingSkillRange": [
+      0.4,
+      0.5
+    ],
+    "learningTimeConstantActualFoodWorkdays": 550,
+    "learningRule": "S(n) = 1 - (1 - S0) * exp(-n / tau); n counts food workdays, not calendar days"
+  },
+  "soilDynamics": {
+    "referenceResponseTimeDays": 3,
+    "status": "scenario-dependent exploratory choice; not yet accepted as a season timing rule",
+    "shortRainCaveat": "6-8 day rainy spells can have lower realized harvest than steady-state rain potential"
+  },
+  "calibration": {
+    "referenceSeed": "calm-river",
+    "population": 40,
+    "workCapableAdults": 16,
+    "dependents": 24,
+    "adultFoodNeedPerDay": 0.38,
+    "dependentFoodNeedPerDay": 0.25,
+    "totalFoodNeedPerDay": 12.08,
+    "landSupplyRatioTargets": {
+      "rain": 1.5,
+      "mild": 1.15,
+      "dryMin": 0.6,
+      "dryMax": 0.8
+    },
+    "laborShareTargetsOfWorkCapablePopulation": {
+      "rainMin": 0.06,
+      "rainMax": 0.08,
+      "mildMin": 0.1,
+      "mildMax": 0.2,
+      "dryStressMin": 0.4,
+      "dryStressMax": 0.5
+    },
+    "targetInterpretation": "reference scenario diagnostics, not jobs quotas, hard gameplay gates, or guarantees for random world seeds"
+  },
+  "reproducibility": {
+    "report": "docs/AGRICULTURE_BALANCE.md",
+    "calculator": "tools/agriculture-balance-check.mjs",
+    "sampleMapAccess": "farm tile within +/-9 cells X/Y of at least one initial household; excludes later migrations and dynamically farmed land",
+    "sourceSimulatorGitBlob": "52b73c277b1a6111fa787374aeb5d300747d2e9f"
+  },
+  "workDemand": {
+    "reserveTargetDays": 18,
+    "reserveRelaxDays": 18,
+    "reserveComfortDays": 26,
+    "explanation": "Comfort/relaxation scores influence autonomous work decisions based on physically accessible household and settlement reserves; not job quotas.",
+    "comfortableCareBonus": 8
+  },
+  "familyExpansion": {
+    "enabled": true,
+    "minPairAge": 18,
+    "maxPairAge": 48,
+    "minHealth": 40,
+    "maxAgeGap": 18,
+    "pairRange": 22,
+    "pairChancePerMonth": 0.45,
+    "maxCouplesPerMonth": 2,
+    "requiredFoodDays": 9,
+    "startupFoodDays": 9,
+    "communalSafetyDays": 6,
+    "homeSpacing": 3,
+    "homeRadius": 12,
+    "pioneerAfterHouseholds": 12,
+    "pioneerChance": 0.55,
+    "pioneerMinRadius": 17,
+    "pioneerMaxRadius": 24,
+    "outpostNeighborRadius": 8,
+    "outpostMinHouseholds": 3,
+    "outpostMinHuts": 3,
+    "outpostClusterRadius": 9
+  }
+}

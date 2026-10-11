@@ -428,10 +428,15 @@
   function agricultureCultivate(s,p,h) {
     const L=s.agriculture.land;
     if(!L.autonomousExpansionEnabled)return false;
-    const demand=living(s).reduce((n,v)=>n+(v.stage==='child'?s.rules.foodNeedChild:s.rules.foodNeedAdult),0);
-    if(agricultureMildCapacity(s)>=demand*L.normalSeasonLandCapacityTargetRatio)return false;
-    let chosen=null,best=-Infinity;
+    const town=accessibleSettlement(s,h);
+    const homes=town?s.households.filter(v=>accessibleSettlement(s,v)?.id===town.id&&householdMembers(s,v).length):[h];
+    const demand=homes.reduce((n,v)=>n+dailyFoodNeed(s,v),0);
     const reach=L.workReachCells;
+    let localCapacity=0;
+    for(const t of s.tiles)if(t.terrain==='field'&&homes.some(v=>
+      Math.abs(t.x-v.x)<=reach&&Math.abs(t.y-v.y)<=reach))localCapacity+=agricultureMildFieldYield(s,t);
+    if(localCapacity>=demand*L.normalSeasonLandCapacityTargetRatio)return false;
+    let chosen=null,best=-Infinity;
     for(let y=Math.max(0,h.y-reach);y<=Math.min(s.height-1,h.y+reach);y++)
       for(let x=Math.max(0,h.x-reach);x<=Math.min(s.width-1,h.x+reach);x++){
         const t=tile(s,x,y);
@@ -475,6 +480,18 @@
     const basic = security.town ? security.town.workDemand : null;
     const scarce = security.days < 4 || p.hunger > .35 || (basic && basic.foodPressure > .65);
     const field = nearestField(s, h);
+    // Pioneers without existing fields can choose cultivation as a real food
+    // activity. The work shift opens meadow; harvested Food still starts at zero.
+    const L=s.agriculture?.land;
+    let canCultivate=false;
+    if(L?.autonomousExpansionEnabled&&!field){
+      const reach=L.workReachCells;
+      for(let y=Math.max(0,h.y-reach);y<=Math.min(s.height-1,h.y+reach)&&!canCultivate;y++)
+        for(let x=Math.max(0,h.x-reach);x<=Math.min(s.width-1,h.x+reach);x++){
+          const t=tile(s,x,y);
+          if(t.terrain==='meadow'&&t.fertility>=L.minimumCultivationFertility){canCultivate=true;break;}
+        }
+    }
     const wood = nearestResource(s, h, 'wood');
     const fiber = nearestResource(s, h, 'fiber');
     const forage = nearestResource(s, h, 'food');
@@ -486,7 +503,9 @@
     const foodBias = call.score;
     const candidates = [];
     if (forage) candidates.push({ name: 'forage', score: 4.8 + (scarce ? 3.5 : 0) + p.proficiency.gather + foodBias, valid: true });
-    if (field) candidates.push({ name: 'farm', score: 4.4 + field.crop * 2.5 + (scarce ? 2.2 : 0) + p.proficiency.food + foodBias, valid: true });
+    if (field||canCultivate) candidates.push({ name: 'farm',
+      score:4.4+(field?.crop||0)*2.5+(scarce?2.2:0)+p.proficiency.food+foodBias+
+        (canCultivate?(L.pioneerCultivationBonus??4.5):0),valid:true });
     if (wood && (!h.home || publicMaterials || (basic && basic.housingPressure > .2))) candidates.push({ name: 'wood', score: (!h.home && h.inventory.wood < s.rules.hutWood ? 8.0 : publicMaterials ? 6.5 : 2.6) + p.proficiency.gather, valid: true });
     if (stone && publicStone) candidates.push({ name: 'stone', score: 6.0 + p.proficiency.gather, valid: true });
     if (fiber && !h.home) candidates.push({ name: 'fiber', score: h.inventory.fiber < s.rules.hutFiber ? 7.5 + p.proficiency.gather : 1, valid: true });
@@ -509,7 +528,7 @@
     const foodDays = Number.isFinite(security.days) ? security.days.toFixed(1) : '充足';
     const workReasons = {
       forage: `附近仍有可採集的野生食物；家戶可及存糧約 ${foodDays} 天`,
-      farm: `附近農田作物成熟度 ${Math.round((field?.crop || 0)*100)}%，農業熟練度 ${Math.round(p.proficiency.food*100)}%；家戶可及存糧約 ${foodDays} 天`,
+      farm: field?`附近農田作物成熟度 ${Math.round(field.crop*100)}%，農業熟練度 ${Math.round(p.proficiency.food*100)}%；家戶可及存糧約 ${foodDays} 天`:`附近適合開墾的草地可供農業發展；家戶可及存糧約 ${foodDays} 天`,
       wood: `住屋或聚落需要木材；家戶木材 ${h.inventory.wood.toFixed(1)}，附近可伐木`,
       fiber: `尚須纖維建屋；家戶纖維 ${h.inventory.fiber.toFixed(1)}`,
       stone: `附近可採石，公共建材需求尚未滿足`,
@@ -534,7 +553,7 @@
     if (choice.name === 'forage' && forage) {
       const amount = Math.min(forage.forage, .6 + p.proficiency.gather * .45);
       forage.forage -= amount; distribute(s, h, 'food', amount);
-    } else if (choice.name === 'farm' && field) {
+    } else if (choice.name === 'farm' && (field||canCultivate)) {
       if (s.agriculture) agricultureHarvest(s,p,h);
       else if (field.crop >= .47) {
         const amount = (1.5 + p.proficiency.food * .8) * field.crop * field.fertility * s.rules.farmYieldMultiplier;

@@ -91,15 +91,23 @@
     r.childOrdinaryLearningChance=clamp(r.childOrdinaryLearningChance,0,1);
     return r;
   }
-  const OPPONENT_DEFAULTS=Object.freeze({profileId:'opponent-v0.1',enabled:true,
-    name:'暮影信仰',initialHouseholdIndexes:[5,6],championDevotion:53,familyDevotion:29,
-    initialDp:42,startDay:14,decisionIntervalDays:12,spreadOracleDurationDays:150,
-    offensiveEveryTurns:4});
+  const OPPONENT_DEFAULTS=Object.freeze({profileId:'opponent-v0.2',enabled:true,
+    name:'暮影信仰',originMode:'separated-native',initialHouseholdIndexes:[4,5,6,7],
+    nativeVillages:3,nativeHouseholdsPerVillage:3,minimumOriginDistance:29,
+    championDevotion:53,familyDevotion:29,initialDp:42,startDay:14,
+    decisionIntervalDays:12,spreadOracleDurationDays:150,offensiveEveryTurns:4});
+  const OPPONENT_LEGACY_DEFAULTS=Object.freeze({...OPPONENT_DEFAULTS,
+    profileId:'opponent-v0.1',originMode:'mixed',initialHouseholdIndexes:[5,6],
+    nativeVillages:0});
   function opponentRules(profile){
-    if(profile?.profileId!==OPPONENT_DEFAULTS.profileId||profile.enabled===false)return null;
-    const r={...OPPONENT_DEFAULTS};
+    if(![OPPONENT_DEFAULTS.profileId,OPPONENT_LEGACY_DEFAULTS.profileId].includes(profile?.profileId)||
+      profile.enabled===false)return null;
+    const base=profile.profileId===OPPONENT_LEGACY_DEFAULTS.profileId?
+      OPPONENT_LEGACY_DEFAULTS:OPPONENT_DEFAULTS;
+    const r={...base};
     for(const k of ['championDevotion','familyDevotion','initialDp','startDay',
-      'decisionIntervalDays','spreadOracleDurationDays','offensiveEveryTurns'])
+      'decisionIntervalDays','spreadOracleDurationDays','offensiveEveryTurns',
+      'nativeVillages','nativeHouseholdsPerVillage','minimumOriginDistance'])
       if(Number.isFinite(profile[k]))r[k]=profile[k];
     r.championDevotion=Math.round(clamp(r.championDevotion,40,79));
     r.familyDevotion=Math.round(clamp(r.familyDevotion,20,39));
@@ -108,10 +116,14 @@
     r.decisionIntervalDays=Math.round(clamp(r.decisionIntervalDays,3,90));
     r.spreadOracleDurationDays=Math.round(clamp(r.spreadOracleDurationDays,30,720));
     r.offensiveEveryTurns=Math.round(clamp(r.offensiveEveryTurns,2,30));
+    r.nativeVillages=Math.round(clamp(r.nativeVillages,0,4));
+    r.nativeHouseholdsPerVillage=Math.round(clamp(r.nativeHouseholdsPerVillage,3,4));
+    r.minimumOriginDistance=clamp(r.minimumOriginDistance,26,45);
+    r.originMode=base.originMode==='mixed'?'mixed':'separated-native';
     r.initialHouseholdIndexes=Array.isArray(profile.initialHouseholdIndexes)?
-      [...new Set(profile.initialHouseholdIndexes.filter(n=>Number.isInteger(n)&&n>=3&&n<10))].slice(0,3):
-      OPPONENT_DEFAULTS.initialHouseholdIndexes;
-    r.name=typeof profile.name==='string'?profile.name.slice(0,30):OPPONENT_DEFAULTS.name;
+      [...new Set(profile.initialHouseholdIndexes.filter(n=>Number.isInteger(n)&&n>=3&&n<10))]
+        .slice(0,r.originMode==='mixed'?3:5):base.initialHouseholdIndexes.slice();
+    r.name=typeof profile.name==='string'?profile.name.slice(0,30):base.name;
     return r;
   }
   function allFaiths(s){return s.opponent?.enabled?[s.religion,s.opponentReligion]:[s.religion];}
@@ -261,6 +273,131 @@
       if (t.terrain === 'meadow' && rand(s) > .6) { t.terrain = 'field'; t.crop = .35; }
     }
   }
+  // World-first genesis. A God does not own the land simply because it spawns
+  // nearby: native settlements already exist, with real homes and unaligned people.
+  function genesisFieldPatches(s,center){
+    let patches=0;
+    for(let y=Math.max(0,Math.floor(center.y-10));y<=Math.min(s.height-1,Math.ceil(center.y+10));y++)
+      for(let x=Math.max(0,Math.floor(center.x-10));x<=Math.min(s.width-1,Math.ceil(center.x+10));x++){
+        const t=tile(s,x,y),d=dist(t,center);
+        if(t.terrain!=='meadow'||d<=2||d>=10||t.fertility<.52)continue;
+        if(rand(s)<.37)continue;
+        t.terrain='field';t.crop=.25+rand(s)*.43;patches++;
+      }
+    if(patches<8)for(let y=Math.max(0,Math.floor(center.y-8));y<=Math.min(s.height-1,Math.ceil(center.y+8));y++)
+      for(let x=Math.max(0,Math.floor(center.x-8));x<=Math.min(s.width-1,Math.ceil(center.x+8));x++){
+        const t=tile(s,x,y);
+        if(t.terrain==='meadow'&&dist(t,center)<8&&rand(s)>.55){
+          t.terrain='field';t.crop=.35;patches++;
+        }
+      }
+    return patches;
+  }
+  function locateOpponentOrigin(s,minimumDistance){
+    const river=y=>riverX(s,y);
+    let best=null,score=-Infinity;
+    // Search the opposite river bank and north-west side of this compact PoC
+    // map. No random choice or hard-coded occupied tile; both have resources.
+    for(let y=9;y<Math.floor(s.height*.5)-4;y++)
+      for(let x=7;x<Math.floor(s.width*.43);x++){
+        const t=tile(s,x,y),d=dist(t,s.camp),fromRiver=river(y)-x;
+        if(t.terrain!=='meadow'||d<minimumDistance||fromRiver<6||fromRiver>22)continue;
+        let availability=0;
+        for(let yy=Math.max(1,y-7);yy<=Math.min(s.height-2,y+7);yy+=2)
+          for(let xx=Math.max(1,x-7);xx<=Math.min(s.width-2,x+7);xx+=2){
+            const item=tile(s,xx,yy);
+            availability+=item.terrain==='meadow'?.08:item.terrain==='forest'?.07:
+              item.terrain==='river'?-0.08:0;
+          }
+        const quality=availability+t.fertility*.5+t.moisture*.5-
+          Math.abs(fromRiver-12)*.03-Math.abs(y-14)*.006;
+        if(quality>score){best={x,y};score=quality;}
+      }
+    // The relaxed fallback is used only when a very small/crowded custom map
+    // lacks a candidate. It is still opposite the player with no extra people.
+    return best||nearestLand(s,Math.round(s.width*.24),Math.round(s.height*.18));
+  }
+  function placeGenesisHouse(s,h,center,index,count){
+    const angle=Math.PI*2*index/count,extent=2.3+(index%2)*.7;
+    const pos=nearestLand(s,center.x+Math.cos(angle)*extent,
+      center.y+Math.sin(angle)*extent);
+    h.x=pos.x;h.y=pos.y;
+    for(let j=0;j<h.members.length;j++){
+      const p=s.people.find(q=>q.id===h.members[j]);if(!p)continue;
+      p.x=pos.x+(j-1)*.35;p.y=pos.y+(j-1)*.2;p.settlementId=null;
+    }
+  }
+  function addNativeVillage(s,index,center,number){
+    const names=['河岸原生村','北林原生村','谷地原生村','南野原生村'];
+    const villageId='n'+(index+1),memberHomes=[];
+    for(let i=0;i<number;i++){
+      const id='h'+(s.households.length+1);
+      const angle=i*2*Math.PI/number;
+      const loc=nearestLand(s,center.x+Math.cos(angle)*2.5,center.y+Math.sin(angle)*2.5);
+      const source=s.households[i%s.rules.initialHouseholds];
+      const h={id,name:names[index]+'第'+(i+1)+'家',x:loc.x,y:loc.y,
+        members:[],inventory:{food:source.inventory.food,wood:0,stone:0,fiber:0},
+        home:true,buildProgress:s.rules.hutWork,buildMaterialsPaid:true,
+        needs:{},migrated:0,foodShortageDays:0};
+      const ids=Array.from({length:3},(_,j)=>'p'+(s.people.length+1+j));
+      for(let j=0;j<3;j++){
+        const original=s.people[j],isChild=j===2;
+        const person={...original,id:ids[j],
+          name:HUMAN_NAMES[(s.people.length+index*5)%HUMAN_NAMES.length],
+          x:loc.x+(j-1)*.35,y:loc.y+(j-1)*.2,householdId:id,settlementId:villageId,
+          age:isChild?6+((index+i)%8):22+((index*7+i*3+j*4)%23),
+          stage:isChild?'child':'adult',health:100,hunger:0,alive:true,
+          partnerId:isChild?null:ids[1-j],
+          pregnancyDueHour:null,recoveryUntilHour:0,
+          parentIds:isChild?[ids[0],ids[1]]:[],originHouseholdId:id,
+          occupation:j===0?'food_producer':j===1?'gatherer':'dependent',
+          proficiency:{...original.proficiency},
+          activity:'rest',devotion:10,religionId:null,
+          receptivity:rand(s),lastDecision:null,lastFaithEvidence:null,
+          lastWorkHour:-1,lastOracleWorkHour:-1,
+          activityReason:'原生聚落居民，原本已在此地自主生活'};
+        s.people.push(person);h.members.push(person.id);
+      }
+      s.households.push(h);memberHomes.push(h.id);
+    }
+    const t={id:villageId,name:names[index],x:center.x,y:center.y,
+      foundedAtHour:0,householdIds:memberHomes,
+      storage:{food:0,wood:0,stone:0,fiber:0},granary:null,
+      workDemand:{foodPressure:0,housingPressure:0},
+      foodShortageDays:0,famineDays:0,famineReliefDays:0,
+      famineActive:false,lastDailyUnmetFood:0,native:true};
+    s.settlements.push(t);
+    genesisFieldPatches(s,center);
+  }
+  function generateSeparatedOrigins(s,opponent){
+    s.opponentCamp=locateOpponentOrigin(s,opponent.minimumOriginDistance);
+    const ids=opponent.initialHouseholdIndexes;
+    for(let i=0;i<ids.length;i++){
+      const h=s.households[ids[i]];if(!h)continue;
+      placeGenesisHouse(s,h,s.opponentCamp,i,ids.length);
+      let championChosen=false;
+      for(const personId of h.members){
+        const p=s.people.find(v=>v.id===personId);
+        if(!p)continue;
+        p.religionId=s.opponentReligion.id;
+        if(p.stage==='adult'&&!championChosen){
+          p.devotion=opponent.championDevotion;championChosen=true;
+        }else p.devotion=opponent.familyDevotion;
+      }
+    }
+    genesisFieldPatches(s,s.opponentCamp);
+    const sites=[
+      {x:Math.min(s.width-7,s.camp.x+13),y:Math.min(s.height-7,s.camp.y+3)},
+      {x:Math.max(6,s.opponentCamp.x-10),y:Math.min(s.height-7,s.opponentCamp.y+3)},
+      {x:Math.round((s.camp.x+s.opponentCamp.x)/2)-6,
+        y:Math.round((s.camp.y+s.opponentCamp.y)/2)+4},
+      {x:Math.round(s.width*.5),y:Math.round(s.height*.85)}
+    ];
+    for(let i=0;i<opponent.nativeVillages;i++){
+      const site=nearestLand(s,sites[i].x,sites[i].y);
+      addNativeVillage(s,i,site,opponent.nativeHouseholdsPerVillage);
+    }
+  }
   function create(config = {}) {
     const rules = rulesFrom(config);
     const agriculture = config.balanceProfile?.profileId === 'agriculture-balance-v0.1'
@@ -294,8 +431,9 @@
       history: { settlementFoundedHour: null, firstSaintHour: null },
       metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
     generate(s, initialMoisture);
-    if(opponent){
-      // No new people, buildings, farmland or resources are created by the rival.
+    if(opponent?.originMode==='separated-native')generateSeparatedOrigins(s,opponent);
+    else if(opponent){
+      // Preserve previous v0.1 mixed-religion genesis for existing experiments.
       for(const i of opponent.initialHouseholdIndexes){
         const h=s.households[i];if(!h)continue;
         let championChosen=false;

@@ -7,6 +7,7 @@
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
+  let selectedNeedId=null, needPage=0;
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
   const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
@@ -59,6 +60,48 @@
     const radius=Math.max(size*.62,10*canvasScale);
     return {x:(p.x+.5)*size+Math.max(size*.82,radius*.72),
       y:(p.y+.5)*size-Math.max(size*1.10,radius*1.7),radius};
+  }
+  const needTitles={'food-water':'缺雨與作物','food-shortage':'糧食不足',
+    healing:'傷病與治療',shelter:'住所與安居'};
+  const openPrayers=()=>state.religion.prayers.filter(p=>p.status==='open')
+    .sort((a,b)=>b.createdAtHour-a.createdAtHour||a.id.localeCompare(b.id));
+  function currentNeed(){
+    const prayer=state.religion.prayers.find(p=>p.id===selectedNeedId&&p.status==='open');
+    return prayer?{prayer,location:S.prayerLocation(state,prayer.id)}:null;
+  }
+  function needCard(prayer){
+    const place=prayer.location||S.prayerLocation(state,prayer.id);
+    const title=prayer.title||needTitles[prayer.type]||'信徒祈求';
+    const summary=prayer.summary||prayer.needSummary||'居民提出了實際生活需求';
+    const coordinates=place?`(${format(place.center.x)}, ${format(place.center.y)})`:'';
+    const source=place?.locationName||prayer.settlementName||'位置尚未記錄';
+    const supporters=prayer.supporterCount??new Set(prayer.by||[]).size;
+    return `<button type="button" class="need-locate-card${selectedNeedId===prayer.id?' is-located':''}"
+      data-need-locate="${html(prayer.id)}"
+      aria-label="在地圖定位：${html(title)}，${html(source)} ${html(coordinates)}"
+      title="${html(summary)}">
+      <span class="need-head"><strong>${html(title)}</strong><span>${html(source)} ${html(coordinates)}</span></span>
+      <span class="need-detail">第 ${Math.floor(prayer.createdAtHour/24)+1} 日 · ${supporters} 位信徒 · ${html(summary)}</span>
+    </button>`;
+  }
+  function locateNeed(id){
+    const prayer=state.religion.prayers.find(p=>p.id===id&&p.status==='open');
+    const location=prayer&&S.prayerLocation(state,prayer.id);
+    if(!location){selectedNeedId=null;render();say('需求已結束，或缺少可確認的來源位置。');return;}
+    selectedNeedId=prayer.id;cursor=null;render();
+    say(`已定位 ${needTitles[prayer.type]||'祈求'}：${location.locationName} ${format(location.center.x)}, ${format(location.center.y)}`);
+  }
+  function bindNeedControls(){
+    $('needsPanel').querySelectorAll('[data-need-locate]').forEach(button=>
+      button.onclick=()=>locateNeed(button.dataset.needLocate));
+    $('needsPanel').querySelectorAll('[data-needs-page]').forEach(button=>button.onclick=()=>{
+      const max=Math.max(0,Math.ceil(openPrayers().length/3)-1);
+      needPage=Math.max(0,Math.min(max,needPage+Number(button.dataset.needsPage)));
+      render();
+    });
+    $('needsPanel').querySelectorAll('[data-need-clear]').forEach(button=>button.onclick=()=>{
+      selectedNeedId=null;render();
+    });
   }
   function showDivineKind(kind){
     divineKind=kind;if(kind!=='miracle')armedMiracle=null;
@@ -120,7 +163,7 @@
     state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{}),religionProfile:activeReligionProfile,divineProfile:activeDivineProfile});
     if(divineKind==='miracle')configureMiracle(selectedPower());
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
-    paused=true;speed=1;acc=0;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;$('events').scrollTop=0;
+    paused=true;speed=1;acc=0;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -138,7 +181,7 @@
     finally{profileLoading=false;$('balanceProfile').disabled=false;$('pauseBtn').disabled=false;render();}
   });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
-  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;activeDivineProfile=state.divinePowers;$('balanceProfile').value=activeProfile?'agriculture':'original';armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;activeDivineProfile=state.divinePowers;$('balanceProfile').value=activeProfile?'agriculture':'original';armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
@@ -206,16 +249,14 @@
     $('oracleBtn').disabled=profileLoading||!saint||!S.checkOracle(state,saint?.id,intent).ok;
     $('concludeBtn').hidden=!active;
     $('concludeBtn').disabled=!active||!quota||quota.quota<=-1;
-    const prayerTitles={'food-water':'缺雨與作物','food-shortage':'糧食不足',
-      healing:'傷病與治療',shelter:'住所與安居'};
-    const prayers=state.religion.prayers.filter(p=>p.status==='open');
+    const prayers=openPrayers();
     const answered=state.religion.prayers.filter(p=>p.status==='answered').slice(-1);
     const focusedPriest=state.people.find(p=>p.id===activePriestId&&p.alive&&state.religion.priests.includes(p.id));
     const gathered=focusedPriest?S.priestPetitions(state,focusedPriest.id):[];
     if(focusedPriest){
       priestPetitionIndex=Math.min(priestPetitionIndex,Math.max(0,gathered.length-1));
       const p=gathered[priestPetitionIndex];
-      const card=p?`<div class="need-item"><strong>${html(p.title)} · ${html(p.settlementName)}</strong><small>第 ${Math.floor(p.createdAtHour/24)+1} 日 · ${p.supporterCount} 位信徒</small><small>${html(p.summary)}</small></div>`:
+      const card=p?needCard(p):
         '<div class="need-item"><small>目前尚未彙整到未完成的當地祈求。</small></div>';
       const nav=gathered.length>1?`<div class="priest-prayer-nav">
         <button type="button" data-priest-nav="-1" aria-label="上一則祈願" ${priestPetitionIndex===0?'disabled':''}>‹</button>
@@ -225,14 +266,25 @@
       $('needsPanel').innerHTML=`<div class="priest-summary"><b>${html(focusedPriest.name)} · Priest</b><small>彙整 ${gathered.length} 類未完成祈求；信徒仍可直接向 God 祈禱。</small></div>`+card+nav;
       $('needsPanel').querySelectorAll('[data-priest-nav]').forEach(button=>button.onclick=()=>{
         priestPetitionIndex=Math.max(0,Math.min(gathered.length-1,priestPetitionIndex+Number(button.dataset.priestNav)));
-        render();
+        selectedNeedId=gathered[priestPetitionIndex]?.id||null;
+        cursor=null;render();
       });
     }else{
-      $('needsPanel').innerHTML=prayers.length?prayers.slice(-2).reverse().map(p=>
-        `<div class="need-item"><strong>${html(prayerTitles[p.type]||'信徒祈禱')}</strong><small>第 ${Math.floor(p.createdAtHour/24)+1} 日 · ${p.by.length} 位信徒</small><small>${html(p.needSummary||'居民提出了實際生活需求')}</small></div>`).join(''):
+      const pages=Math.ceil(prayers.length/3);
+      needPage=Math.max(0,Math.min(needPage,Math.max(0,pages-1)));
+      const cards=prayers.slice(needPage*3,(needPage+1)*3).map(needCard).join('');
+      const pager=pages>1?`<div class="need-pager">
+        <button type="button" data-needs-page="-1" aria-label="上一頁需求" ${needPage===0?'disabled':''}>‹</button>
+        <small>需求 ${needPage*3+1}–${Math.min((needPage+1)*3,prayers.length)} / ${prayers.length}</small>
+        <button type="button" data-needs-page="1" aria-label="下一頁需求" ${needPage>=pages-1?'disabled':''}>›</button>
+      </div>`:'';
+      $('needsPanel').innerHTML=prayers.length?`<div class="need-list">${cards}</div>${pager}`:
         answered.length?'<div class="need-item"><strong>最近的祈求已獲得回應</strong><small>真實後果已更新參與信徒的信仰。</small></div>':
           '目前沒有迫切的祈禱。當居民遭遇缺水、缺糧、傷病或住房問題時，可能主動祈求。';
     }
+    if(selectedNeedId)$('needsPanel').insertAdjacentHTML('beforeend',
+      '<button type="button" class="need-clear" data-need-clear="1">清除地圖定位 ×</button>');
+    bindNeedControls();
     $('weatherNotice').textContent=`農田 ${st.farmFields} 格${st.newFields?` · 新開墾 ${st.newFields} 格`:''} · 含水 ${format(st.avgMoisture*100)}% · ${st.phase==='dry'?'旱季，土地與工作效率降低':'農業依土壤、作物與實際勞動運作'}`;
     const townRoster=state.settlements.map(t=>t.id+':'+t.name).join('|');
     if(townRoster!==lastTownRoster){

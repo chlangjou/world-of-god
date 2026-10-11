@@ -501,14 +501,18 @@
     const canBuild = !h.home && h.inventory.wood >= s.rules.hutWood && h.inventory.fiber >= s.rules.hutFiber;
     const call = workCalling(s, p);
     const foodBias = call.score;
+    // Unmet shelter material needs still matter when food reserves make family care attractive.
+    // This is decision pressure only: gathering and construction still require real work.
+    const shelterMaterialBonus = !h.home && security.days >= 4
+      ? clamp(num(s.agriculture?.workDemand?.unhousedMaterialPriorityBonus, 2), 0, 4) : 0;
     const candidates = [];
     if (forage) candidates.push({ name: 'forage', score: 4.8 + (scarce ? 3.5 : 0) + p.proficiency.gather + foodBias, valid: true });
     if (field||canCultivate) candidates.push({ name: 'farm',
       score:4.4+(field?.crop||0)*2.5+(scarce?2.2:0)+p.proficiency.food+foodBias+
         (canCultivate?(L.pioneerCultivationBonus??4.5):0),valid:true });
-    if (wood && (!h.home || publicMaterials || (basic && basic.housingPressure > .2))) candidates.push({ name: 'wood', score: (!h.home && h.inventory.wood < s.rules.hutWood ? 8.0 : publicMaterials ? 6.5 : 2.6) + p.proficiency.gather, valid: true });
+    if (wood && (!h.home || publicMaterials || (basic && basic.housingPressure > .2))) candidates.push({ name: 'wood', score: (!h.home && h.inventory.wood < s.rules.hutWood ? 8.0 + shelterMaterialBonus : publicMaterials ? 6.5 : 2.6) + p.proficiency.gather, valid: true });
     if (stone && publicStone) candidates.push({ name: 'stone', score: 6.0 + p.proficiency.gather, valid: true });
-    if (fiber && !h.home) candidates.push({ name: 'fiber', score: h.inventory.fiber < s.rules.hutFiber ? 7.5 + p.proficiency.gather : 1, valid: true });
+    if (fiber && !h.home) candidates.push({ name: 'fiber', score: h.inventory.fiber < s.rules.hutFiber ? 7.5 + shelterMaterialBonus + p.proficiency.gather : 1, valid: true });
     if (!h.home && canBuild) candidates.push({ name: 'build', score: 9.3 + p.proficiency.build, valid: true });
     // Not every work period should be production. When accessible reserves are
     // strong, adults can spend the work block supporting dependents and the home.

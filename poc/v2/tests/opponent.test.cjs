@@ -65,9 +65,12 @@ test('independent Priests/Saints arise; AI issues real Oracle and casts real Mir
 test('40+ commitments resist ordinary rival sermons while affiliation remains personal',()=>{
   const s=fresh(),p=s.people.find(v=>v.id==='p1');
   p.devotion=61;p.religionId='r1';
+  // Isolate ordinary rivalry: an attributed rival Miracle is now permitted
+  // to challenge 40+ commitment, but a Priest sermon still cannot.
+  s.opponent.startDay=360;
   after(s,180);
   assert.equal(p.religionId,'r1');
-  assert.ok(p.devotion>=61,'high devotion should not decay merely due to rival sermons');
+  assert.ok(p.devotion>=61,'high devotion must not decay from sermons alone');
   good(s);
 });
 

@@ -180,7 +180,9 @@ test('AI has its own regional prayers, matched Rain evidence, and independent at
 });
 
 test('save and restore preserve miracle impressions, fulfilled evidence and AI decisions',()=>{
-  const s=fresh(true),p=s.people.find(v=>v.nativeOrigin&&v.religionId===null),
+  const s=fresh(true);
+  advance(s,1); // Allow the existing granary plan to initialize before snapshot.
+  const p=s.people.find(v=>v.nativeOrigin&&v.religionId===null),
     source=s.people.find(v=>v.religionId==='r1');
   p.health=40;source.x=p.x;source.y=p.y;
   assert.ok(W.castMiracle(s,'heal',{x:p.x,y:p.y,radius:2,intensity:1}).ok);

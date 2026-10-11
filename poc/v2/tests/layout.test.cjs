@@ -89,3 +89,22 @@ test('the selected Divine Power is routed through typed Miracle and Oracle actio
   assert.ok(fs.readFileSync(path.join(root,'tools/build-single.cjs'),'utf8').includes('WOG_DIVINE_PROFILE'),
     'standalone export must bundle tunable power parameters');
 });
+
+test('need-location controls keep three readable entries, exact map centers, and fixed viewport',()=>{
+  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+  const app=fs.readFileSync(path.join(root,'src/app.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'assets/viewport.css'),'utf8');
+  const sim=fs.readFileSync(path.join(root,'src/sim.js'),'utf8');
+  assert.ok(html.includes('需求定位')&&html.includes('評估範圍'));
+  assert.ok(app.includes('prayers.slice(needPage*3,(needPage+1)*3)'),
+    'all needs must stay navigable, not just the newest two');
+  assert.ok(app.includes('data-need-locate')&&app.includes('data-needs-page'));
+  assert.ok(app.includes('selectedNeedId')&&app.includes('currentNeed()'));
+  assert.ok(app.includes("loc.radius*size"),'the requested field radius must be drawn');
+  assert.ok(app.includes('cursor||currentNeed()?.location?.center||state.camp'),
+    'a located request becomes the preview anchor until the pointer moves');
+  assert.ok(sim.includes('function prayerLocation('));
+  assert.ok(css.includes('.need-locate-card')&&css.includes('.need-pager'));
+  assert.ok(css.includes('html,body{height:100%;max-height:100%;overflow:hidden}'),
+    'global page must remain non-scrolling');
+});

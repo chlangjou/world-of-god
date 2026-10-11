@@ -18,7 +18,7 @@
     oracleQuota: 4, oracleRefillDays: 90, oracleDurationDays: 180,
     oracleCommunicationRadius: 13, faithThreshold: 40,
     defaultRainRadius: 7, defaultRainIntensity: 0.85, defaultRainDays: 10,
-    eventLimit: 130, prayerLimit: 18, daysPerYear: 360,
+    eventLimit: 200, prayerLimit: 18, daysPerYear: 360,
     conceptionChancePerMonth: 0.12, conceptionMinFoodDays: 6, postpartumRecoveryDays: 60,
     familyReturnFoodDays: 2, famineAlertDays: 21, famineReliefDays: 7, isolatedFamineDays: 45
   });
@@ -1508,6 +1508,10 @@
     candidate.counts.interSettlementAdoptions ||= 0;
     for(const o of candidate.religion.oracles||[])o.reachedSettlements ||= {};
     for(const town of candidate.settlements||[])ensureGranary(candidate,town);
+    // Legacy v2 saves carried the former 130-event default. Expand it without
+    // discarding their existing event IDs, history or world state. Other tuned
+    // event limits are intentionally left alone.
+    if(candidate.rules?.eventLimit===130)candidate.rules.eventLimit=DEFAULT_RULES.eventLimit;
     const verdict=validate(candidate);
     if(!verdict.ok) throw new Error('無法讀取世界：'+verdict.errors.join('；'));
     return candidate;

@@ -35,3 +35,21 @@ test('granary construction is visible in the existing fixed viewport without new
  assert.equal(agriculture.granary.woodRequired,6);
  assert.equal(agriculture.granary.stoneRequired,4);
 });
+
+test('History only uses a fixed-height scrollbar with newest events first',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const app=fs.readFileSync(path.join(root,'src/app.js'),'utf8');
+ const styles=fs.readFileSync(path.join(root,'assets/viewport.css'),'utf8');
+ assert.ok(html.includes('id="historyCount"'));
+ assert.ok(html.includes('id="events"') && html.includes('tabindex="0"'));
+ assert.ok(!html.includes('id="historyPrev"')&&!html.includes('id="historyNext"'),
+   'history pager controls must be removed');
+ assert.ok(!app.includes('historyPage') && !app.includes('historyPrev'));
+ assert.ok(app.includes('state.events.slice().reverse()'),'event order should be newest first');
+ assert.ok(app.includes('oldNewestId'),'keep reading position as new events appear');
+ assert.ok(styles.includes('[data-inspect-panel="history"] #events'));
+ assert.ok(styles.includes('overflow-y:auto'));
+ assert.ok(styles.includes('html,body{height:100%;max-height:100%;overflow:hidden}'),
+   'only History scrolls; the overall page stays fixed');
+ assert.equal(W.DEFAULT_RULES.eventLimit,200);
+});

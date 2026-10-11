@@ -116,8 +116,8 @@
             </section>
             <section class="panel" data-inspect-panel="history" aria-label="歷史紀錄" hidden>
               <div class="panel-heading"><h2>歷史與因果</h2><span class="eyebrow">HISTORY</span></div>
-              <div class="panel-pager"><button id="historyPrev" type="button" aria-label="較新的歷史">‹</button><span id="historyPageLabel">最近事件</span><button id="historyNext" type="button" aria-label="較早的歷史">›</button></div>
-              <div id="events" class="events"></div>
+              <div id="historyCount" class="history-summary">保留 0 / 200 筆 · 最新在上</div>
+              <div id="events" class="events" role="log" aria-label="歷史事件，由新到舊" aria-live="off" tabindex="0"></div>
             </section>
           </div>
         </section>

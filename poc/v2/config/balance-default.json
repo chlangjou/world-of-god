@@ -2,7 +2,7 @@
   "profileId": "web-mvp0-0.2.1-runtime-baseline",
   "status": "reference-snapshot",
   "loadedByRuntime": false,
-  "description": "Unmodified current simulation DEFAULT_RULES snapshot, retained for reproducible PoC A/B comparisons. Editing this file does not affect the Web simulation.",
+  "description": "Read-only mirror of current Web PoC DEFAULT_RULES for reproducible Original/Agriculture comparisons. The source metadata identifies the historical baseline; the v2 history retention default is now 200. Editing this file does not affect the runtime.",
   "source": {
     "repository": "chlangjou/world-of-god",
     "branch": "web-mvp-0",
@@ -42,7 +42,7 @@
     "defaultRainRadius": 7,
     "defaultRainIntensity": 0.85,
     "defaultRainDays": 10,
-    "eventLimit": 130,
+    "eventLimit": 200,
     "prayerLimit": 18,
     "daysPerYear": 360,
     "conceptionChancePerMonth": 0.12,

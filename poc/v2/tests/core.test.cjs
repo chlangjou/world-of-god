@@ -257,6 +257,44 @@ test('event feed contains significant history, not periodic inventory and weathe
   assert.ok(s.events.filter(e=>e.kind==='famine').length<12,'only sustained food crises count as major events');
 });
 
+test('history retains the newest 200 events, dropping only the oldest when overflowing',()=>{
+  const s=fresh();
+  assert.equal(s.rules.eventLimit,200);
+  s.events=Array.from({length:200},(_,i)=>({
+    id:i+1,hour:i*24,kind:'religion',text:'重大事件 '+(i+1),reasons:[],entities:[]
+  }));
+  s.eventSeq=200;
+  const cast=W.castRain(s,{x:s.camp.x,y:s.camp.y,radius:7,intensity:0.85,durationDays:10});
+  assert.equal(cast.ok,true,'a real Miracle event should enter History');
+  assert.equal(s.events.length,200,'the 201st event must trim exactly one item');
+  assert.equal(s.events[0].id,2,'the oldest event is removed first');
+  assert.equal(s.events.at(-1).id,201,'newest event is retained');
+  assert.equal(s.events.at(-1).kind,'miracle');
+  valid(s);
+});
+
+test('restoring a legacy 130-event save raises future retention to 200 without deleting history',()=>{
+  const world=fresh();
+  world.rules.eventLimit=130;
+  world.events=[
+    {id:1,hour:1,kind:'settlement',text:'保留先前事件',reasons:[],entities:[]}
+  ];
+  world.eventSeq=1;
+  const oldEvents=clone(world.events);
+  const oldPeople=clone(world.people);
+  const oldFood=W.stats(world).food;
+  const restored=W.restore(JSON.stringify(world));
+  assert.equal(restored.rules.eventLimit,200,'the old baseline should adopt the new history cap');
+  assert.deepEqual(restored.events,oldEvents,'events already stored must be preserved');
+  assert.deepEqual(restored.people,oldPeople);
+  assert.equal(W.stats(restored).food,oldFood);
+  const custom=fresh({rules:{eventLimit:72}});
+  assert.equal(W.restore(JSON.stringify(custom)).rules.eventLimit,72,
+    'a deliberately customized limit other than the old default remains unchanged');
+  assert.deepEqual(W.restore(JSON.stringify(restored)),restored,'save/load should be stable');
+  valid(restored);
+});
+
 test('work and non-work phases have distinct, specific explanations instead of universal shortage reason',()=>{
   const s=fresh();afterDays(s,22);
   const adults=s.people.filter(p=>p.alive&&p.stage==='adult');

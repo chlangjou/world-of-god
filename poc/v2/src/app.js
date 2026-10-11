@@ -3,9 +3,9 @@
   const S = window.WoG2;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, activeReligionProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, historyPage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
-  let armedRain = false, cursor = null, chosen = 'p1', lastEventId = 0, toastTimeout;
+  let armedRain = false, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='';
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
@@ -67,7 +67,7 @@
   function newWorld() {
     state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{}),religionProfile:activeReligionProfile});
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
-    paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';housePage=0;historyPage=0;armedRain=false;
+    paused=true;speed=1;acc=0;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';housePage=0;armedRain=false;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -85,7 +85,7 @@
     finally{profileLoading=false;$('balanceProfile').disabled=false;$('pauseBtn').disabled=false;render();}
   });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
-  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';housePage=0;historyPage=0;render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';housePage=0;$('events').scrollTop=0;render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost() {
     $('radiusValue').textContent=$('radius').value+' 格';$('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';$('durationValue').textContent=$('duration').value+' 日';
@@ -187,16 +187,24 @@
       const activeReason=p.activityReason?`<div class="reason" title="${html(p.activityReason)}" tabindex="0"><b>此刻行動：</b>${html(p.activityReason)}</div>`:'';
       $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'} · ${religious}</div><div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${activeReason}<div class="reason" title="${html(dec?.reason||'尚未進行工作決策')}" tabindex="0">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
     }
-    // Paginated history avoids nested scroll in fixed-viewport inspector.
-    const historyPageSize=3;
-    const historyPages=Math.max(1,Math.ceil(state.events.length/historyPageSize));
-    historyPage=Math.min(historyPage,historyPages-1);
-    $('historyPageLabel').textContent=`歷史 ${historyPage+1} / ${historyPages}`;
-    $('historyPrev').disabled=historyPage===0;$('historyNext').disabled=historyPage>=historyPages-1;
-    if(lastEventId!==state.eventSeq || $('events').dataset.page!==String(historyPage)){
-      lastEventId=state.eventSeq;$('events').dataset.page=String(historyPage);
-      $('events').innerHTML=state.events.slice().reverse().slice(historyPage*historyPageSize,(historyPage+1)*historyPageSize)
-        .map(e=>`<div class="event ${html(e.kind)}"><small>第 ${Math.floor(e.hour/24)+1} 日 · ${html(e.kind)}</small><div>${html(e.text)}</div>${e.reasons?.length?`<details><summary>原因</summary>${e.reasons.map(x=>'<div>'+html(x)+'</div>').join('')}</details>`:''}</div>`).join('')||'<div class="muted">尚無重大歷史事件</div>';
+    // History alone scrolls inside the fixed-size inspector; newest events stay first.
+    const feed=$('events');
+    $('historyCount').textContent=`保留 ${state.events.length} / ${state.rules.eventLimit} 筆 · 最新在上`;
+    if(lastEventId!==state.eventSeq || feed.dataset.count!==String(state.events.length)){
+      // Preserve the item being read when a new event is prepended; remain pinned
+      // to the newest event only when the reader is already at the top.
+      const oldTop=feed.scrollTop;
+      const oldNewestId=feed.firstElementChild?.dataset.eventId;
+      const readingOlder=oldTop>4;
+      feed.innerHTML=state.events.slice().reverse()
+        .map(e=>`<div class="event ${html(e.kind)}" data-event-id="${html(e.id)}"><small>第 ${Math.floor(e.hour/24)+1} 日 · ${html(e.kind)}</small><div>${html(e.text)}</div>${e.reasons?.length?`<details><summary>原因</summary>${e.reasons.map(x=>'<div>'+html(x)+'</div>').join('')}</details>`:''}</div>`).join('')||'<div class="muted">尚無重大歷史事件</div>';
+      if(readingOlder && oldNewestId){
+        const previousTopEvent=Array.from(feed.children).find(el=>el.dataset.eventId===oldNewestId);
+        feed.scrollTop=oldTop+(previousTopEvent && feed.firstElementChild
+          ? Math.max(0,previousTopEvent.offsetTop-feed.firstElementChild.offsetTop):0);
+      }else feed.scrollTop=0;
+      feed.dataset.count=String(state.events.length);
+      lastEventId=state.eventSeq;
     }
     draw();
   }
@@ -280,8 +288,6 @@
   $('settlementSelect').onchange=e=>{selectedTownId=e.target.value;housePage=0;render();};
   $('housePrev').onclick=()=>{housePage=Math.max(0,housePage-1);render();};
   $('houseNext').onclick=()=>{housePage++;render();};
-  $('historyPrev').onclick=()=>{historyPage=Math.max(0,historyPage-1);render();};
-  $('historyNext').onclick=()=>{historyPage++;render();};
   $('miracleTab').onclick=()=>showDivineKind('miracle');
   $('oracleTab').onclick=()=>showDivineKind('oracle');
   $('divinePowerSelect').onchange=()=>render();

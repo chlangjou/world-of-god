@@ -86,6 +86,15 @@ body{display:flex;flex-direction:column;min-height:0}
 .person-detail .reason{margin-top:6px;padding-top:5px;line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 .person-detail .reason:focus-visible{outline:2px solid var(--accent)}
 .events-panel .events,.events{max-height:none;overflow:visible}
+/* Explicit History-only scrollbar: the page, map and other inspectors remain fixed. */
+.inspector-panels>.panel[data-inspect-panel="history"]{display:flex;flex-direction:column;min-height:0}
+.inspector-panels>.panel[data-inspect-panel="history"] .panel-heading{flex:0 0 auto}
+.history-summary{flex:0 0 auto;color:var(--muted);font-size:10px;line-height:1.4;padding:0 0 7px}
+.inspector-panels>.panel[data-inspect-panel="history"] #events{
+  flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;scrollbar-gutter:stable;padding:2px 6px 5px 2px
+}
+#events:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .event{font-size:11px;line-height:1.4;margin-bottom:7px;padding:0 0 7px 10px}
 .event small{font-size:10px;margin-bottom:2px}
 .event details{font-size:10px;margin-top:3px}

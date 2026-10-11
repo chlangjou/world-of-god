@@ -10,7 +10,7 @@
 
 ## 1. Three primary rules
 
-1. **No vertical scrolling in normal gameplay.** The world, intervention commands, current essentials and selected inspection content fit a single application viewport. Do not rely on page scrolling or independently scrolling long person/event lists. Offer tabs, pagination, selection, compact summaries or discrete detail overlays instead of scrollbars. No essential gameplay control may be clipped or pushed below the visible viewport.
+1. **No vertical scrolling in normal gameplay.** The world, intervention commands, current essentials and selected inspection content fit a single application viewport. Do not use page scrolling or independently scrolling resident lists. History is an explicit exception: it uses a scrollbar confined to its fixed-height inspector while other lists keep tabs, selection or pagination. No essential gameplay control may be clipped or pushed below the visible viewport.
 2. **Hints instead of permanent explanations.** Use short labels and current actionable values by default. Explain rules and concepts on hover/focus/click/touch as contextual Hints/Tooltips. Essential state (food, DP, time, cooldown, current warning, action availability) stays directly visible; hiding it in Hints would defeat situational awareness.
 3. **Unavailable Miracle = visibly greyed and non-castable.** If a Miracle is cooling down, the button becomes clearly inactive/grey and shows the remaining **simulation-time** cooldown. The player cannot enter targeting or execute the cast until it is available. When blocked for other reasons, show a truthful reason (e.g. insufficient DP, invalid area/permission) as well.
 
@@ -39,7 +39,7 @@ Illustrative layout, not mandatory pixel geometry:
 ~~~
 
 - The browser/document itself must not be a long vertical reading surface in regular play.
-- Avoid nested `overflow-y:auto` as the primary way of fitting residents or History. Resident selection and events use bounded pages, category tabs, latest-N summaries or explicit next/previous controls. A long-term History archive may use a separate paginated view if added later.
+- Avoid nested `overflow-y:auto` for residents and household lists. **History alone** uses a bounded internal scrollbar (newest first; up to 200 recent significant events), without making the document or whole sidebar scroll.
 - Prefer responsive map size with correct aspect ratio, and use `min-height:0` / proper flex/grid constraints for fixed panels. Do **not** simply apply `overflow:hidden` to the existing tall layout and silently hide content.
 - Do not permanently reserve height for the opening explanatory banner, large title, repeated subtitles, or verbose notice paragraphs. Put these in a Help overlay or Hints.
 - If a temporary dialog cannot fit, use discrete steps/tabs/pagination rather than introducing whole-page or in-panel vertical scrolling. Dialogs must have obvious close, cancel and keyboard handling.
@@ -95,8 +95,8 @@ Implementation guidance:
 ## 5. Inspection and navigation rules
 
 - One selected person/household/settlement at a time; display a concise summary in the visible inspector. Detailed Work Demand, resource access and faith explanation can open a contextual detail page.
-- Prefer tabs such as `祈禱`, `聚落`, `居民`, `歷史` and `下一頁/上一頁` for lists. Do not produce a continuously taller sidebar as population grows.
-- **History only contains meaningful events** per current rules: births, deaths, sustained famine/recovery, migration, major settlement and divine/religious outcomes. The UI shows a small recent set; routine counters belong in stats, not an unbounded event feed.
+- Prefer tabs such as `祈禱`, `聚落`, `居民`, `歷史`. Keep household lists paginated and History inside its own fixed-height scroll area; never grow the sidebar as population grows.
+- **History only contains meaningful events** per current rules: births, deaths, sustained famine/recovery, migration, major settlement and divine/religious outcomes. The most recent 200 are retained by default, ordered newest first in a scrollable History-only panel. Routine counters belong in stats.
 - Sim speed, pause and active Miracle feedback must stay visible even after selecting another person or detail view.
 - Help/Hints are presentation state and must not change the simulation or its deterministic results.
 
@@ -114,7 +114,7 @@ These gaps led to the current **fixed-viewport, tabbed inspection, two-level div
 Test with both little and much content (e.g. 24 vs 40+ people; few vs 100+ recent significant events), while paused and at 1×/4×/16×.
 
 - [ ] **Viewport:** normal gameplay at desktop baseline **1366×768** and **1920×1080**, 100% browser zoom, has no page-level vertical scrollbar; map, time and essential divine actions fit within the viewport. Test compact behavior at **1280×720**. Do not hide controls by clipping.
-- [ ] **No nested list scrolling:** person/history selection remains possible through pagination/tabs/selection, with no required vertical list scrolling.
+- [ ] **Bounded History-only scrolling:** household/person lists still use pagination or selection, while History alone has a usable internal scrollbar with newest events above older events. No page-level scrollbar.
 - [ ] **Contextual hints:** long explanations removed from routine layout; Hints accessible through mouse hover, keyboard focus and touch interaction. Important DP/cooldown/shortage state is visible without hovering.
 - [ ] **Cooldown:** cast Rain, confirm it greys out and cannot be armed by button or shortcut; remaining **simulated** time is displayed; Pause freezes it, time acceleration advances it, availability recovers exactly when simulation cooldown ends.
 - [ ] **DP/capability:** low-DP and invalid-cast conditions show distinct, truthful reasons and never spend resources. The same simulator validation path applies to mouse and keyboard interaction.
@@ -134,7 +134,7 @@ Suggested rollout: (1) fixed viewport and map-first layout; (2) compact panels, 
 
 - Replaced the long stacked page with a bounded `100%`-height header, top HUD and a workspace containing the map and a right-hand control/inspection rail. The map and selected divine action remain visible together.
 - Divine selection has **two layers**: Miracle/Oracle category tabs, then an extensible power-type dropdown (Rain or food-production Oracle currently implemented). Selected power parameters/actions appear only in the corresponding compact panel.
-- Resident inspection is a dropdown rather than an unbounded button list. Household cards and meaningful history events are explicitly paged; the inspector uses tabs rather than nested scroll lists.
+- Resident inspection is a dropdown rather than an unbounded button list. Household cards are paginated; the History tab now uses one bounded internal scrollbar showing newest events first (retention 200), without document scrolling.
 - Rain reads live `evalRain` status. Cooldown and insufficient-DP states disable the cast/target control with a textual reason; the `1` shortcut shares the same check.
 - Header File dropdown keeps save/load/import/export reachable without spending permanent horizontal width on each button.
 - Baseline viewport sizes **1280×720, 1366×768 and 1920×1080** remain manual visual acceptance checks; no verified browser screenshots were produced in this change.

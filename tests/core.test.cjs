@@ -405,6 +405,8 @@ test('adult partners can form new households without conjured housing or transfe
   valid(s);
   const saved=W.restore(JSON.stringify(s));
   assert.deepEqual(saved,s);
+  afterDays(s,12);afterDays(saved,12);
+  assert.deepEqual(saved,s,'new-generation worlds must replay exactly after save/restore');
 });
 test('real housing forms additional settlements with local crop access',()=>{
   const profile=require('../config/balance-agriculture-v0.1.json');

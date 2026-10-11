@@ -3,7 +3,7 @@
   const S = window.WoG2;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, activeReligionProfile = null, activeDivineProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, activeDivineProfile = null, activeOpponentProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
@@ -188,10 +188,19 @@
     if(!response.ok)throw new Error('Religion Propagation Profile 無法載入');
     return response.json();
   }
+  async function loadOpponent(){
+    if(window.WOG_OPPONENT_PROFILE)return window.WOG_OPPONENT_PROFILE;
+    const response=await fetch('config/opponent-v0.1.json');
+    if(!response.ok)throw new Error('Opponent Profile 無法載入');
+    return response.json();
+  }
   function newWorld() {
-    state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{}),religionProfile:activeReligionProfile,divineProfile:activeDivineProfile});
+    state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{}),
+      religionProfile:activeReligionProfile,divineProfile:activeDivineProfile,
+      opponentProfile:$('opponentMode').value==='ai'?activeOpponentProfile:null});
     if(divineKind==='miracle')configureMiracle(selectedPower());
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
+    $('opponentMode').value=state.opponent?.enabled?'ai':'off';
     paused=true;speed=1;acc=0;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
@@ -209,8 +218,21 @@
     }catch(err){activeProfile=previous;$('balanceProfile').value=previous?'agriculture':'original';say('Profile 載入失敗：'+err.message);}
     finally{profileLoading=false;$('balanceProfile').disabled=false;$('pauseBtn').disabled=false;render();}
   });
+  $('opponentMode').addEventListener('change',e=>{
+    if(profileLoading)return;
+    const requested=e.target.value;
+    const current=state.opponent?.enabled?'ai':'off';
+    if(requested===current)return;
+    if(!confirm('切換對手模式會以相同 Seed 重新創世，尚未儲存的世界進度將消失。要繼續嗎？')){
+      e.target.value=current;return;
+    }
+    newWorld();say(requested==='ai'?'已開啟 AI 對手，新世界從宗教競爭開始。':'新世界已改為單一神明模式。');
+  });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
-  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;activeDivineProfile=state.divinePowers;$('balanceProfile').value=activeProfile?'agriculture':'original';armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;activeDivineProfile=state.divinePowers;
+    if(state.opponent?.enabled)activeOpponentProfile=state.opponent;
+    $('balanceProfile').value=activeProfile?'agriculture':'original';
+    $('opponentMode').value=state.opponent?.enabled?'ai':'off';armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
@@ -246,12 +268,18 @@
     const dailyNeed=state.people.filter(p=>p.alive).reduce((a,p)=>a+(p.stage==='child'?state.rules.foodNeedChild:state.rules.foodNeedAdult),0);
     $('foodMetric').textContent=format(st.food);
     $('stockMetric').textContent=`約 ${format(st.food/Math.max(dailyNeed,.01),1)} 日 · 公共 ${format(st.commonFood)}`;
-    $('followersMetric').textContent=st.followers;$('devotionMetric').textContent=`信眾 ${st.believers} · 新入教 ${st.newBelievers} · 奉獻 ${format(st.devotionWeight)}`;
+    $('followersMetric').textContent=st.opponentEnabled?
+      `${st.followers} / ${st.opponentFollowers}`:st.followers;
+    $('followersMetric').title=st.opponentEnabled?'我方信徒 / 對手信徒（虔誠度 40+）':'我方信徒（虔誠度 40+）';
+    $('devotionMetric').textContent=st.opponentEnabled?
+      `己方信眾 ${st.believers} · 對手信眾 ${st.opponentBelievers} · 改宗 ${st.rivalConversions}`:
+      `信眾 ${st.believers} · 新入教 ${st.newBelievers} · 奉獻 ${format(st.devotionWeight)}`;
     $('powerMetric').textContent=format(state.god.dp,1);$('powerRate').textContent=`+${format(st.dpRateDay,2)} DP / 模擬日`;
     $('powerFill').style.width=Math.min(100,state.god.dp/state.god.cap*100)+'%';
     $('pauseBtn').textContent=paused?'▶ 開始 / 繼續':'Ⅱ 暫停';
     $('pauseBtn').disabled=profileLoading;
     $('balanceProfile').value=state.agriculture?'agriculture':'original';
+    $('opponentMode').value=state.opponent?.enabled?'ai':'off';
     $('applyAgricultureBtn').disabled=profileLoading||!state.agriculture;
     $('mapStatus').textContent=profileLoading?'載入平衡設定中…':located?.location?
       `已定位 ${needTitles[located.prayer.type]||'需求'} · ${located.location.locationName} (${format(located.location.center.x)}, ${format(located.location.center.y)})`:
@@ -340,10 +368,15 @@
     $('settlementSelect').disabled=!state.settlements.length;
     const town=state.settlements.find(t=>t.id===selectedTownId)||state.settlements[0];
     const localReligion=town?S.settlementReligionStats(state,town.id):null;
+    const rivalTown=town&&state.opponent?.enabled?
+      `<p title="對手也需要真實信眾和祭司，神力由其信徒產生">${html(state.opponentReligion.name)}：
+        信眾 ${localReligion.opponentBelievers}/${localReligion.population} · 信徒 ${localReligion.opponentFollowers} ·
+        Saint ${localReligion.opponentSaints} / Priest ${localReligion.opponentPriests} ·
+        對手神力 ${format(state.opponentGod.dp,1)} DP</p>`:'';
     const granary=town?.granary;
     const granaryStatus=granary?.built?'已建成':
       granary?.materialsPaid?'建造中':granary?'籌備建材':'尚無計畫';
-    $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><p title="信眾為 Devotion 20+；信徒為 40+。Saint 與 Priest 是獨立角色。">宗教：信眾 ${localReligion.believers}/${localReligion.population} · 信徒 ${localReligion.followers} · Saint ${localReligion.saints} / Priest ${localReligion.priests} · 神諭 ${localReligion.activeOracles}</p><p title="未完成糧倉時，公共糧食以臨時共同儲備方式保管並保持可及；真正的糧倉需使用本聚落材料及居民建造。">公共糧倉：${granaryStatus} · 本地公糧 ${format(town.storage.food)} · 石材 ${format(town.storage.stone,1)}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
+    $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><p title="信眾為 Devotion 20+；信徒為 40+。Saint 與 Priest 是獨立角色。">宗教：信眾 ${localReligion.believers}/${localReligion.population} · 信徒 ${localReligion.followers} · Saint ${localReligion.saints} / Priest ${localReligion.priests} · 神諭 ${localReligion.activeOracles}</p>${rivalTown}<p title="未完成糧倉時，公共糧食以臨時共同儲備方式保管並保持可及；真正的糧倉需使用本聚落材料及居民建造。">公共糧倉：${granaryStatus} · 本地公糧 ${format(town.storage.food)} · 石材 ${format(town.storage.stone,1)}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
       `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
     const filteredHomes=town?state.households.filter(h=>town.householdIds.includes(h.id)):state.households;
     const housePageSize=2;
@@ -368,11 +401,13 @@
     if(selectedPerson) {
       const current=selectedPerson;
       const p=current,h=state.households.find(v=>v.id===p.householdId),dec=p.lastDecision;
-      const religious=current.religionId===state.religion.id?'初光信仰':'尚未歸屬';
-      const isPriest=state.religion.priests.includes(p.id);
-      const isSaint=state.religion.saints.includes(p.id);
+      const religious=current.religionId===state.religion.id?state.religion.name:
+        current.religionId===state.opponentReligion?.id?state.opponentReligion.name:'尚未歸屬';
+      const isOpponent=current.religionId===state.opponentReligion?.id;
+      const isPriest=(isOpponent?state.opponentReligion?.priests:state.religion.priests).includes(p.id);
+      const isSaint=(isOpponent?state.opponentReligion?.saints:state.religion.saints).includes(p.id);
       const roles=[isSaint?'Saint · 神諭聆聽者':null,isPriest?'Priest · 祭司':null].filter(Boolean);
-      const prayerCount=isPriest?S.priestPetitions(state,p.id).length:0;
+      const prayerCount=isPriest&&!isOpponent?S.priestPetitions(state,p.id).length:0;
       const roleInfo=roles.length?`<div class="priest-summary">${html(roles.join(' / '))}${prayerCount?` · 已彙整 ${prayerCount} 類祈求（點地圖泡泡查看）`:''}</div>`:'';
       const workDay=dec && Number.isFinite(dec.hour)?`第 ${Math.floor(dec.hour/24)+1} 日的`:'先前的';
       const statusText=Object.entries(p.divineStatuses||{}).filter(([,v])=>v.endsAtHour>state.hour)
@@ -444,12 +479,18 @@
     }
     for(const t of state.settlements){c.save();c.strokeStyle=t.id===selectedTownId?'#f4d69f':'#bed9b4';c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();}
     const saintIds=new Set(state.religion.saints), priestIds=new Set(state.religion.priests);
+    const rivalSaintIds=new Set(state.opponentReligion?.saints||[]),
+      rivalPriestIds=new Set(state.opponentReligion?.priests||[]);
     for(const p of state.people){if(!p.alive)continue;const px=(p.x+.5)*size,py=(p.y+.5)*size;
-      const saint=saintIds.has(p.id),priest=priestIds.has(p.id);
+      const saint=saintIds.has(p.id),priest=priestIds.has(p.id),
+        rivalSaint=rivalSaintIds.has(p.id),rivalPriest=rivalPriestIds.has(p.id),
+        rival=p.religionId===state.opponentReligion?.id;
       c.beginPath();c.arc(px,py,p.stage==='child'?size*.23:size*.32,0,Math.PI*2);
-      c.fillStyle=saint?'#80e4eb':priest?'#c4a2fa':p.devotion>=40?'#f6d2a0':p.devotion>=20?'#e1e6c2':'#bcd9d2';
+      c.fillStyle=rivalSaint?'#ff7d98':rivalPriest?'#f0a070':rival?'#cf7775':
+        saint?'#80e4eb':priest?'#c4a2fa':p.devotion>=40?'#f6d2a0':p.devotion>=20?'#e1e6c2':'#bcd9d2';
       c.fill();c.strokeStyle='#21342fcc';c.lineWidth=1.4;c.stroke();
       if(saint&&priest){c.strokeStyle='#c4a2fa';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.53,0,Math.PI*2);c.stroke();}
+      if(rivalSaint&&rivalPriest){c.strokeStyle='#ffb06d';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.53,0,Math.PI*2);c.stroke();}
       // Temporary statuses remain visible without obscuring Saint/Priest role colors.
       const statuses=Object.entries(p.divineStatuses||{}).filter(([,v])=>v.endsAtHour>state.hour);
       if(statuses.length){
@@ -605,18 +646,19 @@
   $('helpBtn').onclick=()=>$('infoDialog').showModal();$('closeHelp').onclick=()=>$('infoDialog').close();
   // New playtests start with the latest experimental Agriculture profile.
   // Loading failure is explicit and falls back to the reproducible Original rules.
-  $('balanceProfile').disabled=true;$('resetBtn').disabled=true;
+  $('balanceProfile').disabled=true;$('opponentMode').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
-  Promise.allSettled([loadAgriculture(),loadReligion(),loadDivine()]).then(([agriculture,religion,divine])=>{
+  Promise.allSettled([loadAgriculture(),loadReligion(),loadDivine(),loadOpponent()]).then(([agriculture,religion,divine,opponent])=>{
     activeProfile=agriculture.status==='fulfilled'?agriculture.value:null;
     activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
     activeDivineProfile=divine.status==='fulfilled'?divine.value:null;
+    activeOpponentProfile=opponent.status==='fulfilled'?opponent.value:S.OPPONENT_DEFAULTS;
     newWorld();
-    const failures=[agriculture,religion,divine].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    const failures=[agriculture,religion,divine,opponent].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     say(failures.length?'Profile 載入失敗，採用內建預設：'+failures.join('；'):
-      'Agriculture、Religion Propagation 與 Divine Powers v0.1 已啟用。');
+      'Agriculture、Religion Propagation、Divine Powers 與 AI 對手已啟用。');
   }).finally(()=>{
-    profileLoading=false;$('balanceProfile').disabled=false;$('resetBtn').disabled=false;render();
+    profileLoading=false;$('balanceProfile').disabled=false;$('opponentMode').disabled=false;$('resetBtn').disabled=false;render();
   });
 })();

@@ -121,5 +121,28 @@
     "reserveComfortDays": 26,
     "explanation": "Comfort/relaxation scores influence autonomous work decisions based on physically accessible household and settlement reserves; not job quotas.",
     "comfortableCareBonus": 8
+  },
+  "familyExpansion": {
+    "enabled": true,
+    "minPairAge": 18,
+    "maxPairAge": 48,
+    "minHealth": 40,
+    "maxAgeGap": 18,
+    "pairRange": 22,
+    "pairChancePerMonth": 0.45,
+    "maxCouplesPerMonth": 2,
+    "requiredFoodDays": 9,
+    "startupFoodDays": 9,
+    "communalSafetyDays": 6,
+    "homeSpacing": 3,
+    "homeRadius": 12,
+    "pioneerAfterHouseholds": 12,
+    "pioneerChance": 0.55,
+    "pioneerMinRadius": 17,
+    "pioneerMaxRadius": 24,
+    "outpostNeighborRadius": 8,
+    "outpostMinHouseholds": 3,
+    "outpostMinHuts": 3,
+    "outpostClusterRadius": 9
   }
 }

@@ -3,9 +3,9 @@
   const S = window.WoG2;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, activeReligionProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, activeDivineProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
-  let armedRain = false, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
+  let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
@@ -14,10 +14,45 @@
   const stageName = {adult:'成年人',child:'兒童',elder:'長者'};
   const occupationName = {food_producer:'糧食生產者',gatherer:'採集者',dependent:'受扶養者'};
   // First layer: action category; second layer: available power within that category.
+
   const availablePowers={
-    miracle:[{id:'rain',label:'喚雨 Rain'}],
-    oracle:[{id:'food.produce',label:'糧食生產'}]
+    miracle:[
+      {id:'rain',label:'喚雨 Rain',hint:'改變土壤濕度；真正產量仍由世界決定'},
+      {id:'ripening',label:'促熟 Ripening',hint:'已存在農田更快補充作物，不增加成熟存量上限'},
+      {id:'harvest',label:'豐收 Harvest',hint:'增益現有待收作物，不會憑空生成庫存'},
+      {id:'heal',label:'治療 Heal',hint:'治癒範圍內受傷的在世居民'},
+      {id:'efficiency',label:'效率祝福 Efficiency',hint:'暫時提升範圍內己方信徒的實際工作效率'},
+      {id:'drought',label:'乾旱 Drought',hint:'局部減弱水分補充；需足夠當地神性臨在'},
+      {id:'lightning',label:'雷擊 Lightning',hint:'立即傷害範圍內居民及作物，不區分信仰'},
+      {id:'confusion',label:'混亂 Confusion',hint:'暫時干擾自主判斷、傳教協調；不直接改宗'},
+      {id:'blindness',label:'致盲 Blindness',hint:'暫時縮短居民尋找資源和農田的範圍'}
+    ],
+    oracle:[
+      {id:'food.produce',label:'糧食生產',hint:'Saint 傳遞生產優先意圖；居民自行決定工作'},
+      {id:'religion.spread',label:'傳教',hint:'Saint 動員傳教意願，Priest 保留原本自然佈道'}
+    ]
   };
+  const selectedPower=()=> $('divinePowerSelect').value;
+  const powerMeta=(kind=divineKind,id=selectedPower())=>
+    availablePowers[kind]?.find(p=>p.id===id)||availablePowers[kind]?.[0];
+  function configureMiracle(id){
+    const rule=id==='rain'?{
+      label:'喚雨 Rain',defaultRadius:state.rules.defaultRainRadius,
+      defaultIntensity:state.rules.defaultRainIntensity,defaultDurationDays:state.rules.defaultRainDays,
+      maxIntensity:state.rules.rainSupportMaxIntensity,maxDays:state.rules.rainMaxDays,instant:false
+    }:state.divinePowers?.powers?.[id]||S.POWER_DEFAULTS[id];
+    if(!rule)return;
+    $('radius').value=Math.min(14,rule.defaultRadius);
+    $('intensity').max=String(Math.round(rule.maxIntensity*100));
+    $('intensity').value=String(Math.round(rule.defaultIntensity*100));
+    $('duration').max=String(Math.max(1,rule.maxDays));
+    $('duration').value=String(Math.max(1,rule.defaultDurationDays||1));
+    $('durationLabel').hidden=!!rule.instant;
+    $('miracleName').textContent=powerMeta('miracle',id)?.label||rule.label;
+    $('miracleHint').textContent=powerMeta('miracle',id)?.hint||'神蹟改變現實，後續由世界決定';
+    $('miracleHint').title=$('miracleHint').textContent;
+  }
+
   function priestBubblePosition(p,size){
     // Keep the rendered prayer bubble at least 20 CSS px wide for mouse/touch.
     const canvasScale=canvas.width/Math.max(1,canvas.getBoundingClientRect().width);
@@ -26,13 +61,14 @@
       y:(p.y+.5)*size-Math.max(size*1.10,radius*1.7),radius};
   }
   function showDivineKind(kind){
-    divineKind=kind;if(kind!=='miracle')armedRain=false;
+    divineKind=kind;if(kind!=='miracle')armedMiracle=null;
     $('miraclePanel').hidden=kind!=='miracle';$('oraclePanel').hidden=kind!=='oracle';
     for(const [id,category] of [['miracleTab','miracle'],['oracleTab','oracle']]){
       $(id).classList.toggle('active',category===kind);
       $(id).setAttribute('aria-selected',String(category===kind));
     }
     $('divinePowerSelect').innerHTML=availablePowers[kind].map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+    if(kind==='miracle')configureMiracle(selectedPower());
     render();
   }
   function showInspector(tab){
@@ -45,20 +81,29 @@
     document.querySelectorAll('[data-inspect-panel]').forEach(el=>el.hidden=el.dataset.inspectPanel!==tab);
     render();
   }
-  function toggleRainTarget(){
+  function toggleMiracleTarget(){
     if(profileLoading)return;
     if(divineKind!=='miracle')showDivineKind('miracle');
-    if(!armedRain){
-      const target=cursor||state.camp;
-      const result=S.evalRain(state,{x:target.x,y:target.y,...opts()});
-      if(!result.ok){say(result.reason);updateCost();return;}
-    }
-    armedRain=!armedRain;render();
-    if(armedRain)say('請點擊地圖選擇喚雨位置。Esc 可取消。');
+    if(armedMiracle){armedMiracle=null;render();return;}
+    const id=selectedPower(),target=cursor||state.camp;
+    const result=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
+    const skill=state.god.skills[id];
+    if(skill?.readyAtHour>state.hour){say('此神蹟仍在冷卻');updateCost();return;}
+    if(state.god.dp<result.cost){say('目前 Divine Power 不足');updateCost();return;}
+    // The cursor may currently be over an empty/no-presence area. Do not prevent
+    // aiming elsewhere; every clicked map center is independently validated.
+    armedMiracle=id;render();
+    say('請點擊地圖施展 '+powerMeta('miracle',id).label+'。Esc 可取消。');
   }
   function say(text) { const box=$('toast');box.textContent=text;box.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>box.classList.remove('visible'),3000); }
   function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,durationDays:+$('duration').value}; }
   function storageKey() {return 'wog-poc-v2-save';}
+  async function loadDivine(){
+    if(window.WOG_DIVINE_PROFILE)return window.WOG_DIVINE_PROFILE;
+    const response=await fetch('config/divine-powers-v0.1.json');
+    if(!response.ok)throw new Error('Divine Powers Profile 無法載入');
+    return response.json();
+  }
   async function loadAgriculture() {
     if (window.WOG_AGRICULTURE_PROFILE) return window.WOG_AGRICULTURE_PROFILE;
     const response=await fetch('config/balance-agriculture-v0.1.json');
@@ -72,9 +117,10 @@
     return response.json();
   }
   function newWorld() {
-    state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{}),religionProfile:activeReligionProfile});
+    state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{}),religionProfile:activeReligionProfile,divineProfile:activeDivineProfile});
+    if(divineKind==='miracle')configureMiracle(selectedPower());
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
-    paused=true;speed=1;acc=0;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedRain=false;$('events').scrollTop=0;
+    paused=true;speed=1;acc=0;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -92,18 +138,25 @@
     finally{profileLoading=false;$('balanceProfile').disabled=false;$('pauseBtn').disabled=false;render();}
   });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
-  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;$('events').scrollTop=0;render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;activeDivineProfile=state.divinePowers;$('balanceProfile').value=activeProfile?'agriculture':'original';armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
-  function updateCost() {
-    $('radiusValue').textContent=$('radius').value+' 格';$('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';$('durationValue').textContent=$('duration').value+' 日';
-    const target=cursor||state.camp, preview=S.evalRain(state,{x:target.x,y:target.y,...opts()});
-    $('rainCost').textContent=`預估 ${preview.cost} DP`;const left=Math.max(0,state.god.skills.rain.readyAtHour-state.hour);
-    if(armedRain && left>0)armedRain=false;
-    $('rainCooldown').textContent=left ? `冷卻中 · 剩餘 ${Math.ceil(left/24)} 模擬日` : preview.reason || '已就緒 · 點選後指定地圖中心';
-    $('rainBtn').textContent=armedRain?'取消選擇位置':'選擇施展位置';
-    $('rainBtn').disabled=profileLoading||(!preview.ok&&!armedRain);
-    $('rainBtn').title=preview.reason||'點擊後在地圖選擇喚雨中心';
-    $('rainBtn').classList.toggle('secondary',armedRain);
+  function updateCost(){
+    if(divineKind!=='miracle')return;
+    const id=selectedPower();
+    $('radiusValue').textContent=$('radius').value+' 格';
+    $('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';
+    $('durationValue').textContent=$('durationLabel').hidden?'即時':$('duration').value+' 日';
+    const target=cursor||state.camp,preview=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
+    const left=Math.max(0,(state.god.skills[id]?.readyAtHour||0)-state.hour);
+    if(armedMiracle&&armedMiracle!==id)armedMiracle=null;
+    if(armedMiracle&&left>0)armedMiracle=null;
+    $('rainCost').textContent=`預估 ${preview.cost??'—'} DP`;
+    $('rainCooldown').textContent=left?`冷卻中 · 剩餘 ${Math.ceil(left/24)} 模擬日`:
+      preview.reason||'已就緒 · 指定地圖中心；最終條件以實際點選位置判斷';
+    $('rainBtn').textContent=armedMiracle?'取消選擇位置':'選擇施展位置';
+    $('rainBtn').disabled=profileLoading||left>0||state.god.dp+1e-8<(preview.cost??Infinity);
+    $('rainBtn').title=preview.reason||'點擊後選擇施展中心';
+    $('rainBtn').classList.toggle('secondary',!!armedMiracle);
   }
   function render() {
     const st=S.stats(state), current=state.people.find(p=>p.id===chosen);
@@ -124,8 +177,8 @@
     $('balanceProfile').value=state.agriculture?'agriculture':'original';
     $('applyAgricultureBtn').disabled=profileLoading||!state.agriculture;
     $('mapStatus').textContent=profileLoading?'載入平衡設定中…':state.agriculture?'Agriculture v0.1 · 河流、季節與實際農作物':'Original · 原始平衡對照';
-    $('mapTip').hidden=!armedRain;
-    $('simHint').textContent=armedRain?'已選擇降雨：點擊地圖施展（Esc 取消）':st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。';
+    $('mapTip').hidden=!armedMiracle;
+    $('simHint').textContent=armedMiracle?('已選擇'+(powerMeta('miracle',armedMiracle)?.label||'神蹟')+'：點擊地圖施展（Esc 取消）'):st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。';
     $('simRate').textContent=`${speed}× · 約 ${format(2/speed,2)} 秒 / 模擬日`;
     updateCost();
     const saints=state.religion.saints.map(id=>state.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
@@ -140,10 +193,17 @@
     const saint=saints.find(p=>p.id===selectedSaintId);
     const quota=saint&&state.religion.saintQuota?state.religion.saintQuota[saint.id]:null;
     $('saintQuota').textContent=quota?`${quota.quota} / ${state.rules.oracleQuota}`:'—';
-    const active=state.religion.oracles.find(o=>o.status==='active'&&o.saintId===selectedSaintId&&o.intentType==='food.produce');
-    $('oracleStatus').textContent=active?`持續中 · 已影響工作選擇 ${active.influenceWorkCount} 次`:'目前沒有有效指派';
-    $('oracleReason').textContent=active?active.propagatedAtHour===null?'Saint 已接收，準備向居民傳達。':`已傳播到 ${active.heardCount} 位可能聽見的居民；是否改變行為仍取決於實際生活。`:'神諭不消耗 DP，但需要合格的 Saint 和他的接收額度。';
-    $('oracleBtn').disabled=profileLoading||!saint||!quota||quota.quota<1||!!active;
+    const intent=divineKind==='oracle'?selectedPower():'food.produce';
+    const active=state.religion.oracles.find(o=>o.status==='active'&&o.saintId===selectedSaintId&&o.intentType===intent);
+    $('oracleName').textContent=powerMeta('oracle',intent)?.label||'糧食生產';
+    $('oracleHint').textContent=powerMeta('oracle',intent)?.hint||'Saint 傳遞意圖，居民自主行動';
+    $('oracleStatus').textContent=active?
+      (intent==='religion.spread'?`持續中 · 已促成傳教 ${active.influenceSermonCount||0} 次`:
+        `持續中 · 已影響工作選擇 ${active.influenceWorkCount} 次`):'目前沒有有效指派';
+    $('oracleReason').textContent=active?active.propagatedAtHour===null?'Saint 已接收，準備向居民傳達。':
+      `已傳播到 ${active.heardCount} 位可聆聽的居民；實際結果仍取決於當地活動。`:
+      (saint?S.checkOracle(state,saint.id,intent).reason||'神諭不消耗 DP；會使用 Saint 個人接收額度。':'需要合格 Saint 和可用額度');
+    $('oracleBtn').disabled=profileLoading||!saint||!S.checkOracle(state,saint?.id,intent).ok;
     $('concludeBtn').hidden=!active;
     $('concludeBtn').disabled=!active||!quota||quota.quota<=-1;
     const prayerTitles={'food-water':'缺雨與作物','food-shortage':'糧食不足',
@@ -219,8 +279,10 @@
       const prayerCount=isPriest?S.priestPetitions(state,p.id).length:0;
       const roleInfo=roles.length?`<div class="priest-summary">${html(roles.join(' / '))}${prayerCount?` · 已彙整 ${prayerCount} 類祈求（點地圖泡泡查看）`:''}</div>`:'';
       const workDay=dec && Number.isFinite(dec.hour)?`第 ${Math.floor(dec.hour/24)+1} 日的`:'先前的';
+      const statusText=Object.entries(p.divineStatuses||{}).filter(([,v])=>v.endsAtHour>state.hour)
+        .map(([key,v])=>(S.POWER_DEFAULTS[key]?.label||key)+` · 剩餘 ${Math.ceil((v.endsAtHour-state.hour)/24)} 日`).join('／');
       const activeReason=p.activityReason?`<div class="reason" title="${html(p.activityReason)}" tabindex="0"><b>此刻行動：</b>${html(p.activityReason)}</div>`:'';
-      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'} · ${religious}</div>${roleInfo}<div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${activeReason}<div class="reason" title="${html(dec?.reason||'尚未進行工作決策')}" tabindex="0">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
+      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'} · ${religious}</div>${roleInfo}${statusText?`<div class="divine-status">限時狀態：${html(statusText)}</div>`:''}<div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${activeReason}<div class="reason" title="${html(dec?.reason||'尚未進行工作決策')}" tabindex="0">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
     }
     // History alone scrolls inside the fixed-size inspector; newest events stay first.
     const feed=$('events');
@@ -306,14 +368,30 @@
       c.textBaseline='middle';c.fillText(petitions.length>9?'9+':String(petitions.length),b.x,b.y);
       c.restore();
     }
-    for(const e of state.effects){if(state.hour>=e.endsAtHour)continue;c.save();c.fillStyle='#9dccde24';c.strokeStyle='#bfeaff';c.lineWidth=2.5;c.beginPath();c.arc(e.x*size,e.y*size,e.radius*size,0,Math.PI*2);c.fill();c.stroke();
-      c.strokeStyle='#acd7e680';for(let i=0;i<30;i++){const aa=i*2.39996,rr=(i%10)/10*e.radius*size;const x=e.x*size+Math.cos(aa)*rr,y=e.y*size+Math.sin(aa)*rr;const fall=(time*19+i*13)%24;c.beginPath();c.moveTo(x,y+fall-12);c.lineTo(x-3,y+fall);c.stroke();}c.restore();}
-    if(armedRain) {const target=cursor||state.camp;c.save();c.strokeStyle='#ffdda7';c.lineWidth=3;c.setLineDash([7,4]);c.beginPath();c.arc(target.x*size,target.y*size,+$('radius').value*size,0,Math.PI*2);c.stroke();c.restore();}
+    for(const e of state.effects){
+      if(state.hour>=e.endsAtHour)continue;
+      const kind=e.type||'rain';
+      c.save();
+      c.fillStyle=kind==='ripening'?'#f3ce6622':kind==='drought'?'#b97e4926':'#9dccde24';
+      c.strokeStyle=kind==='ripening'?'#e5c86b':kind==='drought'?'#bf885a':'#bfeaff';
+      c.lineWidth=2.5;c.beginPath();c.arc(e.x*size,e.y*size,e.radius*size,0,Math.PI*2);c.fill();c.stroke();
+      if(kind==='rain'){
+        c.strokeStyle='#acd7e680';
+        for(let i=0;i<30;i++){const aa=i*2.39996,rr=(i%10)/10*e.radius*size;const x=e.x*size+Math.cos(aa)*rr,y=e.y*size+Math.sin(aa)*rr;const fall=(time*19+i*13)%24;c.beginPath();c.moveTo(x,y+fall-12);c.lineTo(x-3,y+fall);c.stroke();}
+      }
+      c.restore();
+    }
+    if(armedMiracle) {const target=cursor||state.camp;c.save();c.strokeStyle='#ffdda7';c.lineWidth=3;c.setLineDash([7,4]);c.beginPath();c.arc(target.x*size,target.y*size,+$('radius').value*size,0,Math.PI*2);c.stroke();c.restore();}
   }
   function onMap(e) {
     const rect=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-rect.left)*state.width/rect.width), y=Math.floor((e.clientY-rect.top)*state.height/rect.height);
     if(x<0||y<0||x>=state.width||y>=state.height)return;
-    if(armedRain){const r=S.castRain(state,{x,y,...opts()});say(r.ok?`降雨成功：消耗 ${r.cost} DP，世界將自行運作。`:r.reason);if(r.ok)armedRain=false;render();return;}
+    if(armedMiracle){
+      const id=armedMiracle,r=S.castMiracle(state,id,{x,y,...opts()});
+      say(r.ok?(powerMeta('miracle',id)?.label||id)+` 已施展，消耗 ${r.cost} DP；世界繼續自主運作。`:r.reason);
+      if(r.ok)armedMiracle=null;
+      render();return;
+    }
     const mx=(e.clientX-rect.left)*canvas.width/rect.width;
     const my=(e.clientY-rect.top)*canvas.height/rect.height;
     let marked=null,hit=Infinity;
@@ -344,9 +422,9 @@
   $('pauseBtn').onclick=()=>{paused=!paused;render();};
   document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>{speed=+btn.dataset.speed;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',b===btn));render();});
   ['radius','intensity','duration'].forEach(id=>$(id).addEventListener('input',()=>{updateCost();draw();}));
-  $('rainBtn').onclick=toggleRainTarget;
-  $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{saintId:selectedSaintId,intentType:'food.produce'});say(r.ok?'神諭已交給 Saint；居民稍後自主聆聽與回應。':r.reason);render();};
-  $('concludeBtn').onclick=()=>{const o=state.religion.oracles.find(v=>v.status==='active'&&v.saintId===selectedSaintId&&v.intentType==='food.produce');const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
+  $('rainBtn').onclick=toggleMiracleTarget;
+  $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{saintId:selectedSaintId,intentType:selectedPower()});say(r.ok?'神諭已交給 Saint；居民稍後自主聆聽與回應。':r.reason);render();};
+  $('concludeBtn').onclick=()=>{const o=state.religion.oracles.find(v=>v.status==='active'&&v.saintId===selectedSaintId&&v.intentType===selectedPower());const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
   canvas.addEventListener('click',onMap);
   canvas.addEventListener('mousemove',e=>{const rect=canvas.getBoundingClientRect();cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};});
   canvas.addEventListener('mouseleave',()=>{cursor=null;});
@@ -357,9 +435,9 @@
   $('houseNext').onclick=()=>{housePage++;render();};
   $('miracleTab').onclick=()=>showDivineKind('miracle');
   $('oracleTab').onclick=()=>showDivineKind('oracle');
-  $('divinePowerSelect').onchange=()=>render();
+  $('divinePowerSelect').onchange=()=>{armedMiracle=null;if(divineKind==='miracle')configureMiracle(selectedPower());render();};
   document.querySelectorAll('[data-inspect-tab]').forEach(button=>button.onclick=()=>{if(button.dataset.inspectTab==='needs'){activePriestId=null;priestPetitionIndex=0;}showInspector(button.dataset.inspectTab);});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedRain){armedRain=false;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)){toggleRainTarget();}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedMiracle){armedMiracle=null;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)){toggleMiracleTarget();}});
   $('saveBtn').onclick=save;
   $('loadBtn').onclick=()=>{let raw=null;try{raw=localStorage.getItem(storageKey()) || localStorage.getItem('wog-mvp0-web-save');}catch(_){}if(raw)restore(raw);else say('目前沒有本機存檔；可以匯入 JSON。');};
   $('exportBtn').onclick=exportSave;
@@ -384,13 +462,14 @@
   $('balanceProfile').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
-  Promise.allSettled([loadAgriculture(),loadReligion()]).then(([agriculture,religion])=>{
+  Promise.allSettled([loadAgriculture(),loadReligion(),loadDivine()]).then(([agriculture,religion,divine])=>{
     activeProfile=agriculture.status==='fulfilled'?agriculture.value:null;
     activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
+    activeDivineProfile=divine.status==='fulfilled'?divine.value:null;
     newWorld();
-    const failures=[agriculture,religion].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    const failures=[agriculture,religion,divine].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     say(failures.length?'Profile 載入失敗，採用內建預設：'+failures.join('；'):
-      'Agriculture 與 Religion Propagation v0.1 已啟用。');
+      'Agriculture、Religion Propagation 與 Divine Powers v0.1 已啟用。');
   }).finally(()=>{
     profileLoading=false;$('balanceProfile').disabled=false;$('resetBtn').disabled=false;render();
   });

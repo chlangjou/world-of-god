@@ -91,11 +91,47 @@
     r.childOrdinaryLearningChance=clamp(r.childOrdinaryLearningChance,0,1);
     return r;
   }
-  function religionRand(s){
-    let x=s.religionRng>>>0;
+  const OPPONENT_DEFAULTS=Object.freeze({profileId:'opponent-v0.1',enabled:true,
+    name:'暮影信仰',initialHouseholdIndexes:[5,6],championDevotion:53,familyDevotion:29,
+    initialDp:42,startDay:14,decisionIntervalDays:12,spreadOracleDurationDays:150,
+    offensiveEveryTurns:4});
+  function opponentRules(profile){
+    if(profile?.profileId!==OPPONENT_DEFAULTS.profileId||profile.enabled===false)return null;
+    const r={...OPPONENT_DEFAULTS};
+    for(const k of ['championDevotion','familyDevotion','initialDp','startDay',
+      'decisionIntervalDays','spreadOracleDurationDays','offensiveEveryTurns'])
+      if(Number.isFinite(profile[k]))r[k]=profile[k];
+    r.championDevotion=Math.round(clamp(r.championDevotion,40,79));
+    r.familyDevotion=Math.round(clamp(r.familyDevotion,20,39));
+    r.initialDp=clamp(r.initialDp,0,100);
+    r.startDay=Math.round(clamp(r.startDay,1,360));
+    r.decisionIntervalDays=Math.round(clamp(r.decisionIntervalDays,3,90));
+    r.spreadOracleDurationDays=Math.round(clamp(r.spreadOracleDurationDays,30,720));
+    r.offensiveEveryTurns=Math.round(clamp(r.offensiveEveryTurns,2,30));
+    r.initialHouseholdIndexes=Array.isArray(profile.initialHouseholdIndexes)?
+      [...new Set(profile.initialHouseholdIndexes.filter(n=>Number.isInteger(n)&&n>=3&&n<10))].slice(0,3):
+      OPPONENT_DEFAULTS.initialHouseholdIndexes;
+    r.name=typeof profile.name==='string'?profile.name.slice(0,30):OPPONENT_DEFAULTS.name;
+    return r;
+  }
+  function allFaiths(s){return s.opponent?.enabled?[s.religion,s.opponentReligion]:[s.religion];}
+  function faithOf(s,id){return allFaiths(s).find(f=>f.id===id)||null;}
+  function actorFor(s,godId){
+    if(s.opponent?.enabled&&godId===s.opponentGod.id)
+      return {faith:s.opponentReligion,god:s.opponentGod,enemy:true};
+    return {faith:s.religion,god:s.god,enemy:false};
+  }
+  function faithDpRate(s,faith){
+    const weight=living(s).filter(p=>p.religionId===faith.id)
+      .reduce((n,p)=>n+faithfulWeight(p.devotion),0);
+    return s.rules.naturalDpPerDay+weight*s.rules.devotionDpPerWeightDay;
+  }
+  function religionRand(s,faith=s.religion){
+    const key=faith?.id===s.opponentReligion?.id?'opponentRng':'religionRng';
+    let x=s[key]>>>0;
     x^=x<<13;x^=x>>>17;x^=x<<5;
-    s.religionRng=x>>>0;
-    return s.religionRng/4294967296;
+    s[key]=x>>>0;
+    return s[key]/4294967296;
   }
   const HUMAN_NAMES = ['青禾','木川','雨生','阿岑','松遠','小滿','雲舒','柏石','穗寧','如月','望山','松原','溪明','海棠','春野','南星','芷晴','阿黎','長空','岑音','林羽','安年','初光','碧落','稻安','嵐風','稻香','晨露','南風','青木','田川','百合'];
   const FAMILY_NAMES = ['青禾家','溪畔家','松原家','山影家','白石家','風林家','雲野家','河望家','田北家','林北家'];
@@ -232,10 +268,19 @@
     const seed = String(config.seed || 'valley-spring-01').slice(0, 100);
     const religionPropagation=religionRules(config.religionProfile);
     const divinePowers=divinePowerRules(config.divineProfile);
+    const opponent=opponentRules(config.opponentProfile);
     const initialMoisture = clamp(num(config.moisture, .52), .2, .9);
     const s = { version: VERSION, seed, rules, rng: hash(seed), religionRng:hash(seed+'|religion-v0.1'), hour: 0, tick: 0,
       width: rules.width, height: rules.height, tiles: [], people: [], households: [], settlements: [],
-      camp: null, religionPropagation, divinePowers, religion: { id: 'r1', godId: 'g1', name: '初光信仰', saints: [], priests: [],
+      camp: null, religionPropagation, divinePowers,
+      opponent:opponent?{...opponent,lastActionDay:-1,turns:0,casts:0,oracleIssues:0}:null,
+      opponentRng:opponent?hash(seed+'|opponent-v0.1'):null,
+      opponentReligion:opponent?{id:'r2',godId:'g2',name:opponent.name,
+        saints:[],priests:[],saintQuota:{},oracles:[],reachedSettlements:{}}:null,
+      opponentGod:opponent?{id:'g2',dp:opponent.initialDp,cap:rules.maxDp,
+        skills:{rain:{level:1,xp:0,readyAtHour:0},
+          ...Object.fromEntries(Object.keys(POWER_DEFAULTS).map(id=>[id,{level:1,xp:0,readyAtHour:0}]))}}:null,
+      religion: { id: 'r1', godId: 'g1', name: '初光信仰', saints: [], priests: [],
         oracles: [], prayers: [], lastPrayerHour: -1, regionalPrayerAt:{}, reachedSettlements:{} },
       god: { id: 'g1', dp: rules.initialDp, cap: rules.maxDp,
         skills: { rain: { level: 1, xp: 0, readyAtHour: 0 },
@@ -249,6 +294,21 @@
       history: { settlementFoundedHour: null, firstSaintHour: null },
       metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
     generate(s, initialMoisture);
+    if(opponent){
+      // No new people, buildings, farmland or resources are created by the rival.
+      for(const i of opponent.initialHouseholdIndexes){
+        const h=s.households[i];if(!h)continue;
+        let championChosen=false;
+        for(const personId of h.members){
+          const p=s.people.find(v=>v.id===personId);
+          if(!p)continue;
+          p.religionId=s.opponentReligion.id;
+          if(p.stage==='adult'&&!championChosen){
+            p.devotion=opponent.championDevotion;championChosen=true;
+          }else p.devotion=opponent.familyDevotion;
+        }
+      }
+    }
     if (agriculture) {s.counts.newFields=0;s.counts.newFamilies=0;s.counts.newSettlements=0;}
     if (agriculture) for (const t of s.tiles) if (t.terrain === 'field') {
       const L=agriculture.land, cap=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*

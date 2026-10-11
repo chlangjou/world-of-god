@@ -324,3 +324,58 @@ test('Agriculture crop regeneration exactly accounts for unharvested stock plus 
   assert.ok(Math.abs(generated-remaining-(s.counts.foodFromLabor-before))<1e-7,'No harvested Food may arise without crop-stock transfer');
   assert.equal(W.validate(s).ok,true);
 });
+
+test('high-growth Agriculture supports a 4,000-day world without Rain or food collapse',()=>{
+  const profile=require('../config/balance-agriculture-v0.1.json');
+  const s=W.create({seed:'valley-spring-01',balanceProfile:profile});
+  afterDays(s,4000);
+  const st=W.stats(s);
+  const need=s.people.filter(p=>p.alive).reduce((n,p)=>n+(p.stage==='child'?s.rules.foodNeedChild:s.rules.foodNeedAdult),0);
+  assert.ok(st.people>=45,'the population should outgrow the initial 24-person settlement');
+  assert.ok(st.food>need*12,'agriculture must have a meaningful reserve at day 4000');
+  assert.equal(st.deaths,0);
+  assert.equal(s.counts.rainCasts,0);
+  valid(s);
+});
+
+test('farmers autonomously expand fields only through work, with initially zero crops',()=>{
+  const profile=require('../config/balance-agriculture-v0.1.json');
+  const s=W.create({seed:'calm-river',balanceProfile:profile});
+  afterDays(s,120);
+  const originalFields=s.tiles.filter(t=>t.terrain==='field').length;
+  // A synthetic high-population load tests food capacity; it is not a birth mechanic.
+  const adult=s.people.find(p=>p.stage==='adult'), child=s.people.find(p=>p.stage==='child');
+  for(let i=0;i<176;i++){
+    const a=i%4===0,source=a?adult:child,h=s.households[i%s.households.length];
+    const person={...source,id:'stress-'+i,householdId:h.id,stage:a?'adult':'child',
+      occupation:a?'food_producer':'dependent',partnerId:null,genderRole:'fertilize',
+      pregnancyDueHour:null,religionId:null,devotion:0,proficiency:{...source.proficiency}};
+    h.members.push(person.id);s.people.push(person);
+  }
+  afterDays(s,180);
+  const st=W.stats(s);
+  assert.ok(st.farmFields>originalFields+20,'people must be able to cultivate additional reachable land');
+  assert.ok(st.newFields>20,'field expansion must be done by real farm work');
+  assert.equal(st.deaths,0);
+  assert.equal(s.counts.rainCasts,0);
+  valid(s);
+});
+
+test('a 4,000-day Agriculture save can adopt current profile without inventory creation',()=>{
+  const latest=require('../config/balance-agriculture-v0.1.json');
+  const earlier=clone(latest);
+  earlier.land.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture=.2;
+  earlier.land.autonomousExpansionEnabled=false;
+  const s=W.create({seed:'calm-river',balanceProfile:earlier});
+  afterDays(s,180);
+  const before=clone({people:s.people,households:s.households,settlements:s.settlements,
+    events:s.events,tiles:s.tiles});
+  assert.equal(W.applyAgricultureProfile(s,latest).ok,true);
+  assert.deepEqual({people:s.people,households:s.households,settlements:s.settlements,
+    events:s.events,tiles:s.tiles},before,'profile update itself must not create Food, crop or people');
+  assert.equal(s.agriculture.land.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture,.8);
+  assert.equal(W.applyAgricultureProfile(W.create(),latest).ok,false,'Original remains isolated');
+  valid(s);
+  afterDays(s,10);
+  valid(s);
+});

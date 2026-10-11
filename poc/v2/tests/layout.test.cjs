@@ -53,3 +53,20 @@ test('History only uses a fixed-height scrollbar with newest events first',()=>{
    'only History scrolls; the overall page stays fixed');
  assert.equal(W.DEFAULT_RULES.eventLimit,200);
 });
+
+test('Priest and Saint are distinct map roles; only collected petitions display clickable bubbles',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const app=fs.readFileSync(path.join(root,'src/app.js'),'utf8');
+ const viewport=fs.readFileSync(path.join(root,'assets/viewport.css'),'utf8');
+ assert.ok(html.includes('sw saint')&&html.includes('sw priest'),
+   'special roles must be visible in the map legend');
+ assert.ok(app.includes("saint?'#80e4eb':priest?'#c4a2fa'"),'separate role colors');
+ assert.ok(app.includes('priestBubblePosition')&&app.includes('S.priestPetitions(state,id)'),
+   'real collected petitions must gate the bubble');
+ assert.ok(app.includes("activePriestId=marked.id;showInspector('needs')"),
+   'a bubble click opens its Priest prayer information');
+ assert.ok(app.includes('priestPetitionIndex')&&app.includes('data-priest-nav'),
+   'all collected petition types must remain navigable without scrolling');
+ assert.ok(viewport.includes('.priest-prayer-nav')&&viewport.includes('.sw.priest'));
+ assert.ok(viewport.includes('html,body{height:100%;max-height:100%;overflow:hidden}'));
+});

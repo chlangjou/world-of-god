@@ -26,8 +26,10 @@
   // Religion Propagation v0.1: tunable, seed-stable social pulses (separate from economic RNG).
   const RELIGION_DEFAULTS=Object.freeze({
     profileId:'religion-propagation-v0.1',pulseDays:7,minimumChildAge:4,
+    priesthoodEnabled:true,priestTeachingMultiplier:1.8,
     contactRadius:11,interSettlementReach:30,
-    householdJoinChance:.13,socialJoinChance:.055,priestJoinChance:.075,
+    householdJoinChance:.13,socialJoinChance:.055,priestJoinChance:.24,
+    priestRivalDoubtChance:.58,priestRivalConversionChance:.30,priestRivalDoubtStep:3,
     settlementVisitChance:.012,weakLearningChance:.26,ordinaryConsolidationCap:60,
     childStrongLearningChance:.32,childOrdinaryLearningChance:.14,
     regionalSaintChancePerMonth:.12,oracleRelayChance:.55
@@ -36,12 +38,16 @@
     const r={...RELIGION_DEFAULTS};
     if(profile?.profileId===r.profileId)for(const [k,v] of Object.entries(r))
       if(typeof v==='number'&&Number.isFinite(profile[k]))r[k]=profile[k];
+    if(profile?.profileId===r.profileId && typeof profile.priesthoodEnabled==='boolean')
+      r.priesthoodEnabled=profile.priesthoodEnabled;
     r.pulseDays=Math.round(clamp(r.pulseDays,1,90));
     r.minimumChildAge=Math.round(clamp(r.minimumChildAge,0,17));
     r.contactRadius=clamp(r.contactRadius,1,25);
     r.interSettlementReach=clamp(r.interSettlementReach,0,64);
     for(const k of Object.keys(r))if(k.endsWith('Chance')||k.endsWith('ChancePerMonth'))r[k]=clamp(r[k],0,1);
     r.ordinaryConsolidationCap=Math.round(clamp(r.ordinaryConsolidationCap,40,79));
+    r.priestTeachingMultiplier=clamp(r.priestTeachingMultiplier,1,3);
+    r.priestRivalDoubtStep=Math.round(clamp(r.priestRivalDoubtStep,1,8));
     r.weakLearningChance=clamp(r.weakLearningChance,0,1);
     r.childStrongLearningChance=clamp(r.childStrongLearningChance,0,1);
     r.childOrdinaryLearningChance=clamp(r.childOrdinaryLearningChance,0,1);
@@ -191,12 +197,13 @@
     const s = { version: VERSION, seed, rules, rng: hash(seed), religionRng:hash(seed+'|religion-v0.1'), hour: 0, tick: 0,
       width: rules.width, height: rules.height, tiles: [], people: [], households: [], settlements: [],
       camp: null, religionPropagation, religion: { id: 'r1', godId: 'g1', name: '初光信仰', saints: [], priests: [],
-        oracles: [], prayers: [], lastPrayerHour: -1, reachedSettlements:{} },
+        oracles: [], prayers: [], lastPrayerHour: -1, regionalPrayerAt:{}, reachedSettlements:{} },
       god: { id: 'g1', dp: rules.initialDp, cap: rules.maxDp,
         skills: { rain: { level: 1, xp: 0, readyAtHour: 0 } } },
       effects: [], nextId: 1, eventSeq: 0, events: [],
       counts: { births: 0, deaths: 0, relocations: 0, rainCasts: 0, foodFromLabor: 0,
-        newBelievers:0, householdAdoptions:0, socialAdoptions:0, interSettlementAdoptions:0 },
+        newBelievers:0, householdAdoptions:0, socialAdoptions:0, interSettlementAdoptions:0,
+        priestAdoptions:0,rivalConversions:0,rivalDoubts:0 },
       environment: { phase: 'mild', totalRain: 0 }, lastFoodOutput: 0,
       balanceProfileId: agriculture?.profileId || 'original', agriculture,
       history: { settlementFoundedHour: null, firstSaintHour: null },
@@ -231,7 +238,9 @@
     const activeOracle = s.religion.oracles.find(o => o.status === 'active');
     return { day: days(s) + 1, people: pop.length, households: s.households.length, houses: s.households.filter(h => h.home).length,
       settlements: s.settlements.length, followers: followers.length, believers: believers.length,
-      newBelievers:s.counts.newBelievers||0, saints:s.religion.saints.length,priests:s.religion.priests.length,
+      newBelievers:s.counts.newBelievers||0,priestAdoptions:s.counts.priestAdoptions||0,
+      rivalConversions:s.counts.rivalConversions||0,
+      saints:s.religion.saints.length,priests:s.religion.priests.length,
       avgDevotion: religious.reduce((z,p)=>z+p.devotion,0)/Math.max(1,religious.length),
       devotionWeight: devWeight, dpRateDay: s.rules.naturalDpPerDay + devWeight * s.rules.devotionDpPerWeightDay,
       food: foodPrivate + common, commonFood: common, privateFood: foodPrivate, avgMoisture: wet, avgCrop: crop,
@@ -343,7 +352,7 @@
     }
   }
   function ensurePriest(s){
-    if(days(s)<10)return;
+    if(!s.religionPropagation.priesthoodEnabled || days(s)<10)return;
     const people=living(s);
     for(const town of s.settlements){
       if(s.religion.priests.some(id=>people.some(p=>p.id===id&&personSettlement(s,p)?.id===town.id)))continue;
@@ -432,11 +441,14 @@
     const adopt=(p,cause)=>{
       p.religionId=id;p.devotion=20+Math.floor(clamp(p.receptivity,0,1)*4);
       s.counts.newBelievers=(s.counts.newBelievers||0)+1;
-      const field=cause==='family'?'householdAdoptions':cause==='exchange'?'interSettlementAdoptions':'socialAdoptions';
+      const field=cause==='family'?'householdAdoptions':cause==='exchange'?'interSettlementAdoptions':
+        cause==='priest'||cause==='rival'?'priestAdoptions':'socialAdoptions';
       s.counts[field]=(s.counts[field]||0)+1;
+      if(cause==='rival')s.counts.rivalConversions=(s.counts.rivalConversions||0)+1;
     };
     for(const p of people){
-      if(p.religionId!==null&&p.religionId!==id)continue; // no rival conversions in v0.1
+      const rival=p.religionId!==null&&p.religionId!==id;
+      if(rival&&p.devotion>=s.rules.faithThreshold)continue;
       if(p.stage==='child'&&p.age<r.minimumChildAge)continue;
       const house=homes.get(p.householdId)||[];
       const guardians=p.stage==='child'?(p.parentIds?.length
@@ -445,7 +457,7 @@
       const family=house.some(q=>q.id!==p.id&&q.religionId===id&&q.devotion>=20);
       // Formative child teaching is distinct from short sermons: sustained lived examples
       // may reach modest committed faith, but never yield Devout/Zealot bands by heredity.
-      if(p.stage==='child'&&guardians.length){
+      if(p.stage==='child'&&guardians.length&&!rival){
         const devout=guardians.filter(q=>q.religionId===id&&q.devotion>=80).length;
         const committed=guardians.filter(q=>q.religionId===id&&q.devotion>=40).length;
         const religious=guardians.filter(q=>q.religionId===id&&q.devotion>=20).length;
@@ -479,17 +491,40 @@
       }
       if(!family&&!social&&!priest&&!exchange)continue;
       const sensitivity=.6+.8*p.receptivity;
+      if(rival){
+        // Only a locally preaching Priest can challenge another affiliation in
+        // this single-God PoC. 40+ rival devotion is protected above. Lower bands
+        // first weaken over repeated credible encounters, then may freely convert.
+        if(!priest)continue;
+        if(p.devotion>=20){
+          const doubt=clamp(r.priestRivalDoubtChance*sensitivity,0,.9);
+          if(religionRand(s)<doubt){
+            p.devotion=Math.max(19,p.devotion-r.priestRivalDoubtStep);
+            s.counts.rivalDoubts=(s.counts.rivalDoubts||0)+1;
+          }
+        }else if(religionRand(s)<clamp(r.priestRivalConversionChance*sensitivity,0,.8)){
+          adopt(p,'rival');
+        }
+        continue;
+      }
       if(p.religionId===id){
         // Repeated credible teaching can cross 40; routine consolidation slows above 40.
         // Exceptional Devout/Zealot bands still depend on stronger, attributable evidence.
         const committedSlowdown=p.devotion>=40?.55:1;
-        if(religionRand(s)<r.weakLearningChance*sensitivity*(family||priest?1:.6)*committedSlowdown)
+        const teaching=priest?r.priestTeachingMultiplier:1;
+        if(religionRand(s)<clamp(r.weakLearningChance*sensitivity*(family||priest?1:.6)*committedSlowdown*teaching,0,.95))
           p.devotion=Math.min(r.ordinaryConsolidationCap,p.devotion+1);
       }else{
-        const chance=clamp(( (family?r.householdJoinChance:0)+
-          (social?r.socialJoinChance:0)+(priest?r.priestJoinChance:0)+
-          (exchange?r.settlementVisitChance:0))*sensitivity,0,.65);
-        if(religionRand(s)<chance)adopt(p,family?'family':social||priest?'social':'exchange');
+        // Priests add a *separate* recruitment opportunity. Even when there is
+        // already family/social exposure, the clergy bonus is not overwritten by it.
+        const baseline=clamp(((family?r.householdJoinChance:0)+
+          (social?r.socialJoinChance:0)+(exchange?r.settlementVisitChance:0))*sensitivity,0,.65);
+        const priestBonus=priest?r.priestJoinChance*sensitivity:0;
+        const rolled=religionRand(s);
+        if(rolled<clamp(baseline+priestBonus,0,.85)){
+          const cause=rolled>=baseline?'priest':family?'family':social?'social':'exchange';
+          adopt(p,cause);
+        }
       }
     }
     // Settlement attribution is derived from real residents (migration included), not a border buff.
@@ -1105,6 +1140,98 @@
       }
     }
   }
+  // A direct prayer exists independently of clergy. Priests collect and summarize
+  // actual local open petitions; no extra believer wishes are conjured by appointment.
+  const PETITION_TYPES=Object.freeze({
+    'food-water':{title:'缺雨與作物',summary:'希望改善當地水分與農作物生長'},
+    'food-shortage':{title:'糧食不足',summary:'希望聚落得到充足的食物供應'},
+    'healing':{title:'傷病與治療',summary:'希望病傷的親友恢復健康'},
+    'shelter':{title:'住所與安居',summary:'希望家戶能取得建材及安全住所'}
+  });
+  function prayerSettlement(s,prayer){
+    const direct=s.settlements.find(t=>t.id===prayer.settlementId);
+    if(direct)return direct;
+    const first=(prayer.by||[]).map(id=>s.people.find(p=>p.id===id&&p.alive)).find(Boolean);
+    return first?personSettlement(s,first):null;
+  }
+  function priestPetitions(s,priestId){
+    const priest=s.people.find(p=>p.id===priestId&&p.alive);
+    if(!priest||!s.religion.priests.includes(priestId))return [];
+    return s.religion.prayers.filter(p=>p.status==='open'&&p.collectedBy===priestId)
+      .map(prayer=>{
+        const region=prayerSettlement(s,prayer);
+        const meta=PETITION_TYPES[prayer.type]||{title:'信徒祈禱',summary:'信徒提出的當地需要'};
+        return {id:prayer.id,type:prayer.type,title:meta.title,
+          summary:prayer.needSummary||meta.summary,settlementId:region?.id||null,
+          settlementName:region?.name||'尚未形成聚落',
+          createdAtHour:prayer.createdAtHour,
+          receivedAtHour:prayer.collectedAtHour,
+          supporterCount:new Set(prayer.by||[]).size};
+      }).sort((a,b)=>b.createdAtHour-a.createdAtHour||a.id.localeCompare(b.id));
+  }
+  function collectPrayers(s){
+    const priests=s.religion.priests.map(id=>s.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
+    for(const prayer of s.religion.prayers){
+      if(prayer.status!=='open'){prayer.collectedBy=null;continue;}
+      const location=prayerSettlement(s,prayer);
+      const chosen=location?priests.filter(p=>personSettlement(s,p)?.id===location.id)
+        .sort((a,b)=>a.id.localeCompare(b.id))[0]:null;
+      if(!chosen){prayer.collectedBy=null;continue;}
+      if(prayer.collectedBy!==chosen.id)prayer.collectedAtHour=s.hour;
+      prayer.collectedBy=chosen.id;
+    }
+  }
+  function updateRegionalPrayers(s){
+    const last=s.religion.regionalPrayerAt ||= {};
+    const live=living(s);
+    for(const town of s.settlements){
+      const families=s.households.filter(h=>town.householdIds.includes(h.id)&&
+        dist(town,h)<=s.rules.settlementClusterDistance);
+      const believers=live.filter(p=>p.religionId===s.religion.id&&p.devotion>=20&&
+        personSettlement(s,p)?.id===town.id);
+      if(!believers.length)continue;
+      const shortageDays=(town.storage.food+families.reduce((n,h)=>n+h.inventory.food,0))/
+        Math.max(.01,families.reduce((n,h)=>n+dailyFoodNeed(s,h),0));
+      const ill=believers.filter(p=>p.health<70);
+      const homeless=families.filter(h=>!h.home&&householdMembers(s,h).length);
+      const fields=s.tiles.filter(t=>t.terrain==='field'&&dist(t,town)<11);
+      const wet=fields.reduce((n,t)=>n+t.moisture,0)/Math.max(fields.length,1);
+      const crops=fields.reduce((n,t)=>n+t.crop,0)/Math.max(fields.length,1);
+      // The founding settlement retains its original drought petition, including
+      // Miracle-attribution accounting. Remote settlements have local rain needs.
+      const wantsWater=town.id!==s.settlements[0]?.id && fields.length>0 &&
+        wet<.48 && (crops<.4 || shortageDays<10);
+      const wantsFood=shortageDays<6;
+      const wantsHealing=ill.length>0;
+      const wantsShelter=homeless.length>=2&&days(s)-Math.floor(town.foundedAtHour/24)>=10;
+      const conditions={'food-water':wantsWater,'food-shortage':wantsFood,
+        'healing':wantsHealing,'shelter':wantsShelter};
+      // Resolved everyday needs should not remain permanently advertised as crises.
+      for(const p of s.religion.prayers)if(p.settlementId===town.id&&
+        p.status==='open'&&p.type!=='food-water'&&!conditions[p.type])
+          p.status='resolved';
+      const candidate=['food-water','food-shortage','healing','shelter'].find(type=>
+        conditions[type]&&!s.religion.prayers.some(p=>p.status==='open'&&
+          p.settlementId===town.id&&p.type===type));
+      if(!candidate || s.hour-(last[town.id]??-Infinity)<6*24)continue;
+      const reasons={
+        'food-water':`當地農田含水約 ${Math.round(wet*100)}%，農作物生長受影響`,
+        'food-shortage':`本地可及存糧約 ${shortageDays.toFixed(1)} 日`,
+        'healing':`${ill.length} 位信徒身體欠佳，希望獲得治療`,
+        'shelter':`${homeless.length} 個家戶尚無住所`
+      };
+      const actual=candidate==='healing'?ill:believers;
+      s.religion.prayers.push({id:'need-'+s.nextId++,type:candidate,
+        settlementId:town.id,center:{x:town.x,y:town.y},
+        createdAtHour:s.hour,status:'open',
+        by:actual.slice(0,12).map(p=>p.id),needSummary:reasons[candidate],
+        beforeMoisture:wet,foodAtRequest:town.storage.food,
+        foodProductionAtRequest:s.counts.foodFromLabor,castSeen:false,castId:null});
+      last[town.id]=s.hour;
+    }
+    s.religion.prayers=s.religion.prayers
+      .filter(p=>s.hour-p.createdAtHour<=120*24).slice(-s.rules.prayerLimit);
+  }
   function updatePrayers(s) {
     // Direct believer Prayer: short-lived evidence context, not perpetual exposure logs.
     const fields = s.tiles.filter(t=>t.terrain==='field' && dist(t,s.camp)<11);
@@ -1141,12 +1268,16 @@
   function checkFulfillment(s) {
     const st=stats(s);
     for(const prayer of s.religion.prayers) {
-      if (prayer.status!=='open') continue;
+      if (prayer.status!=='open' || prayer.type!=='food-water') continue;
       // Attribution needs a physically relevant prior Rain cast, improved field condition,
       // actual subsequent food labor and reduced food shortage. A button press alone never qualifies.
-      const rain=s.effects.find(e=>dist(e,s.camp)<=e.radius+6 && e.startsAtHour>=prayer.createdAtHour);
+      const center=prayer.center||s.camp;
+      const rain=s.effects.find(e=>dist(e,center)<=e.radius+6 && e.startsAtHour>=prayer.createdAtHour);
       if (rain) { prayer.castSeen=true; prayer.castId=rain.id; }
-      const changedMoisture=st.avgMoisture-prayer.beforeMoisture > .08;
+      const localFields=prayer.center?s.tiles.filter(t=>t.terrain==='field'&&dist(t,center)<11):null;
+      const measuredMoisture=localFields?
+        localFields.reduce((n,t)=>n+t.moisture,0)/Math.max(localFields.length,1):st.avgMoisture;
+      const changedMoisture=measuredMoisture-prayer.beforeMoisture > .08;
       const extraHarvest=s.counts.foodFromLabor-prayer.foodProductionAtRequest >= 8;
       const recent=s.hour-prayer.createdAtHour < 60*24;
       if (prayer.castSeen && changedMoisture && extraHarvest && recent) {
@@ -1174,11 +1305,13 @@
     consumeFood(s);
     updateSettlement(s);
     updatePrayers(s);
+    updateRegionalPrayers(s);
     checkFulfillment(s);
     const rate=stats(s).dpRateDay;
     s.god.dp=Math.min(s.god.cap,s.god.dp+rate);
     ensureSaint(s);
     ensurePriest(s);
+    collectPrayers(s);
     if(days(s)>0&&days(s)%s.religionPropagation.pulseDays===0){
       socialReligionPulse(s);
       relayOracles(s);
@@ -1499,13 +1632,24 @@
       candidate.events=(candidate.events||[]).filter(e=>
         !['world','housing','weather','prayer'].includes(e.kind));
     }
-    candidate.religionPropagation=religionRules(candidate.religionPropagation);
+    // Recognized old v0.1 profile default: adopt the improved Priest baseline on
+    // existing saves too, without overriding independently customized numeric rates.
+    const formerReligion=candidate.religionPropagation;
+    if(formerReligion?.profileId===RELIGION_DEFAULTS.profileId &&
+      formerReligion.priestJoinChance===.075 &&
+      !Number.isFinite(formerReligion.priestRivalDoubtChance))
+      formerReligion.priestJoinChance=RELIGION_DEFAULTS.priestJoinChance;
+    candidate.religionPropagation=religionRules(formerReligion);
     if(!Number.isSafeInteger(candidate.religionRng))candidate.religionRng=hash(candidate.seed+'|religion-v0.1');
     candidate.religion.reachedSettlements ||= {};
+    candidate.religion.regionalPrayerAt ||= {};
     candidate.counts.newBelievers ||= 0;
     candidate.counts.householdAdoptions ||= 0;
     candidate.counts.socialAdoptions ||= 0;
     candidate.counts.interSettlementAdoptions ||= 0;
+    candidate.counts.priestAdoptions ||= 0;
+    candidate.counts.rivalConversions ||= 0;
+    candidate.counts.rivalDoubts ||= 0;
     for(const o of candidate.religion.oracles||[])o.reachedSettlements ||= {};
     for(const town of candidate.settlements||[])ensureGranary(candidate,town);
     // Legacy v2 saves carried the former 130-event default. Expand it without
@@ -1518,5 +1662,5 @@
   }
   return {VERSION,DEFAULT_RULES,create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
-    settlementReligionStats};
+    settlementReligionStats,priestPetitions};
 });

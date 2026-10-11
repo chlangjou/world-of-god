@@ -43,6 +43,8 @@ npm start
 
 Religion Propagation v0.1 讓成人信徒在空閒時間傳道、兒童從虔誠家庭逐步形成信仰、鄰近聚落自然交流，並讓 Priest 轉傳 Saint 的 Oracle；宗教狀態可在聚落檢視。[詳細機制](docs/RELIGION_PROPAGATION.md)。
 
+Priest Interaction v0.2 加入 Priest／Saint 專屬地圖顏色、祭司彙整信徒真實祈願的可點選泡泡，以及對無信仰／低 Devotion 異教徒的加強傳道。 [互動與對照說明](docs/PRIEST_INTERACTION.md)。
+
 正式規格： [Core Principles](../../docs/CORE_PRINCIPLES.md)、
 [Population](../../docs/POPULATION_MODEL.md)、
 [Settlement Economy](../../docs/SETTLEMENT_ECONOMY_OCCUPATIONS.md)。

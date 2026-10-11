@@ -5,7 +5,7 @@
 - **Presentation：** `src/app.js` 處理 Input、Canvas、Hints 與儲存，不自行決定 Miracle／Oracle 的模擬規則。
 - **Profile：** `config/balance-agriculture-v0.1.json`（含各聚落糧倉建設）與 `config/religion-propagation-v0.1.json` 分別提供農業／基礎建設與宗教傳播參數。原始 `config/balance-default.json` 只是歷史 DEFAULT_RULES 快照。
 - **Styles：** 三份 CSS 區分原始基礎、固定視窗及檔案選單。
-- **Guides / Tests：** UI 規格、Agriculture 計算和可重現測試都在本目錄內，避免混入正式遊戲設計文件。
+- **Guides / Tests：** UI 規格、Agriculture 計算、Priest 祈願互動和有／無 Priest 對照測試都在本目錄內，避免混入正式遊戲設計文件。
 - **Optional Bundle：** 維護多檔案原始碼；必要時才產生 `dist/` 離線單檔，產物不進 Git。
 
 保留 God expresses intent, world determines execution、NPC 自主選擇、真實作物／食物庫存、物理可及共同糧倉、具體因果、Simulation／Rendering 分離、一頁不捲動 UI。

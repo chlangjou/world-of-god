@@ -149,3 +149,15 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
 
 /* Finished settlement granaries are distinguished from ordinary homes on the map. */
 .sw.granary{background:#d7a75e;border:1px solid #885f3a}
+
+/* Religious roles are identifiable independently of Devotion colors. */
+.sw.saint{background:#80e4eb}.sw.priest{background:#c4a2fa}
+.priest-summary{font-size:11px;color:var(--accent);line-height:1.4;margin-bottom:6px}
+.priest-summary small{display:block;font-size:10px;color:var(--muted)}
+@media(max-width:650px){.legend{flex-wrap:wrap;row-gap:2px}}
+
+/* Fixed-height priest petition navigation and legible scaled map markers. */
+.priest-prayer-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin:4px 0}
+.priest-prayer-nav small{font-size:10px;color:var(--muted)}
+.priest-prayer-nav button{background:#273c37;color:var(--text);border:1px solid #4c6159;border-radius:5px;padding:1px 12px;cursor:pointer}
+.priest-prayer-nav button:disabled{opacity:.4;cursor:not-allowed}

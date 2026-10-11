@@ -6,6 +6,7 @@
   let activeProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, historyPage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedRain = false, cursor = null, chosen = 'p1', lastEventId = 0, toastTimeout;
+  let selectedTownId = null, lastTownRoster = '';
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
   const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
@@ -60,7 +61,7 @@
   function newWorld() {
     state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{})});
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
-    paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;lastRoster='';housePage=0;historyPage=0;armedRain=false;
+    paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;lastRoster='';lastTownRoster='';selectedTownId=null;housePage=0;historyPage=0;armedRain=false;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -78,7 +79,7 @@
     finally{profileLoading=false;$('balanceProfile').disabled=false;$('pauseBtn').disabled=false;render();}
   });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
-  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;lastRoster='';housePage=0;historyPage=0;render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;lastRoster='';lastTownRoster='';selectedTownId=null;housePage=0;historyPage=0;render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost() {
     $('radiusValue').textContent=$('radius').value+' 格';$('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';$('durationValue').textContent=$('duration').value+' 日';
@@ -97,8 +98,8 @@
     $('weather').textContent=st.phase==='dry'?'乾旱期':st.phase==='rainy'?'雨季':'和暖時節';
     $('peopleMetric').textContent=st.people;
     $('familiesMetric').textContent=`${st.households} 個家戶 · 出生 ${st.births} / 死亡 ${st.deaths}`;
-    $('townMetric').textContent=st.settlements?state.settlements[0].name:'尚未形成';
-    $('houseMetric').textContent=`${st.houses} / ${st.households} 戶有住所`;
+    $('townMetric').textContent=st.settlements>1?`${st.settlements} 處聚落`:st.settlements?state.settlements[0].name:'尚未形成';
+    $('houseMetric').textContent=`${st.houses}/${st.households} 有住所 · 新成家 ${st.newFamilies||0}`;
     const dailyNeed=state.people.filter(p=>p.alive).reduce((a,p)=>a+(p.stage==='child'?state.rules.foodNeedChild:state.rules.foodNeedAdult),0);
     $('foodMetric').textContent=format(st.food);
     $('stockMetric').textContent=`約 ${format(st.food/Math.max(dailyNeed,.01),1)} 日 · 公共 ${format(st.commonFood)}`;
@@ -128,15 +129,24 @@
     $('needsPanel').innerHTML=prayers.length?prayers.slice(-2).map(p=>`<div class="need-item"><strong>缺雨與糧食的祈禱</strong><small>第 ${Math.floor(p.createdAtHour/24)+1} 日 · ${p.by.length} 位信徒提出實際需要</small><small>請觀察雨後是否真的改善耕作，而非只看施法次數。</small></div>`).join(''):
       answered.length?'<div class="need-item"><strong>最近的祈求已獲得回應</strong><small>土地、勞動與食物真的出現變化；對應信徒的信仰已更新。</small></div>':'目前沒有迫切的祈禱。當水分、作物或糧食受到壓力，居民可能主動祈求。';
     $('weatherNotice').textContent=`農田 ${st.farmFields} 格${st.newFields?` · 新開墾 ${st.newFields} 格`:''} · 含水 ${format(st.avgMoisture*100)}% · ${st.phase==='dry'?'旱季，土地與工作效率降低':'農業依土壤、作物與實際勞動運作'}`;
-    const town=state.settlements[0];
+    const townRoster=state.settlements.map(t=>t.id+':'+t.name).join('|');
+    if(townRoster!==lastTownRoster){
+      lastTownRoster=townRoster;
+      $('settlementSelect').innerHTML=state.settlements.map(t=>`<option value="${html(t.id)}">${html(t.name)}</option>`).join('');
+    }
+    if(!state.settlements.some(t=>t.id===selectedTownId))selectedTownId=state.settlements[0]?.id||null;
+    $('settlementSelect').value=selectedTownId||'';
+    $('settlementSelect').disabled=!state.settlements.length;
+    const town=state.settlements.find(t=>t.id===selectedTownId)||state.settlements[0];
     $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
       `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
+    const filteredHomes=town?state.households.filter(h=>town.householdIds.includes(h.id)):state.households;
     const housePageSize=2;
-    const housePages=Math.max(1,Math.ceil(state.households.length/housePageSize));
+    const housePages=Math.max(1,Math.ceil(filteredHomes.length/housePageSize));
     housePage=Math.min(housePage,housePages-1);
     $('housePageLabel').textContent=`家戶 ${housePage+1} / ${housePages}`;
     $('housePrev').disabled=housePage===0;$('houseNext').disabled=housePage>=housePages-1;
-    $('houseList').innerHTML=state.households.slice(housePage*housePageSize,(housePage+1)*housePageSize).map(h=>{
+    $('houseList').innerHTML=filteredHomes.slice(housePage*housePageSize,(housePage+1)*housePageSize).map(h=>{
       const access=S.inspectHousehold(state,h.id);
       const reach=access.settlementId?'可領公共糧':town?'公共糧倉不可及':'無公共糧倉';
       return `<div><b>${html(h.name)}</b><small>${h.home?'有住所':'建屋中'} · 私糧 ${format(h.inventory.food,1)}</small><small>${reach} · 可及 ${format(access.foodCoverageDays,1)} 日</small></div>`;
@@ -192,7 +202,7 @@
       if(h.home){c.fillStyle='#e1cf9d';c.fillRect(px-size*.47,py-size*.20,size*.95,size*.8);c.fillStyle='#7c6654';c.beginPath();c.moveTo(px-size*.72,py-size*.23);c.lineTo(px,py-size*.91);c.lineTo(px+size*.72,py-size*.23);c.closePath();c.fill();}
       else {c.fillStyle='#d6bb947e';c.beginPath();c.moveTo(px-size*.5,py+size*.28);c.lineTo(px,py-size*.47);c.lineTo(px+size*.5,py+size*.28);c.fill();}
     }
-    if(state.settlements.length){const t=state.settlements[0];c.save();c.strokeStyle='#f4d69f';c.lineWidth=2;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,14*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 17px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-11)*size);c.restore();}
+    for(const t of state.settlements){c.save();c.strokeStyle=t.id===selectedTownId?'#f4d69f':'#bed9b4';c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();}
     for(const p of state.people){if(!p.alive)continue;const px=(p.x+.5)*size,py=(p.y+.5)*size;
       c.beginPath();c.arc(px,py,p.stage==='child'?size*.23:size*.3,0,Math.PI*2);
       c.fillStyle=p.devotion>=40?'#f6d2a0':p.devotion>=20?'#e1e6c2':'#bcd9d2';c.fill();c.strokeStyle='#21342fcc';c.lineWidth=1.4;c.stroke();
@@ -227,6 +237,7 @@
   canvas.addEventListener('mousemove',e=>{const rect=canvas.getBoundingClientRect();cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};});
   canvas.addEventListener('mouseleave',()=>{cursor=null;});
   $('residentSelect').onchange=e=>{chosen=e.target.value;render();};
+  $('settlementSelect').onchange=e=>{selectedTownId=e.target.value;housePage=0;render();};
   $('housePrev').onclick=()=>{housePage=Math.max(0,housePage-1);render();};
   $('houseNext').onclick=()=>{housePage++;render();};
   $('historyPrev').onclick=()=>{historyPage=Math.max(0,historyPage-1);render();};

@@ -329,6 +329,7 @@
     const pop = living(s), religious = pop.filter(p => p.religionId === s.religion.id);
     const followers = religious.filter(p => p.devotion >= s.rules.faithThreshold);
     const believers = religious.filter(p=>p.devotion>=20);
+    const rivals=s.opponent?.enabled?pop.filter(p=>p.religionId===s.opponentReligion.id):[];
     const devWeight = religious.reduce((sum, p) => sum + faithfulWeight(p.devotion), 0);
     const foodPrivate = s.households.reduce((sum, h) => sum + h.inventory.food, 0);
     const common = s.settlements.reduce((sum, t) => sum + t.storage.food, 0);
@@ -341,6 +342,13 @@
       newBelievers:s.counts.newBelievers||0,priestAdoptions:s.counts.priestAdoptions||0,
       rivalConversions:s.counts.rivalConversions||0,
       saints:s.religion.saints.length,priests:s.religion.priests.length,
+      opponentEnabled:!!s.opponent?.enabled,
+      opponentFollowers:rivals.filter(p=>p.devotion>=s.rules.faithThreshold).length,
+      opponentBelievers:rivals.filter(p=>p.devotion>=20).length,
+      opponentSaints:s.opponentReligion?.saints.length||0,
+      opponentPriests:s.opponentReligion?.priests.length||0,
+      opponentDp:s.opponentGod?.dp||0,
+      opponentDpRateDay:s.opponentReligion?faithDpRate(s,s.opponentReligion):0,
       avgDevotion: religious.reduce((z,p)=>z+p.devotion,0)/Math.max(1,religious.length),
       devotionWeight: devWeight, dpRateDay: s.rules.naturalDpPerDay + devWeight * s.rules.devotionDpPerWeightDay,
       food: foodPrivate + common, commonFood: common, privateFood: foodPrivate, avgMoisture: wet, avgCrop: crop,
@@ -361,14 +369,16 @@
     }
     return out;
   }
-  function presenceAt(s, center) {
-    // Derived weighted spatial contribution; MVP supports a single actual religion.
-    let weighted = 0;
-    for (const p of s.people) if (p.alive && p.religionId === s.religion.id) {
-      const d = dist(p, center);
-      if (d < 13) weighted += faithfulWeight(p.devotion) * (1 - d/13);
+  function presenceAt(s,center,religionId=s.religion.id){
+    let weighted=0,total=0;
+    for(const p of s.people)if(p.alive&&faithOf(s,p.religionId)){
+      const d=dist(p,center);
+      if(d>=13)continue;
+      const value=faithfulWeight(p.devotion)*(1-d/13);
+      total+=value;
+      if(p.religionId===religionId)weighted+=value;
     }
-    return { density: weighted / (Math.PI * 13 * 13), share: weighted > 0 ? 1 : 0, weighted };
+    return {density:weighted/(Math.PI*13*13),share:total?weighted/total:0,weighted,total};
   }
   // The same cooldown policy is used for Rain and all newly added Miracles:
   // - duration is an independent, monotonic dimension for timed effects,
@@ -388,46 +398,49 @@
     return ticks*s.rules.tickHours/24;
   }
   function evalRain(s, input = {}) {
+    const {god,faith,enemy}=actorFor(s,input.godId);
     const x = num(input.x, NaN), y = num(input.y, NaN);
     const radius = num(input.radius, s.rules.defaultRainRadius);
     const intensity = num(input.intensity, s.rules.defaultRainIntensity);
     const durationDays = num(input.durationDays, s.rules.defaultRainDays);
-    const cost = Math.ceil((7 + .09 * radius * radius + 6 * intensity + .4 * durationDays) / (1 + (s.god.skills.rain.level - 1) * .14));
+    const cost = Math.ceil((7 + .09 * radius * radius + 6 * intensity + .4 * durationDays) / (1 + (god.skills.rain.level - 1) * .14));
     const cooldownDays=castCooldownDays(s,{baseDays:s.rules.rainBaseCooldownDays,
       radius,intensity,referenceRadius:s.rules.defaultRainRadius,
       referenceIntensity:s.rules.defaultRainIntensity,durationDays,
-      maxDays:s.rules.rainMaxDays,instant:false,level:s.god.skills.rain.level});
+      maxDays:s.rules.rainMaxDays,instant:false,level:god.skills.rain.level});
     let reason = null;
     if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x >= s.width || y >= s.height) reason = '降雨中心不在地圖內';
     else if (!(radius >= 2 && radius <= s.rules.rainRadiusMax)) reason = '範圍不在可施展界線內';
     else if (!(intensity > 0 && intensity <= s.rules.rainSupportMaxIntensity)) reason = '目前僅開放一般支援型降雨強度';
     else if (!(durationDays >= 1 && durationDays <= s.rules.rainMaxDays)) reason = '單次降雨不可超過一個模擬月';
-    else if (s.hour < s.god.skills.rain.readyAtHour) reason = '喚雨仍在冷卻';
-    else if (s.god.dp + 1e-8 < cost) reason = '神力不足';
+    else if (s.hour < god.skills.rain.readyAtHour) reason = '喚雨仍在冷卻';
+    else if (god.dp + 1e-8 < cost) reason = '神力不足';
     return { ok: !reason, reason, cost, cooldownDays, radius, intensity, durationDays,
-      center: { x, y }, presence: Number.isFinite(x) ? presenceAt(s, { x, y }) : null };
+      center: { x, y }, presence: Number.isFinite(x) ? presenceAt(s, { x, y },faith.id) : null };
   }
   function castRain(s, input) {
     const test = evalRain(s, input);
+    const {god,faith,enemy}=actorFor(s,input?.godId);
     if (!test.ok) return test;
-    s.god.dp = Math.max(0, s.god.dp - test.cost);
+    god.dp = Math.max(0, god.dp - test.cost);
     const effect = { id: 'rain-' + s.nextId++, type:'rain', x: test.center.x, y: test.center.y,
       radius: test.radius, intensity: test.intensity, startsAtHour: s.hour,
-      endsAtHour: s.hour + test.durationDays * 24 };
+      endsAtHour: s.hour + test.durationDays * 24, godId:god.id };
     s.effects.push(effect);
-    s.god.skills.rain.readyAtHour = s.hour + Math.round(test.cooldownDays * 24/8)*8;
-    s.god.skills.rain.xp += Math.max(1, Math.round(test.radius * test.intensity * test.durationDays / 8));
-    const skill = s.god.skills.rain;
+    god.skills.rain.readyAtHour = s.hour + Math.round(test.cooldownDays * 24/8)*8;
+    god.skills.rain.xp += Math.max(1, Math.round(test.radius * test.intensity * test.durationDays / 8));
+    const skill = god.skills.rain;
     while (skill.level < 5 && skill.xp >= skill.level * skill.level * 30) skill.level++;
     s.counts.rainCasts++;
-    log(s, 'miracle', `你向河谷施展降雨，雨雲將停留約 ${test.durationDays} 日。`,
+    creditWitnesses(s,faith,test.center,test.radius,'rain');
+    log(s, 'miracle', `${enemy?faith.name+'的神明':'你'}向河谷施展降雨，雨雲將停留約 ${test.durationDays} 日。`,
       [`直接效果：選定範圍增加降雨；不保證豐收`, `神力 -${test.cost}，喚雨冷卻 ${Math.round(test.cooldownDays)} 日`]);
     return { ...test, effectId: effect.id };
   }
 
 
-  function skillState(s,type){
-    return s.god.skills[type] ||= {level:1,xp:0,readyAtHour:0};
+  function skillState(s,type,god=s.god){
+    return god.skills[type] ||= {level:1,xp:0,readyAtHour:0};
   }
   function cropStockCap(s,t){
     if(!s.agriculture || t.terrain!=='field')return 1;
@@ -438,7 +451,8 @@
   function activeStatus(s,p,type){
     const v=p.divineStatuses?.[type];
     if(!v||v.endsAtHour<=s.hour||!p.alive)return 0;
-    if(type==='efficiency'&&(p.religionId!==s.religion.id||p.devotion<s.rules.faithThreshold))return 0;
+    if(type==='efficiency'&&(p.devotion<s.rules.faithThreshold||
+      (v.godId||s.god.id)!==faithOf(s,p.religionId)?.godId))return 0;
     return v.strength;
   }
   function expireStatuses(s){
@@ -456,13 +470,14 @@
   }
   function evaluateMiracle(s,type,input={}){
     if(type==='rain')return evalRain(s,input);
+    const {god,faith,enemy}=actorFor(s,input.godId);
     const def=s.divinePowers.powers[type];
     if(!def)return {ok:false,reason:'未登錄的神蹟'};
     const x=num(input.x,NaN),y=num(input.y,NaN);
     const radius=num(input.radius,def.defaultRadius);
     const intensity=num(input.intensity,def.defaultIntensity);
     const durationDays=def.instant?0:num(input.durationDays,def.defaultDurationDays);
-    const center={x,y},skill=skillState(s,type);
+    const center={x,y},skill=skillState(s,type,god);
     const cost=Math.max(1,Math.ceil((def.baseCost+.045*radius*radius+3*intensity+
       (def.instant?0:.17*durationDays))/(1+(skill.level-1)*.14)));
     const cooldownDays=castCooldownDays(s,{baseDays:def.cooldownDays,
@@ -475,8 +490,8 @@
       t.terrain==='field'&&(type!=='harvest'||(s.agriculture?t.cropStock>1e-8:t.crop>.02))):[];
     const people=['heal','efficiency','confusion','blindness'].includes(type)?
       s.people.filter(p=>inArea(p)&&(type!=='heal'||p.health<100)&&
-       (type!=='efficiency'||(p.religionId===s.religion.id&&p.devotion>=s.rules.faithThreshold))):[];
-    const presence=validCenter?presenceAt(s,center):null;
+       (type!=='efficiency'||(p.religionId===faith.id&&p.devotion>=s.rules.faithThreshold))):[];
+    const presence=validCenter?presenceAt(s,center,faith.id):null;
     let reason=null;
     if(!validCenter)reason='施展中心不在地圖內';
     else if(!(radius>=1&&radius<=14))reason='施展範圍必須在 1 至 14 格內';
@@ -489,13 +504,14 @@
       reason=type==='heal'?'範圍內沒有需要治療的在世居民':
         type==='efficiency'?'範圍內沒有可祝福的己方信徒':'範圍內沒有可干擾的在世居民';
     else if(s.hour<skill.readyAtHour)reason='此神蹟仍在冷卻';
-    else if(s.god.dp+1e-8<cost)reason='神力不足';
+    else if(god.dp+1e-8<cost)reason='神力不足';
     return {ok:!reason,reason,cost,cooldownDays,center,radius,intensity,durationDays,
       presence,applicableFields:fields.length,applicablePeople:people.length,instant:!!def.instant,type};
   }
   function castMiracle(s,type,input={}){
     if(type==='rain')return castRain(s,input);
     const check=evaluateMiracle(s,type,input);
+    const {god,faith,enemy}=actorFor(s,input.godId);
     if(!check.ok)return check;
     const {center,radius,intensity,durationDays}=check;
     const people=s.people.filter(p=>p.alive&&dist(p,center)<=radius);
@@ -537,32 +553,45 @@
       }
     }else if(['efficiency','confusion','blindness'].includes(type)){
       for(const p of people){
-        if(type==='efficiency'&&(p.religionId!==s.religion.id||p.devotion<s.rules.faithThreshold))continue;
+        if(type==='efficiency'&&(p.religionId!==faith.id||p.devotion<s.rules.faithThreshold))continue;
         const endsAtHour=s.hour+durationDays*24;
         p.divineStatuses ||= {};
         const old=p.divineStatuses[type],previous=old&&old.endsAtHour>s.hour?old:null;
         p.divineStatuses[type]={strength:Math.max(intensity,previous?.strength||0),
-          endsAtHour:Math.max(endsAtHour,previous?.endsAtHour||0),godId:s.god.id};
+          endsAtHour:Math.max(endsAtHour,previous?.endsAtHour||0),godId:god.id};
         applied++;
       }
     }else if(type==='ripening'||type==='drought'){
       const effect={id:type+'-'+s.nextId++,type,x:center.x,y:center.y,
-        radius,intensity,startsAtHour:s.hour,endsAtHour:s.hour+durationDays*24};
+        radius,intensity,startsAtHour:s.hour,endsAtHour:s.hour+durationDays*24,godId:god.id};
       s.effects.push(effect);applied=rayCells(s,center,radius).filter(t=>t.terrain!=='river').length;
     }
-    s.god.dp=Math.max(0,s.god.dp-check.cost);
-    const skill=skillState(s,type);
+    god.dp=Math.max(0,god.dp-check.cost);
+    const skill=skillState(s,type,god);
     skill.readyAtHour=s.hour+Math.max(8,Math.round(check.cooldownDays*24/8)*8);
     skill.xp+=Math.max(1,Math.round(radius*intensity*(durationDays||1)/8));
     while(skill.level<5&&skill.xp>=skill.level*skill.level*30)skill.level++;
     s.counts.miracleCasts ||= {};
     s.counts.miracleCasts[type]=(s.counts.miracleCasts[type]||0)+1;
-    log(s,'miracle','你施展 '+tuning.powers[type].label+'，作用於 '+applied+' 個目標。',
+    if(applied>0)creditWitnesses(s,faith,center,radius,type);
+    log(s,'miracle',(enemy?faith.name+'的神明':'你')+'施展 '+tuning.powers[type].label+'，作用於 '+applied+' 個目標。',
       ['直接作用於世界或居民；實際後續結果仍由模擬決定',
        '神力 -'+check.cost+'，冷卻約 '+Math.round(check.cooldownDays)+' 日']);
     return {...check,applied,actual};
   }
 
+  function creditWitnesses(s,faith,center,radius,type){
+    // Attributed real beneficial intervention affects existing believers only;
+    // casting does not fabricate food, people or instant conversions.
+    if(!['rain','ripening','harvest','heal','efficiency'].includes(type))return;
+    for(const p of s.people)if(p.alive&&p.religionId===faith.id&&p.devotion>=20&&
+      dist(p,center)<=radius){
+      const old=p.devotion;
+      p.devotion=Math.min(100,p.devotion+(type==='heal'?2:1));
+      if(p.devotion>old)p.lastFaithEvidence={hour:s.hour,
+        cause:faith.name+'神蹟的直接見證',change:p.devotion-old};
+    }
+  }
   function personSettlement(s,p){
     const town=s.settlements.find(t=>t.id===p.settlementId);
     return town && town.householdIds.includes(p.householdId) &&
@@ -578,6 +607,10 @@
       followers:believers.filter(p=>p.devotion>=40).length,
       priests:s.religion.priests.filter(id=>memberIds.has(id)).length,
       saints:s.religion.saints.filter(id=>memberIds.has(id)).length,
+      opponentBelievers:people.filter(p=>p.religionId===s.opponentReligion?.id&&p.devotion>=20).length,
+      opponentFollowers:people.filter(p=>p.religionId===s.opponentReligion?.id&&p.devotion>=40).length,
+      opponentPriests:(s.opponentReligion?.priests||[]).filter(id=>memberIds.has(id)).length,
+      opponentSaints:(s.opponentReligion?.saints||[]).filter(id=>memberIds.has(id)).length,
       activeOracles:s.religion.oracles.filter(o=>o.status==='active'&&o.propagatedAtHour!==null&&
         (o.reachedSettlements?.[townId]||people.some(p=>oracleContact(s,p,o)>0))).length};
   }
@@ -1643,7 +1676,8 @@
       // Attribution needs a physically relevant prior Rain cast, improved field condition,
       // actual subsequent food labor and reduced food shortage. A button press alone never qualifies.
       const center=prayer.center||s.camp;
-      const rain=s.effects.find(e=>dist(e,center)<=e.radius+6 && e.startsAtHour>=prayer.createdAtHour);
+      const rain=s.effects.find(e=>(e.type||'rain')==='rain' && (!e.godId||e.godId===s.god.id) &&
+        dist(e,center)<=e.radius+6 && e.startsAtHour>=prayer.createdAtHour);
       if (rain) { prayer.castSeen=true; prayer.castId=rain.id; }
       const localFields=prayer.center?s.tiles.filter(t=>t.terrain==='field'&&dist(t,center)<11):null;
       const measuredMoisture=localFields?

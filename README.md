@@ -4,6 +4,14 @@
 
 This branch is a **fresh, independent browser-based prototype** derived from the current `main` design specifications (Issues #1–#8 and the Issue #11 MVP-0 scope), **not** a port of the earlier `web-poc` code or its balance model. It deliberately focuses on the small playable God–World feedback loop before deciding on a production engine or Codex implementation workflow.
 
+## High-growth farmland update (2026-10-11)
+
+Agriculture now uses a **4× higher per-plot land regeneration coefficient** (`q=0.80` vs historical `0.20`) and allows autonomous farmers to convert eligible reachable meadow into new fields when normal-season capacity falls behind population demand. Cultivation consumes a real work shift, starts with zero crop stock, and does not bypass labor or resource conservation. Housed residents avoid endlessly stockpiling once adequately supplied.
+
+**Direct no-Miracle Web Kernel test:** `valley-spring-01` reached 54 people by day 4,000, about 410 Food (~25 days), zero deaths. In a separate *synthetic 200-person load test*, farmland increased from 118 to 189 plots by day 90 and reserves stayed near 25 days at day 360; the test injected people and does not demonstrate natural reproductive expansion to 200. The current household/partner and map scale are still bounded.
+
+**Continue a prior 4,000-day save:** load it in the updated standalone HTML, then choose **檔案 → 更新目前世界農業**. This explicit action updates the Agriculture settings without resetting population, existing Food/crop stock, structures or history. Existing saves are not silently changed.
+
 ## Current Web PoC playtest — Agriculture v0.1 & single-screen controls (2026-10-11)
 
 **New worlds default to Agriculture v0.1.** Original remains selectable in the header as a same-Seed comparison. Agriculture now includes river-influenced seasonal soil, crop-stock-conserving harvest, experience-based farming skill and tunable autonomous reserve choices (18-day relaxation / 26-day comfort thresholds). This does **not** force a farmer quota or change Miracle/Oracle authority.

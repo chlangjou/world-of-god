@@ -38,6 +38,10 @@ test('native map geometry offers balanced initial opportunities without placing 
     const playerReach=dist(nearPlayer,s.camp),enemyReach=dist(nearAI,s.opponentCamp);
     assert.ok(Math.abs(playerReach-enemyReach)<=3.6,
       seed+': opposite sides should have comparable access to their native village');
+    const playerAdvantage=dist(nearPlayer,s.opponentCamp)-playerReach;
+    const aiAdvantage=dist(nearAI,s.camp)-enemyReach;
+    assert.ok(Math.abs(playerAdvantage-aiAdvantage)<=4,
+      seed+': player must not own a much more exclusive initial native village');
     assert.ok(Math.abs(dist(center,s.camp)-dist(center,s.opponentCamp))<=3,
       seed+': shared middle village must be roughly equidistant');
     for(const village of [nearPlayer,nearAI,center])

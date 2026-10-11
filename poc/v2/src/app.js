@@ -154,7 +154,10 @@
     $('settlementSelect').disabled=!state.settlements.length;
     const town=state.settlements.find(t=>t.id===selectedTownId)||state.settlements[0];
     const localReligion=town?S.settlementReligionStats(state,town.id):null;
-    $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><p title="信眾為 Devotion 20+；信徒為 40+。Saint 與 Priest 是獨立角色。">宗教：信眾 ${localReligion.believers}/${localReligion.population} · 信徒 ${localReligion.followers} · Saint ${localReligion.saints} / Priest ${localReligion.priests} · 神諭 ${localReligion.activeOracles}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
+    const granary=town?.granary;
+    const granaryStatus=granary?.built?'已建成':
+      granary?.materialsPaid?'建造中':granary?'籌備建材':'尚無計畫';
+    $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><p title="信眾為 Devotion 20+；信徒為 40+。Saint 與 Priest 是獨立角色。">宗教：信眾 ${localReligion.believers}/${localReligion.population} · 信徒 ${localReligion.followers} · Saint ${localReligion.saints} / Priest ${localReligion.priests} · 神諭 ${localReligion.activeOracles}</p><p title="未完成糧倉時，公共糧食以臨時共同儲備方式保管並保持可及；真正的糧倉需使用本聚落材料及居民建造。">公共糧倉：${granaryStatus} · 本地公糧 ${format(town.storage.food)} · 石材 ${format(town.storage.stone,1)}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
       `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
     const filteredHomes=town?state.households.filter(h=>town.householdIds.includes(h.id)):state.households;
     const housePageSize=2;
@@ -217,6 +220,26 @@
       const px=h.x*size+size/2,py=h.y*size+size/2;
       if(h.home){c.fillStyle='#e1cf9d';c.fillRect(px-size*.47,py-size*.20,size*.95,size*.8);c.fillStyle='#7c6654';c.beginPath();c.moveTo(px-size*.72,py-size*.23);c.lineTo(px,py-size*.91);c.lineTo(px+size*.72,py-size*.23);c.closePath();c.fill();}
       else {c.fillStyle='#d6bb947e';c.beginPath();c.moveTo(px-size*.5,py+size*.28);c.lineTo(px,py-size*.47);c.lineTo(px+size*.5,py+size*.28);c.fill();}
+    }
+    // Each Settlement's granary is a genuine built structure, not a free storage icon.
+    for(const town of state.settlements){
+      const g=town.granary;if(!g)continue;
+      const px=(g.x+.5)*size,py=(g.y+.5)*size;
+      c.save();
+      if(g.built){
+        c.fillStyle='#d7a75e';c.strokeStyle='#4a3426';c.lineWidth=1.3;
+        c.fillRect(px-size*.58,py-size*.28,size*1.16,size*.93);
+        c.strokeRect(px-size*.58,py-size*.28,size*1.16,size*.93);
+        c.fillStyle='#885f3a';c.beginPath();
+        c.moveTo(px-size*.85,py-size*.3);c.lineTo(px,py-size*.95);
+        c.lineTo(px+size*.85,py-size*.3);c.closePath();c.fill();
+        c.fillStyle='#3c443a';c.fillRect(px-size*.12,py+size*.09,size*.24,size*.56);
+      }else{
+        c.strokeStyle=g.materialsPaid?'#e5ba74':'#b3a583';
+        c.lineWidth=1.5;c.setLineDash(g.materialsPaid?[2,2]:[3,4]);
+        c.strokeRect(px-size*.6,py-size*.6,size*1.2,size*1.2);
+      }
+      c.restore();
     }
     for(const t of state.settlements){c.save();c.strokeStyle=t.id===selectedTownId?'#f4d69f':'#bed9b4';c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();}
     for(const p of state.people){if(!p.alive)continue;const px=(p.x+.5)*size,py=(p.y+.5)*size;

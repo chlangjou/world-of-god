@@ -82,7 +82,7 @@
           </div>
           <div id="oraclePanel" class="command-body" role="tabpanel" aria-labelledby="oracleTab" hidden>
             <div class="command-current"><strong>糧食生產神諭</strong><small>由 Saint 傳達，居民自行決定是否行動</small></div>
-            <div class="saint-row"><span>接收者</span><strong id="saintName">尚未出現</strong></div>
+            <label class="saint-row"><span>接收者</span><select id="saintSelect" aria-label="選擇接收神諭的 Saint" disabled><option>尚未出現</option></select></label>
             <div class="saint-row"><span>額度</span><strong id="saintQuota">—</strong></div>
             <div class="action-bottom"><button id="oracleBtn" class="btn accent secondary" disabled>傳下神諭</button><span id="oracleStatus">未發佈</span></div>
             <small id="oracleReason" class="command-reason" role="status">需要合格 Saint 和可用額度</small>

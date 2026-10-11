@@ -12,7 +12,8 @@ Before changing mechanics, consult `../../docs/CORE_PRINCIPLES.md`,
 - `src/sim.js` is authoritative for simulation state and must be DOM-free.
   `src/app.js` only handles rendering, input, saves and runtime profile loading.
 - Put experimental adjustable values in
-  `config/balance-agriculture-v0.1.json`. Preserve Original as an A/B control;
+  `config/balance-agriculture-v0.1.json` and religion-specific tunables in
+  `config/religion-propagation-v0.1.json`. Preserve Original as an Agriculture A/B control;
   its JSON is a read-only snapshot of the kernel defaults.
 - God expresses intent; the World determines execution. No forced worker,
   family or settlement quotas and no food or building materials created by UI.

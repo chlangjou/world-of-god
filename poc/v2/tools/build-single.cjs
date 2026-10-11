@@ -9,7 +9,9 @@ for(const p of ['assets/style-base.css','assets/viewport.css','assets/file-menu.
  html=html.replace(marker,'<style>\n'+read(p)+'\n</style>');
 }
 const profile=JSON.stringify(JSON.parse(read('config/balance-agriculture-v0.1.json'))).replace(/</g,'\\u003c');
-const scripts='<script>window.WOG_AGRICULTURE_PROFILE='+profile+';</'+'script>'+
+const religion=JSON.stringify(JSON.parse(read('config/religion-propagation-v0.1.json'))).replace(/</g,'\\u003c');
+const scripts='<script>window.WOG_RELIGION_PROFILE='+religion+';</'+'script>'+ 
+  '<script>window.WOG_AGRICULTURE_PROFILE='+profile+';</'+'script>'+
   '<script>\n'+read('src/sim.js')+'\n</'+'script>'+
   '<script>\n'+read('src/app.js')+'\n</'+'script>';
 const marker='<script src="src/sim.js"></script><script src="src/app.js"></script>';

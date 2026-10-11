@@ -11,6 +11,11 @@ test('v2 browser loads separate JS, styles and editable balance JSON',()=>{
  assert.ok(!html.includes('window.WOG_AGRICULTURE_PROFILE='));
  const profile=require('../config/balance-agriculture-v0.1.json');
  assert.equal(profile.familyExpansion.enabled,true);
+ const religion=require('../config/religion-propagation-v0.1.json');
+ assert.equal(religion.profileId,'religion-propagation-v0.1');
+ assert.ok(fs.readFileSync(path.join(root,'src/app.js'),'utf8').includes('loadReligion()'));
+ assert.ok(html.includes('id="saintSelect"'));
+ assert.ok(fs.statSync(path.join(root,'config/religion-propagation-v0.1.json')).isFile());
 });
 test('Original defaults are preserved without applying experimental numbers',()=>{
  const original=require('../config/balance-default.json');

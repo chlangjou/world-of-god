@@ -338,6 +338,27 @@
       p.x=pos.x+(j-1)*.35;p.y=pos.y+(j-1)*.2;p.settlementId=null;
     }
   }
+  function villageWaterRisk(s,point){
+    if(!s.agriculture||!s.nativeWorld)return {risk:0,bank:0};
+    const p=s.agriculture.nativeResilience||{};
+    const half=s.agriculture.river?.riverHalfWidthCells??1.6;
+    const bank=Math.max(0,Math.abs(point.x-riverX(s,point.y))-half);
+    const start=num(p.dryRiskStartsAtRiverBankCells,3);
+    const end=Math.max(start+1,num(p.dryRiskFullAtRiverBankCells,16));
+    return {risk:p.enabled===false?0:clamp((bank-start)/(end-start)),bank};
+  }
+  function localReservePolicy(s,town){
+    const W=s.agriculture?.workDemand||{},p=s.agriculture?.nativeResilience||{};
+    const {risk,bank}=villageWaterRisk(s,town);
+    const resilience=s.nativeWorld&&s.agriculture&&p.enabled!==false;
+    return {risk,bank,
+      target:Math.round(num(W.reserveTargetDays,8)+(resilience?
+        risk*num(p.activeReserveExtraDaysFarRiver,20):0)),
+      relax:Math.round(num(W.reserveRelaxDays,7)+(resilience?
+        risk*num(p.relaxReserveExtraDaysFarRiver,18):0)),
+      comfort:Math.round(num(W.reserveComfortDays,11)+(resilience?
+        risk*num(p.comfortableReserveExtraDaysFarRiver,20):0))};
+  }
   function addNativeVillage(s,index,center,number){
     const names=['河岸原生村','北林原生村','谷地原生村','南野原生村'];
     const villageId='n'+(index+1),memberHomes=[];
@@ -378,6 +399,21 @@
       workDemand:{foodPressure:0,housingPressure:0},
       foodShortageDays:0,famineDays:0,famineReliefDays:0,
       famineActive:false,lastDailyUnmetFood:0,native:true};
+    // These people existed before either God appeared; their store is a
+    // plausible historical harvest snapshot, not divine or UI-created Food.
+    // Remote settlements already learned to save more for recurrent dry spells.
+    const resilience=s.agriculture?.nativeResilience||{};
+    const {risk,bank}=villageWaterRisk(s,t);
+    const nearDays=num(resilience.initialReserveDaysNearRiver,15);
+    const extraDays=num(resilience.initialReserveExtraDaysFarRiver,19);
+    const initialDays=clamp(nearDays+risk*extraDays,12,45);
+    const familyNeed=memberHomes.reduce((n,id)=>
+      n+dailyFoodNeed(s,s.households.find(h=>h.id===id)),0);
+    const privateFood=memberHomes.reduce((n,id)=>
+      n+s.households.find(h=>h.id===id).inventory.food,0);
+    t.storage.food=Math.max(0,initialDays*familyNeed-privateFood);
+    t.preexistingReserveDays=initialDays;
+    t.riverBankDistance=bank;
     s.settlements.push(t);
     genesisFieldPatches(s,center);
   }
@@ -1349,7 +1385,7 @@
     // Not every work period should be production. When accessible reserves are
     // strong, adults can spend the work block supporting dependents and the home.
     // Oracle pressure can redirect willing people to feasible food activities.
-    candidates.push({ name: 'care', score: 3.5 + (security.days >= (s.agriculture?.workDemand?.reserveComfortDays ?? 11) ? (h.home ? (s.agriculture?.workDemand?.comfortableCareBonus ?? 5.0) : 5.0) : security.days >= (s.agriculture?.workDemand?.reserveRelaxDays ?? 7) ? 2.7 : 0) +
+    candidates.push({ name: 'care', score: 3.5 + (security.days >= (basic?.reserveComfortDays ?? s.agriculture?.workDemand?.reserveComfortDays ?? 11) ? (h.home ? (s.agriculture?.workDemand?.comfortableCareBonus ?? 5.0) : 5.0) : security.days >= (basic?.reserveRelaxDays ?? s.agriculture?.workDemand?.reserveRelaxDays ?? 7) ? 2.7 : 0) +
       (householdMembers(s,h).some(v=>v.stage==='child') ? .7 : 0), valid: true });
     if (!candidates.length) { p.activity = 'rest'; p.activityReason = '附近缺少可用資源，這次無法工作';
       p.lastDecision = { work: 'rest', hour: s.hour, reason: p.activityReason, foodDays: security.days, oracleInfluence: 0 }; return; }
@@ -1642,10 +1678,15 @@
       const activeHomes = s.households.filter(h => accessibleSettlement(s,h)?.id === town.id && householdMembers(s,h).length);
       const totalNeed = activeHomes.reduce((n,h)=>n+dailyFoodNeed(s,h),0);
       const foodStock = town.storage.food + activeHomes.reduce((z,h)=>z+h.inventory.food,0);
-      const required = totalNeed * (s.agriculture?.workDemand?.reserveTargetDays ?? 8); // adjustable desired buffer; not forced rationing
+      const reserve=localReservePolicy(s,town);
+      const required=totalNeed*reserve.target; // local forecast, not imposed work quotas
       const foodPressure = totalNeed ? clamp(1 - foodStock/Math.max(1,required)) : 0;
       const housingPressure = activeHomes.filter(h=>!h.home).length / Math.max(1,activeHomes.length);
-      town.workDemand = {foodPressure,housingPressure};
+      town.workDemand=s.nativeWorld?
+        {foodPressure,housingPressure,reserveTargetDays:reserve.target,
+          reserveRelaxDays:reserve.relax,reserveComfortDays:reserve.comfort,
+          riverBankDistance:reserve.bank,waterRisk:reserve.risk}:
+        {foodPressure,housingPressure};
       if (foodPressure > .9) town.foodShortageDays++;
       else town.foodShortageDays = Math.max(0,town.foodShortageDays-1);
       // Famine is a meaningful transition backed by actual missed meals, not a daily stock summary.

@@ -581,86 +581,89 @@
       activeOracles:s.religion.oracles.filter(o=>o.status==='active'&&o.propagatedAtHour!==null&&
         (o.reachedSettlements?.[townId]||people.some(p=>oracleContact(s,p,o)>0))).length};
   }
-  function appointSaint(s,p){
-    const first=s.religion.saints.length===0;
-    s.religion.saints.push(p.id);
-    s.religion.saintQuota ||= {};
-    s.religion.saintQuota[p.id]={quota:s.rules.oracleQuota,nextRefillHour:s.hour+s.rules.oracleRefillDays*24};
-    if(s.history.firstSaintHour===null)s.history.firstSaintHour=s.hour;
-    log(s,'religion',`${p.name} 在信仰生活中成為${first?'第一位':'另一位'}聆聽者。`,
+  function appointSaint(s,p,faith=s.religion){
+    const first=faith.saints.length===0;
+    faith.saints.push(p.id);
+    faith.saintQuota ||= {};
+    faith.saintQuota[p.id]={quota:s.rules.oracleQuota,nextRefillHour:s.hour+s.rules.oracleRefillDays*24};
+    if(faith===s.religion&&s.history.firstSaintHour===null)s.history.firstSaintHour=s.hour;
+    log(s,'religion',`${faith.name}：${p.name} 在信仰生活中成為${first?'第一位':'另一位'}聆聽者。`,
       ['自主形成的 Saint 資格不等於 Priest 職位，也不是神直接指定']);
   }
-  function ensureSaint(s){
+  function ensureSaint(s,faith=s.religion){
     if(days(s)<2)return;
-    const candidates=living(s).filter(p=>p.religionId===s.religion.id&&p.devotion>=40&&p.stage==='adult');
+    const candidates=living(s).filter(p=>p.religionId===faith.id&&p.devotion>=40&&p.stage==='adult');
     const rank=(a,b)=>(b.devotion*.5+b.receptivity*45)-(a.devotion*.5+a.receptivity*45)||a.id.localeCompare(b.id);
-    if(!s.religion.saints.length){if(candidates.length)appointSaint(s,candidates.sort(rank)[0]);return;}
+    if(!faith.saints.length){if(candidates.length)appointSaint(s,candidates.sort(rank)[0],faith);return;}
     // More settlements create opportunities, not one Saint per settlement or per follower count.
     const limit=1+Math.floor(Math.sqrt(Math.max(0,s.settlements.length-1)));
-    if(s.religion.saints.length>=limit||days(s)%s.rules.daysPerMonth!==0)return;
+    if(faith.saints.length>=limit||days(s)%s.rules.daysPerMonth!==0)return;
     for(const town of s.settlements){
-      if(s.religion.saints.some(id=>candidates.some(p=>p.id===id&&personSettlement(s,p)?.id===town.id)))continue;
+      if(faith.saints.some(id=>candidates.some(p=>p.id===id&&personSettlement(s,p)?.id===town.id)))continue;
       const locals=candidates.filter(p=>personSettlement(s,p)?.id===town.id);
-      if(locals.length<2||!s.religion.priests.some(id=>locals.some(p=>p.id===id)))continue;
-      const eligible=locals.filter(p=>p.receptivity>=.65&&!s.religion.saints.includes(p.id)).sort(rank);
-      if(eligible.length&&religionRand(s)<s.religionPropagation.regionalSaintChancePerMonth){
-        appointSaint(s,eligible[0]);break;
+      if(locals.length<2||!faith.priests.some(id=>locals.some(p=>p.id===id)))continue;
+      const eligible=locals.filter(p=>p.receptivity>=.65&&!faith.saints.includes(p.id)).sort(rank);
+      if(eligible.length&&religionRand(s,faith)<s.religionPropagation.regionalSaintChancePerMonth){
+        appointSaint(s,eligible[0],faith);break;
       }
     }
   }
-  function ensurePriest(s){
+  function ensurePriest(s,faith=s.religion){
     if(!s.religionPropagation.priesthoodEnabled || days(s)<10)return;
     const people=living(s);
     for(const town of s.settlements){
-      if(s.religion.priests.some(id=>people.some(p=>p.id===id&&personSettlement(s,p)?.id===town.id)))continue;
+      if(faith.priests.some(id=>people.some(p=>p.id===id&&personSettlement(s,p)?.id===town.id)))continue;
       const local=people.filter(p=>personSettlement(s,p)?.id===town.id&&
-        p.religionId===s.religion.id&&p.devotion>=20);
+        p.religionId===faith.id&&p.devotion>=20);
       if(local.length<3)continue;
       const eligible=local.filter(p=>p.stage==='adult'&&p.devotion>=25&&
         s.households.find(h=>h.id===p.householdId)?.home);
       if(!eligible.length)continue;
-      const nonSaints=eligible.filter(p=>!s.religion.saints.includes(p.id));
+      const nonSaints=eligible.filter(p=>!faith.saints.includes(p.id));
       const candidate=(nonSaints.length?nonSaints:eligible).sort((a,b)=>
         (b.receptivity*2+b.proficiency.gather+b.devotion/100)-
         (a.receptivity*2+a.proficiency.gather+a.devotion/100)||a.id.localeCompare(b.id))[0];
-      if(s.religion.priests.includes(candidate.id))continue;
-      s.religion.priests.push(candidate.id);
-      log(s,'religion',`${candidate.name} 在${town.name}得到支持，兼任祭司與傳道者。`,
+      if(faith.priests.includes(candidate.id))continue;
+      faith.priests.push(candidate.id);
+      log(s,'religion',`${faith.name}：${candidate.name} 在${town.name}得到支持，兼任祭司與傳道者。`,
         ['當地信眾需求、個人適任性及實際居所促成宗教角色']);
     }
   }
-  function checkOracle(s, saintId, intentType) {
+  function checkOracle(s, saintId, intentType,faith=s.religion) {
     if (!['food.produce','religion.spread'].includes(intentType)) return { ok: false, reason: '這類神諭尚未實作' };
     const saint = s.people.find(p => p.id === saintId && p.alive);
-    if (!saint || !s.religion.saints.includes(saintId)) return { ok: false, reason: '接收者必須是本宗教仍在世的 Saint' };
-    const record = s.religion.saintQuota && s.religion.saintQuota[saintId];
+    if (!saint || !faith.saints.includes(saintId)) return { ok: false, reason: '接收者必須是本宗教仍在世的 Saint' };
+    const record = faith.saintQuota && faith.saintQuota[saintId];
     if (!record || record.quota < 1) return { ok: false, reason: 'Saint 的神諭接收額度不足' };
-    if (s.religion.oracles.some(o => o.saintId === saintId && o.intentType === intentType && o.status === 'active'))
+    if (faith.oracles.some(o => o.saintId === saintId && o.intentType === intentType && o.status === 'active'))
       return { ok: false, reason: '這位 Saint 已經持有相同類型的有效神諭' };
     return { ok: true, saint };
   }
   function issueOracle(s, input = {}) {
-    const saintId = input.saintId || s.religion.saints[0];
+    const {faith,god,enemy}=actorFor(s,input.godId);
+    const saintId = input.saintId || faith.saints[0];
     const intentType=input.intentType||'food.produce';
-    const test = checkOracle(s, saintId, intentType);
+    const test = checkOracle(s, saintId, intentType,faith);
     if (!test.ok) return test;
     const durationDays = clamp(num(input.durationDays, s.rules.oracleDurationDays), 1, 720);
-    s.religion.saintQuota[saintId].quota--;
-    const o = { id: 'o' + s.nextId++, godId: s.god.id, saintId,
+    faith.saintQuota[saintId].quota--;
+    const o = { id: 'o' + s.nextId++, godId: god.id, saintId,
       intentType, audience: 'local-community', issuedAtHour: s.hour,
       expiresAtHour: s.hour + durationDays * 24, status: 'active', propagatedAtHour: null,
       reachRadius: s.rules.oracleCommunicationRadius, influenceWorkCount: 0,
       influenceSermonCount:0,heardCount: 0,
       reachedSettlements:{}, fulfillmentCredited: false, progressFoodAtStart: stats(s).food };
-    s.religion.oracles.push(o);
-    log(s, 'oracle', `神諭交給 ${test.saint.name}：${intentType==='religion.spread'?'鼓勵信眾更積極地傳播信仰':'請讓族人重視糧食生產'}。`,
+    faith.oracles.push(o);
+    if(enemy)s.opponent.oracleIssues++;
+    log(s, 'oracle', `${enemy?faith.name+'的神諭':'神諭'}交給 ${test.saint.name}：${intentType==='religion.spread'?'鼓勵信眾更積極地傳播信仰':'請讓族人重視糧食生產'}。`,
       ['Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定']);
-    return { ok: true, oracleId: o.id, saintId, quotaLeft: s.religion.saintQuota[saintId].quota };
+    return { ok: true, oracleId: o.id, saintId, quotaLeft: faith.saintQuota[saintId].quota };
   }
   function concludeOracle(s, oracleId) {
-    const o = s.religion.oracles.find(v => v.id === oracleId && v.status === 'active');
+    const faith=s.religion;
+    const o = faith.oracles.find(v => v.id === oracleId && v.status === 'active');
     if (!o) return { ok: false, reason: '沒有可宣告完成的神諭' };
-    const q = s.religion.saintQuota[o.saintId];
+    const q = faith.saintQuota[o.saintId];
     if (!q || q.quota <= -1) return { ok: false, reason: 'Saint 的額度已達 -1 下限' };
     q.quota--; o.status = 'concluded';
     log(s, 'oracle', '神宣告這道神諭的使命已經結束。', ['結束此 Saint 的單一指派；既有生活成果仍保留']);
@@ -668,13 +671,13 @@
   }
 
   // A sermon is a real non-work leisure activity; contacts are evaluated on weekly pulses.
-  function recentPreacher(s,p){
-    return p.alive&&p.religionId===s.religion.id&&p.devotion>=20&&
+  function recentPreacher(s,p,faith=s.religion){
+    return p.alive&&p.religionId===faith.id&&p.devotion>=20&&
       p.stage==='adult'&&Number.isFinite(p.lastPreachHour)&&
       s.hour-p.lastPreachHour<=s.religionPropagation.pulseDays*24;
   }
-  function socialReligionPulse(s){
-    const r=s.religionPropagation,id=s.religion.id,people=living(s);
+  function socialReligionPulse(s,faith=s.religion){
+    const r=s.religionPropagation,id=faith.id,people=living(s);
     const homes=new Map(),towns=new Map(),preachers=new Map();
     const scale=r.contactRadius,cell=(x,y)=>x+','+y;
     for(const p of people){
@@ -685,25 +688,30 @@
         if(!towns.has(town.id))towns.set(town.id,[]);
         towns.get(town.id).push(p);
       }
-      if(!recentPreacher(s,p))continue;
+      if(!recentPreacher(s,p,faith))continue;
       const k=cell(Math.floor(p.x/scale),Math.floor(p.y/scale));
       if(!preachers.has(k))preachers.set(k,[]);
       preachers.get(k).push(p);
     }
     const byId=new Map(people.map(p=>[p.id,p]));
-    const priestSources=s.religion.priests.map(id=>byId.get(id)).filter(p=>p&&recentPreacher(s,p));
+    const priestSources=faith.priests.map(id=>byId.get(id)).filter(p=>p&&recentPreacher(s,p,faith));
     const remoteSources=new Map();
     for(const town of s.settlements){
-      const sources=(towns.get(town.id)||[]).filter(p=>recentPreacher(s,p));
+      const sources=(towns.get(town.id)||[]).filter(p=>recentPreacher(s,p,faith));
       if(sources.length)remoteSources.set(town.id,sources);
     }
     const adopt=(p,cause)=>{
       p.religionId=id;p.devotion=20+Math.floor(clamp(p.receptivity,0,1)*4);
-      s.counts.newBelievers=(s.counts.newBelievers||0)+1;
-      const field=cause==='family'?'householdAdoptions':cause==='exchange'?'interSettlementAdoptions':
-        cause==='priest'||cause==='rival'?'priestAdoptions':'socialAdoptions';
-      s.counts[field]=(s.counts[field]||0)+1;
-      if(cause==='rival')s.counts.rivalConversions=(s.counts.rivalConversions||0)+1;
+      if(faith===s.religion){
+        s.counts.newBelievers=(s.counts.newBelievers||0)+1;
+        const field=cause==='family'?'householdAdoptions':cause==='exchange'?'interSettlementAdoptions':
+          cause==='priest'||cause==='rival'?'priestAdoptions':'socialAdoptions';
+        s.counts[field]=(s.counts[field]||0)+1;
+        if(cause==='rival')s.counts.rivalConversions=(s.counts.rivalConversions||0)+1;
+      }else{
+        s.counts.opponentNewBelievers=(s.counts.opponentNewBelievers||0)+1;
+        if(cause==='rival')s.counts.opponentConversions=(s.counts.opponentConversions||0)+1;
+      }
     };
     for(const p of people){
       const rival=p.religionId!==null&&p.religionId!==id;
@@ -727,10 +735,10 @@
           committed>=1?r.childOrdinaryLearningChance*.7:r.weakLearningChance*.65;
         if(religious){
           if(p.religionId===null){
-            if(religionRand(s)<clamp((.22+.15*committed+.08*devout)*(.6+.6*p.receptivity),0,.95))
+            if(religionRand(s,faith)<clamp((.22+.15*committed+.08*devout)*(.6+.6*p.receptivity),0,.95))
               adopt(p,'family');
           }else if(p.religionId===id&&p.devotion<cap&&
-            religionRand(s)<chance*(.65+.7*p.receptivity)){
+            religionRand(s,faith)<chance*(.65+.7*p.receptivity)){
             p.devotion=Math.min(cap,p.devotion+1);
           }
           continue;
@@ -765,11 +773,12 @@
         if(p.devotion>=20){
           const clear=nearbyPriests.some(q=>!activeStatus(s,q,'confusion'))?1:.5;
           const doubt=clamp(r.priestRivalDoubtChance*sensitivity*sermonAmplification*clear,0,.9);
-          if(religionRand(s)<doubt){
+          if(religionRand(s,faith)<doubt){
             p.devotion=Math.max(19,p.devotion-r.priestRivalDoubtStep);
-            s.counts.rivalDoubts=(s.counts.rivalDoubts||0)+1;
+            const counter=faith===s.religion?'rivalDoubts':'opponentDoubts';
+            s.counts[counter]=(s.counts[counter]||0)+1;
           }
-        }else if(religionRand(s)<clamp(r.priestRivalConversionChance*sensitivity*sermonAmplification,0,.8)){
+        }else if(religionRand(s,faith)<clamp(r.priestRivalConversionChance*sensitivity*sermonAmplification,0,.8)){
           adopt(p,'rival');
         }
         continue;
@@ -780,7 +789,7 @@
         const committedSlowdown=p.devotion>=40?.55:1;
         const clarity=nearbyPriests.some(q=>!activeStatus(s,q,'confusion'))?1:.6;
         const teaching=priest?r.priestTeachingMultiplier*sermonAmplification*clarity:1;
-        if(religionRand(s)<clamp(r.weakLearningChance*sensitivity*(family||priest?1:.6)*committedSlowdown*teaching,0,.95))
+        if(religionRand(s,faith)<clamp(r.weakLearningChance*sensitivity*(family||priest?1:.6)*committedSlowdown*teaching,0,.95))
           p.devotion=Math.min(r.ordinaryConsolidationCap,p.devotion+1);
       }else{
         // Priests add a *separate* recruitment opportunity. Even when there is
@@ -791,7 +800,7 @@
         const confusedPriest=nearbyPriests.length&&nearbyPriests.every(q=>activeStatus(s,q,'confusion')>0);
         const preacherClarity=confusedPriest?.45:1;
         const priestBonus=priest?r.priestJoinChance*sensitivity*sermonAmplification*preacherClarity:0;
-        const rolled=religionRand(s);
+        const rolled=religionRand(s,faith);
         if(rolled<clamp(baseline+priestBonus,0,.85)){
           const cause=rolled>=baseline?'priest':family?'family':social?'social':'exchange';
           adopt(p,cause);
@@ -801,19 +810,19 @@
     // One bounded social-pulse accounting window; no per-person lifelong sermon histories.
     for(const p of people)p.spreadSermonsSincePulse=0;
     // Settlement attribution is derived from real residents (migration included), not a border buff.
-    const reached=s.religion.reachedSettlements ||= {};
+    const reached=faith.reachedSettlements ||= {};
     for(const town of s.settlements){
       if(reached[town.id]!==undefined)continue;
       if((towns.get(town.id)||[]).some(p=>p.religionId===id&&p.devotion>=20)){
         reached[town.id]=s.hour;
         if(town.id!==s.settlements[0]?.id)
-          log(s,'religion',`${s.religion.name} 隨實際信眾傳入${town.name}。`,
+          log(s,'religion',`${faith.name} 隨實際信眾傳入${town.name}。`,
             ['已歸屬該聚落的居民具有宗教信仰；可能來自家庭、遷移、交流或傳道']);
       }
     }
   }
-  function oracleContact(s,p,o){
-    if(!p.alive||p.religionId!==s.religion.id||p.devotion<20||
+  function oracleContact(s,p,o,faith=s.religion){
+    if(!p.alive||p.religionId!==faith.id||p.devotion<20||
       o.status!=='active'||o.propagatedAtHour===null)return 0;
     const saint=s.people.find(q=>q.id===o.saintId&&q.alive);
     if(!saint)return 0;
@@ -822,13 +831,13 @@
     return town&&o.reachedSettlements?.[town.id] ? .8 : 0;
   }
 
-  function spreadCalling(s,p){
-    if(!p.alive||p.stage!=='adult'||p.religionId!==s.religion.id||p.devotion<20)
+  function spreadCalling(s,p,faith=s.religion){
+    if(!p.alive||p.stage!=='adult'||p.religionId!==faith.id||p.devotion<20)
       return {score:0,oracle:null};
     let best={score:0,oracle:null};
-    for(const o of s.religion.oracles){
+    for(const o of faith.oracles){
       if(o.intentType!=='religion.spread'||o.status!=='active'||o.propagatedAtHour===null)continue;
-      const transmitted=oracleContact(s,p,o);
+      const transmitted=oracleContact(s,p,o,faith);
       if(!transmitted)continue;
       // Sustained rather than permanent maximum attention; individuals still choose.
       const lifetime=(s.hour-o.issuedAtHour)/Math.max(1,o.expiresAtHour-o.issuedAtHour);
@@ -837,9 +846,9 @@
     }
     return best;
   }
-  function relayOracles(s){
+  function relayOracles(s,faith=s.religion){
     const r=s.religionPropagation,people=living(s);
-    for(const o of s.religion.oracles){
+    for(const o of faith.oracles){
       if(o.status!=='active'||o.propagatedAtHour===null)continue;
       o.reachedSettlements ||= {};
       const saint=people.find(p=>p.id===o.saintId);
@@ -849,20 +858,20 @@
         o.reachedSettlements[origin.id]={hour:s.hour,via:'saint'};
       for(const town of s.settlements){
         if(o.reachedSettlements[town.id])continue;
-        if(!people.some(p=>p.religionId===s.religion.id&&p.devotion>=20&&
+        if(!people.some(p=>p.religionId===faith.id&&p.devotion>=20&&
           personSettlement(s,p)?.id===town.id))continue;
         const connected=Object.keys(o.reachedSettlements).some(sourceId=>{
           const source=s.settlements.find(t=>t.id===sourceId);
           return source&&dist(source,town)<=r.interSettlementReach;
         });
         if(!connected)continue;
-        const priest=s.religion.priests.some(id=>people.some(p=>p.id===id&&personSettlement(s,p)?.id===town.id));
-        if(religionRand(s)>r.oracleRelayChance*(priest?1:.25))continue;
+        const priest=faith.priests.some(id=>people.some(p=>p.id===id&&personSettlement(s,p)?.id===town.id));
+        if(religionRand(s,faith)>r.oracleRelayChance*(priest?1:.25))continue;
         o.reachedSettlements[town.id]={hour:s.hour,via:priest?'priest':'social'};
         log(s,'oracle',`${town.name} 經由${priest?'祭司':'居民交流'}聽見神諭。`,
           ['訊息沿已建立信仰聯繫的相鄰聚落傳遞，並未直接廣播所有居民']);
       }
-      o.heardCount=people.filter(p=>oracleContact(s,p,o)>0).length;
+      o.heardCount=people.filter(p=>oracleContact(s,p,o,faith)>0).length;
     }
   }
   function nearestResource(s, home, kind,person=null) {

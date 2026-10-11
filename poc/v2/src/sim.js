@@ -1479,7 +1479,8 @@
       const center={x:Math.round(finished.reduce((n,h)=>n+h.x,0)/finished.length),
                     y:Math.round(finished.reduce((n,h)=>n+h.y,0)/finished.length)};
       if(s.settlements.some(t=>dist(t,center)<=s.rules.settlementClusterDistance))continue;
-      const id='s'+(s.settlements.reduce((n,t)=>Math.max(n,Number(t.id.slice(1))||0),0)+1);
+      const id='s'+Math.max(s.opponent?.originMode==='separated-native'?2:1,
+        s.settlements.reduce((n,t)=>Math.max(n,/^s\d+$/.test(t.id)?Number(t.id.slice(1)):0),0)+1);
       const town={id,name:'新拓聚落 '+id.slice(1),x:center.x,y:center.y,foundedAtHour:s.hour,
         householdIds:group.map(h=>h.id),storage:{food:0,wood:0,stone:0,fiber:0},granary:null,
         workDemand:{foodPressure:0,housingPressure:0},foodShortageDays:0,
@@ -1495,7 +1496,8 @@
     }
   }
   function updateSettlement(s) {
-    if (!hasSettlement(s)) {
+    const separated=s.opponent?.originMode==='separated-native';
+    if (!hasSettlement(s)||(separated&&!s.settlements.some(t=>t.id==='s1'))) {
       const near = s.households.filter(h => dist(h, s.camp) <= s.rules.settlementClusterDistance);
       const huts = near.filter(h => h.home);
       if (huts.length >= s.rules.settlementMinHuts && near.length >= 4) {
@@ -1504,13 +1506,16 @@
           workDemand:{foodPressure:0,housingPressure:0}, foodShortageDays:0,
           famineDays:0, famineReliefDays:0, famineActive:false, lastDailyUnmetFood:0 };
         ensureGranary(s,town);
-        s.settlements.push(town);
+        if(separated)s.settlements.unshift(town);
+        else s.settlements.push(town);
         for (const p of s.people) if (town.householdIds.includes(p.householdId)) p.settlementId = town.id;
         s.history.settlementFoundedHour = s.hour;
         log(s,'settlement',`${town.name} 由 ${huts.length} 戶已建屋的家庭形成。`,
           ['群居、土地與水源適宜；多戶實際收集建材並完成住所']);
       }
-      return;
+      // Existing native settlements are productive from Genesis even before
+      // either religion independently builds the first new settlement.
+      if(!separated||!hasSettlement(s))return;
     }
     establishOutpost(s);
     for (const town of s.settlements) {

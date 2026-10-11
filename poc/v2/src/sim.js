@@ -1707,6 +1707,19 @@
       }
     }
   }
+  // Religious offices must not remain attached to somebody who no longer
+  // follows this God. This matters once bilateral Priest conversions are real.
+  function reconcileFaithOffices(s,faith){
+    const members=new Map(living(s).map(p=>[p.id,p]));
+    const belongs=(id,min)=>members.get(id)?.religionId===faith.id&&members.get(id).devotion>=min;
+    faith.priests=faith.priests.filter(id=>belongs(id,20));
+    faith.saints=faith.saints.filter(id=>belongs(id,40));
+    for(const o of faith.oracles)if(o.status==='active'&&!faith.saints.includes(o.saintId)){
+      o.status='saint_departed';
+      log(s,'oracle',`${faith.name}：聆聽者已不再具備所屬宗教的 Saint 資格，神諭停止傳播。`,
+        ['角色依照真實居民當前信仰與虔誠度維持，無法繼續代表原神明傳播']);
+    }
+  }
   function opponentTurn(s){
     const ai=s.opponent;
     if(!ai?.enabled)return;
@@ -1759,7 +1772,7 @@
     s.god.dp=Math.min(s.god.cap,s.god.dp+rate);
     if(s.opponent?.enabled)s.opponentGod.dp=Math.min(s.opponentGod.cap,
       s.opponentGod.dp+faithDpRate(s,s.opponentReligion));
-    for(const faith of allFaiths(s)){ensureSaint(s,faith);ensurePriest(s,faith);}
+    for(const faith of allFaiths(s)){reconcileFaithOffices(s,faith);ensureSaint(s,faith);ensurePriest(s,faith);}
     collectPrayers(s);
     if(days(s)>0&&days(s)%s.religionPropagation.pulseDays===0){
       const faiths=allFaiths(s);

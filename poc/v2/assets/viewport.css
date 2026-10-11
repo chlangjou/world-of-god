@@ -161,3 +161,6 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
 .priest-prayer-nav small{font-size:10px;color:var(--muted)}
 .priest-prayer-nav button{background:#273c37;color:var(--text);border:1px solid #4c6159;border-radius:5px;padding:1px 12px;cursor:pointer}
 .priest-prayer-nav button:disabled{opacity:.4;cursor:not-allowed}
+
+/* Miracle statuses are readable in the fixed resident inspector. */
+.divine-status{font-size:10px;color:#e6d698;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}

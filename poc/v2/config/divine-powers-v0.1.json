@@ -85,5 +85,7 @@
       "maxDays": 30,
       "maxIntensity": 2
     }
-  }
+  },
+  "cooldownDurationFloorFraction": 0.18,
+  "cooldownPolicy": "Cooldown starts at cast time. Timed Miracle cooldown scales monotonically with cast duration (up to its max), plus moderately with radius/intensity and independently with Mastery. At equal radius/intensity, a 5-day cast has shorter cooldown than a 30-day cast. The 0.18 floor avoids zero-cost cooldown spamming; final readyAtHour rounds up to an 8-hour simulation tick."
 }

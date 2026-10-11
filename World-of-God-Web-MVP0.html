@@ -182,6 +182,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
           <button id="loadBtn" class="btn ghost" title="讀取儲存的世界">讀取</button>
           <button id="exportBtn" class="btn ghost" title="匯出存檔 JSON">匯出 JSON</button>
           <button id="importBtn" class="btn ghost" title="匯入存檔 JSON">匯入 JSON</button>
+          <button id="applyAgricultureBtn" class="btn ghost" title="保留現有世界人口、建築及歷史，套用最新 Agriculture 設定">更新目前世界農業</button>
         </div>
       </details>
       <button id="helpBtn" class="btn ghost" title="玩法及操作說明">說明</button>
@@ -287,7 +288,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <input id="importFile" type="file" accept="application/json,.json" hidden>
-  <script>window.WOG_AGRICULTURE_PROFILE={"profileId":"agriculture-balance-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"units":{"distance":"map cells from the riverbank","time":"simulated days and actual full 8-hour food workdays","food":"existing abstract Food units"},"description":"Selectable experimental Agriculture v0.1 Web PoC balance: physical river/soil/crop-stock production and autonomous work response; numerical parameters are tunable.","river":{"distanceOrigin":"river bank (map centerline distance minus half-width of 1.6 cells, clamped to zero)","fullEffectThroughCells":5,"zeroEffectAtCells":15,"nearBankInfluence":0.95,"falloff":"linear","meaning":"seasonal moisture contribution potential, not fixed soil moisture","riverHalfWidthCells":1.6},"seasons":{"rain":{"backgroundMoisture":0.76,"riverWaterAvailability":1,"diagnosticFoodLaborShare":0.08},"mild":{"backgroundMoisture":0.46,"riverWaterAvailability":0.54,"diagnosticFoodLaborShare":0.15},"dry":{"backgroundMoisture":0.12,"riverWaterAvailability":0.4,"diagnosticFoodLaborShare":0.5},"cycleDays":160,"dryWindows":[[14,29]],"rainWindows":[[0,5],[32,39],[68,74]]},"land":{"foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture":0.2,"referenceMoisture":0.9,"moistureExponent":0.8,"harvestMechanic":"actual yield is limited by accumulated unharvested crop stock and worker capacity; do not create food by formula alone","cropStockCapacityDays":2},"worker":{"foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment":9.5,"skillOutputIntercept":0.6,"skillOutputSlope":0.8,"environmentMoistureExponent":3,"startingSkillReference":0.45,"startingSkillRange":[0.4,0.5],"learningTimeConstantActualFoodWorkdays":550,"learningRule":"S(n) = 1 - (1 - S0) * exp(-n / tau); n counts food workdays, not calendar days"},"soilDynamics":{"referenceResponseTimeDays":3,"status":"scenario-dependent exploratory choice; not yet accepted as a season timing rule","shortRainCaveat":"6-8 day rainy spells can have lower realized harvest than steady-state rain potential"},"calibration":{"referenceSeed":"calm-river","population":40,"workCapableAdults":16,"dependents":24,"adultFoodNeedPerDay":0.38,"dependentFoodNeedPerDay":0.25,"totalFoodNeedPerDay":12.08,"landSupplyRatioTargets":{"rain":1.5,"mild":1.15,"dryMin":0.6,"dryMax":0.8},"laborShareTargetsOfWorkCapablePopulation":{"rainMin":0.06,"rainMax":0.08,"mildMin":0.1,"mildMax":0.2,"dryStressMin":0.4,"dryStressMax":0.5},"targetInterpretation":"reference scenario diagnostics, not jobs quotas, hard gameplay gates, or guarantees for random world seeds"},"reproducibility":{"report":"docs/AGRICULTURE_BALANCE.md","calculator":"tools/agriculture-balance-check.mjs","sampleMapAccess":"farm tile within +/-9 cells X/Y of at least one initial household; excludes later migrations and dynamically farmed land","sourceSimulatorGitBlob":"52b73c277b1a6111fa787374aeb5d300747d2e9f"},"workDemand":{"reserveTargetDays":18,"reserveRelaxDays":18,"reserveComfortDays":26,"explanation":"Comfort/relaxation scores influence autonomous work decisions based on physically accessible household and settlement reserves; not job quotas."}};</script><script>
+  <script>window.WOG_AGRICULTURE_PROFILE={"profileId":"agriculture-balance-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"units":{"distance":"map cells from the riverbank","time":"simulated days and actual full 8-hour food workdays","food":"existing abstract Food units"},"description":"High-growth experimental Agriculture v0.1: 4× land yield and expandable cultivated area. No imposed farming quotas or conjured Food; all numeric tuning remains in this profile.","river":{"distanceOrigin":"river bank (map centerline distance minus half-width of 1.6 cells, clamped to zero)","fullEffectThroughCells":5,"zeroEffectAtCells":15,"nearBankInfluence":0.95,"falloff":"linear","meaning":"seasonal moisture contribution potential, not fixed soil moisture","riverHalfWidthCells":1.6},"seasons":{"rain":{"backgroundMoisture":0.76,"riverWaterAvailability":1,"diagnosticFoodLaborShare":0.08},"mild":{"backgroundMoisture":0.46,"riverWaterAvailability":0.54,"diagnosticFoodLaborShare":0.15},"dry":{"backgroundMoisture":0.12,"riverWaterAvailability":0.4,"diagnosticFoodLaborShare":0.5},"cycleDays":160,"dryWindows":[[14,29]],"rainWindows":[[0,5],[32,39],[68,74]]},"land":{"foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture":0.8,"referenceMoisture":0.9,"moistureExponent":0.8,"harvestMechanic":"actual yield is limited by accumulated unharvested crop stock and worker capacity; do not create food by formula alone","cropStockCapacityDays":2,"normalSeasonLandCapacityTargetRatio":1.6,"autonomousExpansionEnabled":true,"minimumCultivationFertility":0.45,"workReachCells":9,"expansionNotes":"Autonomous agricultural work may cultivate one suitable reachable meadow when mild-season field potential is under population need × target ratio; this consumes the work shift and yields no Food until crops regrow."},"worker":{"foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment":9.5,"skillOutputIntercept":0.6,"skillOutputSlope":0.8,"environmentMoistureExponent":3,"startingSkillReference":0.45,"startingSkillRange":[0.4,0.5],"learningTimeConstantActualFoodWorkdays":550,"learningRule":"S(n) = 1 - (1 - S0) * exp(-n / tau); n counts food workdays, not calendar days"},"soilDynamics":{"referenceResponseTimeDays":3,"status":"scenario-dependent exploratory choice; not yet accepted as a season timing rule","shortRainCaveat":"6-8 day rainy spells can have lower realized harvest than steady-state rain potential"},"calibration":{"referenceSeed":"calm-river","population":40,"workCapableAdults":16,"dependents":24,"adultFoodNeedPerDay":0.38,"dependentFoodNeedPerDay":0.25,"totalFoodNeedPerDay":12.08,"landSupplyRatioTargets":{"rain":1.5,"mild":1.15,"dryMin":0.6,"dryMax":0.8},"laborShareTargetsOfWorkCapablePopulation":{"rainMin":0.06,"rainMax":0.08,"mildMin":0.1,"mildMax":0.2,"dryStressMin":0.4,"dryStressMax":0.5},"targetInterpretation":"reference scenario diagnostics, not jobs quotas, hard gameplay gates, or guarantees for random world seeds"},"reproducibility":{"report":"docs/AGRICULTURE_BALANCE.md","calculator":"tools/agriculture-balance-check.mjs","sampleMapAccess":"farm tile within +/-9 cells X/Y of at least one initial household; excludes later migrations and dynamically farmed land","sourceSimulatorGitBlob":"52b73c277b1a6111fa787374aeb5d300747d2e9f"},"workDemand":{"reserveTargetDays":18,"reserveRelaxDays":18,"reserveComfortDays":26,"explanation":"Comfort/relaxation scores influence autonomous work decisions based on physically accessible household and settlement reserves; not job quotas.","comfortableCareBonus":8}};</script><script>
 /* World of God — Web-first MVP-0. Standalone deterministic simulation, no DOM or wall clock. */
 (function (root, factory) {
   'use strict';
@@ -458,6 +459,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
       history: { settlementFoundedHour: null, firstSaintHour: null },
       metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
     generate(s, initialMoisture);
+    if (agriculture) s.counts.newFields=0;
     if (agriculture) for (const t of s.tiles) if (t.terrain === 'field') {
       const L=agriculture.land, cap=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
         Math.pow(1/L.referenceMoisture,L.moistureExponent)*L.cropStockCapacityDays;
@@ -487,6 +489,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
       settlements: s.settlements.length, followers: followers.length, avgDevotion: religious.reduce((z,p)=>z+p.devotion,0)/Math.max(1,religious.length),
       devotionWeight: devWeight, dpRateDay: s.rules.naturalDpPerDay + devWeight * s.rules.devotionDpPerWeightDay,
       food: foodPrivate + common, commonFood: common, privateFood: foodPrivate, avgMoisture: wet, avgCrop: crop,
+      farmFields:s.tiles.reduce((n,t)=>n+(t.terrain==='field'),0), newFields:s.counts.newFields||0,
       saintId: s.religion.saints[0] || null, activeOracle: activeOracle || null,
       rainReady: s.hour >= s.god.skills.rain.readyAtHour, rainReadyHour: s.god.skills.rain.readyAtHour,
       phase: s.environment.phase, births: s.counts.births, deaths: s.counts.deaths,
@@ -626,8 +629,9 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
   }
   function nearestField(s, home) {
     let best = null, strength = -Infinity;
-    for (let y = Math.max(0, home.y - 9); y <= Math.min(s.height - 1, home.y + 9); y++)
-      for (let x = Math.max(0, home.x - 9); x <= Math.min(s.width - 1, home.x + 9); x++) {
+    const reach=s.agriculture?.land?.workReachCells ?? 9;
+    for (let y = Math.max(0, home.y - reach); y <= Math.min(s.height - 1, home.y + reach); y++)
+      for (let x = Math.max(0, home.x - reach); x <= Math.min(s.width - 1, home.x + reach); x++) {
         const t = tile(s, x, y);
         if (t.terrain !== 'field') continue;
         const score = t.crop * 4 + t.moisture * .5 - .09 * Math.hypot(x - home.x, y - home.y);
@@ -686,9 +690,60 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
     } else h.inventory[kind] += amount;
     if (kind === 'food') { s.counts.foodFromLabor += amount; s.lastFoodOutput += amount; }
   }
+  // Potential is measured for stable mild weather; this is not an instant harvest.
+  function agricultureMildFieldYield(s,t) {
+    const A=s.agriculture,L=A.land,R=A.river,C=A.seasons.mild;
+    const d=Math.max(0,Math.abs(t.x-riverX(s,t.y))-R.riverHalfWidthCells);
+    const influence=d<=R.fullEffectThroughCells?R.nearBankInfluence:
+      d>=R.zeroEffectAtCells?0:R.nearBankInfluence*(R.zeroEffectAtCells-d)/(R.zeroEffectAtCells-R.fullEffectThroughCells);
+    const moisture=clamp(C.backgroundMoisture+(1-C.backgroundMoisture)*influence*C.riverWaterAvailability);
+    return L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
+      Math.pow(moisture/L.referenceMoisture,L.moistureExponent);
+  }
+  function agricultureMildCapacity(s) {
+    if(s.environment.landCapacityEvalDay!==days(s)) {
+      const reach=s.agriculture.land.workReachCells;
+      const alive=new Set(living(s).map(p=>p.id));
+      const homes=s.households.filter(h=>h.members.some(id=>alive.has(id)));
+      let capacity=0;
+      for(const t of s.tiles)if(t.terrain==='field'&&
+        homes.some(h=>Math.abs(t.x-h.x)<=reach&&Math.abs(t.y-h.y)<=reach))
+          capacity+=agricultureMildFieldYield(s,t);
+      s.environment.landCapacityMild=capacity;
+      s.environment.landCapacityEvalDay=days(s);
+    }
+    return s.environment.landCapacityMild;
+  }
+  function agricultureCultivate(s,p,h) {
+    const L=s.agriculture.land;
+    if(!L.autonomousExpansionEnabled)return false;
+    const demand=living(s).reduce((n,v)=>n+(v.stage==='child'?s.rules.foodNeedChild:s.rules.foodNeedAdult),0);
+    if(agricultureMildCapacity(s)>=demand*L.normalSeasonLandCapacityTargetRatio)return false;
+    let chosen=null,best=-Infinity;
+    const reach=L.workReachCells;
+    for(let y=Math.max(0,h.y-reach);y<=Math.min(s.height-1,h.y+reach);y++)
+      for(let x=Math.max(0,h.x-reach);x<=Math.min(s.width-1,h.x+reach);x++){
+        const t=tile(s,x,y);
+        if(t.terrain!=='meadow'||t.fertility<L.minimumCultivationFertility)continue;
+        const score=agricultureMildFieldYield(s,t)-.002*Math.hypot(t.x-h.x,t.y-h.y);
+        if(score>best){chosen=t;best=score;}
+      }
+    if(!chosen)return false; // No reachable suitable land: a genuine local limit.
+    // This real work shift opens a plot with zero crops and yields no Food.
+    chosen.terrain='field';chosen.cropStock=0;chosen.crop=0;
+    s.environment.landCapacityMild+=agricultureMildFieldYield(s,chosen);
+    s.counts.newFields=(s.counts.newFields||0)+1;
+    p.proficiency.food=1-(1-p.proficiency.food)*
+      Math.exp(-1/s.agriculture.worker.learningTimeConstantActualFoodWorkdays);
+    p.activityReason+='；本次耕作開墾農地，作物仍須自然生長';
+    if(p.lastDecision)p.lastDecision.reason=p.activityReason;
+    return true;
+  }
   function agricultureHarvest(s,p,h) {
+    if(agricultureCultivate(s,p,h))return 0;
     const A=s.agriculture,L=A.land,W=A.worker;
-    const plots=s.tiles.filter(t=>t.terrain==='field'&&Math.abs(t.x-h.x)<=9&&Math.abs(t.y-h.y)<=9);
+    const reach=A.land.workReachCells??9;
+    const plots=s.tiles.filter(t=>t.terrain==='field'&&Math.abs(t.x-h.x)<=reach&&Math.abs(t.y-h.y)<=reach);
     if(!plots.length)return 0;
     let fertility=0,weighted=0;
     for(const t of plots){fertility+=t.fertility;weighted+=t.fertility*Math.pow(t.moisture/L.referenceMoisture,W.environmentMoistureExponent);}
@@ -728,7 +783,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
     // Not every work period should be production. When accessible reserves are
     // strong, adults can spend the work block supporting dependents and the home.
     // Oracle pressure can redirect willing people to feasible food activities.
-    candidates.push({ name: 'care', score: 3.5 + (security.days >= (s.agriculture?.workDemand?.reserveComfortDays ?? 11) ? 5.0 : security.days >= (s.agriculture?.workDemand?.reserveRelaxDays ?? 7) ? 2.7 : 0) +
+    candidates.push({ name: 'care', score: 3.5 + (security.days >= (s.agriculture?.workDemand?.reserveComfortDays ?? 11) ? (h.home ? (s.agriculture?.workDemand?.comfortableCareBonus ?? 5.0) : 5.0) : security.days >= (s.agriculture?.workDemand?.reserveRelaxDays ?? 7) ? 2.7 : 0) +
       (householdMembers(s,h).some(v=>v.stage==='child') ? .7 : 0), valid: true });
     if (!candidates.length) { p.activity = 'rest'; p.activityReason = '附近缺少可用資源，這次無法工作';
       p.lastDecision = { work: 'rest', hour: s.hour, reason: p.activityReason, foodDays: security.days, oracleInfluence: 0 }; return; }
@@ -1231,6 +1286,16 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
       forecastCommonShare:access.communal, dailyFoodNeed:access.need, foodCoverageDays:access.days,
       activeMembers:householdMembers(s,h).length, foodShortageDays:h.foodShortageDays};
   }
+  // Explicit action permits a running PoC to adopt improved balance, preserving
+  // physical crop stock and all people/history; no Food is created by this update.
+  function applyAgricultureProfile(s,profile) {
+    if(!s.agriculture)return {ok:false,reason:'Original 世界不支援原地切換農業模型'};
+    if(profile?.profileId!=='agriculture-balance-v0.1')return {ok:false,reason:'無效的 Agriculture Profile'};
+    s.agriculture=JSON.parse(JSON.stringify(profile));
+    s.balanceProfileId=profile.profileId;
+    s.environment.landCapacityEvalDay=-1;
+    return {ok:true};
+  }
   function restore(json) {
     const candidate=typeof json==='string'?JSON.parse(json):JSON.parse(JSON.stringify(json));
     if(candidate?.version==='mvp0-web-1') {
@@ -1263,7 +1328,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
     return candidate;
   }
   return {VERSION,DEFAULT_RULES,create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
-    issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold};
+    issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile};
 });
 
 </script><script>
@@ -1377,6 +1442,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
     $('pauseBtn').textContent=paused?'▶ 開始 / 繼續':'Ⅱ 暫停';
     $('pauseBtn').disabled=profileLoading;
     $('balanceProfile').value=state.agriculture?'agriculture':'original';
+    $('applyAgricultureBtn').disabled=profileLoading||!state.agriculture;
     $('mapStatus').textContent=profileLoading?'載入平衡設定中…':state.agriculture?'Agriculture v0.1 · 河流、季節與實際農作物':'Original · 原始平衡對照';
     $('mapTip').hidden=!armedRain;
     $('simHint').textContent=armedRain?'已選擇降雨：點擊地圖施展（Esc 取消）':st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。';
@@ -1395,7 +1461,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
     const answered=state.religion.prayers.filter(p=>p.status==='answered').slice(-1);
     $('needsPanel').innerHTML=prayers.length?prayers.slice(-2).map(p=>`<div class="need-item"><strong>缺雨與糧食的祈禱</strong><small>第 ${Math.floor(p.createdAtHour/24)+1} 日 · ${p.by.length} 位信徒提出實際需要</small><small>請觀察雨後是否真的改善耕作，而非只看施法次數。</small></div>`).join(''):
       answered.length?'<div class="need-item"><strong>最近的祈求已獲得回應</strong><small>土地、勞動與食物真的出現變化；對應信徒的信仰已更新。</small></div>':'目前沒有迫切的祈禱。當水分、作物或糧食受到壓力，居民可能主動祈求。';
-    $('weatherNotice').textContent=`農田平均含水 ${format(st.avgMoisture*100)}% · 作物生長 ${format(st.avgCrop*100)}% · ${st.phase==='dry'?'土地正失水，乾旱是有限的自然變化。':'降水、地力與居民的勞動共同決定糧食。'}`;
+    $('weatherNotice').textContent=`農田 ${st.farmFields} 格${st.newFields?` · 新開墾 ${st.newFields} 格`:''} · 含水 ${format(st.avgMoisture*100)}% · ${st.phase==='dry'?'旱季，土地與工作效率降低':'農業依土壤、作物與實際勞動運作'}`;
     const town=state.settlements[0];
     $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
       `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
@@ -1509,7 +1575,19 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
   $('exportBtn').onclick=exportSave;
   $('importBtn').onclick=()=>$('importFile').click();
   $('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;if(file.size>10*1024*1024){say('檔案超過 10 MB，無法匯入。');return;}restore(await file.text());e.target.value='';});
-  $('resetBtn').onclick=()=>{if(!confirm('要重新開始河谷世界嗎？目前未儲存的進度會消失。'))return;newWorld();say('新世界已生成。');};
+  $('applyAgricultureBtn').onclick=async()=>{
+    if(profileLoading)return;
+    if(!state.agriculture){say('目前使用 Original；請先選擇 Agriculture 世界。');return;}
+    if(!confirm('更新目前世界的 Agriculture 平衡參數？會保留人口、食物庫存、已開墾農田及歷史，不會重新創世。建議先儲存或匯出備份。'))return;
+    try{
+      const latest=await loadAgriculture();
+      const r=S.applyAgricultureProfile(state,latest);
+      if(!r.ok){say(r.reason);return;}
+      activeProfile=state.agriculture;
+      render();say('已套用最新農業產能與擴張規則；世界歷史與食物存量完整保留。');
+    }catch(e){say('更新失敗：'+e.message);}
+  };
+    $('resetBtn').onclick=()=>{if(!confirm('要重新開始河谷世界嗎？目前未儲存的進度會消失。'))return;newWorld();say('新世界已生成。');};
   $('helpBtn').onclick=()=>$('infoDialog').showModal();$('closeHelp').onclick=()=>$('infoDialog').close();
   // New playtests start with the latest experimental Agriculture profile.
   // Loading failure is explicit and falls back to the reproducible Original rules.

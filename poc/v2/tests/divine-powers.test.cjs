@@ -127,6 +127,7 @@ test('A no-presence location cannot authorize offensive high-tier casting',()=>{
 
 test('Drought is bounded physical water pressure and expires on simulation time',()=>{
   const s=fresh(),plot=nearestField(s);canCast(s);
+  plot.moisture=.95; // known moist soil fixture: direct drying will be observable
   const cast=W.castMiracle(s,'drought',{x:plot.x,y:plot.y,radius:5,intensity:1.5,durationDays:2});
   assert.equal(cast.ok,true,cast.reason);
   const before=plot.moisture;

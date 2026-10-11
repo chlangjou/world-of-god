@@ -23,6 +23,41 @@
     familyReturnFoodDays: 2, famineAlertDays: 21, famineReliefDays: 7, isolatedFamineDays: 45
   });
 
+
+  // Independent, data-configurable first-batch Miracle skills. Rain retains its v2
+  // public API and original cost/cooldown; everything else shares one typed path.
+  const POWER_DEFAULTS=Object.freeze({
+    ripening:{label:'促熟 Ripening',baseCost:8,cooldownDays:12,defaultRadius:7,defaultIntensity:1,defaultDurationDays:12,maxDays:30,maxIntensity:2.5,instant:false},
+    harvest:{label:'豐收 Harvest',baseCost:10,cooldownDays:13,defaultRadius:7,defaultIntensity:1,defaultDurationDays:0,maxDays:0,maxIntensity:2,instant:true},
+    heal:{label:'治療 Heal',baseCost:7,cooldownDays:9,defaultRadius:6,defaultIntensity:1,defaultDurationDays:0,maxDays:0,maxIntensity:2,instant:true},
+    efficiency:{label:'效率祝福 Efficiency',baseCost:10,cooldownDays:16,defaultRadius:7,defaultIntensity:1,defaultDurationDays:14,maxDays:30,maxIntensity:2,instant:false},
+    drought:{label:'乾旱 Drought',baseCost:16,cooldownDays:30,defaultRadius:7,defaultIntensity:1,defaultDurationDays:12,maxDays:30,maxIntensity:2,instant:false,offensive:true},
+    lightning:{label:'雷擊 Lightning',baseCost:14,cooldownDays:18,defaultRadius:3,defaultIntensity:1,defaultDurationDays:0,maxDays:0,maxIntensity:2,instant:true,offensive:true},
+    confusion:{label:'混亂 Confusion',baseCost:11,cooldownDays:19,defaultRadius:7,defaultIntensity:1,defaultDurationDays:12,maxDays:30,maxIntensity:2,instant:false,offensive:true},
+    blindness:{label:'致盲 Blindness',baseCost:11,cooldownDays:19,defaultRadius:7,defaultIntensity:1,defaultDurationDays:12,maxDays:30,maxIntensity:2,instant:false,offensive:true}
+  });
+  const POWER_PROFILE_ID='divine-powers-v0.1';
+  function divinePowerRules(profile){
+    const source=profile?.profileId===POWER_PROFILE_ID?profile:{};
+    const powers={};
+    for(const [type,base] of Object.entries(POWER_DEFAULTS)){
+      const configured=source.powers?.[type]||{};
+      powers[type]={...base};
+      for(const key of ['baseCost','cooldownDays','defaultRadius','defaultIntensity','defaultDurationDays','maxDays','maxIntensity']){
+        if(Number.isFinite(configured[key]))powers[type][key]=clamp(configured[key],0,key==='cooldownDays'?120:100);
+      }
+    }
+    return {profileId:POWER_PROFILE_ID,powers,
+      destructiveMinWeighted:clamp(num(source.destructiveMinWeighted,4),0,100),
+      ripeningGrowthPerIntensity:clamp(num(source.ripeningGrowthPerIntensity,2.3),.1,6),
+      harvestExtraPerIntensity:clamp(num(source.harvestExtraPerIntensity,.9),.1,2.5),
+      harvestMaxExtraCapRatio:clamp(num(source.harvestMaxExtraCapRatio,1.5),.2,3),
+      efficiencyWorkBonus:clamp(num(source.efficiencyWorkBonus,.55),.05,2),
+      confusionScoreNoise:clamp(num(source.confusionScoreNoise,5),.1,12),
+      blindnessReachReduction:clamp(num(source.blindnessReachReduction,.7),.1,.9),
+      spreadSermonBonus:clamp(num(source.spreadSermonBonus,.24),.05,1)};
+  }
+
   // Religion Propagation v0.1: tunable, seed-stable social pulses (separate from economic RNG).
   const RELIGION_DEFAULTS=Object.freeze({
     profileId:'religion-propagation-v0.1',pulseDays:7,minimumChildAge:4,
@@ -193,13 +228,15 @@
       ? JSON.parse(JSON.stringify(config.balanceProfile)) : null;
     const seed = String(config.seed || 'valley-spring-01').slice(0, 100);
     const religionPropagation=religionRules(config.religionProfile);
+    const divinePowers=divinePowerRules(config.divineProfile);
     const initialMoisture = clamp(num(config.moisture, .52), .2, .9);
     const s = { version: VERSION, seed, rules, rng: hash(seed), religionRng:hash(seed+'|religion-v0.1'), hour: 0, tick: 0,
       width: rules.width, height: rules.height, tiles: [], people: [], households: [], settlements: [],
-      camp: null, religionPropagation, religion: { id: 'r1', godId: 'g1', name: '初光信仰', saints: [], priests: [],
+      camp: null, religionPropagation, divinePowers, religion: { id: 'r1', godId: 'g1', name: '初光信仰', saints: [], priests: [],
         oracles: [], prayers: [], lastPrayerHour: -1, regionalPrayerAt:{}, reachedSettlements:{} },
       god: { id: 'g1', dp: rules.initialDp, cap: rules.maxDp,
-        skills: { rain: { level: 1, xp: 0, readyAtHour: 0 } } },
+        skills: { rain: { level: 1, xp: 0, readyAtHour: 0 },
+           ...Object.fromEntries(Object.keys(POWER_DEFAULTS).map(id=>[id,{level:1,xp:0,readyAtHour:0}])) } },
       effects: [], nextId: 1, eventSeq: 0, events: [],
       counts: { births: 0, deaths: 0, relocations: 0, rainCasts: 0, foodFromLabor: 0,
         newBelievers:0, householdAdoptions:0, socialAdoptions:0, interSettlementAdoptions:0,
@@ -249,7 +286,7 @@
       saintId: s.religion.saints[0] || null, activeOracle: activeOracle || null,
       rainReady: s.hour >= s.god.skills.rain.readyAtHour, rainReadyHour: s.god.skills.rain.readyAtHour,
       phase: s.environment.phase, births: s.counts.births, deaths: s.counts.deaths,
-      rainActive: s.effects.length, householdsUnhoused: s.households.filter(h => !h.home).length,
+      rainActive: s.effects.filter(e=>(e.type||'rain')==='rain').length, householdsUnhoused: s.households.filter(h => !h.home).length,
       workChoices: s.metrics.workChoices, oracleInfluenced: s.metrics.oracleInfluencedChoices };
   }
   function rayCells(s, center, radius) {
@@ -304,6 +341,143 @@
     log(s, 'miracle', `你向河谷施展降雨，雨雲將停留約 ${test.durationDays} 日。`,
       [`直接效果：選定範圍增加降雨；不保證豐收`, `神力 -${test.cost}，喚雨冷卻 ${Math.round(test.cooldownDays)} 日`]);
     return { ...test, effectId: effect.id };
+  }
+
+
+  function skillState(s,type){
+    return s.god.skills[type] ||= {level:1,xp:0,readyAtHour:0};
+  }
+  function cropStockCap(s,t){
+    if(!s.agriculture || t.terrain!=='field')return 1;
+    const L=s.agriculture.land;
+    return L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
+      Math.pow(1/L.referenceMoisture,L.moistureExponent)*L.cropStockCapacityDays;
+  }
+  function activeStatus(s,p,type){
+    const v=p.divineStatuses?.[type];
+    if(!v||v.endsAtHour<=s.hour||!p.alive)return 0;
+    if(type==='efficiency'&&(p.religionId!==s.religion.id||p.devotion<s.rules.faithThreshold))return 0;
+    return v.strength;
+  }
+  function expireStatuses(s){
+    for(const p of s.people){
+      if(!p.divineStatuses)continue;
+      for(const [key,v] of Object.entries(p.divineStatuses)){
+        if(v.endsAtHour<=s.hour)delete p.divineStatuses[key];
+      }
+      if(!Object.keys(p.divineStatuses).length)delete p.divineStatuses;
+    }
+  }
+  function perceivedReach(s,p,reach){
+    const blind=activeStatus(s,p,'blindness');
+    return blind?Math.max(1,Math.floor(reach*(1-s.divinePowers.blindnessReachReduction*Math.min(1,blind)))):reach;
+  }
+  function evaluateMiracle(s,type,input={}){
+    if(type==='rain')return evalRain(s,input);
+    const def=s.divinePowers.powers[type];
+    if(!def)return {ok:false,reason:'未登錄的神蹟'};
+    const x=num(input.x,NaN),y=num(input.y,NaN);
+    const radius=num(input.radius,def.defaultRadius);
+    const intensity=num(input.intensity,def.defaultIntensity);
+    const durationDays=def.instant?0:num(input.durationDays,def.defaultDurationDays);
+    const center={x,y},skill=skillState(s,type);
+    const workload=radius*radius*intensity*(def.instant?1:Math.max(1,durationDays/10));
+    const cost=Math.max(1,Math.ceil((def.baseCost+.045*radius*radius+3*intensity+
+      (def.instant?0:.17*durationDays))/(1+(skill.level-1)*.14)));
+    const cooldownDays=def.cooldownDays*Math.max(.6,Math.min(1.5,workload/(def.defaultRadius**2*def.defaultIntensity)))/
+      (1+(skill.level-1)*.12);
+    const validCenter=Number.isFinite(x)&&Number.isFinite(y)&&x>=0&&y>=0&&x<s.width&&y<s.height;
+    const inArea=p=>validCenter&&p.alive&&dist(p,center)<=radius;
+    const fields=validCenter&&['ripening','harvest'].includes(type)?rayCells(s,center,radius).filter(t=>
+      t.terrain==='field'&&(type!=='harvest'||(s.agriculture?t.cropStock>1e-8:t.crop>.02))):[];
+    const people=['heal','efficiency','confusion','blindness'].includes(type)?
+      s.people.filter(p=>inArea(p)&&(type!=='heal'||p.health<100)&&
+       (type!=='efficiency'||(p.religionId===s.religion.id&&p.devotion>=s.rules.faithThreshold))):[];
+    const presence=validCenter?presenceAt(s,center):null;
+    let reason=null;
+    if(!validCenter)reason='施展中心不在地圖內';
+    else if(!(radius>=1&&radius<=14))reason='施展範圍必須在 1 至 14 格內';
+    else if(!(intensity>.0&&intensity<=def.maxIntensity))reason='神蹟強度超出限制';
+    else if(!def.instant&&!(durationDays>=1&&durationDays<=def.maxDays))reason='持續時間超出限制';
+    else if(def.offensive&&(!presence||presence.weighted<s.divinePowers.destructiveMinWeighted||
+      presence.share<=.5))reason='當地神性臨在不足，無法發動破壞／干擾神蹟';
+    else if(['ripening','harvest'].includes(type)&&!fields.length)reason='範圍內沒有可作用的現有農作物';
+    else if(['heal','efficiency','confusion','blindness'].includes(type)&&!people.length)
+      reason=type==='heal'?'範圍內沒有需要治療的在世居民':
+        type==='efficiency'?'範圍內沒有可祝福的己方信徒':'範圍內沒有可干擾的在世居民';
+    else if(s.hour<skill.readyAtHour)reason='此神蹟仍在冷卻';
+    else if(s.god.dp+1e-8<cost)reason='神力不足';
+    return {ok:!reason,reason,cost,cooldownDays,center,radius,intensity,durationDays,
+      presence,applicableFields:fields.length,applicablePeople:people.length,instant:!!def.instant,type};
+  }
+  function castMiracle(s,type,input={}){
+    if(type==='rain')return castRain(s,input);
+    const check=evaluateMiracle(s,type,input);
+    if(!check.ok)return check;
+    const {center,radius,intensity,durationDays}=check;
+    const people=s.people.filter(p=>p.alive&&dist(p,center)<=radius);
+    const cells=['harvest','lightning'].includes(type)?rayCells(s,center,radius):[];
+    const tuning=s.divinePowers;
+    let applied=0,actual=0;
+    if(type==='heal'){
+      for(const p of people)if(p.health<100){
+        const healed=Math.min(100-p.health,30*intensity*Math.max(.45,1-dist(p,center)/Math.max(1,radius)*.5));
+        p.health+=healed;actual+=healed;applied++;
+      }
+    }else if(type==='harvest'){
+      for(const t of cells)if(t.terrain==='field'){
+        if(s.agriculture){
+          const original=Math.max(0,t.cropStock),cap=cropStockCap(s,t);
+          if(original<=0)continue;
+          const extra=Math.min(original*tuning.harvestExtraPerIntensity*intensity,
+            Math.max(0,cap*(1+tuning.harvestMaxExtraCapRatio)-original));
+          if(extra<=0)continue;
+          t.cropStock=original+extra;
+          t.crop=clamp(t.cropStock/Math.max(cap,1e-9));actual+=extra;applied++;
+        }else if(t.crop>.02){
+          const extra=Math.min(.98-t.crop,t.crop*.45*intensity);
+          if(extra<=0)continue;
+          t.crop+=extra;actual+=extra;applied++;
+        }
+      }
+    }else if(type==='lightning'){
+      for(const p of people){
+        const amount=(16+29*intensity)*Math.max(.3,1-dist(p,center)/Math.max(1,radius)*.7);
+        p.health=Math.max(0,p.health-amount);
+        actual+=amount;applied++;
+        if(p.health<=0)die(s,p.id,'遭雷擊受傷致死');
+      }
+      for(const t of cells)if(t.terrain==='field'){
+        const fraction=clamp(.25*intensity*Math.max(.2,1-dist(t,center)/Math.max(1,radius)),0,.8);
+        if(s.agriculture)t.cropStock=Math.max(0,t.cropStock*(1-fraction));
+        else t.crop=Math.max(.02,t.crop*(1-fraction));
+      }
+    }else if(['efficiency','confusion','blindness'].includes(type)){
+      for(const p of people){
+        if(type==='efficiency'&&(p.religionId!==s.religion.id||p.devotion<s.rules.faithThreshold))continue;
+        const endsAtHour=s.hour+durationDays*24;
+        p.divineStatuses ||= {};
+        const old=p.divineStatuses[type],previous=old&&old.endsAtHour>s.hour?old:null;
+        p.divineStatuses[type]={strength:Math.max(intensity,previous?.strength||0),
+          endsAtHour:Math.max(endsAtHour,previous?.endsAtHour||0),godId:s.god.id};
+        applied++;
+      }
+    }else if(type==='ripening'||type==='drought'){
+      const effect={id:type+'-'+s.nextId++,type,x:center.x,y:center.y,
+        radius,intensity,startsAtHour:s.hour,endsAtHour:s.hour+durationDays*24};
+      s.effects.push(effect);applied=rayCells(s,center,radius).filter(t=>t.terrain!=='river').length;
+    }
+    s.god.dp=Math.max(0,s.god.dp-check.cost);
+    const skill=skillState(s,type);
+    skill.readyAtHour=s.hour+Math.max(8,Math.round(check.cooldownDays*24/8)*8);
+    skill.xp+=Math.max(1,Math.round(radius*intensity*(durationDays||1)/8));
+    while(skill.level<5&&skill.xp>=skill.level*skill.level*30)skill.level++;
+    s.counts.miracleCasts ||= {};
+    s.counts.miracleCasts[type]=(s.counts.miracleCasts[type]||0)+1;
+    log(s,'miracle','你施展 '+tuning.powers[type].label+'，作用於 '+applied+' 個目標。',
+      ['直接作用於世界或居民；實際後續結果仍由模擬決定',
+       '神力 -'+check.cost+'，冷卻約 '+Math.round(check.cooldownDays)+' 日']);
+    return {...check,applied,actual};
   }
 
   function personSettlement(s,p){
@@ -900,31 +1074,39 @@
     for (const t of s.tiles) {
       if (t.terrain === 'river') continue;
       const nearRiver = clamp(1-Math.abs(t.x-riverX(s,t.y))/10);
-      let boost = 0;
+      let boost = 0, droughtPressure=0, ripeningFactor=1;
       for (const e of s.effects) {
-        if (s.hour < e.endsAtHour && Math.hypot(t.x - e.x, t.y - e.y) <= e.radius) boost += .028 * e.intensity;
+        if(s.hour>=e.endsAtHour||Math.hypot(t.x-e.x,t.y-e.y)>e.radius)continue;
+        const kind=e.type||'rain';
+        if(kind==='rain')boost+=.028*e.intensity;
+        else if(kind==='drought')droughtPressure=Math.max(droughtPressure,e.intensity);
+        else if(kind==='ripening')ripeningFactor=Math.max(ripeningFactor,
+          1+e.intensity*s.divinePowers.ripeningGrowthPerIntensity);
       }
-      effectSummary += boost;
+      effectSummary+=boost;
       if(A) {
         const R=A.river,C=A.seasons[season],L=A.land;
         const d=Math.max(0,Math.abs(t.x-riverX(s,t.y))-R.riverHalfWidthCells);
         const influence=d<=R.fullEffectThroughCells?R.nearBankInfluence:
           d>=R.zeroEffectAtCells?0:R.nearBankInfluence*(R.zeroEffectAtCells-d)/(R.zeroEffectAtCells-R.fullEffectThroughCells);
-        const target=clamp(C.backgroundMoisture+(1-C.backgroundMoisture)*influence*C.riverWaterAvailability);
+        const target=clamp(C.backgroundMoisture+(1-C.backgroundMoisture)*influence*C.riverWaterAvailability-.16*droughtPressure);
         const tau=A.soilDynamics.referenceResponseTimeDays;
-        t.moisture=clamp(t.moisture+(target-t.moisture)*(1-Math.exp(-s.rules.tickHours/24/tau))+boost,0,1);
+        t.moisture=clamp(t.moisture+(target-t.moisture)*(1-Math.exp(-s.rules.tickHours/24/tau))+boost-.009*droughtPressure,0,1);
         if(t.terrain==='field'){
           const daily=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
             Math.pow(t.moisture/L.referenceMoisture,L.moistureExponent);
           const cap=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
             Math.pow(1/L.referenceMoisture,L.moistureExponent)*L.cropStockCapacityDays;
-          t.cropStock=Math.min(cap,Math.max(0,t.cropStock)+daily*s.rules.tickHours/24);
+          // A prior Harvest blessing may have created existing standing biomass above
+          // the normal renewal cap. Keep that real stock until harvested; do not refill above it.
+          const before=Math.max(0,t.cropStock);
+          t.cropStock=Math.min(Math.max(cap,before),before+daily*ripeningFactor*s.rules.tickHours/24);
           t.crop=cap>0?clamp(t.cropStock/cap):0;
         }
       } else {
-      t.moisture = clamp(t.moisture - (drought ? .014 : .007) + naturalRain + nearRiver*.003 + boost, .03, .98);
+      t.moisture = clamp(t.moisture - (drought ? .014 : .007) + naturalRain + nearRiver*.003 + boost-.018*droughtPressure, .03, .98);
       if (t.terrain === 'field') {
-        const growth = t.moisture > .23 ? (.006 + .029 * t.moisture) * t.fertility : -.006;
+        const growth = t.moisture > .23 ? (.006 + .029 * t.moisture) * t.fertility*ripeningFactor : -.006;
         t.crop = clamp(t.crop + growth, .02, 1);
       }
       }
@@ -936,7 +1118,7 @@
     const expired = s.effects.filter(e => s.hour >= e.endsAtHour);
     if (expired.length) {
       s.effects = s.effects.filter(e => s.hour < e.endsAtHour);
-      for (const e of expired) log(s, 'miracle', '神蹟的降雨已結束；土地保留實際濕潤或乾燥狀態。', ['停止持續雨水輸入，沒有回溯物理後果']);
+      for (const e of expired) log(s,'miracle', (e.type==='ripening'?'促熟':e.type==='drought'?'乾旱':'降雨')+'神蹟已結束；土地保留已產生的實際變化。', ['持續輸入到期，自然過程繼續，不回溯結果']);
     }
   }
 
@@ -1554,7 +1736,7 @@
     if(!Number.isSafeInteger(ticks) || ticks<0 || ticks>50000) throw new RangeError('ticks must be integer 0..50000');
     for(let k=0;k<ticks;k++) {
       s.hour+=s.rules.tickHours;s.tick++;
-      processOracles(s);processScheduledBirths(s);updateWorld(s);updatePeople(s);
+      expireStatuses(s);processOracles(s);processScheduledBirths(s);updateWorld(s);updatePeople(s);
       if(s.tick%3===0) daily(s);
       if(s.hour>0 && s.hour%(s.rules.daysPerMonth*24)===0) demographic(s);
     }
@@ -1640,6 +1822,11 @@
       !Number.isFinite(formerReligion.priestRivalDoubtChance))
       formerReligion.priestJoinChance=RELIGION_DEFAULTS.priestJoinChance;
     candidate.religionPropagation=religionRules(formerReligion);
+    candidate.divinePowers=divinePowerRules(candidate.divinePowers);
+    candidate.god.skills ||= {};
+    for(const type of ['rain',...Object.keys(POWER_DEFAULTS)])
+      candidate.god.skills[type] ||= {level:1,xp:0,readyAtHour:0};
+    for(const e of candidate.effects||[])e.type ||= 'rain';
     if(!Number.isSafeInteger(candidate.religionRng))candidate.religionRng=hash(candidate.seed+'|religion-v0.1');
     candidate.religion.reachedSettlements ||= {};
     candidate.religion.regionalPrayerAt ||= {};
@@ -1660,7 +1847,8 @@
     if(!verdict.ok) throw new Error('無法讀取世界：'+verdict.errors.join('；'));
     return candidate;
   }
-  return {VERSION,DEFAULT_RULES,create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
+  return {VERSION,DEFAULT_RULES,POWER_DEFAULTS,create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
+    evaluateMiracle,castMiracle,activeStatus,
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
     settlementReligionStats,priestPetitions};
 });

@@ -42,7 +42,9 @@
   const selectedPower=()=> $('divinePowerSelect').value;
   function rememberMiracleSettings(){
     if(!configuredMiracleId)return;
-    const current=opts();
+    const current={radius:Number($('radius').value),
+      intensityPercent:Number($('intensity').value),
+      durationDays:Number($('duration').value)};
     if(Object.values(current).every(Number.isFinite))
       miracleSettings[configuredMiracleId]=current;
   }
@@ -63,7 +65,7 @@
     radius.value=String(bounded(prior?.radius,rule.defaultRadius,Number(radius.min)||2,14));
     intensity.max=String(maxIntensity);
     intensity.value=String(bounded(
-      prior?.intensity*100,Math.round(rule.defaultIntensity*100),
+      prior?.intensityPercent,Math.round(rule.defaultIntensity*100),
       Number(intensity.min)||30,maxIntensity));
     duration.max=String(maxDays);
     duration.value=String(bounded(

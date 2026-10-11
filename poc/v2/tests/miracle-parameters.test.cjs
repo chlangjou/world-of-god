@@ -139,3 +139,30 @@ test('remembered Miracle presets remain within changed profile maxima',async()=>
   assert.equal(ui.el('duration').max,'6');
   assert.equal(ui.el('durationLabel').hidden,false);
 });
+
+test('cooldown preview changes with selected Rain duration and matches the final cast',async()=>{
+  const ui=await boot(),s=ui.world();
+  s.god.dp=s.god.cap;
+  ui.set('radius',14);
+  ui.set('intensity',100);
+  ui.set('duration',30);
+  const full=ui.el('rainCooldown').textContent;
+  assert.ok(full.includes('本次預計冷卻'),full);
+  const longDays=Number(full.match(/冷卻 ([0-9.]+) 模擬日/)?.[1]);
+  assert.ok(Number.isFinite(longDays));
+  ui.set('duration',5);
+  const short=ui.el('rainCooldown').textContent;
+  const shortDays=Number(short.match(/冷卻 ([0-9.]+) 模擬日/)?.[1]);
+  assert.ok(Number.isFinite(shortDays)&&shortDays<longDays,
+    'changing duration must immediately shorten the preview, even for wide spells');
+  const expected=W.evalRain(s,{x:s.camp.x,y:s.camp.y,radius:14,intensity:1,durationDays:5});
+  assert.equal(shortDays,Number(expected.cooldownDays.toFixed(1)));
+  ui.el('rainBtn').onclick();
+  const unit=768/s.width;
+  ui.canvas.listeners.click({clientX:(s.camp.x+.25)*unit,clientY:(s.camp.y+.25)*unit});
+  assert.equal(s.god.skills.rain.readyAtHour-s.hour,
+    Math.round(expected.cooldownDays*24/8)*8);
+  assert.ok(ui.el('rainCooldown').textContent.includes('冷卻中'));
+  // Short casts still respect their own cooldown, not merely the active rain duration.
+  assert.equal(ui.el('rainBtn').disabled,true);
+});

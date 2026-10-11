@@ -99,6 +99,8 @@ test('need-location controls keep three readable entries, exact map centers, and
   assert.ok(app.includes('prayers.slice(needPage*3,(needPage+1)*3)'),
     'all needs must stay navigable, not just the newest two');
   assert.ok(app.includes('data-need-locate')&&app.includes('data-needs-page'));
+  assert.ok(app.includes('needsMarkup!==lastNeedsMarkup'),
+    'a frequent render must not replace a need button while the player is clicking or focusing it');
   assert.ok(app.includes('selectedNeedId')&&app.includes('currentNeed()'));
   assert.ok(app.includes("loc.radius*size"),'the requested field radius must be drawn');
   assert.ok(app.includes('cursor||currentNeed()?.location?.center||state.camp'),

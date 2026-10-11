@@ -10,6 +10,8 @@ New browser games start with 51 individuals:
 - AI (`g2/r2`): 4 starting households / 12 initial adherents on the opposite side, at least 29 cells from the player camp (default dimensions/seed).
 - Indigenous population: 3 pre-existing villages (`n1/n2/n3`), with 3 real households and 9 initially unaffiliated individuals each (27 people). Households have pre-existing homes, private Food, communal historical stock and nearby farm fields. `nativeOrigin` remains on a person after they choose a religion.
 
+For the default `valley-spring-01` seed, after the fairness refinement the native village centers are `n1=(25,34)`, `n2=(33,7)`, `n3=(31,19)`. The side villages are each about **13.2 cells** from their corresponding God, with equal approximate advantage over the other; the middle village is about **14.8 / 14.9 cells** from player/AI respectively. The exact sites depend on Seed and terrain.
+
 The 3 villages are **not God-owned territories**. Nobody is automatically converted because their village is near a deity; converted individuals remain native people. Gods' own households establish `s1/s2` through ordinary home-building, not by annexing the original villages. One-God new worlds still start with native villages by supplying `worldGenesisMode:'native'`; existing old saved games preserve their prior household and settlement placement.
 
 ### Fair, water-aware village selection
@@ -19,7 +21,7 @@ At new world generation, candidate meadow tiles are scored by water access, fert
 New-game checks across 5 seeds enforce:
 
 - The middle village's distances to both God origins differ by **at most 3 map cells**.
-- The two outer villages' *near-side* distances to their corresponding Gods differ by **at most 3.5 cells**; neither is granted extra initial followers.
+- The two outer villages' *near-side* distances to their corresponding Gods differ by **at most 3.5 cells**. Their *relative distance advantage over the other God* is also checked (target difference within 4 cells) so one side is not given an exclusive village while the other's is already contested. Neither God receives free extra initial followers.
 - All three village centers are within **10 map cells of river-bank influence**, avoiding unreasonably dry native starting locations.
 
 This is approximately equal **opportunity**, not forced equality of conversion rates or difficulty. The simulation may produce different religious growth due to geography, needs, actual Priest influence and player decisions. Small custom maps may use a relaxed location fallback.

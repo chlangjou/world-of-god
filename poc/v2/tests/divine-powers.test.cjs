@@ -30,6 +30,8 @@ test('Ripening replenishes real harvested crop stock and expires without creatin
   plot.cropStock=0;plot.crop=0;canCast(s);
   const cast=W.castMiracle(s,'ripening',{x:plot.x,y:plot.y,radius:5,intensity:1.4,durationDays:2});
   assert.equal(cast.ok,true,cast.reason);
+  assert.ok(s.god.skills.ripening.readyAtHour>s.hour);
+  assert.equal(s.god.skills.harvest.readyAtHour,0,'independent skill cooldowns');
   assert.equal(W.stats(s).food,food);
   W.advanceTicks(s,1);
   assert.ok(plot.cropStock>0,'existing agricultural stock must regenerate');
@@ -78,6 +80,8 @@ test('Efficiency and debuffs coexist, refresh within caps and expire with simula
   assert.ok(W.activeStatus(s,p,'confusion')>0);
   assert.ok(W.activeStatus(s,p,'blindness')>0);
   const id=p.religionId;W.advanceTicks(s,1);
+  assert.ok(p.lastDecision?.reason?.includes('混亂'),'decision scores must actually be affected');
+  assert.ok(p.lastDecision?.reason?.includes('致盲'),'perceptual work path must see blindness');
   assert.equal(p.religionId,id,'a debuff may not directly change religious identity');
   advanceDays(s,2);
   for(const type of ['efficiency','confusion','blindness'])assert.equal(W.activeStatus(s,p,type),0);
@@ -119,4 +123,28 @@ test('A no-presence location cannot authorize offensive high-tier casting',()=>{
   const attempt=W.castMiracle(s,'drought',{x:s.camp.x,y:s.camp.y});
   assert.equal(attempt.ok,false);
   assert.equal(s.god.dp,before);
+});
+
+test('Drought is bounded physical water pressure and expires on simulation time',()=>{
+  const s=fresh(),plot=nearestField(s);canCast(s);
+  const cast=W.castMiracle(s,'drought',{x:plot.x,y:plot.y,radius:5,intensity:1.5,durationDays:2});
+  assert.equal(cast.ok,true,cast.reason);
+  const before=plot.moisture;
+  W.advanceTicks(s,1);
+  assert.ok(plot.moisture<before,'direct drought pressure changes real soil water');
+  advanceDays(s,2);
+  assert.ok(!s.effects.some(e=>e.type==='drought'));
+  valid(s);
+});
+
+test('Original model also accepts Ripening without fabricating Food',()=>{
+  const s=W.create({seed:'original-divine-compat'});
+  const plot=nearestField(s);assert.ok(plot);
+  const food=W.stats(s).food;plot.crop=.06;canCast(s);
+  const cast=W.castMiracle(s,'ripening',{x:plot.x,y:plot.y,radius:4,intensity:1,durationDays:2});
+  assert.equal(cast.ok,true,cast.reason);
+  W.advanceTicks(s,1);
+  assert.ok(plot.crop>.06,'Original fractional crop must grow through same actual field process');
+  assert.equal(W.stats(s).food,food,'Miracle by itself must not put Food in family/common inventory');
+  valid(s);
 });

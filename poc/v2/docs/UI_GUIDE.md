@@ -138,3 +138,13 @@ Suggested rollout: (1) fixed viewport and map-first layout; (2) compact panels, 
 - Rain reads live `evalRain` status. Cooldown and insufficient-DP states disable the cast/target control with a textual reason; the `1` shortcut shares the same check.
 - Header File dropdown keeps save/load/import/export reachable without spending permanent horizontal width on each button.
 - Baseline viewport sizes **1280×720, 1366×768 and 1920×1080** remain manual visual acceptance checks; no verified browser screenshots were produced in this change.
+
+## 10. Click-to-locate needs (2026-10-11)
+
+- **Need origin is actionable:** every active Prayer in the Needs inspector is a focusable button with its original evaluation center's place name and coordinates. Show up to three per page; keep remaining entries navigable with compact pagination, **without** creating page-level or normal-inspector scrolling.
+- **Map indicator:** selecting a prayer shows a distinct crosshair and location label. Local crop-water prayers use the radius already employed by the World prayer evaluation (currently 11 cells), depicted as a dashed *reference* ring. Never mislabel it as a required Miracle cast radius or a guarantee of downstream success.
+- **Priest parity:** every collected prayer carries the same source location as its originating record. Selecting the Priest bubble opens the first/current need with the map pin, and the Priest prayer navigator changes the pin as it changes the need. Never position all petitions at the Priest's current coordinates.
+- **Lifecycle:** answered, resolved, lapsed, or removed needs release their pin immediately on redraw. New World/load resets transient selection; changing the paginated global list clears stale selection. The user can also clear the map pin manually or use Esc when no Miracle is armed.
+- **Divine interaction:** location selection merely guides God; no DP charge, auto-cast or change in underlying Faith/World state. Until the pointer enters the map, the selected center may be used for Miracle preview. The final map click is still independently validated and must remain explicit.
+- **Source precision:** a settlement-aggregated need is marked at its *evaluation center*, not advertised as an individual person's exact live location. Old founding-area water requests that lack stored centers use the original camp-based evaluation center.
+- **Functional checks:** tests cover three distinct water needs, source switching, additional-page navigation, Priest bubble navigation, expiration cleanup, crop evaluation radius, unchanged DP, and save-format compatibility. The three desktop viewport sizes remain subject to real-browser visual checks.

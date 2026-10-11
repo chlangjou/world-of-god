@@ -91,3 +91,23 @@ test('saved cooldown deadline and custom duration-floor parameter survive restor
   W.advanceTicks(s,ticks);W.advanceTicks(loaded,ticks);
   assert.deepEqual(loaded,s,'save/restore should not shift any simulated cooldown');
 });
+
+test('a 30-day Rain followed by a 5-day Rain receives a new shorter cooldown',()=>{
+  const s=W.create({seed:'cooldown-sequence',divineProfile:powers});
+  const common=same(s,{radius:s.rules.defaultRainRadius,
+    intensity:s.rules.defaultRainIntensity});
+  s.god.dp=s.god.cap;
+  const full=W.castRain(s,{...common,durationDays:30});
+  assert.equal(full.ok,true,full.reason);
+  const firstDeadline=s.god.skills.rain.readyAtHour;
+  const firstCooldownDays=(firstDeadline-s.hour)/24;
+  assert.equal(firstCooldownDays,30);
+  W.advanceTicks(s,(firstDeadline-s.hour)/s.rules.tickHours);
+  s.god.dp=s.god.cap;
+  const short=W.castRain(s,{...common,durationDays:5});
+  assert.equal(short.ok,true,short.reason);
+  const secondCooldownDays=(s.god.skills.rain.readyAtHour-s.hour)/24;
+  assert.ok(secondCooldownDays<firstCooldownDays,
+    'the next shorter Rain must establish its own shorter deadline');
+  assert.equal((s.effects.find(e=>e.id===short.effectId).endsAtHour-s.hour)/24,5);
+});

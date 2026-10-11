@@ -11,9 +11,11 @@ for(const p of ['assets/style-base.css','assets/viewport.css','assets/file-menu.
 const profile=JSON.stringify(JSON.parse(read('config/balance-agriculture-v0.1.json'))).replace(/</g,'\\u003c');
 const religion=JSON.stringify(JSON.parse(read('config/religion-propagation-v0.1.json'))).replace(/</g,'\\u003c');
 const divine=JSON.stringify(JSON.parse(read('config/divine-powers-v0.1.json'))).replace(/</g,'\\u003c');
+const opponent=JSON.stringify(JSON.parse(read('config/opponent-v0.1.json'))).replace(/</g,'\\u003c');
 const scripts='<script>window.WOG_RELIGION_PROFILE='+religion+';</'+'script>'+ 
   '<script>window.WOG_AGRICULTURE_PROFILE='+profile+';</'+'script>'+
   '<script>window.WOG_DIVINE_PROFILE='+divine+';</'+'script>'+
+  '<script>window.WOG_OPPONENT_PROFILE='+opponent+';</'+'script>'+
   '<script>\n'+read('src/sim.js')+'\n</'+'script>'+
   '<script>\n'+read('src/app.js')+'\n</'+'script>';
 const marker='<script src="src/sim.js"></script><script src="src/app.js"></script>';

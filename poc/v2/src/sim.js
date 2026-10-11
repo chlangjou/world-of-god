@@ -197,6 +197,17 @@
     if (s.events.length > s.rules.eventLimit) s.events.shift();
     return evt.id;
   }
+  // UI notices are factual simulation events, not an animation-clock heuristic.
+  // Only recent notices are retained; they never change world decisions or RNG.
+  function alertPlayer(s,level,type,text,center,extra={}){
+    s.attention ||= {seq:0,items:[],lastPreachingHour:-Infinity};
+    const valid=center&&Number.isFinite(center.x)&&Number.isFinite(center.y);
+    const note={seq:++s.attention.seq,hour:s.hour,level,type,text,
+      center:valid?{x:center.x,y:center.y}:null,...extra};
+    s.attention.items.push(note);
+    if(s.attention.items.length>32)s.attention.items.shift();
+    return note;
+  }
   function riverX(s, y) {
     return s.width * .46 + Math.sin(y * .17) * 4 + Math.sin(y * .052) * 5;
   }
@@ -425,6 +436,7 @@
     const s = { version: VERSION, seed, rules, rng: hash(seed), religionRng:hash(seed+'|religion-v0.1'), hour: 0, tick: 0,
       width: rules.width, height: rules.height, tiles: [], people: [], households: [], settlements: [],
       camp: null, nativeWorld, religionPropagation, divinePowers,
+      attention:{seq:0,items:[],lastPreachingHour:-999999},
       opponent:opponent?{...opponent,lastActionDay:-1,turns:0,casts:0,oracleIssues:0}:null,
       opponentRng:opponent?hash(seed+'|opponent-v0.1'):null,
       opponentReligion:opponent?{id:'r2',godId:'g2',name:opponent.name,
@@ -674,6 +686,8 @@
     const cells=['harvest','lightning'].includes(type)?rayCells(s,center,radius):[];
     const tuning=s.divinePowers;
     let applied=0,actual=0;
+    const threatened=enemy&&['drought','lightning','confusion','blindness'].includes(type)?
+      people.filter(p=>p.religionId===s.religion.id&&p.devotion>=20):[];
     if(type==='heal'){
       for(const p of people)if(p.health<100){
         const healed=Math.min(100-p.health,30*intensity*Math.max(.45,1-dist(p,center)/Math.max(1,radius)*.5));
@@ -729,6 +743,12 @@
     while(skill.level<5&&skill.xp>=skill.level*skill.level*30)skill.level++;
     s.counts.miracleCasts ||= {};
     s.counts.miracleCasts[type]=(s.counts.miracleCasts[type]||0)+1;
+    if(threatened.length){
+      const subject=threatened[0];
+      alertPlayer(s,'pause','attack',
+        faith.name+'施展'+tuning.powers[type].label+'，波及 '+threatened.length+' 位你的信眾',
+        center,{personId:subject.id,actorGodId:god.id,targetCount:threatened.length});
+    }
     log(s,'miracle',(enemy?faith.name+'的神明':'你')+'施展 '+tuning.powers[type].label+'，作用於 '+applied+' 個目標。',
       ['直接作用於世界或居民；實際後續結果仍由模擬決定',
        '神力 -'+check.cost+'，冷卻約 '+Math.round(check.cooldownDays)+' 日']);
@@ -871,6 +891,7 @@
       preachers.get(k).push(p);
     }
     const byId=new Map(people.map(p=>[p.id,p]));
+    const pressuredPlayer=[];
     const priestSources=faith.priests.map(id=>byId.get(id)).filter(p=>p&&recentPreacher(s,p,faith));
     const remoteSources=new Map();
     for(const town of s.settlements){
@@ -878,6 +899,8 @@
       if(sources.length)remoteSources.set(town.id,sources);
     }
     const adopt=(p,cause)=>{
+      if(faith===s.opponentReligion&&p.religionId===s.religion.id)
+        pressuredPlayer.push({person:p,converted:true});
       p.religionId=id;p.devotion=20+Math.floor(clamp(p.receptivity,0,1)*4);
       if(faith===s.religion){
         s.counts.newBelievers=(s.counts.newBelievers||0)+1;
@@ -952,6 +975,8 @@
           const doubt=clamp(r.priestRivalDoubtChance*sensitivity*sermonAmplification*clear,0,.9);
           if(religionRand(s,faith)<doubt){
             p.devotion=Math.max(19,p.devotion-r.priestRivalDoubtStep);
+            if(faith===s.opponentReligion&&p.religionId===s.religion.id)
+              pressuredPlayer.push({person:p,converted:false});
             const counter=faith===s.religion?'rivalDoubts':'opponentDoubts';
             s.counts[counter]=(s.counts[counter]||0)+1;
           }
@@ -982,6 +1007,21 @@
           const cause=rolled>=baseline?'priest':family?'family':social?'social':'exchange';
           adopt(p,cause);
         }
+      }
+    }
+    // A meaningful (actual) Devotion loss or conversion, never mere nearby
+    // foreign speech, is eligible to interrupt accelerated play.
+    if(pressuredPlayer.length){
+      const converted=pressuredPlayer.find(v=>v.converted);
+      const first=converted||pressuredPlayer[0];
+      const last=s.attention?.lastPreachingHour??-Infinity;
+      if(converted||s.hour-last>=14*24){
+        alertPlayer(s,'pause','preaching',
+          converted?first.person.name+'受'+faith.name+'傳教影響而改宗':
+            faith.name+'的祭司正在動搖你的信眾（'+pressuredPlayer.length+' 人）',
+          first.person,{personId:first.person.id,actorGodId:faith.godId,
+            targetCount:pressuredPlayer.length});
+        s.attention.lastPreachingHour=s.hour;
       }
     }
     // One bounded social-pulse accounting window; no per-person lifelong sermon histories.
@@ -1788,12 +1828,15 @@
         'shelter':`${homeless.length} 個家戶尚無住所`
       };
       const actual=candidate==='healing'?ill:believers;
-      s.religion.prayers.push({id:'need-'+s.nextId++,type:candidate,
+      const prayer={id:'need-'+s.nextId++,type:candidate,
         settlementId:town.id,center:{x:town.x,y:town.y},
         createdAtHour:s.hour,status:'open',
         by:actual.slice(0,12).map(p=>p.id),needSummary:reasons[candidate],
         beforeMoisture:wet,foodAtRequest:town.storage.food,
-        foodProductionAtRequest:s.counts.foodFromLabor,castSeen:false,castId:null});
+        foodProductionAtRequest:s.counts.foodFromLabor,castSeen:false,castId:null};
+      s.religion.prayers.push(prayer);
+      alertPlayer(s,'slow','prayer',town.name+'：'+reasons[candidate],prayer.center,
+        {prayerId:prayer.id});
       last[town.id]=s.hour;
     }
     s.religion.prayers=s.religion.prayers
@@ -1814,6 +1857,8 @@
           center:{x:s.camp.x,y:s.camp.y},beforeMoisture:wet,foodAtRequest:stats(s).food,
           foodProductionAtRequest:s.counts.foodFromLabor, castSeen:false, castId:null };
         s.religion.prayers.push(prayer);
+        alertPlayer(s,'slow','prayer','創始河谷：信徒祈求降雨以改善農田',prayer.center,
+          {prayerId:prayer.id});
         s.religion.lastPrayerHour=s.hour;
         // Prayer is live need/petition information, not an endlessly repeated historical headline.
       }
@@ -2286,6 +2331,12 @@
       formerReligion.priestJoinChance=RELIGION_DEFAULTS.priestJoinChance;
     candidate.religionPropagation=religionRules(formerReligion);
     candidate.divinePowers=divinePowerRules(candidate.divinePowers);
+    candidate.attention ||= {seq:0,items:[],lastPreachingHour:-999999};
+    candidate.attention.items ||= [];
+    candidate.attention.seq=Number.isSafeInteger(candidate.attention.seq)?
+      candidate.attention.seq:0;
+    if(!Number.isFinite(candidate.attention.lastPreachingHour))
+      candidate.attention.lastPreachingHour=-999999;
     if(candidate.opponent?.enabled){
       const previous=candidate.opponent;
       candidate.opponent={...opponentRules(previous),

@@ -1107,19 +1107,18 @@
     formNewHouseholds(s);
     // Household movement requires actual pressure AND a promising destination;
     // moving all hungry people to the same exhausted tile is not a survival strategy.
-    const town=s.settlements[0];
-    if(town && town.workDemand.foodPressure>.9 && town.foodShortageDays>=30) {
+    const migrationTowns=s.agriculture?.familyExpansion?.enabled?s.settlements:s.settlements.slice(0,1);
+    for(const town of migrationTowns) {
+      if(!(town.workDemand.foodPressure>.9 && town.foodShortageDays>=30))continue;
       const vulnerable=s.households.find(h=>h.migrated===0 && accessibleSettlement(s,h)?.id===town.id &&
         householdMembers(s,h).length && foodSecurity(s,h).days<2);
-      if(vulnerable) {
-        const next=relocationSite(s,vulnerable,town);
-        if(next){
-          const from={x:vulnerable.x,y:vulnerable.y};
-          moveHousehold(s,vulnerable,next,town,true);
-          log(s,'migration',`${vulnerable.name} 因持續缺糧，自主搬往新的採集區。`,
-            ['舊聚落供給不足，且附近有可採集的環境資源',`原位置 ${from.x},${from.y}，新位置 ${next.x},${next.y}`]);
-        }
-      }
+      if(!vulnerable)continue;
+      const next=relocationSite(s,vulnerable,town);
+      if(!next)continue;
+      const from={x:vulnerable.x,y:vulnerable.y};
+      moveHousehold(s,vulnerable,next,town,true);
+      log(s,'migration',`${vulnerable.name} 因持續缺糧，自主搬往新的採集區。`,
+        ['舊聚落供給不足，且附近有可採集的環境資源',`原位置 ${from.x},${from.y}，新位置 ${next.x},${next.y}`]);
     }
   }
   function die(s, personId, reason) {

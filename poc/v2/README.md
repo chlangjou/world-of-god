@@ -46,6 +46,8 @@ Religion Propagation v0.1 讓成人信徒在空閒時間傳道、兒童從虔誠
 
 Priest Interaction v0.2 加入 Priest／Saint 專屬地圖顏色、祭司彙整信徒真實祈願的可點選泡泡，以及對無信仰／低 Devotion 異教徒的加強傳道。 [互動與對照說明](docs/PRIEST_INTERACTION.md)。
 
+**需求定位**：需求分頁現在顯示祈求的來源聚落與座標，每頁可點選三筆，更多需求使用上一頁／下一頁。選取後地圖顯示十字中心，缺雨類另外顯示實際農田評估的 11 格參考圈。Priest 祈求泡泡與切換祈願也能定位；需求結束時標記自動清除。定位不會施放 Miracle 或消耗 DP。舊存檔的創始河谷缺雨祈求會使用當時原有的創始區域中心。
+
 Miracle / Oracle 擴充 v0.1 **已實作** **Ripening、Harvest、Heal、Efficiency、Drought、Lightning、Confusion、Blindness、Religion Spread**（八種新增神蹟、一種新增神諭），保留原有 Rain 與 Food Production。其中 **Ripening（促熟）優先於 Harvest（豐收）**：現有 Agriculture 的作物存量 `cropStock` 容易被收割清空，促熟直接加快現有作物的生長／補充速度，不增加成熟作物的存量上限。豐收必須展示不同的單次收成效果，若做不到真正差異則單獨暫緩。Efficiency 暫時強化己方信徒的實際行動效率；Confusion 干擾決策與協調；Blindness 影響資源感知與可行行動，三者不可只是相同的生產力倍率。`Food Reserve` 因現階段難以與已存在的 `food.produce`／自治儲糧形成可觀察的玩法差異而暫緩，不列入 UI。[擴充規格與驗收界線](docs/DIVINE_POWERS_EXPANSION_V0_1.md)。能力已接上遊戲地圖施展／Saint 發佈、模擬狀態與保存恢復；數值仍是 PoC 初始值。實際視窗尺寸及遊戲手感仍須由本機瀏覽器試玩確認。
 
 正式 Miracle 規格中原稱 **Accelerate** 的能力已改名為 **Ripening（促熟）**：負責作物提早成熟／現有農田更快補充可收割作物，與提高單次實際收成的 Harvest、提升信徒工作效率的 Efficiency 分開。**Ripening 已列第一批並完成實作**：直接強化現有連續式作物存量的補充過程，毋須新增複雜的離散成熟階段。這輪不進行額外 A/B 平衡試驗。
@@ -66,7 +68,7 @@ npm run build:standalone  # 可選，dist/ 不入庫
 ```
 
 測試包括 8 種新增 Miracle 與 Religion Spread 的直接功能檢查，並保留 4,000 日農業、土地資源守恆、自主成家、多聚落、宗教家庭傳承、傳道、Oracle 接力與可重現性的既有回歸；
-仍需實際瀏覽器檢查 1280×720／1366×768／1920×1080 佈局。
+已加入「三筆需求定位／翻頁／Priest 定位／自動清除」直接互動測試；仍需實際瀏覽器檢查 1280×720／1366×768／1920×1080 佈局。
 
 ## 存檔
 

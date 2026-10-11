@@ -335,7 +335,7 @@
       const angle=i*2*Math.PI/number;
       const loc=nearestLand(s,center.x+Math.cos(angle)*2.5,center.y+Math.sin(angle)*2.5);
       const source=s.households[i%s.rules.initialHouseholds];
-      const h={id,name:names[index]+'第'+(i+1)+'家',x:loc.x,y:loc.y,
+      const h={id,name:names[index]+'第'+(i+1)+'家',x:loc.x,y:loc.y,nativeOrigin:villageId,
         members:[],inventory:{food:source.inventory.food,wood:0,stone:0,fiber:0},
         home:true,buildProgress:s.rules.hutWork,buildMaterialsPaid:true,
         needs:{},migrated:0,foodShortageDays:0};
@@ -345,6 +345,7 @@
         const person={...original,id:ids[j],
           name:HUMAN_NAMES[(s.people.length+index*5)%HUMAN_NAMES.length],
           x:loc.x+(j-1)*.35,y:loc.y+(j-1)*.2,householdId:id,settlementId:villageId,
+          nativeOrigin:villageId,
           age:isChild?6+((index+i)%8):22+((index*7+i*3+j*4)%23),
           stage:isChild?'child':'adult',health:100,hunger:0,alive:true,
           partnerId:isChild?null:ids[1-j],
@@ -482,6 +483,8 @@
     const pop = living(s), religious = pop.filter(p => p.religionId === s.religion.id);
     const followers = religious.filter(p => p.devotion >= s.rules.faithThreshold);
     const believers = religious.filter(p=>p.devotion>=20);
+    const unaffiliated=pop.filter(p=>p.religionId===null).length;
+    const nativePeople=pop.filter(p=>p.nativeOrigin).length;
     const rivals=s.opponent?.enabled?pop.filter(p=>p.religionId===s.opponentReligion.id):[];
     const devWeight = religious.reduce((sum, p) => sum + faithfulWeight(p.devotion), 0);
     const foodPrivate = s.households.reduce((sum, h) => sum + h.inventory.food, 0);
@@ -492,6 +495,7 @@
     const activeOracle = s.religion.oracles.find(o => o.status === 'active');
     return { day: days(s) + 1, people: pop.length, households: s.households.length, houses: s.households.filter(h => h.home).length,
       settlements: s.settlements.length, followers: followers.length, believers: believers.length,
+      unaffiliated,nativePeople,nativeVillages:s.settlements.filter(t=>t.native).length,
       newBelievers:s.counts.newBelievers||0,priestAdoptions:s.counts.priestAdoptions||0,
       rivalConversions:s.counts.rivalConversions||0,
       saints:s.religion.saints.length,priests:s.religion.priests.length,
@@ -743,6 +747,7 @@
     const believers=people.filter(p=>p.religionId===s.religion.id&&p.devotion>=20);
     const memberIds=new Set(people.map(p=>p.id));
     return {population:people.length,believers:believers.length,
+      unaffiliated:people.filter(p=>p.religionId===null).length,
       followers:believers.filter(p=>p.devotion>=40).length,
       priests:s.religion.priests.filter(id=>memberIds.has(id)).length,
       saints:s.religion.saints.filter(id=>memberIds.has(id)).length,

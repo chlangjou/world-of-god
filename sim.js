@@ -168,6 +168,7 @@
       history: { settlementFoundedHour: null, firstSaintHour: null },
       metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
     generate(s, initialMoisture);
+    if (agriculture) s.counts.newFields=0;
     if (agriculture) for (const t of s.tiles) if (t.terrain === 'field') {
       const L=agriculture.land, cap=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
         Math.pow(1/L.referenceMoisture,L.moistureExponent)*L.cropStockCapacityDays;
@@ -197,6 +198,7 @@
       settlements: s.settlements.length, followers: followers.length, avgDevotion: religious.reduce((z,p)=>z+p.devotion,0)/Math.max(1,religious.length),
       devotionWeight: devWeight, dpRateDay: s.rules.naturalDpPerDay + devWeight * s.rules.devotionDpPerWeightDay,
       food: foodPrivate + common, commonFood: common, privateFood: foodPrivate, avgMoisture: wet, avgCrop: crop,
+      farmFields:s.tiles.reduce((n,t)=>n+(t.terrain==='field'),0), newFields:s.counts.newFields||0,
       saintId: s.religion.saints[0] || null, activeOracle: activeOracle || null,
       rainReady: s.hour >= s.god.skills.rain.readyAtHour, rainReadyHour: s.god.skills.rain.readyAtHour,
       phase: s.environment.phase, births: s.counts.births, deaths: s.counts.deaths,
@@ -336,8 +338,9 @@
   }
   function nearestField(s, home) {
     let best = null, strength = -Infinity;
-    for (let y = Math.max(0, home.y - 9); y <= Math.min(s.height - 1, home.y + 9); y++)
-      for (let x = Math.max(0, home.x - 9); x <= Math.min(s.width - 1, home.x + 9); x++) {
+    const reach=s.agriculture?.land?.workReachCells ?? 9;
+    for (let y = Math.max(0, home.y - reach); y <= Math.min(s.height - 1, home.y + reach); y++)
+      for (let x = Math.max(0, home.x - reach); x <= Math.min(s.width - 1, home.x + reach); x++) {
         const t = tile(s, x, y);
         if (t.terrain !== 'field') continue;
         const score = t.crop * 4 + t.moisture * .5 - .09 * Math.hypot(x - home.x, y - home.y);
@@ -396,9 +399,60 @@
     } else h.inventory[kind] += amount;
     if (kind === 'food') { s.counts.foodFromLabor += amount; s.lastFoodOutput += amount; }
   }
+  // Potential is measured for stable mild weather; this is not an instant harvest.
+  function agricultureMildFieldYield(s,t) {
+    const A=s.agriculture,L=A.land,R=A.river,C=A.seasons.mild;
+    const d=Math.max(0,Math.abs(t.x-riverX(s,t.y))-R.riverHalfWidthCells);
+    const influence=d<=R.fullEffectThroughCells?R.nearBankInfluence:
+      d>=R.zeroEffectAtCells?0:R.nearBankInfluence*(R.zeroEffectAtCells-d)/(R.zeroEffectAtCells-R.fullEffectThroughCells);
+    const moisture=clamp(C.backgroundMoisture+(1-C.backgroundMoisture)*influence*C.riverWaterAvailability);
+    return L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
+      Math.pow(moisture/L.referenceMoisture,L.moistureExponent);
+  }
+  function agricultureMildCapacity(s) {
+    if(s.environment.landCapacityEvalDay!==days(s)) {
+      const reach=s.agriculture.land.workReachCells;
+      const alive=new Set(living(s).map(p=>p.id));
+      const homes=s.households.filter(h=>h.members.some(id=>alive.has(id)));
+      let capacity=0;
+      for(const t of s.tiles)if(t.terrain==='field'&&
+        homes.some(h=>Math.abs(t.x-h.x)<=reach&&Math.abs(t.y-h.y)<=reach))
+          capacity+=agricultureMildFieldYield(s,t);
+      s.environment.landCapacityMild=capacity;
+      s.environment.landCapacityEvalDay=days(s);
+    }
+    return s.environment.landCapacityMild;
+  }
+  function agricultureCultivate(s,p,h) {
+    const L=s.agriculture.land;
+    if(!L.autonomousExpansionEnabled)return false;
+    const demand=living(s).reduce((n,v)=>n+(v.stage==='child'?s.rules.foodNeedChild:s.rules.foodNeedAdult),0);
+    if(agricultureMildCapacity(s)>=demand*L.normalSeasonLandCapacityTargetRatio)return false;
+    let chosen=null,best=-Infinity;
+    const reach=L.workReachCells;
+    for(let y=Math.max(0,h.y-reach);y<=Math.min(s.height-1,h.y+reach);y++)
+      for(let x=Math.max(0,h.x-reach);x<=Math.min(s.width-1,h.x+reach);x++){
+        const t=tile(s,x,y);
+        if(t.terrain!=='meadow'||t.fertility<L.minimumCultivationFertility)continue;
+        const score=agricultureMildFieldYield(s,t)-.002*Math.hypot(t.x-h.x,t.y-h.y);
+        if(score>best){chosen=t;best=score;}
+      }
+    if(!chosen)return false; // No reachable suitable land: a genuine local limit.
+    // This real work shift opens a plot with zero crops and yields no Food.
+    chosen.terrain='field';chosen.cropStock=0;chosen.crop=0;
+    s.environment.landCapacityMild+=agricultureMildFieldYield(s,chosen);
+    s.counts.newFields=(s.counts.newFields||0)+1;
+    p.proficiency.food=1-(1-p.proficiency.food)*
+      Math.exp(-1/s.agriculture.worker.learningTimeConstantActualFoodWorkdays);
+    p.activityReason+='；本次耕作開墾農地，作物仍須自然生長';
+    if(p.lastDecision)p.lastDecision.reason=p.activityReason;
+    return true;
+  }
   function agricultureHarvest(s,p,h) {
+    if(agricultureCultivate(s,p,h))return 0;
     const A=s.agriculture,L=A.land,W=A.worker;
-    const plots=s.tiles.filter(t=>t.terrain==='field'&&Math.abs(t.x-h.x)<=9&&Math.abs(t.y-h.y)<=9);
+    const reach=A.land.workReachCells??9;
+    const plots=s.tiles.filter(t=>t.terrain==='field'&&Math.abs(t.x-h.x)<=reach&&Math.abs(t.y-h.y)<=reach);
     if(!plots.length)return 0;
     let fertility=0,weighted=0;
     for(const t of plots){fertility+=t.fertility;weighted+=t.fertility*Math.pow(t.moisture/L.referenceMoisture,W.environmentMoistureExponent);}
@@ -438,7 +492,7 @@
     // Not every work period should be production. When accessible reserves are
     // strong, adults can spend the work block supporting dependents and the home.
     // Oracle pressure can redirect willing people to feasible food activities.
-    candidates.push({ name: 'care', score: 3.5 + (security.days >= (s.agriculture?.workDemand?.reserveComfortDays ?? 11) ? 5.0 : security.days >= (s.agriculture?.workDemand?.reserveRelaxDays ?? 7) ? 2.7 : 0) +
+    candidates.push({ name: 'care', score: 3.5 + (security.days >= (s.agriculture?.workDemand?.reserveComfortDays ?? 11) ? (h.home ? (s.agriculture?.workDemand?.comfortableCareBonus ?? 5.0) : 5.0) : security.days >= (s.agriculture?.workDemand?.reserveRelaxDays ?? 7) ? 2.7 : 0) +
       (householdMembers(s,h).some(v=>v.stage==='child') ? .7 : 0), valid: true });
     if (!candidates.length) { p.activity = 'rest'; p.activityReason = '附近缺少可用資源，這次無法工作';
       p.lastDecision = { work: 'rest', hour: s.hour, reason: p.activityReason, foodDays: security.days, oracleInfluence: 0 }; return; }
@@ -941,6 +995,16 @@
       forecastCommonShare:access.communal, dailyFoodNeed:access.need, foodCoverageDays:access.days,
       activeMembers:householdMembers(s,h).length, foodShortageDays:h.foodShortageDays};
   }
+  // Explicit action permits a running PoC to adopt improved balance, preserving
+  // physical crop stock and all people/history; no Food is created by this update.
+  function applyAgricultureProfile(s,profile) {
+    if(!s.agriculture)return {ok:false,reason:'Original 世界不支援原地切換農業模型'};
+    if(profile?.profileId!=='agriculture-balance-v0.1')return {ok:false,reason:'無效的 Agriculture Profile'};
+    s.agriculture=JSON.parse(JSON.stringify(profile));
+    s.balanceProfileId=profile.profileId;
+    s.environment.landCapacityEvalDay=-1;
+    return {ok:true};
+  }
   function restore(json) {
     const candidate=typeof json==='string'?JSON.parse(json):JSON.parse(JSON.stringify(json));
     if(candidate?.version==='mvp0-web-1') {
@@ -973,5 +1037,5 @@
     return candidate;
   }
   return {VERSION,DEFAULT_RULES,create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
-    issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold};
+    issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile};
 });

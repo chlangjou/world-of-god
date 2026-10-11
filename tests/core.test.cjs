@@ -379,3 +379,53 @@ test('a 4,000-day Agriculture save can adopt current profile without inventory c
   afterDays(s,10);
   valid(s);
 });
+
+
+test('adult partners can form new households without conjured housing or transferred food',()=>{
+  const profile=require('../config/balance-agriculture-v0.1.json');
+  const s=W.create({seed:'valley-spring-01',balanceProfile:profile});
+  afterDays(s,299);
+  const a=s.people.find(p=>p.id==='p3'),b=s.people.find(p=>p.id==='p6');
+  for(const p of [a,b]){p.age=22;p.stage='adult';p.health=100;p.hunger=0;p.partnerId=null;}
+  b.genderRole='gestate';a.genderRole='fertilize';
+  s.agriculture.familyExpansion.pairChancePerMonth=1;
+  const control=clone(s);
+  control.agriculture.familyExpansion.enabled=false;
+  afterDays(s,1);afterDays(control,1);
+  assert.equal(s.counts.newFamilies,1);
+  assert.equal(s.households.length,control.households.length+1);
+  const newHome=s.households.at(-1);
+  assert.equal(newHome.home,false,'pairing does not spawn a finished house');
+  assert.equal(newHome.inventory.wood,0);assert.equal(newHome.inventory.fiber,0);
+  assert.equal(a.partnerId,b.id);assert.equal(b.partnerId,a.id);
+  assert.equal(a.householdId,newHome.id);assert.equal(b.householdId,newHome.id);
+  const totalFood=w=>w.households.reduce((n,h)=>n+h.inventory.food,0)+w.settlements.reduce((n,t)=>n+t.storage.food,0);
+  assert.ok(Math.abs(totalFood(s)-totalFood(control))<1e-8,'real startup food transfer must conserve stock');
+  valid(s);
+  const saved=W.restore(JSON.stringify(s));
+  assert.deepEqual(saved,s);
+});
+test('real housing forms additional settlements with local crop access',()=>{
+  const profile=require('../config/balance-agriculture-v0.1.json');
+  const s=W.create({seed:'valley-spring-01',balanceProfile:profile});
+  afterDays(s,100);
+  const F=s.agriculture.familyExpansion;
+  F.pioneerAfterHouseholds=8;F.pioneerChance=1;F.pairChancePerMonth=1;F.maxCouplesPerMonth=3;
+  const mother=s.people.find(p=>p.genderRole==='gestate'&&p.stage==='adult');
+  const father=s.people.find(p=>p.genderRole==='fertilize'&&p.stage==='adult');
+  for(let i=0;i<8;i++){
+    const a=s.households[i],b=s.households[(i+4)%8];
+    const woman={...clone(mother),id:'fixture-w'+i,age:22,partnerId:null,householdId:a.id,
+      originHouseholdId:'origin-w'+i,parentIds:[],x:a.x,y:a.y,religionId:null,devotion:0};
+    const man={...clone(father),id:'fixture-m'+i,age:23,partnerId:null,householdId:b.id,
+      originHouseholdId:'origin-m'+i,parentIds:[],x:b.x,y:b.y,religionId:null,devotion:0};
+    a.members.push(woman.id);b.members.push(man.id);s.people.push(woman,man);
+  }
+  afterDays(s,300);
+  assert.ok(s.counts.newFamilies>=6,'grown adults should create independent households');
+  assert.ok(s.settlements.length>=2,'built pioneer homes should found another real settlement');
+  assert.ok(s.counts.newFields>0,'pioneers should cultivate reachable meadow when needed');
+  assert.equal(s.counts.deaths,0,'healthy early pioneer fixtures should not starve for lack of any fields');
+  assert.ok(s.settlements.slice(1).every(t=>t.householdIds.filter(id=>s.households.find(h=>h.id===id)?.home).length>=3));
+  valid(s);
+});

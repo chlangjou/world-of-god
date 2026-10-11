@@ -1,0 +1,27 @@
+{
+  "profileId": "religion-propagation-v0.1",
+  "status": "experimental-runtime-profile",
+  "loadedByRuntime": true,
+  "description": "Religion spreads through actual families, leisure preaching, Priests and nearby settlements. Sustained social credibility can develop normal committed belief (40–60), but not exceptional high Devotion.",
+  "pulseDays": 7,
+  "minimumChildAge": 4,
+  "contactRadius": 11,
+  "interSettlementReach": 30,
+  "householdJoinChance": 0.13,
+  "socialJoinChance": 0.055,
+  "priestJoinChance": 0.075,
+  "settlementVisitChance": 0.012,
+  "weakLearningChance": 0.26,
+  "childStrongLearningChance": 0.32,
+  "childOrdinaryLearningChance": 0.14,
+  "regionalSaintChancePerMonth": 0.12,
+  "oracleRelayChance": 0.55,
+  "semantics": {
+    "childUpbringing": "Repeated household contact creates own religious affiliation. Two 80+ parents can gradually nurture children up to Devotion 55, but never inherit Zealot/Devout bands outright.",
+    "preaching": "Residents and priests autonomously preach during their non-work social phase. Actual recent local preachers allow low-probability uptake; Priest has greater reach/credibility.",
+    "devotion": "Sustained social teaching can gradually cross 40 into regular stable follower status, with slower growth above 40 and a capped ordinaryConsolidationCap of 60. Exceptional 80+ devotion still relies chiefly on attributed divine evidence; no passive erosion without rival belief.",
+    "migration": "Faith follows actual people and households; exchange is abstract nearby social contact, not teleportation or divine broadcast.",
+    "reproducibility": "Seven-day low-rate pulses use a separate seeded religion PRNG, preserving economic PRNG inputs."
+  },
+  "ordinaryConsolidationCap": 60
+}

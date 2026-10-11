@@ -30,10 +30,13 @@ npm start
 | `assets/viewport.css` | 單頁無垂直捲動、Miracle／Oracle 雙層面板 |
 | `assets/file-menu.css` | 檔案與窄螢幕操作 |
 | `config/balance-agriculture-v0.1.json` | 目前可用的 Agriculture、成家、拓荒實驗數值 |
+| `config/religion-propagation-v0.1.json` | 居民閒暇傳道、家庭教育及聚落宗教傳播參數 |
 | `config/balance-default.json` | Original 的唯讀快照；核心預設仍在 `src/sim.js` |
 | `docs/` | Architecture、UI Guide、Agriculture 驗算紀錄 |
 | `tests/` | 核心回歸、資產分離驗證及 Smoke |
 | `tools/` | 跨平台 HTTP server、離線打包、獨立驗算 |
+
+Religion Propagation v0.1 讓成人信徒在空閒時間傳道、兒童從虔誠家庭逐步形成信仰、鄰近聚落自然交流，並讓 Priest 轉傳 Saint 的 Oracle；宗教狀態可在聚落檢視。[詳細機制](docs/RELIGION_PROPAGATION.md)。
 
 正式規格： [Core Principles](../../docs/CORE_PRINCIPLES.md)、
 [Population](../../docs/POPULATION_MODEL.md)、
@@ -48,7 +51,7 @@ npm run check:agriculture
 npm run build:standalone  # 可選，dist/ 不入庫
 ```
 
-測試涵蓋 4,000 日農業、土地資源守恆、自主成家及多聚落；
+測試涵蓋 4,000 日農業、土地資源守恆、自主成家、多聚落、宗教家庭傳承、傳道、Oracle 接力與可重現性；
 仍需實際瀏覽器檢查 1280×720／1366×768／1920×1080 佈局。
 
 ## 存檔

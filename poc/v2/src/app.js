@@ -3,14 +3,14 @@
   const S = window.WoG2;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, historyPage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, historyPage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedRain = false, cursor = null, chosen = 'p1', lastEventId = 0, toastTimeout;
-  let selectedTownId = null, lastTownRoster = '';
+  let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='';
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
   const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
-  const taskName = {rest:'休息',family:'家庭／社交',pray:'祈禱',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',dead:'已離世'};
+  const taskName = {rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',dead:'已離世'};
   const stageName = {adult:'成年人',child:'兒童',elder:'長者'};
   const occupationName = {food_producer:'糧食生產者',gatherer:'採集者',dependent:'受扶養者'};
   // First layer: action category; second layer: available power within that category.
@@ -58,10 +58,16 @@
     if (!response.ok) throw new Error('Agriculture Profile 無法載入');
     return response.json();
   }
+  async function loadReligion() {
+    if(window.WOG_RELIGION_PROFILE)return window.WOG_RELIGION_PROFILE;
+    const response=await fetch('config/religion-propagation-v0.1.json');
+    if(!response.ok)throw new Error('Religion Propagation Profile 無法載入');
+    return response.json();
+  }
   function newWorld() {
-    state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{})});
+    state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{}),religionProfile:activeReligionProfile});
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
-    paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;lastRoster='';lastTownRoster='';selectedTownId=null;housePage=0;historyPage=0;armedRain=false;
+    paused=true;speed=1;acc=0;chosen='p1';lastEventId=0;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';housePage=0;historyPage=0;armedRain=false;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -79,7 +85,7 @@
     finally{profileLoading=false;$('balanceProfile').disabled=false;$('pauseBtn').disabled=false;render();}
   });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
-  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;lastRoster='';lastTownRoster='';selectedTownId=null;housePage=0;historyPage=0;render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+  function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;$('balanceProfile').value=activeProfile?'agriculture':'original';armedRain=false;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=0;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';housePage=0;historyPage=0;render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost() {
     $('radiusValue').textContent=$('radius').value+' 格';$('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';$('durationValue').textContent=$('duration').value+' 日';
@@ -103,7 +109,7 @@
     const dailyNeed=state.people.filter(p=>p.alive).reduce((a,p)=>a+(p.stage==='child'?state.rules.foodNeedChild:state.rules.foodNeedAdult),0);
     $('foodMetric').textContent=format(st.food);
     $('stockMetric').textContent=`約 ${format(st.food/Math.max(dailyNeed,.01),1)} 日 · 公共 ${format(st.commonFood)}`;
-    $('followersMetric').textContent=st.followers;$('devotionMetric').textContent=`奉獻權重 ${format(st.devotionWeight)} · 平均信仰 ${format(st.avgDevotion,1)}`;
+    $('followersMetric').textContent=st.followers;$('devotionMetric').textContent=`信眾 ${st.believers} · 新入教 ${st.newBelievers} · 奉獻 ${format(st.devotionWeight)}`;
     $('powerMetric').textContent=format(state.god.dp,1);$('powerRate').textContent=`+${format(st.dpRateDay,2)} DP / 模擬日`;
     $('powerFill').style.width=Math.min(100,state.god.dp/state.god.cap*100)+'%';
     $('pauseBtn').textContent=paused?'▶ 開始 / 繼續':'Ⅱ 暫停';
@@ -115,15 +121,24 @@
     $('simHint').textContent=armedRain?'已選擇降雨：點擊地圖施展（Esc 取消）':st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。';
     $('simRate').textContent=`${speed}× · 約 ${format(2/speed,2)} 秒 / 模擬日`;
     updateCost();
-    const saint=state.people.find(p=>p.id===st.saintId);
-    $('saintName').textContent=saint?`${saint.name} · ${stageName[saint.stage]||''}`:'尚未出現（通常在初期信仰活動後）';
+    const saints=state.religion.saints.map(id=>state.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
+    const saintRoster=saints.map(p=>p.id+':'+p.name).join('|');
+    if(saintRoster!==lastSaintRoster){
+      lastSaintRoster=saintRoster;
+      $('saintSelect').innerHTML=saints.map(p=>`<option value="${html(p.id)}">${html(p.name)} · ${html(p.settlementId||'未歸屬聚落')}</option>`).join('');
+    }
+    if(!saints.some(p=>p.id===selectedSaintId))selectedSaintId=saints[0]?.id||null;
+    $('saintSelect').value=selectedSaintId||'';
+    $('saintSelect').disabled=!saints.length;
+    const saint=saints.find(p=>p.id===selectedSaintId);
     const quota=saint&&state.religion.saintQuota?state.religion.saintQuota[saint.id]:null;
     $('saintQuota').textContent=quota?`${quota.quota} / ${state.rules.oracleQuota}`:'—';
-    const active=st.activeOracle;
+    const active=state.religion.oracles.find(o=>o.status==='active'&&o.saintId===selectedSaintId&&o.intentType==='food.produce');
     $('oracleStatus').textContent=active?`持續中 · 已影響工作選擇 ${active.influenceWorkCount} 次`:'目前沒有有效指派';
     $('oracleReason').textContent=active?active.propagatedAtHour===null?'Saint 已接收，準備向居民傳達。':`已傳播到 ${active.heardCount} 位可能聽見的居民；是否改變行為仍取決於實際生活。`:'神諭不消耗 DP，但需要合格的 Saint 和他的接收額度。';
-    $('oracleBtn').disabled=!saint||!quota||quota.quota<1||!!active;
+    $('oracleBtn').disabled=profileLoading||!saint||!quota||quota.quota<1||!!active;
     $('concludeBtn').hidden=!active;
+    $('concludeBtn').disabled=!active||!quota||quota.quota<=-1;
     const prayers=state.religion.prayers.filter(p=>p.status==='open');
     const answered=state.religion.prayers.filter(p=>p.status==='answered').slice(-1);
     $('needsPanel').innerHTML=prayers.length?prayers.slice(-2).map(p=>`<div class="need-item"><strong>缺雨與糧食的祈禱</strong><small>第 ${Math.floor(p.createdAtHour/24)+1} 日 · ${p.by.length} 位信徒提出實際需要</small><small>請觀察雨後是否真的改善耕作，而非只看施法次數。</small></div>`).join(''):
@@ -138,7 +153,8 @@
     $('settlementSelect').value=selectedTownId||'';
     $('settlementSelect').disabled=!state.settlements.length;
     const town=state.settlements.find(t=>t.id===selectedTownId)||state.settlements[0];
-    $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
+    const localReligion=town?S.settlementReligionStats(state,town.id):null;
+    $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b> · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><p title="信眾為 Devotion 20+；信徒為 40+。Saint 與 Priest 是獨立角色。">宗教：信眾 ${localReligion.believers}/${localReligion.population} · 信徒 ${localReligion.followers} · Saint ${localReligion.saints} / Priest ${localReligion.priests} · 神諭 ${localReligion.activeOracles}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
       `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
     const filteredHomes=town?state.households.filter(h=>town.householdIds.includes(h.id)):state.households;
     const housePageSize=2;
@@ -231,12 +247,13 @@
   document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>{speed=+btn.dataset.speed;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',b===btn));render();});
   ['radius','intensity','duration'].forEach(id=>$(id).addEventListener('input',()=>{updateCost();draw();}));
   $('rainBtn').onclick=toggleRainTarget;
-  $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{intentType:'food.produce'});say(r.ok?'神諭已交給 Saint；居民稍後自主聆聽與回應。':r.reason);render();};
-  $('concludeBtn').onclick=()=>{const o=S.stats(state).activeOracle;const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
+  $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{saintId:selectedSaintId,intentType:'food.produce'});say(r.ok?'神諭已交給 Saint；居民稍後自主聆聽與回應。':r.reason);render();};
+  $('concludeBtn').onclick=()=>{const o=state.religion.oracles.find(v=>v.status==='active'&&v.saintId===selectedSaintId&&v.intentType==='food.produce');const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
   canvas.addEventListener('click',onMap);
   canvas.addEventListener('mousemove',e=>{const rect=canvas.getBoundingClientRect();cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};});
   canvas.addEventListener('mouseleave',()=>{cursor=null;});
   $('residentSelect').onchange=e=>{chosen=e.target.value;render();};
+  $('saintSelect').onchange=e=>{selectedSaintId=e.target.value;render();};
   $('settlementSelect').onchange=e=>{selectedTownId=e.target.value;housePage=0;render();};
   $('housePrev').onclick=()=>{housePage=Math.max(0,housePage-1);render();};
   $('houseNext').onclick=()=>{housePage++;render();};
@@ -271,12 +288,13 @@
   $('balanceProfile').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
-  loadAgriculture().then(profile=>{
-    activeProfile=profile;newWorld();
-    say('Agriculture v0.1 已啟用；可切換 Original 進行對照。');
-  }).catch(error=>{
-    activeProfile=null;state=S.create({seed:state.seed});paused=true;
-    say('Agriculture 載入失敗，已使用 Original：'+error.message);
+  Promise.allSettled([loadAgriculture(),loadReligion()]).then(([agriculture,religion])=>{
+    activeProfile=agriculture.status==='fulfilled'?agriculture.value:null;
+    activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
+    newWorld();
+    const failures=[agriculture,religion].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    say(failures.length?'Profile 載入失敗，採用內建預設：'+failures.join('；'):
+      'Agriculture 與 Religion Propagation v0.1 已啟用。');
   }).finally(()=>{
     profileLoading=false;$('balanceProfile').disabled=false;$('resetBtn').disabled=false;render();
   });

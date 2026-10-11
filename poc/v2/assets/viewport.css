@@ -59,7 +59,7 @@ body{display:flex;flex-direction:column;min-height:0}
 .command-body .action-bottom span{font-size:10px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .command-reason{color:#cad4c5;display:block;margin-top:6px;line-height:1.3;min-height:15px;font-size:11px}
 .command-body .saint-row{padding:5px 0;font-size:11px;gap:5px}
-.command-body .saint-row strong{font-size:11px}
+.command-body .saint-row select{font-size:11px;max-width:76%;padding:3px 6px;background:#223433;color:var(--text);border:1px solid #4c6660;border-radius:6px}
 .command-body .text-button{padding-top:4px}
 .inspector-shell{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;background:var(--sheet);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .inspector-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:7px 8px;flex:0 0 auto;background:#1b2c2b}

@@ -2298,9 +2298,14 @@
     }
     if(localFields.length&&wet<.45)
       choices.push(['rain',{...center,radius:7,intensity:.8,durationDays:7}]);
-    if(localFields.length)choices.push(['ripening',{...center,radius:7,intensity:1,durationDays:9}]);
+    // Real injured followers must not be ignored just because some field
+    // happens to be eligible for yet another Ripening spell.
     if(weak.length)choices.push(['heal',{...center,radius:6,intensity:1}]);
-    if(adherents.some(p=>dist(p,center)<=7&&p.devotion>=40))
+    const productiveCore=adherents.some(p=>dist(p,center)<=7&&p.devotion>=40);
+    if(productiveCore&&ai.turns%3===0)
+      choices.push(['efficiency',{...center,radius:7,intensity:.85,durationDays:10}]);
+    if(localFields.length)choices.push(['ripening',{...center,radius:7,intensity:1,durationDays:9}]);
+    if(productiveCore)
       choices.push(['efficiency',{...center,radius:7,intensity:.85,durationDays:10}]);
     for(const [type,args] of choices){
       const input={...args,godId:s.opponentGod.id};

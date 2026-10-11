@@ -2104,6 +2104,26 @@
       formerReligion.priestJoinChance=RELIGION_DEFAULTS.priestJoinChance;
     candidate.religionPropagation=religionRules(formerReligion);
     candidate.divinePowers=divinePowerRules(candidate.divinePowers);
+    if(candidate.opponent?.enabled){
+      const previous=candidate.opponent;
+      candidate.opponent={...opponentRules(previous),
+        lastActionDay:Number.isFinite(previous.lastActionDay)?previous.lastActionDay:-1,
+        turns:Number.isFinite(previous.turns)?previous.turns:0,
+        casts:Number.isFinite(previous.casts)?previous.casts:0,
+        oracleIssues:Number.isFinite(previous.oracleIssues)?previous.oracleIssues:0};
+      candidate.opponentRng=Number.isSafeInteger(candidate.opponentRng)?
+        candidate.opponentRng:hash(candidate.seed+'|opponent-v0.1');
+      candidate.opponentReligion ||= {id:'r2',godId:'g2',name:candidate.opponent.name,
+        saints:[],priests:[],saintQuota:{},oracles:[],reachedSettlements:{}};
+      candidate.opponentReligion.saintQuota ||= {};
+      candidate.opponentReligion.reachedSettlements ||= {};
+      candidate.opponentReligion.oracles ||= [];
+      candidate.opponentGod ||= {id:'g2',dp:0,cap:candidate.rules.maxDp,skills:{}};
+      candidate.opponentGod.skills ||= {};
+      for(const type of ['rain',...Object.keys(POWER_DEFAULTS)])
+        candidate.opponentGod.skills[type] ||= {level:1,xp:0,readyAtHour:0};
+      for(const o of candidate.opponentReligion.oracles)o.reachedSettlements ||= {};
+    }
     candidate.god.skills ||= {};
     for(const type of ['rain',...Object.keys(POWER_DEFAULTS)])
       candidate.god.skills[type] ||= {level:1,xp:0,readyAtHour:0};
@@ -2131,5 +2151,5 @@
   return {VERSION,DEFAULT_RULES,POWER_DEFAULTS,create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
     evaluateMiracle,castMiracle,activeStatus,
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
-    settlementReligionStats,priestPetitions,prayerLocation};
+    settlementReligionStats,priestPetitions,prayerLocation,OPPONENT_DEFAULTS};
 });

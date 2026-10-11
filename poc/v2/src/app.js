@@ -354,7 +354,16 @@
       c.fillStyle=saint?'#80e4eb':priest?'#c4a2fa':p.devotion>=40?'#f6d2a0':p.devotion>=20?'#e1e6c2':'#bcd9d2';
       c.fill();c.strokeStyle='#21342fcc';c.lineWidth=1.4;c.stroke();
       if(saint&&priest){c.strokeStyle='#c4a2fa';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.53,0,Math.PI*2);c.stroke();}
-      if(p.id===chosen){c.strokeStyle='#faf5c7';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.66,0,Math.PI*2);c.stroke();}
+      // Temporary statuses remain visible without obscuring Saint/Priest role colors.
+      const statuses=Object.entries(p.divineStatuses||{}).filter(([,v])=>v.endsAtHour>state.hour);
+      if(statuses.length){
+        const statusColors={efficiency:'#77ecb2',confusion:'#e6a0d8',blindness:'#8799aa'};
+        for(const [idx,[kind]] of statuses.entries()){
+          c.strokeStyle=statusColors[kind]||'#ffffff';c.lineWidth=2;
+          c.beginPath();c.arc(px,py,size*(.55+idx*.11),0,Math.PI*2);c.stroke();
+        }
+      }
+      if(p.id===chosen){c.strokeStyle='#faf5c7';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.84,0,Math.PI*2);c.stroke();}
     }
     // A speech bubble belongs only to a Priest who has collected real open petitions.
     for(const id of state.religion.priests){

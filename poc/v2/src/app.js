@@ -97,7 +97,7 @@
     $('needsPanel').querySelectorAll('[data-needs-page]').forEach(button=>button.onclick=()=>{
       const max=Math.max(0,Math.ceil(openPrayers().length/3)-1);
       needPage=Math.max(0,Math.min(max,needPage+Number(button.dataset.needsPage)));
-      render();
+      selectedNeedId=null;cursor=null;render();
     });
     $('needsPanel').querySelectorAll('[data-need-clear]').forEach(button=>button.onclick=()=>{
       selectedNeedId=null;render();
@@ -203,7 +203,7 @@
     $('rainBtn').classList.toggle('secondary',!!armedMiracle);
   }
   function render() {
-    if(selectedNeedId&&!currentNeed())selectedNeedId=null;
+    if(selectedNeedId&&!currentNeed()?.location)selectedNeedId=null;
     const located=currentNeed();
     const st=S.stats(state), current=state.people.find(p=>p.id===chosen);
     $('day').textContent=`第 ${st.day} 日`;

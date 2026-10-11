@@ -8,6 +8,7 @@
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
   let selectedNeedId=null, needPage=0, lastNeedsMarkup=null;
+  let lastAttentionSeq=0,attentionFocus=null;
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
   const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
@@ -202,7 +203,7 @@
     if(divineKind==='miracle')configureMiracle(selectedPower());
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
     $('opponentMode').value=state.opponent?.enabled?'ai':'off';
-    paused=true;speed=1;acc=0;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
+    paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -234,7 +235,7 @@
     if(state.opponent?.enabled&&state.opponent.profileId!=='opponent-v0.1')
       activeOpponentProfile=state.opponent;
     $('balanceProfile').value=activeProfile?'agriculture':'original';
-    $('opponentMode').value=state.opponent?.enabled?'ai':'off';armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+    $('opponentMode').value=state.opponent?.enabled?'ai':'off';armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
@@ -289,6 +290,7 @@
         'Original · 原始平衡對照';
     $('mapTip').hidden=!armedMiracle;
     $('simHint').textContent=armedMiracle?('已選擇'+(powerMeta('miracle',armedMiracle)?.label||'神蹟')+'：點擊地圖施展（Esc 取消）'):
+      attentionFocus?.level==='pause'?('已暫停：'+attentionFocus.text+' · Esc 清除定位'):
       located?.location?'需求中心已標示於地圖；缺雨虛線圈是農田評估範圍，不會自動施展神蹟。':
       st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。';
     $('simRate').textContent=`${speed}× · 約 ${format(2/speed,2)} 秒 / 模擬日`;
@@ -562,6 +564,12 @@
       c.fillText(label,labelX,labelY-2);
       c.restore();
     }
+    if(attentionFocus?.level==='pause'&&attentionFocus.center){
+      const point=attentionFocus.center,x=(point.x+.5)*size,y=(point.y+.5)*size;
+      c.save();c.strokeStyle='#ff8d91';c.lineWidth=2.6;
+      c.beginPath();c.arc(x,y,Math.max(10,size*1.3),0,Math.PI*2);c.stroke();
+      c.beginPath();c.moveTo(x-14,y);c.lineTo(x+14,y);c.moveTo(x,y-14);c.lineTo(x,y+14);c.stroke();c.restore();
+    }
     if(armedMiracle) {
       const target=cursor||source?.location?.center||state.camp;
       c.save();c.strokeStyle='#ffdda7';c.lineWidth=3;c.setLineDash([7,4]);
@@ -602,10 +610,53 @@
     let selected=null,dd=Infinity;for(const p of state.people){if(!p.alive)continue;const d=Math.hypot(p.x-x,p.y-y);if(d<dd){selected=p;dd=d;}}
     if(selected && dd<3.2){chosen=selected.id;showInspector('person');say(`正在觀察 ${selected.name} 的生活與工作選擇`);}else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
   }
+  function receiveFastForwardNotice(notes){
+    const note=notes.find(v=>v.level==='pause')||notes.find(v=>v.level==='slow');
+    if(!note)return false;
+    speed=1;acc=0;
+    document.querySelectorAll('[data-speed]').forEach(b=>
+      b.classList.toggle('active',Number(b.dataset.speed)===1));
+    attentionFocus=note;
+    if(note.level==='pause'){
+      paused=true;
+      if(state.people.some(p=>p.id===note.personId&&p.alive))chosen=note.personId;
+      showInspector('person');
+      say('快進已暫停：'+note.text);
+    }else{
+      // A new, real prayer slows time and locates the actual petition center.
+      paused=false;activePriestId=null;priestPetitionIndex=0;
+      const prayers=openPrayers();
+      const index=prayers.findIndex(p=>p.id===note.prayerId);
+      if(index>=0){selectedNeedId=note.prayerId;needPage=Math.floor(index/3);}
+      showInspector('needs');
+      say('已切換 1×：'+note.text);
+    }
+    render();
+    return true;
+  }
   function animate(t) {
     const dt=Math.min(250,t-(previous||t));previous=t;
-    if(!paused){acc+=dt/1000 * ticksPerRealSecond*speed;
-      let count=Math.floor(acc);if(count>0){count=Math.min(count,200);acc-=count;S.advanceTicks(state,count);}
+    if(!paused){
+      acc+=dt/1000*ticksPerRealSecond*speed;
+      const count=Math.min(Math.floor(acc),200);
+      if(count>0){
+        acc-=count;
+        if(speed<=1){
+          S.advanceTicks(state,count);
+          lastAttentionSeq=state.attention?.seq||lastAttentionSeq;
+        }else{
+          // Check each simulation tick, not the end of a fast-forward batch:
+          // otherwise an urgent event could be skipped by many simulated days.
+          for(let i=0;i<count;i++){
+            S.advanceTicks(state,1);
+            const items=(state.attention?.items||[]).filter(n=>n.seq>lastAttentionSeq);
+            if(items.length){
+              lastAttentionSeq=state.attention.seq;
+              if(receiveFastForwardNotice(items))break;
+            }
+          }
+        }
+      }
     }
     if(t-lastDraw>145){lastDraw=t;render();}
     requestAnimationFrame(animate);
@@ -638,7 +689,7 @@
     render();
   };
   document.querySelectorAll('[data-inspect-tab]').forEach(button=>button.onclick=()=>{if(button.dataset.inspectTab==='needs'){activePriestId=null;priestPetitionIndex=0;needPage=0;}showInspector(button.dataset.inspectTab);});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedMiracle){armedMiracle=null;render();}else if(e.key==='Escape'&&selectedNeedId){selectedNeedId=null;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)){toggleMiracleTarget();}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedMiracle){armedMiracle=null;render();}else if(e.key==='Escape'&&selectedNeedId){selectedNeedId=null;render();}else if(e.key==='Escape'&&attentionFocus){attentionFocus=null;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)){toggleMiracleTarget();}});
   $('saveBtn').onclick=save;
   $('loadBtn').onclick=()=>{let raw=null;try{raw=localStorage.getItem(storageKey()) || localStorage.getItem('wog-mvp0-web-save');}catch(_){}if(raw)restore(raw);else say('目前沒有本機存檔；可以匯入 JSON。');};
   $('exportBtn').onclick=exportSave;

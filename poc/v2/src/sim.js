@@ -329,7 +329,7 @@
     const test = evalRain(s, input);
     if (!test.ok) return test;
     s.god.dp = Math.max(0, s.god.dp - test.cost);
-    const effect = { id: 'rain-' + s.nextId++, x: test.center.x, y: test.center.y,
+    const effect = { id: 'rain-' + s.nextId++, type:'rain', x: test.center.x, y: test.center.y,
       radius: test.radius, intensity: test.intensity, startsAtHour: s.hour,
       endsAtHour: s.hour + test.durationDays * 24 };
     s.effects.push(effect);
@@ -547,7 +547,7 @@
     }
   }
   function checkOracle(s, saintId, intentType) {
-    if (intentType !== 'food.produce') return { ok: false, reason: '此試玩版僅實作糧食生產神諭' };
+    if (!['food.produce','religion.spread'].includes(intentType)) return { ok: false, reason: '這類神諭尚未實作' };
     const saint = s.people.find(p => p.id === saintId && p.alive);
     if (!saint || !s.religion.saints.includes(saintId)) return { ok: false, reason: '接收者必須是本宗教仍在世的 Saint' };
     const record = s.religion.saintQuota && s.religion.saintQuota[saintId];
@@ -558,17 +558,19 @@
   }
   function issueOracle(s, input = {}) {
     const saintId = input.saintId || s.religion.saints[0];
-    const test = checkOracle(s, saintId, input.intentType || 'food.produce');
+    const intentType=input.intentType||'food.produce';
+    const test = checkOracle(s, saintId, intentType);
     if (!test.ok) return test;
     const durationDays = clamp(num(input.durationDays, s.rules.oracleDurationDays), 1, 720);
     s.religion.saintQuota[saintId].quota--;
     const o = { id: 'o' + s.nextId++, godId: s.god.id, saintId,
-      intentType: 'food.produce', audience: 'local-community', issuedAtHour: s.hour,
+      intentType, audience: 'local-community', issuedAtHour: s.hour,
       expiresAtHour: s.hour + durationDays * 24, status: 'active', propagatedAtHour: null,
-      reachRadius: s.rules.oracleCommunicationRadius, influenceWorkCount: 0, heardCount: 0,
+      reachRadius: s.rules.oracleCommunicationRadius, influenceWorkCount: 0,
+      influenceSermonCount:0,heardCount: 0,
       reachedSettlements:{}, fulfillmentCredited: false, progressFoodAtStart: stats(s).food };
     s.religion.oracles.push(o);
-    log(s, 'oracle', `神諭交給 ${test.saint.name}：請讓族人重視糧食生產。`,
+    log(s, 'oracle', `神諭交給 ${test.saint.name}：${intentType==='religion.spread'?'鼓勵信眾更積極地傳播信仰':'請讓族人重視糧食生產'}。`,
       ['Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定']);
     return { ok: true, oracleId: o.id, saintId, quotaLeft: s.religion.saintQuota[saintId].quota };
   }
@@ -653,10 +655,17 @@
       }
       if(p.religionId===id&&p.devotion>=r.ordinaryConsolidationCap)continue;
       const bx=Math.floor(p.x/scale),by=Math.floor(p.y/scale);
-      let social=false;
-      for(let dx=-1;dx<=1&&!social;dx++)for(let dy=-1;dy<=1&&!social;dy++)
-        social=(preachers.get(cell(bx+dx,by+dy))||[]).some(q=>q.id!==p.id&&dist(q,p)<=r.contactRadius);
-      const priest=priestSources.some(q=>dist(q,p)<=r.contactRadius);
+      let social=false, nearbySpread=0;
+      for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+        for(const q of preachers.get(cell(bx+dx,by+dy))||[]){
+          if(q.id===p.id||dist(q,p)>r.contactRadius)continue;
+          social=true;nearbySpread=Math.max(nearbySpread,Math.min(3,q.spreadSermonsSincePulse||0));
+        }
+      }
+      const nearbyPriests=priestSources.filter(q=>dist(q,p)<=r.contactRadius);
+      const priest=nearbyPriests.length>0;
+      const priestSpread=Math.max(0,...nearbyPriests.map(q=>Math.min(3,q.spreadSermonsSincePulse||0)));
+      const sermonAmplification=1+s.divinePowers.spreadSermonBonus*priestSpread;
       const town=personSettlement(s,p);
       let exchange=false;
       if(town)for(const other of s.settlements){
@@ -671,12 +680,13 @@
         // first weaken over repeated credible encounters, then may freely convert.
         if(!priest)continue;
         if(p.devotion>=20){
-          const doubt=clamp(r.priestRivalDoubtChance*sensitivity,0,.9);
+          const clear=nearbyPriests.some(q=>!activeStatus(s,q,'confusion'))?1:.5;
+          const doubt=clamp(r.priestRivalDoubtChance*sensitivity*sermonAmplification*clear,0,.9);
           if(religionRand(s)<doubt){
             p.devotion=Math.max(19,p.devotion-r.priestRivalDoubtStep);
             s.counts.rivalDoubts=(s.counts.rivalDoubts||0)+1;
           }
-        }else if(religionRand(s)<clamp(r.priestRivalConversionChance*sensitivity,0,.8)){
+        }else if(religionRand(s)<clamp(r.priestRivalConversionChance*sensitivity*sermonAmplification,0,.8)){
           adopt(p,'rival');
         }
         continue;
@@ -685,15 +695,19 @@
         // Repeated credible teaching can cross 40; routine consolidation slows above 40.
         // Exceptional Devout/Zealot bands still depend on stronger, attributable evidence.
         const committedSlowdown=p.devotion>=40?.55:1;
-        const teaching=priest?r.priestTeachingMultiplier:1;
+        const clarity=nearbyPriests.some(q=>!activeStatus(s,q,'confusion'))?1:.6;
+        const teaching=priest?r.priestTeachingMultiplier*sermonAmplification*clarity:1;
         if(religionRand(s)<clamp(r.weakLearningChance*sensitivity*(family||priest?1:.6)*committedSlowdown*teaching,0,.95))
           p.devotion=Math.min(r.ordinaryConsolidationCap,p.devotion+1);
       }else{
         // Priests add a *separate* recruitment opportunity. Even when there is
         // already family/social exposure, the clergy bonus is not overwritten by it.
         const baseline=clamp(((family?r.householdJoinChance:0)+
-          (social?r.socialJoinChance:0)+(exchange?r.settlementVisitChance:0))*sensitivity,0,.65);
-        const priestBonus=priest?r.priestJoinChance*sensitivity:0;
+          (social?r.socialJoinChance*(1+s.divinePowers.spreadSermonBonus*nearbySpread):0)+
+           (exchange?r.settlementVisitChance:0))*sensitivity,0,.65);
+        const confusedPriest=nearbyPriests.length&&nearbyPriests.every(q=>activeStatus(s,q,'confusion')>0);
+        const preacherClarity=confusedPriest?.45:1;
+        const priestBonus=priest?r.priestJoinChance*sensitivity*sermonAmplification*preacherClarity:0;
         const rolled=religionRand(s);
         if(rolled<clamp(baseline+priestBonus,0,.85)){
           const cause=rolled>=baseline?'priest':family?'family':social?'social':'exchange';
@@ -701,6 +715,8 @@
         }
       }
     }
+    // One bounded social-pulse accounting window; no per-person lifelong sermon histories.
+    for(const p of people)p.spreadSermonsSincePulse=0;
     // Settlement attribution is derived from real residents (migration included), not a border buff.
     const reached=s.religion.reachedSettlements ||= {};
     for(const town of s.settlements){
@@ -721,6 +737,22 @@
     if(dist(saint,p)<=o.reachRadius)return 1;
     const town=personSettlement(s,p);
     return town&&o.reachedSettlements?.[town.id] ? .8 : 0;
+  }
+
+  function spreadCalling(s,p){
+    if(!p.alive||p.stage!=='adult'||p.religionId!==s.religion.id||p.devotion<20)
+      return {score:0,oracle:null};
+    let best={score:0,oracle:null};
+    for(const o of s.religion.oracles){
+      if(o.intentType!=='religion.spread'||o.status!=='active'||o.propagatedAtHour===null)continue;
+      const transmitted=oracleContact(s,p,o);
+      if(!transmitted)continue;
+      // Sustained rather than permanent maximum attention; individuals still choose.
+      const lifetime=(s.hour-o.issuedAtHour)/Math.max(1,o.expiresAtHour-o.issuedAtHour);
+      const pressure=transmitted*clamp(1-.55*lifetime,.35,1);
+      if(pressure>best.score)best={score:pressure,oracle:o};
+    }
+    return best;
   }
   function relayOracles(s){
     const r=s.religionPropagation,people=living(s);
@@ -750,10 +782,11 @@
       o.heardCount=people.filter(p=>oracleContact(s,p,o)>0).length;
     }
   }
-  function nearestResource(s, home, kind) {
+  function nearestResource(s, home, kind,person=null) {
     let best = null, strength = -Infinity;
-    for (let y = Math.max(0, home.y - 7); y <= Math.min(s.height - 1, home.y + 7); y++)
-      for (let x = Math.max(0, home.x - 7); x <= Math.min(s.width - 1, home.x + 7); x++) {
+    const reach=person?perceivedReach(s,person,7):7;
+    for (let y = Math.max(0, home.y - reach); y <= Math.min(s.height - 1, home.y + reach); y++)
+      for (let x = Math.max(0, home.x - reach); x <= Math.min(s.width - 1, home.x + reach); x++) {
         const t = tile(s, x, y);
         if (t.terrain === 'river') continue;
         const quantity = kind === 'food' ? t.forage : t[kind];
@@ -762,9 +795,10 @@
       }
     return best && (kind === 'food' ? best.forage : best[kind]) > .2 ? best : null;
   }
-  function nearestField(s, home) {
+  function nearestField(s, home, person=null) {
     let best = null, strength = -Infinity;
-    const reach=s.agriculture?.land?.workReachCells ?? 9;
+    const naturalReach=s.agriculture?.land?.workReachCells ?? 9;
+    const reach=person?perceivedReach(s,person,naturalReach):naturalReach;
     for (let y = Math.max(0, home.y - reach); y <= Math.min(s.height - 1, home.y + reach); y++)
       for (let x = Math.max(0, home.x - reach); x <= Math.min(s.width - 1, home.x + reach); x++) {
         const t = tile(s, x, y);
@@ -778,7 +812,7 @@
     let strongest = { score: 0, oracle: null };
     if (p.religionId !== s.religion.id || p.devotion < 20) return strongest;
     for (const o of s.religion.oracles) {
-      if (o.status !== 'active' || o.propagatedAtHour === null) continue;
+      if (o.status !== 'active' || o.intentType!=='food.produce' || o.propagatedAtHour === null) continue;
       const saint = s.people.find(v => v.id === o.saintId && v.alive);
       const transmission=oracleContact(s,p,o);
       if(!transmission)continue;
@@ -856,7 +890,7 @@
     const town=accessibleSettlement(s,h);
     const homes=town?s.households.filter(v=>accessibleSettlement(s,v)?.id===town.id&&householdMembers(s,v).length):[h];
     const demand=homes.reduce((n,v)=>n+dailyFoodNeed(s,v),0);
-    const reach=L.workReachCells;
+    const reach=perceivedReach(s,p,L.workReachCells);
     let localCapacity=0;
     for(const t of s.tiles)if(t.terrain==='field'&&homes.some(v=>
       Math.abs(t.x-v.x)<=reach&&Math.abs(t.y-v.y)<=reach))localCapacity+=agricultureMildFieldYield(s,t);
@@ -883,7 +917,7 @@
   function agricultureHarvest(s,p,h) {
     if(agricultureCultivate(s,p,h))return 0;
     const A=s.agriculture,L=A.land,W=A.worker;
-    const reach=A.land.workReachCells??9;
+    const reach=perceivedReach(s,p,A.land.workReachCells??9);
     const plots=s.tiles.filter(t=>t.terrain==='field'&&Math.abs(t.x-h.x)<=reach&&Math.abs(t.y-h.y)<=reach);
     if(!plots.length)return 0;
     let fertility=0,weighted=0;
@@ -891,6 +925,7 @@
     const skill=p.proficiency.food;
     let capacity=W.foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment*
       (W.skillOutputIntercept+W.skillOutputSlope*skill)*weighted/Math.max(fertility,1e-9);
+    capacity*=1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency');
     let harvested=0;
     plots.sort((a,b)=>b.cropStock-a.cropStock||a.y-b.y||a.x-b.x);
     for(const t of plots){const n=Math.min(Math.max(0,t.cropStock),capacity);t.cropStock-=n;capacity-=n;harvested+=n;if(capacity<=1e-9)break;}
@@ -904,23 +939,23 @@
     const security = foodSecurity(s, h);
     const basic = security.town ? security.town.workDemand : null;
     const scarce = security.days < 4 || p.hunger > .35 || (basic && basic.foodPressure > .65);
-    const field = nearestField(s, h);
+    const field = nearestField(s, h,p);
     // Pioneers without existing fields can choose cultivation as a real food
     // activity. The work shift opens meadow; harvested Food still starts at zero.
     const L=s.agriculture?.land;
     let canCultivate=false;
     if(L?.autonomousExpansionEnabled&&!field){
-      const reach=L.workReachCells;
+      const reach=perceivedReach(s,p,L.workReachCells);
       for(let y=Math.max(0,h.y-reach);y<=Math.min(s.height-1,h.y+reach)&&!canCultivate;y++)
         for(let x=Math.max(0,h.x-reach);x<=Math.min(s.width-1,h.x+reach);x++){
           const t=tile(s,x,y);
           if(t.terrain==='meadow'&&t.fertility>=L.minimumCultivationFertility){canCultivate=true;break;}
         }
     }
-    const wood = nearestResource(s, h, 'wood');
-    const fiber = nearestResource(s, h, 'fiber');
-    const forage = nearestResource(s, h, 'food');
-    const stone = nearestResource(s, h, 'stone');
+    const wood = nearestResource(s, h, 'wood',p);
+    const fiber = nearestResource(s, h, 'fiber',p);
+    const forage = nearestResource(s, h, 'food',p);
+    const stone = nearestResource(s, h, 'stone',p);
     const publicMaterials = security.town && security.town.storage.wood < 20;
     const publicStone = security.town && security.town.storage.stone < 14;
     const town=security.town, granary=town?ensureGranary(s,town):null, G=granaryRules(s);
@@ -958,6 +993,12 @@
     // Reasoned autonomous utility; no Oracle writes occupation, action or inventory directly.
     const specialization = n => (p.occupation === 'food_producer' && (n === 'farm' || n === 'forage') ? 1.35 : 0) +
       (p.occupation === 'gatherer' && (n === 'wood' || n === 'fiber' || n === 'stone') ? 1.1 : 0);
+    const confusion=activeStatus(s,p,'confusion');
+    if(confusion)for(const choice of candidates){
+      // Deterministic bounded *mistake among feasible options*, never forced work.
+      const roll=hash(s.seed+'|confusion|'+s.hour+'|'+p.id+'|'+choice.name)/4294967296;
+      choice.score+=(roll-.5)*2*s.divinePowers.confusionScoreNoise*confusion;
+    }
     candidates.sort((a,b)=> (b.score + specialization(b.name)) - (a.score + specialization(a.name)) || a.name.localeCompare(b.name));
     const choice = candidates[0];
     const normalScores = candidates.map(x=>({name:x.name,score:x.score - ((x.name==='farm'||x.name==='forage')?foodBias:0) + specialization(x.name)}));
@@ -977,6 +1018,9 @@
     const modifiers = [];
     if (scarce && (choice.name === 'farm' || choice.name === 'forage')) modifiers.push('目前糧食安全壓力提高了此工作的優先度');
     if (specialization(choice.name)>0) modifiers.push('現有職業與技能提高了工作傾向');
+    if(confusion)modifiers.push('混亂正在干擾對可行工作的評估');
+    if(activeStatus(s,p,'blindness'))modifiers.push('致盲縮短可發現的資源與農田範圍');
+    if(activeStatus(s,p,'efficiency'))modifiers.push('效率祝福提高此人實際工作時的可行產出');
     if (shifted) modifiers.push('神諭使這次選擇有別於未收到神諭時的最高優先項目');
     else if (foodBias>0 && (choice.name==='farm'||choice.name==='forage')) modifiers.push('神諭強化原本可行的糧食工作');
     const reason = [workReasons[choice.name], ...modifiers].join('；');
@@ -990,23 +1034,28 @@
     s.metrics.workChoices++;
     if (shifted) { s.metrics.oracleInfluencedChoices++; call.oracle.influenceWorkCount++; p.lastOracleWorkHour = s.hour; }
     if (choice.name === 'forage' && forage) {
-      const amount = Math.min(forage.forage, .6 + p.proficiency.gather * .45);
+      const amount = Math.min(forage.forage, (.6 + p.proficiency.gather * .45)*
+        (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));
       forage.forage -= amount; distribute(s, h, 'food', amount);
     } else if (choice.name === 'farm' && (field||canCultivate)) {
       if (s.agriculture) agricultureHarvest(s,p,h);
       else if (field.crop >= .47) {
-        const amount = (1.5 + p.proficiency.food * .8) * field.crop * field.fertility * s.rules.farmYieldMultiplier;
+        const amount = (1.5 + p.proficiency.food * .8) * field.crop * field.fertility * s.rules.farmYieldMultiplier*
+          (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency'));
         field.crop = Math.max(.04, field.crop - .52);
         distribute(s, h, 'food', amount);
       } else field.crop = clamp(field.crop + .035 + .04 * p.proficiency.food, 0, 1);
     } else if (choice.name === 'wood' && wood) {
-      const amt = Math.min(wood.wood, 1.7 + p.proficiency.gather * .8);
+      const amt = Math.min(wood.wood,(1.7 + p.proficiency.gather * .8)*
+        (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));
       wood.wood -= amt; distribute(s, h, 'wood', amt);
     } else if (choice.name === 'stone' && stone) {
-      const amt = Math.min(stone.stone, 1.2 + p.proficiency.gather * .6);
+      const amt = Math.min(stone.stone,(1.2 + p.proficiency.gather * .6)*
+        (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));
       stone.stone -= amt; distribute(s, h, 'stone', amt);
     } else if (choice.name === 'fiber' && fiber) {
-      const amt = Math.min(fiber.fiber, 1.4 + p.proficiency.gather * .7);
+      const amt = Math.min(fiber.fiber,(1.4 + p.proficiency.gather * .7)*
+        (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));
       fiber.fiber -= amt; distribute(s, h, 'fiber', amt);
     } else if(choice.name==='build_granary'&&town&&granary&&!granary.built) {
       if(!granary.materialsPaid) {
@@ -1016,7 +1065,8 @@
         town.storage.stone=Math.max(0,town.storage.stone-G.stoneRequired);
         granary.materialsPaid=true;
       }
-      granary.progress+=1+p.proficiency.build*.55;
+      granary.progress+=(1+p.proficiency.build*.55)*
+        (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency'));
       if(granary.progress>=G.workRequired) {
         granary.built=true;
         log(s,'settlement',`${town.name} 的公共糧倉完工，居民可更有組織地儲存共同物資。`,
@@ -1029,7 +1079,8 @@
         h.inventory.wood -= s.rules.hutWood; h.inventory.fiber -= s.rules.hutFiber;
         h.buildMaterialsPaid = true;
       }
-      h.buildProgress += 1 + p.proficiency.build * .55;
+      h.buildProgress += (1 + p.proficiency.build * .55)*
+        (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency'));
       if (h.buildProgress >= s.rules.hutWork) {
         h.home = true;
       }
@@ -1046,10 +1097,19 @@
         const priest=s.religion.priests.includes(p.id);
         const believer=p.religionId===s.religion.id&&p.devotion>=20;
         const pray=believer&&(days(s)+hash(p.id))%5===0;
+        const spread=believer?spreadCalling(s,p):{score:0,oracle:null};
+        const cadence=spread.score>=.25?(priest?2:4):(priest?3:7);
         const preach=believer&&p.stage==='adult'&&!pray&&
-          (days(s)+hash(p.id))%(priest?3:7)===0;
+          (days(s)+hash(p.id))%cadence===0;
         p.activity=p.stage==='child'?'family':pray?'pray':preach?'preach':'family';
-        if(preach)p.lastPreachHour=s.hour;
+        if(preach){
+          p.lastPreachHour=s.hour;
+          if(spread.oracle){
+            p.spreadSermonsSincePulse=(p.spreadSermonsSincePulse||0)+1;
+            spread.oracle.influenceSermonCount=(spread.oracle.influenceSermonCount||0)+1;
+            s.metrics.spreadInfluencedSermons=(s.metrics.spreadInfluencedSermons||0)+1;
+          }
+        }
         p.activityReason=p.activity==='preach'?
           (priest?'祭司利用閒暇時間向居民佈道':'利用閒暇時間與親友分享信仰'):
           p.activity==='pray'?'利用非工作時段祈禱':
@@ -1470,7 +1530,7 @@
       } else if (!recent) prayer.status='lapsed';
     }
     for(const o of s.religion.oracles) {
-      if(o.status!=='active' || o.fulfillmentCredited || o.influenceWorkCount < 3) continue;
+      if(o.status!=='active'||o.intentType!=='food.produce'||o.fulfillmentCredited||o.influenceWorkCount<3)continue;
       const foodGain=st.food-o.progressFoodAtStart;
       if(foodGain > 5 && s.hour>o.issuedAtHour+24) {
         o.fulfillmentCredited=true;
@@ -1509,13 +1569,13 @@
         log(s,'oracle','聆聽者離世，屬於他的神諭停止傳播。',['不自動轉移給下一位 Saint；既有生活成果繼續存在']);
       } else if(s.hour>=o.expiresAtHour) {
         o.status='expired';
-        log(s,'oracle','糧食神諭的效期自然結束。',['到期免費，已完成的生活成果不回溯']);
+        log(s,'oracle',(o.intentType==='religion.spread'?'傳教':'糧食')+'神諭的效期自然結束。',['到期免費，已完成的生活成果不回溯']);
       } else if (o.propagatedAtHour===null && s.hour>=o.issuedAtHour+24) {
         o.propagatedAtHour=s.hour;
         const town=personSettlement(s,owner);
         if(town)(o.reachedSettlements ||= {})[town.id]={hour:s.hour,via:'saint'};
         o.heardCount=living(s).filter(p=>oracleContact(s,p,o)>0).length;
-        log(s,'oracle',`${owner.name} 開始向附近居民講述糧食神諭；${o.heardCount} 人有機會聽見。`,
+        log(s,'oracle',`${owner.name} 開始向附近居民講述${o.intentType==='religion.spread'?'傳教':'糧食'}神諭；${o.heardCount} 人有機會聽見。`,
           ['Saint 接收內容可靠','傳播受個人距離與社群影響，不是向全地圖強制廣播']);
       }
     }

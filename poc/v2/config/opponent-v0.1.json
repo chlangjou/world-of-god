@@ -1,0 +1,27 @@
+{
+  "profileId": "opponent-v0.1",
+  "status": "experimental-runtime-profile",
+  "loadedByRuntime": true,
+  "description": "One deterministic rival god with independent Divine Power, Saint/Priest, Oracles, cooldowns, and ordinary faith propagation. Begins with real existing households, no free population or land.",
+  "enabled": true,
+  "name": "暮影信仰",
+  "initialHouseholdIndexes": [
+    5,
+    6
+  ],
+  "championDevotion": 53,
+  "familyDevotion": 29,
+  "initialDp": 42,
+  "startDay": 14,
+  "decisionIntervalDays": 12,
+  "spreadOracleDurationDays": 150,
+  "offensiveEveryTurns": 4,
+  "semantics": {
+    "genesis": "Existing households indexed from zero change affiliation to r2 at the same genesis; no new people, houses, land or stocks.",
+    "agency": "Rival clergy and Saints emerge under the same requirements. The opponent uses existing Miracle/Oracle evaluation, costs, cooldown and physical outcomes. It cannot directly order individual workers.",
+    "decisions": "At most one Miracle per AI decision interval; prioritizes real nearby water/crop/healing needs, then a blessing. Occasionally attempts a hostile confusion spell where local faith dominance permits.",
+    "rivalry": "Active sermons from both faiths affect uncommitted people symmetrically. Followers at Devotion 40+ are safe from routine opponent preaching; under 40 may erode and switch after 20.",
+    "replay": "Separate opponentRng and saved counters support deterministic replay. Loading an old single-God save does not retroactively enable the opponent.",
+    "tuning": "All values are experimental and not an authoritative main/docs rule."
+  }
+}

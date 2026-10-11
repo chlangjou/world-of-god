@@ -157,3 +157,39 @@ test('weak foreign faith does not flip immediately, and old profile defaults mig
   settlements:loaded.settlements,events:loaded.events,prayers:loaded.religion.prayers},previous);
  valid(loaded);
 });
+
+test('open prayer centers expose real evaluation origin, including founding-area legacy saves',()=>{
+  const s=after(fresh(true,true),21);
+  const prayer=s.religion.prayers.find(p=>p.type==='food-water'&&p.status==='open');
+  assert.ok(prayer,'founding-area water petition must be real');
+  const location=W.prayerLocation(s,prayer.id);
+  assert.deepEqual(location.center,{x:s.camp.x,y:s.camp.y});
+  assert.equal(location.radius,11,'water demand is evaluated over nearby fields');
+  const reports=W.priestPetitions(s,s.religion.priests[0]);
+  const collected=reports.find(v=>v.id===prayer.id);
+  assert.deepEqual(collected.location.center,location.center);
+  const legacy=copy(prayer);delete legacy.center;
+  const fallback=W.prayerLocation(s,legacy);
+  assert.deepEqual(fallback.center,location.center);
+  assert.equal(fallback.source,'founding-fallback');
+  assert.equal(W.prayerLocation(s,'missing-need'),null);
+  valid(s);
+});
+
+test('several regional water needs preserve separate, stable centers for map navigation',()=>{
+  const s=after(fresh(true,true),22);
+  const locs=[{x:8,y:12},{x:26,y:36},{x:49,y:45}];
+  const ids=[];
+  for(const [i,center] of locs.entries()){
+    const id='need-locator-'+i;ids.push(id);
+    s.religion.prayers.push({id,type:'food-water',status:'open',center,
+      settlementId:'region-'+i,by:['p1'],createdAtHour:s.hour,
+      needSummary:'附近農田真實缺雨',collectedBy:null});
+  }
+  const points=ids.map(id=>W.prayerLocation(s,id).center);
+  assert.deepEqual(points,locs,'each request must retain its own origin');
+  assert.equal(new Set(points.map(p=>p.x+','+p.y)).size,3);
+  const saved=W.restore(JSON.stringify(s));
+  assert.deepEqual(ids.map(id=>W.prayerLocation(saved,id).center),locs);
+  valid(saved);
+});

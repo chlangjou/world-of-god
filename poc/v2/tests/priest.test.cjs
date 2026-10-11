@@ -159,7 +159,7 @@ test('weak foreign faith does not flip immediately, and old profile defaults mig
 });
 
 test('open prayer centers expose real evaluation origin, including founding-area legacy saves',()=>{
-  const s=after(fresh(true,true),21);
+  const s=after(fresh(true),21);
   const prayer=s.religion.prayers.find(p=>p.type==='food-water'&&p.status==='open');
   assert.ok(prayer,'founding-area water petition must be real');
   const location=W.prayerLocation(s,prayer.id);

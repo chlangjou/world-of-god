@@ -272,7 +272,7 @@
       `${st.followers} / ${st.opponentFollowers}`:st.followers;
     $('followersMetric').title=st.opponentEnabled?'我方信徒 / 對手信徒（虔誠度 40+）':'我方信徒（虔誠度 40+）';
     $('devotionMetric').textContent=st.opponentEnabled?
-      `己方信眾 ${st.believers} · 對手信眾 ${st.opponentBelievers} · 改宗 ${st.rivalConversions}`:
+      `信眾 己 ${st.believers} / 敵 ${st.opponentBelievers} · 改宗 ${st.rivalConversions}`:
       `信眾 ${st.believers} · 新入教 ${st.newBelievers} · 奉獻 ${format(st.devotionWeight)}`;
     $('powerMetric').textContent=format(state.god.dp,1);$('powerRate').textContent=`+${format(st.dpRateDay,2)} DP / 模擬日`;
     $('powerFill').style.width=Math.min(100,state.god.dp/state.god.cap*100)+'%';
@@ -369,10 +369,9 @@
     const town=state.settlements.find(t=>t.id===selectedTownId)||state.settlements[0];
     const localReligion=town?S.settlementReligionStats(state,town.id):null;
     const rivalTown=town&&state.opponent?.enabled?
-      `<p title="對手也需要真實信眾和祭司，神力由其信徒產生">${html(state.opponentReligion.name)}：
-        信眾 ${localReligion.opponentBelievers}/${localReligion.population} · 信徒 ${localReligion.opponentFollowers} ·
-        Saint ${localReligion.opponentSaints} / Priest ${localReligion.opponentPriests} ·
-        對手神力 ${format(state.opponentGod.dp,1)} DP</p>`:'';
+      `<p title="${html(state.opponentReligion.name)}：S=Saint，P=Priest；對手以真實信徒恢復神力">對手：信眾 ${localReligion.opponentBelievers} ·
+        40+ ${localReligion.opponentFollowers} · S${localReligion.opponentSaints}/P${localReligion.opponentPriests}
+        · ${format(state.opponentGod.dp)} DP</p>`:'';
     const granary=town?.granary;
     const granaryStatus=granary?.built?'已建成':
       granary?.materialsPaid?'建造中':granary?'籌備建材':'尚無計畫';

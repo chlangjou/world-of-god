@@ -903,6 +903,97 @@
     h.migrated++;
     s.counts.relocations++;
   }
+
+  // Low-rate opportunities, not orders: real people, kinship, resources and available land.
+  function compatiblePartners(s,a,b,F) {
+    if(!a.alive||!b.alive||a.stage!=='adult'||b.stage!=='adult'||a.partnerId||b.partnerId||
+       a.genderRole===b.genderRole)return false;
+    if(a.age<F.minPairAge||b.age<F.minPairAge||a.age>F.maxPairAge||b.age>F.maxPairAge||
+       Math.abs(a.age-b.age)>F.maxAgeGap||a.health<F.minHealth||b.health<F.minHealth||
+       a.hunger>.55||b.hunger>.55)return false;
+    const ah=householdOf(s,a),bh=householdOf(s,b);
+    if(!ah||!bh||ah.id===bh.id||dist(ah,bh)>F.pairRange)return false;
+    if((a.originHouseholdId||ah.id)===(b.originHouseholdId||bh.id))return false;
+    const parents=new Set(a.parentIds||[]);
+    if(parents.has(b.id)||(b.parentIds||[]).includes(a.id)||
+       (b.parentIds||[]).some(id=>parents.has(id)))return false;
+    if((accessibleSettlement(s,ah)?.id||null)!==(accessibleSettlement(s,bh)?.id||null))return false;
+    return foodSecurity(s,ah).days>=F.requiredFoodDays&&foodSecurity(s,bh).days>=F.requiredFoodDays;
+  }
+  function familyHomeSite(s,origin,F) {
+    const town=accessibleSettlement(s,origin);
+    const count=town?s.households.filter(h=>accessibleSettlement(s,h)?.id===town.id&&householdMembers(s,h).length).length:0;
+    const pioneer=town&&count>=F.pioneerAfterHouseholds&&rand(s)<F.pioneerChance;
+    function choose(center,inner,outer,remote) {
+      let best=null,score=-Infinity;
+      for(let y=Math.max(1,Math.floor(center.y-outer));y<Math.min(s.height-1,Math.ceil(center.y+outer));y++)
+        for(let x=Math.max(1,Math.floor(center.x-outer));x<Math.min(s.width-1,Math.ceil(center.x+outer));x++){
+          const t=tile(s,x,y),d=Math.hypot(x-center.x,y-center.y);
+          if(t.terrain!=='meadow'||d<inner||d>outer)continue;
+          if(s.households.some(h=>householdMembers(s,h).length&&Math.hypot(x-h.x,y-h.y)<F.homeSpacing))continue;
+          if(remote&&s.settlements.some(v=>Math.hypot(x-v.x,y-v.y)<=s.rules.settlementClusterDistance+1))continue;
+          const nearby=remote?s.households.filter(h=>h.home&&householdMembers(s,h).length&&!accessibleSettlement(s,h)&&Math.hypot(x-h.x,y-h.y)<=F.outpostNeighborRadius).length:0;
+          const rank=t.fertility+.4*t.moisture+nearby*3-.008*Math.abs(x-riverX(s,y))-.001*Math.hypot(x-origin.x,y-origin.y);
+          if(rank>score){score=rank;best={x,y};}
+        }
+      return best;
+    }
+    if(pioneer){
+      const anchors=s.households.filter(h=>h.home&&householdMembers(s,h).length&&!accessibleSettlement(s,h));
+      for(const home of anchors){const pos=choose(home,F.homeSpacing,F.outpostNeighborRadius,true);if(pos)return pos;}
+      const remote=choose(town,F.pioneerMinRadius,F.pioneerMaxRadius,true);
+      if(remote)return remote;
+    }
+    return choose(town||origin,F.homeSpacing,F.homeRadius,false);
+  }
+  function transferStartupFood(s,ah,bh,amount,F){
+    const town=accessibleSettlement(s,ah);
+    const common=town&&accessibleSettlement(s,bh)?.id===town.id;
+    const available=ah.inventory.food+bh.inventory.food+(common?town.storage.food:0);
+    if(available+1e-8<amount)return false;
+    if(common){
+      const need=s.households.reduce((n,h)=>n+(accessibleSettlement(s,h)?.id===town.id?dailyFoodNeed(s,h):0),0);
+      if(available<amount+need*F.communalSafetyDays)return false;
+    }
+    let remaining=amount;
+    for(const home of [ah,bh]){const n=Math.min(home.inventory.food,remaining,amount/2);home.inventory.food-=n;remaining-=n;}
+    if(common){const n=Math.min(town.storage.food,remaining);town.storage.food-=n;remaining-=n;}
+    for(const home of [ah,bh]){const n=Math.min(home.inventory.food,remaining);home.inventory.food-=n;remaining-=n;}
+    if(remaining>1e-8)throw Error('新家庭糧食轉移不守恆');
+    return true;
+  }
+  function formNewHouseholds(s){
+    const F=s.agriculture?.familyExpansion;
+    if(!F?.enabled||!s.settlements.length)return;
+    let formed=0;
+    const women=living(s).filter(p=>p.stage==='adult'&&p.genderRole==='gestate'&&!p.partnerId);
+    for(const a of women){
+      if(formed>=F.maxCouplesPerMonth)break;
+      const others=living(s).filter(b=>b.genderRole==='fertilize'&&compatiblePartners(s,a,b,F))
+        .sort((x,y)=>dist(householdOf(s,a),householdOf(s,x))-dist(householdOf(s,a),householdOf(s,y))||x.id.localeCompare(y.id));
+      if(!others.length||rand(s)>F.pairChancePerMonth)continue;
+      const partner=others[0],ah=householdOf(s,a),bh=householdOf(s,partner),site=familyHomeSite(s,ah,F);
+      if(!site)continue;
+      const food=F.startupFoodDays*2*s.rules.foodNeedAdult;
+      if(!transferStartupFood(s,ah,bh,food,F))continue;
+      const number=s.households.reduce((n,h)=>Math.max(n,Number(h.id.slice(1))||0),0)+1;
+      const h={id:'h'+number,name:a.name+'與'+partner.name+'家',x:site.x,y:site.y,members:[a.id,partner.id],
+        inventory:{food,wood:0,stone:0,fiber:0},home:false,buildProgress:0,buildMaterialsPaid:false,
+        needs:{},migrated:0,foodShortageDays:0};
+      ah.members=ah.members.filter(id=>id!==a.id);bh.members=bh.members.filter(id=>id!==partner.id);
+      s.households.push(h);a.partnerId=partner.id;partner.partnerId=a.id;
+      const town=s.settlements.find(t=>dist(t,h)<=s.rules.settlementClusterDistance)||null;
+      if(town)town.householdIds.push(h.id);
+      for(const p of [a,partner]){
+        p.householdId=h.id;p.settlementId=town?.id||null;p.x=site.x;p.y=site.y;
+        if(p.occupation==='dependent')p.occupation=p.proficiency.food>=p.proficiency.gather?'food_producer':'gatherer';
+      }
+      formed++;s.counts.newFamilies=(s.counts.newFamilies||0)+1;
+      log(s,'family',a.name+'與'+partner.name+'建立新家戶。',
+        ['成年居民在附近自主配對且非近親','從舊家戶／可及公共糧倉實際轉出 '+food.toFixed(1)+' 糧食；需自行建造住所',
+         town?'加入 '+town.name:'離開原聚落，向外定居']);
+    }
+  }
   function demographic(s) {
     const now=days(s);
     for(const p of s.people.slice()) {
@@ -936,6 +1027,7 @@
         }
       }
     }
+    formNewHouseholds(s);
     // Household movement requires actual pressure AND a promising destination;
     // moving all hungry people to the same exhausted tile is not a survival strategy.
     const town=s.settlements[0];

@@ -70,7 +70,18 @@
     priestRivalDoubtChance:.58,priestRivalConversionChance:.30,priestRivalDoubtStep:3,
     settlementVisitChance:.012,weakLearningChance:.26,ordinaryConsolidationCap:60,
     childStrongLearningChance:.32,childOrdinaryLearningChance:.14,
-    regionalSaintChancePerMonth:.12,oracleRelayChance:.55
+    regionalSaintChancePerMonth:.12,oracleRelayChance:.55,
+    // Religion Competition v0.3: real, attributable results rather than button
+    // presses raise Devotion. Ordinary 40+ sermon protection is unchanged.
+    miracleWitnessRadius:7,miracleAttributionRadius:11,
+    miracleEvidenceRepeatDays:28,miracleInterestDays:90,
+    miracleInterestThreshold:10,miracleInterestJoinChance:.27,
+    miracleRivalDoubtFactor:.65,miracleWitnessRepeatFactor:.25,
+    healMinRecovery:7,healDirectDevotion:19,healWitnessDevotion:3,
+    efficiencyDirectDevotion:14,efficiencyWitnessDevotion:2,
+    harvestWitnessDevotion:2,ripeningWitnessDevotion:2,
+    ripeningEvidenceMinimumCrop:2.5,rainWitnessDevotion:3,
+    spreadOracleJoinBonus:.11
   });
   function religionRules(profile){
     const r={...RELIGION_DEFAULTS};
@@ -89,6 +100,21 @@
     r.weakLearningChance=clamp(r.weakLearningChance,0,1);
     r.childStrongLearningChance=clamp(r.childStrongLearningChance,0,1);
     r.childOrdinaryLearningChance=clamp(r.childOrdinaryLearningChance,0,1);
+    for(const k of ['miracleWitnessRadius','miracleAttributionRadius'])
+      r[k]=clamp(r[k],2,25);
+    r.miracleEvidenceRepeatDays=clamp(r.miracleEvidenceRepeatDays,1,180);
+    r.miracleInterestDays=clamp(r.miracleInterestDays,7,365);
+    r.miracleInterestThreshold=clamp(r.miracleInterestThreshold,4,40);
+    r.miracleInterestJoinChance=clamp(r.miracleInterestJoinChance,0,1);
+    r.miracleRivalDoubtFactor=clamp(r.miracleRivalDoubtFactor,0,1);
+    r.miracleWitnessRepeatFactor=clamp(r.miracleWitnessRepeatFactor,0,1);
+    r.healMinRecovery=clamp(r.healMinRecovery,1,50);
+    for(const k of ['healDirectDevotion','healWitnessDevotion',
+      'efficiencyDirectDevotion','efficiencyWitnessDevotion',
+      'harvestWitnessDevotion','ripeningWitnessDevotion','rainWitnessDevotion'])
+      r[k]=clamp(r[k],0,35);
+    r.ripeningEvidenceMinimumCrop=clamp(r.ripeningEvidenceMinimumCrop,.1,50);
+    r.spreadOracleJoinBonus=clamp(r.spreadOracleJoinBonus,0,.5);
     return r;
   }
   const OPPONENT_DEFAULTS=Object.freeze({profileId:'opponent-v0.2',enabled:true,
@@ -640,6 +666,101 @@
       if(p.religionId===religionId)weighted+=value;
     }
     return {density:weighted/(Math.PI*13*13),share:total?weighted/total:0,weighted,total};
+  }
+  // A person's religion remains one affiliation + Devotion. Interest in an
+  // alternative God is a short, bounded, explicitly attributed impression, not
+  // immediate conversion and not a sermon/event history.
+  function divineInterest(s,p,faith){
+    const item=p.miracleInterest?.[faith.godId];
+    return item&&item.expiresAtHour>s.hour?item.score:0;
+  }
+  function faithContext(s,faith,person){
+    if(person.religionId===faith.id)return 1;
+    const radius=s.religionPropagation.miracleAttributionRadius;
+    const sources=living(s).filter(q=>q.religionId===faith.id&&q.devotion>=20&&
+      dist(q,person)<=radius);
+    if(!sources.length)return 0; // No one can identify which God intervened.
+    if(sources.some(q=>faith.priests.includes(q.id)||faith.saints.includes(q.id)))
+      return 1;
+    return .72;
+  }
+  function recordDivineInterest(s,p,faith,value){
+    if(!(value>0))return;
+    p.miracleInterest ||= {};
+    const previous=p.miracleInterest[faith.godId];
+    const old=previous&&previous.expiresAtHour>s.hour?previous.score:0;
+    p.miracleInterest[faith.godId]={
+      score:clamp(old+value,0,60),
+      expiresAtHour:s.hour+s.religionPropagation.miracleInterestDays*24};
+  }
+  function applyMiracleFaith(s,faith,p,amount,type,role){
+    if(!p.alive||amount<=0)return false;
+    const credible=faithContext(s,faith,p);
+    if(!credible)return false;
+    const key=faith.godId+':'+type+':'+role;
+    p.lastMiracleFaith ||= {};
+    const previous=p.lastMiracleFaith[key];
+    const repeated=Number.isFinite(previous)&&
+      s.hour-previous<s.religionPropagation.miracleEvidenceRepeatDays*24;
+    // Repeated sights do not build infinite faith from one worker/field.
+    const factor=repeated?(role==='witness'?
+      s.religionPropagation.miracleWitnessRepeatFactor:.5):1;
+    const magnitude=Math.max(0,Math.round(amount*credible*factor));
+    if(!magnitude)return false;
+    p.lastMiracleFaith[key]=s.hour;
+    if(p.religionId===faith.id){
+      const delta=Math.min(magnitude,100-p.devotion);
+      p.devotion+=delta;
+      if(delta)p.lastFaithEvidence={hour:s.hour,cause:type+' 可信神蹟證據',change:delta,godId:faith.godId};
+      return delta>0;
+    }
+    if(p.religionId===null){
+      recordDivineInterest(s,p,faith,magnitude);
+      p.lastFaithEvidence={hour:s.hour,cause:type+' 見證神蹟',change:0,godId:faith.godId,
+        interest:divineInterest(s,p,faith)};
+      return true;
+    }
+    // Credible opposing miracles may challenge even 40+ commitment. Ordinary
+    // preaching still cannot. Actual conversion requires personal later choice.
+    const doubt=Math.max(1,Math.round(magnitude*s.religionPropagation.miracleRivalDoubtFactor));
+    const delta=Math.min(doubt,Math.max(0,p.devotion-1));
+    p.devotion-=delta;
+    recordDivineInterest(s,p,faith,magnitude);
+    if(delta)p.lastFaithEvidence={hour:s.hour,cause:type+' 異教神蹟證據',change:-delta,godId:faith.godId};
+    return delta>0;
+  }
+  function miracleWitnesses(s,faith,type,centers,exclude,amount){
+    if(!centers.length||amount<=0)return 0;
+    let changed=0;
+    for(const p of living(s)){
+      if(exclude.has(p.id))continue;
+      if(!centers.some(c=>dist(c,p)<=s.religionPropagation.miracleWitnessRadius))continue;
+      if(applyMiracleFaith(s,faith,p,amount,type,'witness'))changed++;
+    }
+    return changed;
+  }
+  function miraclePersonalEvidence(s,faith,type,beneficiaries,witnessAmount){
+    if(!beneficiaries.length)return {recipients:0,witnesses:0};
+    const centers=beneficiaries.map(v=>v.person);
+    const excluded=new Set(centers.map(p=>p.id));
+    let recipients=0;
+    for(const {person,amount} of beneficiaries)
+      if(applyMiracleFaith(s,faith,person,amount,type,'direct'))recipients++;
+    const witnesses=miracleWitnesses(s,faith,type,centers,excluded,witnessAmount);
+    if(recipients||witnesses)
+      log(s,'faith',faith.name+'的'+type+'成果獲得見證：'+recipients+
+        ' 位直接受益者、'+witnesses+' 位附近居民受到信仰影響。',
+        ['只有具體改善或自主工作成果才能構成證據',
+         '觀察者需有可信的本宗教來源；不會在施法時強制改宗']);
+    return {recipients,witnesses};
+  }
+  function miracleAgriculturalEvidence(s,faith,type,center,amount){
+    const witness=miracleWitnesses(s,faith,type,[center],new Set(),amount);
+    if(witness)
+      log(s,'faith',faith.name+'的'+type+'成果在農地被見證；'+
+        witness+' 位附近居民受到小幅度信仰影響。',
+        ['只根據實際存在的作物改善；沒有直接的人體神蹟受益者']);
+    return witness;
   }
   // The same cooldown policy is used for Rain and all newly added Miracles:
   // - duration is an independent, monotonic dimension for timed effects,

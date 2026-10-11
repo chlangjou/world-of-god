@@ -56,7 +56,7 @@
         <div class="map-wrap">
           <canvas id="world" width="768" height="768" aria-label="世界地圖，可點選居民或施展神蹟" tabindex="0"></canvas>
           <div class="legend" aria-label="地圖圖例"><span><i class="sw river"></i>河流</span><span><i class="sw forest"></i>森林</span><span><i class="sw field"></i>農田</span><span><i class="sw homes"></i>住所</span><span><i class="sw granary"></i>糧倉</span><span><i class="sw human"></i>居民</span><span title="可直接接收神諭的聆聽者"><i class="sw saint"></i>Saint</span><span title="傳道並彙整信徒祈禱的祭司"><i class="sw priest"></i>Priest</span></div>
-          <div id="mapTip" class="map-tip">選擇喚雨後，點擊地圖施展</div>
+          <div id="mapTip" class="map-tip">已進入神蹟選點模式：點擊地圖施展，Esc 取消</div>
         </div>
         <div class="map-footer"><span id="simHint">世界準備中</span><span id="simRate">1×</span></div>
       </section>
@@ -71,17 +71,17 @@
             <label class="power-picker"><span class="sr-only">選擇能力</span><select id="divinePowerSelect" aria-label="選擇神蹟或神諭"><option value="rain">喚雨</option></select></label>
           </div>
           <div id="miraclePanel" class="command-body" role="tabpanel" aria-labelledby="miracleTab">
-            <div class="command-current"><strong>喚雨 Rain</strong><small title="雨水提高土壤濕度，農作物仍需土地再生與居民收穫">影響土壤，不直接生成食物</small></div>
+            <div class="command-current"><strong id="miracleName">喚雨 Rain</strong><small id="miracleHint" title="直接效果進入世界模擬，不自動保證最後結果">影響土壤，不直接生成食物</small></div>
             <div class="ranges">
               <label>範圍 <output id="radiusValue">7 格</output><input type="range" id="radius" min="2" max="14" value="7"></label>
               <label>強度 <output id="intensityValue">0.85×</output><input type="range" id="intensity" min="30" max="120" step="5" value="85"></label>
-              <label>持續 <output id="durationValue">10 日</output><input type="range" id="duration" min="1" max="30" value="10"></label>
+              <label id="durationLabel">持續 <output id="durationValue">10 日</output><input type="range" id="duration" min="1" max="30" value="10"></label>
             </div>
             <div class="action-bottom"><button id="rainBtn" class="btn accent" disabled>選擇施展位置</button><span id="rainCost">預估 — DP</span></div>
             <small id="rainCooldown" class="command-reason" role="status">檢查施展條件中</small>
           </div>
           <div id="oraclePanel" class="command-body" role="tabpanel" aria-labelledby="oracleTab" hidden>
-            <div class="command-current"><strong>糧食生產神諭</strong><small>由 Saint 傳達，居民自行決定是否行動</small></div>
+            <div class="command-current"><strong id="oracleName">糧食生產</strong><small id="oracleHint">由 Saint 傳達，居民自行決定是否行動</small></div>
             <label class="saint-row"><span>接收者</span><select id="saintSelect" aria-label="選擇接收神諭的 Saint" disabled><option>尚未出現</option></select></label>
             <div class="saint-row"><span>額度</span><strong id="saintQuota">—</strong></div>
             <div class="action-bottom"><button id="oracleBtn" class="btn accent secondary" disabled>傳下神諭</button><span id="oracleStatus">未發佈</span></div>
@@ -127,8 +127,8 @@
   <dialog id="infoDialog"><div class="dialog-head"><h2>World of God 操作</h2><button id="closeHelp" class="btn ghost">關閉</button></div>
     <div class="help-text"><p><strong>世界：</strong>居民自行耕作、建立聚落、成長與遷移；神明不直接指派工作。</p>
       <p><strong>兩層神意操作：</strong>先選 Miracle／Oracle 類別，再從下拉清單選能力。Miracle 可以指定地圖目標；Oracle 由 Saint 傳達。</p>
-      <p><strong>喚雨：</strong>調整範圍、強度與持續日數，按施展按鈕，再點擊地圖。冷卻與 DP 由模擬時鐘決定。</p>
-      <p><strong>資訊：</strong>右側以需求、聚落、居民、歷史分頁觀察；上下頁切換，不需要捲動整頁。空白鍵暫停，1 鍵選喚雨，Esc 取消。</p>
+      <p><strong>神蹟：</strong>從選單選擇降雨、促熟、豐收、治療、效率祝福、乾旱、雷擊、混亂或致盲。依能力調整範圍、強度與時間；按施展再點地圖。沒有目標、神力不足或當地臨在不足時不消耗 DP。每項神蹟獨立熟練度和冷卻。</p><p><strong>神諭：</strong>可選糧食生產或傳教，透過 Saint 接收、Priest 與居民實際傳遞，使用 Saint 額度。傳教不直接改宗。</p>
+      <p><strong>資訊：</strong>右側以需求、聚落、居民、歷史分頁觀察；上下頁切換，不需要捲動整頁。空白鍵暫停，1 鍵選當前神蹟，Esc 取消。</p>
       <p><strong>平衡：</strong>新世界預設 Agriculture v0.1；可切換 Original 作 A/B 對照。切換會重新創世，既有存檔不變。</p>
     </div>
   </dialog>

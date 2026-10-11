@@ -65,7 +65,8 @@
     "autonomousExpansionEnabled": true,
     "minimumCultivationFertility": 0.45,
     "workReachCells": 9,
-    "expansionNotes": "Autonomous agricultural work may cultivate one suitable reachable meadow when mild-season field potential is under population need × target ratio; this consumes the work shift and yields no Food until crops regrow."
+    "expansionNotes": "Autonomous agricultural work may cultivate one suitable reachable meadow when mild-season field potential is under population need × target ratio; this consumes the work shift and yields no Food until crops regrow.",
+    "pioneerCultivationBonus": 4.5
   },
   "worker": {
     "foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment": 9.5,

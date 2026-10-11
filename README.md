@@ -4,6 +4,18 @@
 
 This branch is a **fresh, independent browser-based prototype** derived from the current `main` design specifications (Issues #1–#8 and the Issue #11 MVP-0 scope), **not** a port of the earlier `web-poc` code or its balance model. It deliberately focuses on the small playable God–World feedback loop before deciding on a production engine or Codex implementation workflow.
 
+## New-generation households & settlement growth (2026-10-11)
+
+The experimental Agriculture Web PoC now allows **grown children to find unrelated, nearby adult partners**, form independent households and build actual dwellings. A pairing requires compatible ages, health, food access and different originating households; recorded parents and siblings cannot match. Couples transfer an actual **nine-day food supply** from their originating households / reachable communal stocks, not created Food. Adults autonomously gather materials and build their hut, and can cultivate new fields if they settle outside previously farmed ground.
+
+As original villages become crowded, some couples settle farther away. When **three actual huts** cluster among at least **three new households**, the simulation creates a second settlement with its *own initially empty communal storage* and physically bounded access. All numerical thresholds are adjustable under `familyExpansion` in `config/balance-agriculture-v0.1.json`. Original Profile behavior remains unchanged.
+
+**No Miracle / no Oracle, real natural run** — `valley-spring-01`, day **9,000**: **73 residents, 18 households, 14 completed homes, 2 settlements, 10 new families, no deaths**. After family expansion the world held around 66 days of aggregate food reserves; preservation/storage and multi-settlement religious diffusion are still deferred, rather than modeled as a highly detailed economy.
+
+A separate short **synthetic adult pairing stress test** produced 3 settlements with locally grown crops, no shortages or deaths. The test artificially introduces eligible adults to accelerate the observation; it is *not* a natural population-growth claim. Complete engine/browser layout benchmarking at much higher populations is future work.
+
+**Existing saves:** updated Agriculture parameters and `familyExpansion` can be explicitly adopted through **檔案 → 更新目前世界農業**, keeping all existing people, housing, inventory and history. Original saves remain Original.
+
 ## High-growth farmland update (2026-10-11)
 
 Agriculture now uses a **4× higher per-plot land regeneration coefficient** (`q=0.80` vs historical `0.20`) and allows autonomous farmers to convert eligible reachable meadow into new fields when normal-season capacity falls behind population demand. Cultivation consumes a real work shift, starts with zero crop stock, and does not bypass labor or resource conservation. Housed residents avoid endlessly stockpiling once adequately supplied.

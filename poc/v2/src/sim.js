@@ -558,7 +558,8 @@
       opponent:opponent?{...opponent,lastActionDay:-1,turns:0,casts:0,oracleIssues:0}:null,
       opponentRng:opponent?hash(seed+'|opponent-v0.1'):null,
       opponentReligion:opponent?{id:'r2',godId:'g2',name:opponent.name,
-        saints:[],priests:[],saintQuota:{},oracles:[],reachedSettlements:{}}:null,
+        saints:[],priests:[],saintQuota:{},oracles:[],prayers:[],
+        lastPrayerHour:-1,regionalPrayerAt:{},reachedSettlements:{}}:null,
       opponentGod:opponent?{id:'g2',dp:opponent.initialDp,cap:rules.maxDp,
         skills:{rain:{level:1,xp:0,readyAtHour:0},
           ...Object.fromEntries(Object.keys(POWER_DEFAULTS).map(id=>[id,{level:1,xp:0,readyAtHour:0}]))}}:null,
@@ -574,7 +575,8 @@
       environment: { phase: 'mild', totalRain: 0 }, lastFoodOutput: 0,
       balanceProfileId: agriculture?.profileId || 'original', agriculture,
       history: { settlementFoundedHour: null, firstSaintHour: null },
-      metrics: { workChoices: 0, oracleInfluencedChoices: 0 } };
+      metrics: { workChoices: 0, oracleInfluencedChoices: 0,
+        foodProductionByTown:{} } };
     generate(s, initialMoisture);
     if(opponent?.originMode==='separated-native')generateSeparatedOrigins(s,opponent);
     else if(!opponent&&nativeWorld)generateSoloNativeWorld(s);
@@ -1407,7 +1409,16 @@
       h.inventory[kind] += privatePart;
       settlement.storage[kind] += amount - privatePart;
     } else h.inventory[kind] += amount;
-    if (kind === 'food') { s.counts.foodFromLabor += amount; s.lastFoodOutput += amount; }
+    if(kind==='food'){
+      s.counts.foodFromLabor+=amount;s.lastFoodOutput+=amount;
+      const local=s.metrics.foodProductionByTown ||= {};
+      if(settlement)local[settlement.id]=(local[settlement.id]||0)+amount;
+      // Older founding-area prayer exists before a named settlement.
+      if(dist(h,s.camp)<13)local._founding=(local._founding||0)+amount;
+    }
+  }
+  function localFoodProduction(s,settlementId){
+    return s.metrics.foodProductionByTown?.[settlementId||'_founding']||0;
   }
   // Potential is measured for stable mild weather; this is not an instant harvest.
   function agricultureMildFieldYield(s,t) {
@@ -2065,70 +2076,77 @@
       }).sort((a,b)=>b.createdAtHour-a.createdAtHour||a.id.localeCompare(b.id));
   }
   function collectPrayers(s){
-    const priests=s.religion.priests.map(id=>s.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
-    for(const prayer of s.religion.prayers){
-      if(prayer.status!=='open'){prayer.collectedBy=null;continue;}
-      const location=prayerSettlement(s,prayer);
-      const chosen=location?priests.filter(p=>personSettlement(s,p)?.id===location.id)
-        .sort((a,b)=>a.id.localeCompare(b.id))[0]:null;
-      if(!chosen){prayer.collectedBy=null;continue;}
-      if(prayer.collectedBy!==chosen.id)prayer.collectedAtHour=s.hour;
-      prayer.collectedBy=chosen.id;
+    for(const faith of allFaiths(s)){
+      const priests=faith.priests.map(id=>s.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
+      for(const prayer of faith.prayers||[]){
+        if(prayer.status!=='open'){prayer.collectedBy=null;continue;}
+        const location=prayerSettlement(s,prayer);
+        const chosen=location?priests.filter(p=>personSettlement(s,p)?.id===location.id)
+          .sort((a,b)=>a.id.localeCompare(b.id))[0]:null;
+        if(!chosen){prayer.collectedBy=null;continue;}
+        if(prayer.collectedBy!==chosen.id)prayer.collectedAtHour=s.hour;
+        prayer.collectedBy=chosen.id;
+      }
     }
   }
   function updateRegionalPrayers(s){
-    const last=s.religion.regionalPrayerAt ||= {};
     const live=living(s);
-    for(const town of s.settlements){
-      const families=s.households.filter(h=>town.householdIds.includes(h.id)&&
-        dist(town,h)<=s.rules.settlementClusterDistance);
-      const believers=live.filter(p=>p.religionId===s.religion.id&&p.devotion>=20&&
-        personSettlement(s,p)?.id===town.id);
-      if(!believers.length)continue;
-      const shortageDays=(town.storage.food+families.reduce((n,h)=>n+h.inventory.food,0))/
-        Math.max(.01,families.reduce((n,h)=>n+dailyFoodNeed(s,h),0));
-      const ill=believers.filter(p=>p.health<70);
-      const homeless=families.filter(h=>!h.home&&householdMembers(s,h).length);
-      const fields=s.tiles.filter(t=>t.terrain==='field'&&dist(t,town)<11);
-      const wet=fields.reduce((n,t)=>n+t.moisture,0)/Math.max(fields.length,1);
-      const crops=fields.reduce((n,t)=>n+t.crop,0)/Math.max(fields.length,1);
-      // The founding settlement retains its original drought petition, including
-      // Miracle-attribution accounting. Remote settlements have local rain needs.
-      const wantsWater=town.id!==s.settlements[0]?.id && fields.length>0 &&
-        wet<.48 && (crops<.4 || shortageDays<10);
-      const wantsFood=shortageDays<6;
-      const wantsHealing=ill.length>0;
-      const wantsShelter=homeless.length>=2&&days(s)-Math.floor(town.foundedAtHour/24)>=10;
-      const conditions={'food-water':wantsWater,'food-shortage':wantsFood,
-        'healing':wantsHealing,'shelter':wantsShelter};
-      // Resolved everyday needs should not remain permanently advertised as crises.
-      for(const p of s.religion.prayers)if(p.settlementId===town.id&&
-        p.status==='open'&&p.type!=='food-water'&&!conditions[p.type])
-          p.status='resolved';
-      const candidate=['food-water','food-shortage','healing','shelter'].find(type=>
-        conditions[type]&&!s.religion.prayers.some(p=>p.status==='open'&&
-          p.settlementId===town.id&&p.type===type));
-      if(!candidate || s.hour-(last[town.id]??-Infinity)<6*24)continue;
-      const reasons={
-        'food-water':`當地農田含水約 ${Math.round(wet*100)}%，農作物生長受影響`,
-        'food-shortage':`本地可及存糧約 ${shortageDays.toFixed(1)} 日`,
-        'healing':`${ill.length} 位信徒身體欠佳，希望獲得治療`,
-        'shelter':`${homeless.length} 個家戶尚無住所`
-      };
-      const actual=candidate==='healing'?ill:believers;
-      const prayer={id:'need-'+s.nextId++,type:candidate,
-        settlementId:town.id,center:{x:town.x,y:town.y},
-        createdAtHour:s.hour,status:'open',
-        by:actual.slice(0,12).map(p=>p.id),needSummary:reasons[candidate],
-        beforeMoisture:wet,foodAtRequest:town.storage.food,
-        foodProductionAtRequest:s.counts.foodFromLabor,castSeen:false,castId:null};
-      s.religion.prayers.push(prayer);
-      alertPlayer(s,'slow','prayer',town.name+'：'+reasons[candidate],prayer.center,
-        {prayerId:prayer.id});
-      last[town.id]=s.hour;
+    for(const faith of allFaiths(s)){
+      faith.prayers ||= [];
+      const last=faith.regionalPrayerAt ||= {};
+      for(const town of s.settlements){
+        const families=s.households.filter(h=>town.householdIds.includes(h.id)&&
+          dist(town,h)<=s.rules.settlementClusterDistance);
+        const believers=live.filter(p=>p.religionId===faith.id&&p.devotion>=20&&
+          personSettlement(s,p)?.id===town.id);
+        if(!believers.length)continue;
+        const shortageDays=(town.storage.food+families.reduce((n,h)=>n+h.inventory.food,0))/
+          Math.max(.01,families.reduce((n,h)=>n+dailyFoodNeed(s,h),0));
+        const ill=believers.filter(p=>p.health<70);
+        const homeless=families.filter(h=>!h.home&&householdMembers(s,h).length);
+        const fields=s.tiles.filter(t=>t.terrain==='field'&&dist(t,town)<11);
+        const wet=fields.reduce((n,t)=>n+t.moisture,0)/Math.max(fields.length,1);
+        const crops=fields.reduce((n,t)=>n+t.crop,0)/Math.max(fields.length,1);
+        // Player founding prayer has a dedicated original-area path. All other
+        // settlements, including the AI's true s2, petition locally.
+        const wantsWater=(faith!==s.religion||town.id!==s.settlements[0]?.id)&&
+          fields.length>0&&wet<.48&&(crops<.4||shortageDays<10);
+        const wantsFood=shortageDays<6;
+        const wantsHealing=ill.length>0;
+        const wantsShelter=homeless.length>=2&&days(s)-Math.floor(town.foundedAtHour/24)>=10;
+        const conditions={'food-water':wantsWater,'food-shortage':wantsFood,
+          'healing':wantsHealing,'shelter':wantsShelter};
+        for(const p of faith.prayers)if(p.settlementId===town.id&&
+          p.status==='open'&&p.type!=='food-water'&&!conditions[p.type])
+            p.status='resolved';
+        const candidate=['food-water','food-shortage','healing','shelter'].find(type=>
+          conditions[type]&&!faith.prayers.some(p=>p.status==='open'&&
+            p.settlementId===town.id&&p.type===type));
+        if(!candidate||s.hour-(last[town.id]??-Infinity)<6*24)continue;
+        const reasons={
+          'food-water':`當地農田含水約 ${Math.round(wet*100)}%，農作物生長受影響`,
+          'food-shortage':`本地可及存糧約 ${shortageDays.toFixed(1)} 日`,
+          'healing':`${ill.length} 位信徒身體欠佳，希望獲得治療`,
+          'shelter':`${homeless.length} 個家戶尚無住所`
+        };
+        const actual=candidate==='healing'?ill:believers;
+        const prayer={id:'need-'+s.nextId++,type:candidate,
+          settlementId:town.id,center:{x:town.x,y:town.y},
+          createdAtHour:s.hour,status:'open',
+          by:actual.slice(0,12).map(p=>p.id),needSummary:reasons[candidate],
+          beforeMoisture:wet,foodAtRequest:town.storage.food,
+          foodProductionAtRequest:s.counts.foodFromLabor,
+          localFoodProductionAtRequest:localFoodProduction(s,town.id),
+          castSeen:false,castId:null};
+        faith.prayers.push(prayer);
+        if(faith===s.religion)
+          alertPlayer(s,'slow','prayer',town.name+'：'+reasons[candidate],
+            prayer.center,{prayerId:prayer.id});
+        last[town.id]=s.hour;
+      }
+      faith.prayers=faith.prayers.filter(p=>s.hour-p.createdAtHour<=120*24)
+        .slice(-s.rules.prayerLimit);
     }
-    s.religion.prayers=s.religion.prayers
-      .filter(p=>s.hour-p.createdAtHour<=120*24).slice(-s.rules.prayerLimit);
   }
   function updatePrayers(s) {
     // Direct believer Prayer: short-lived evidence context, not perpetual exposure logs.
@@ -2143,7 +2161,9 @@
         const prayer={ id:'need-'+s.nextId++, type:'food-water', createdAtHour:s.hour, status:'open',
           by:supporters.slice(0,12).map(p=>p.id),
           center:{x:s.camp.x,y:s.camp.y},beforeMoisture:wet,foodAtRequest:stats(s).food,
-          foodProductionAtRequest:s.counts.foodFromLabor, castSeen:false, castId:null };
+          foodProductionAtRequest:s.counts.foodFromLabor,
+          localFoodProductionAtRequest:localFoodProduction(s,null),
+          castSeen:false, castId:null };
         s.religion.prayers.push(prayer);
         alertPlayer(s,'slow','prayer','創始河谷：信徒祈求降雨以改善農田',prayer.center,
           {prayerId:prayer.id});
@@ -2153,52 +2173,70 @@
     }
     s.religion.prayers = s.religion.prayers.filter(p=>s.hour-p.createdAtHour<=120*24).slice(-s.rules.prayerLimit);
   }
-  function individualApplyFaithEvidence(s, ids, amount, cause) {
+  function individualApplyFaithEvidence(s, faith, ids, amount, cause) {
     // Individual ownership: religion reports credible evidence; only the person-state transition changes Devotion.
     let changed=0;
     for(const id of ids) {
       const p=s.people.find(v=>v.id===id && v.alive);
-      if(!p||p.religionId!==s.religion.id) continue;
+      if(!p||p.religionId!==faith.id) continue;
       const prev=p.devotion;
       p.devotion=clamp(p.devotion+amount,0,100);
-      p.lastFaithEvidence={hour:s.hour,cause,change:p.devotion-prev};
+      p.lastFaithEvidence={hour:s.hour,cause,change:p.devotion-prev,godId:faith.godId};
       if(p.devotion>prev) changed++;
     }
     return changed;
   }
   function checkFulfillment(s) {
     const st=stats(s);
-    for(const prayer of s.religion.prayers) {
-      if (prayer.status!=='open' || prayer.type!=='food-water') continue;
-      // Attribution needs a physically relevant prior Rain cast, improved field condition,
-      // actual subsequent food labor and reduced food shortage. A button press alone never qualifies.
-      const center=prayer.center||s.camp;
-      const rain=s.effects.find(e=>(e.type||'rain')==='rain' && (!e.godId||e.godId===s.god.id) &&
-        dist(e,center)<=e.radius+6 && e.startsAtHour>=prayer.createdAtHour);
-      if (rain) { prayer.castSeen=true; prayer.castId=rain.id; }
-      const localFields=prayer.center?s.tiles.filter(t=>t.terrain==='field'&&dist(t,center)<11):null;
-      const measuredMoisture=localFields?
-        localFields.reduce((n,t)=>n+t.moisture,0)/Math.max(localFields.length,1):st.avgMoisture;
-      const changedMoisture=measuredMoisture-prayer.beforeMoisture > .08;
-      const extraHarvest=s.counts.foodFromLabor-prayer.foodProductionAtRequest >= 8;
-      const recent=s.hour-prayer.createdAtHour < 60*24;
-      if (prayer.castSeen && changedMoisture && extraHarvest && recent) {
-        prayer.status='answered'; prayer.answeredAtHour=s.hour;
-        const changed=individualApplyFaithEvidence(s,prayer.by,12,'降雨改善作物與實際食物供應，回應祈求');
-        log(s,'faith',`人們看到雨後的糧食收穫，${changed} 位祈禱者加深信仰。`,
-          ['雨水提高土壤濕度','居民實際投入糧食生產','回應了仍存在的祈禱；此需求僅給一次持續性信仰回饋']);
-      } else if (!recent) prayer.status='lapsed';
-    }
-    for(const o of s.religion.oracles) {
-      if(o.status!=='active'||o.intentType!=='food.produce'||o.fulfillmentCredited||o.influenceWorkCount<3)continue;
-      const foodGain=st.food-o.progressFoodAtStart;
-      if(foodGain > 5 && s.hour>o.issuedAtHour+24) {
-        o.fulfillmentCredited=true;
-        const saint=s.people.find(p=>p.id===o.saintId);
-        const ids=living(s).filter(p=>oracleContact(s,p,o)>0).map(p=>p.id);
-        const changed=individualApplyFaithEvidence(s,ids,6,'神諭推動真實食物勞動並改善存糧');
-        log(s,'faith',`糧食神諭的成果逐漸被看見；${changed} 位居民增加信仰。`,
-          ['部分居民自主提高糧食工作優先度','實際的總可用食物增加','成果與仍有效的 Saint 神諭具有可追溯關聯']);
+    for(const faith of allFaiths(s)){
+      for(const prayer of faith.prayers||[]){
+        if(prayer.status!=='open'||prayer.type!=='food-water')continue;
+        // A targeted Rain fulfills its OWN faith's real regional petition only
+        // after a measurable moisture improvement and LOCAL food production.
+        const center=prayer.center||s.camp;
+        const rain=s.effects.find(e=>(e.type||'rain')==='rain'&&
+          (e.godId===faith.godId||(!e.godId&&faith===s.religion))&&
+          dist(e,center)<=e.radius+6&&e.startsAtHour>=prayer.createdAtHour);
+        if(rain){prayer.castSeen=true;prayer.castId=rain.id;}
+        const fields=prayer.center?
+          s.tiles.filter(t=>t.terrain==='field'&&dist(t,center)<11):null;
+        const wet=fields?fields.reduce((n,t)=>n+t.moisture,0)/Math.max(fields.length,1):
+          st.avgMoisture;
+        const improved=wet-prayer.beforeMoisture>.08;
+        const foodGain=Number.isFinite(prayer.localFoodProductionAtRequest)?
+          localFoodProduction(s,prayer.settlementId)-prayer.localFoodProductionAtRequest:
+          s.counts.foodFromLabor-prayer.foodProductionAtRequest;
+        const harvested=foodGain>=8;
+        const recent=s.hour-prayer.createdAtHour<60*24;
+        if(prayer.castSeen&&improved&&harvested&&recent){
+          prayer.status='answered';prayer.answeredAtHour=s.hour;
+          const witnesses=prayer.by.map(id=>s.people.find(p=>p.id===id&&p.alive))
+            .filter(Boolean);
+          const main=new Set(witnesses.map(p=>p.id));
+          const changed=individualApplyFaithEvidence(s,faith,prayer.by,12,
+            '降雨改善農田與實際食物供應，回應當地祈求');
+          const secondary=miracleWitnesses(s,faith,'rain',[center],main,
+            s.religionPropagation.rainWitnessDevotion);
+          log(s,'faith',faith.name+'回應了當地缺雨祈求：'+changed+
+            ' 位祈禱者加深信仰，'+secondary+' 位居民受到小幅影響。',
+            ['來源相符的神明降雨改善當地農田水分',
+             '當地居民確實收成糧食；每筆需求只給一次信仰回饋']);
+        }else if(!recent)prayer.status='lapsed';
+      }
+      for(const o of faith.oracles){
+        if(o.status!=='active'||o.intentType!=='food.produce'||
+          o.fulfillmentCredited||o.influenceWorkCount<3)continue;
+        const foodGain=st.food-o.progressFoodAtStart;
+        if(foodGain>5&&s.hour>o.issuedAtHour+24){
+          o.fulfillmentCredited=true;
+          const ids=living(s).filter(p=>oracleContact(s,p,o,faith)>0).map(p=>p.id);
+          const changed=individualApplyFaithEvidence(s,faith,ids,6,
+            '神諭推動真實食物勞動並改善存糧');
+          log(s,'faith',faith.name+'的糧食神諭成果逐漸被看見；'+changed+
+            ' 位居民加深信仰。',
+            ['部分居民自主提高糧食工作優先度','實際總食物有所改善',
+             '有效的 Saint 神諭提供可追溯的宗教歸因']);
+        }
       }
     }
   }
@@ -2636,10 +2674,13 @@
       candidate.opponentRng=Number.isSafeInteger(candidate.opponentRng)?
         candidate.opponentRng:hash(candidate.seed+'|opponent-v0.1');
       candidate.opponentReligion ||= {id:'r2',godId:'g2',name:candidate.opponent.name,
-        saints:[],priests:[],saintQuota:{},oracles:[],reachedSettlements:{}};
+        saints:[],priests:[],saintQuota:{},oracles:[],prayers:[],regionalPrayerAt:{},
+        lastPrayerHour:-1,reachedSettlements:{}};
       candidate.opponentReligion.saintQuota ||= {};
       candidate.opponentReligion.reachedSettlements ||= {};
       candidate.opponentReligion.oracles ||= [];
+      candidate.opponentReligion.prayers ||= [];
+      candidate.opponentReligion.regionalPrayerAt ||= {};
       candidate.opponentGod ||= {id:'g2',dp:0,cap:candidate.rules.maxDp,skills:{}};
       candidate.opponentGod.skills ||= {};
       for(const type of ['rain',...Object.keys(POWER_DEFAULTS)])
@@ -2653,6 +2694,7 @@
     if(!Number.isSafeInteger(candidate.religionRng))candidate.religionRng=hash(candidate.seed+'|religion-v0.1');
     candidate.religion.reachedSettlements ||= {};
     candidate.religion.regionalPrayerAt ||= {};
+    candidate.metrics.foodProductionByTown ||= {};
     candidate.counts.newBelievers ||= 0;
     candidate.counts.householdAdoptions ||= 0;
     candidate.counts.socialAdoptions ||= 0;

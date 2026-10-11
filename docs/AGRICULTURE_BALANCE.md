@@ -4,6 +4,17 @@
 
 **Source snapshot:** `chlangjou/world-of-god` / `web-mvp-0`, commit `c57d8268f2f9283799aaf6ff2bade9101b43b440`, `sim.js` Git blob SHA `52b73c277b1a6111fa787374aeb5d300747d2e9f` (identical to the v0.2.1 local archive). The actual world generator and farmland locations/fertility were used. Workers may reach a tile if it lies within ±9 cells of **at least one initial household**; does not simulate later relocations.
 
+## High-growth Web PoC revision (2026-10-11)
+
+**Important: the numerical tables in sections 1–7 below are archived analytical v0.1 reference calculations with `q=0.20` and a fixed initial plot set. They are not the current playable high-growth capacity.** The current `config/balance-agriculture-v0.1.json` deliberately supersedes those land-yield assumptions for playability; `tools/agriculture-balance-check.mjs --check` now scales the reference land-capacity assertions to the live coefficient.
+
+- **Normal field productive potential: `q=0.80` Food/plot/day at 90% moisture and full fertility** (4× the archived starting coefficient). Worker-per-day effectiveness and wetness dependence are unchanged. Land productivity is potential, never directly credited as food inventory.
+- **Autonomous field expansion:** if reachable existing fields' *mild-season potential* is below `1.6 × current daily population need`, a citizen who *chooses* farm activity may use one actual work shift to turn a nearby eligible meadow into a field. Eligible meadow fertility is at least `0.45`, and work reach is ±9 map cells. New farmland begins with **zero `cropStock`**; physical soil/season growth must create crop stock before harvesting. No enforced farm quota.
+- **No runaway hoarding:** well-fed housed residents receive a tunable `workDemand.comfortableCareBonus=8` and can choose other activities instead of farming indefinitely; residents still establishing housing retain the original work/house-building incentives. The 18/26-day reserve thresholds remain tunable.
+- **Reference actual game tests:** `valley-spring-01`, 4,000 days, no Rain/Oracle: 24 → 54 population, 0 deaths, approximately 410 Food (25.3 days of population demand) at day 4,000. A separate 200-person **synthetic population-load test** on `calm-river` opened 71 new plots (118 → 189) by day 90, and sustained roughly 25 days of food reserves without Rain by day 360. Synthetic people were injected in the **test fixture only**: this does not prove runtime reproduction can reach 200.
+- **Save migration:** old Agriculture saves preserve their original balance parameter snapshot by default. In the new standalone HTML, load a saved world and choose **檔案 → 更新目前世界農業** to explicitly replace the agriculture rules *without changing existing people, stock, fields, or history*. New growth accrues only on subsequent simulation ticks; recommend saving/exporting beforehand.
+- **Current scope:** 64×64 world, one-settlement setup and adult partnership/household growth rules are still bounded. Additional settlements, children autonomously finding partners, territorial/religious expansion and map scaling are separate future design tasks. Do not mistake this local land headroom for an infinite population guarantee.
+
 ## Profile ownership and how to reproduce
 
 - `config/balance-default.json` is a **read-only snapshot** of the current game `sim.js` defaults; it is not loaded by the game.

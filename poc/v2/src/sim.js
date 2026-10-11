@@ -1040,10 +1040,16 @@
     } else if (choice.name === 'farm' && (field||canCultivate)) {
       if (s.agriculture) agricultureHarvest(s,p,h);
       else if (field.crop >= .47) {
-        const amount = (1.5 + p.proficiency.food * .8) * field.crop * field.fertility * s.rules.farmYieldMultiplier*
-          (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency'));
-        field.crop = Math.max(.04, field.crop - .52);
-        distribute(s, h, 'food', amount);
+        // Historical Original crop is a fraction rather than a physical cropStock.
+        // Preserve old baseline, but let enhanced output consume proportionately
+        // more of the *existing* crop, capped by remaining crop fraction.
+        const requested=1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency');
+        const feasible=requested>1?
+          Math.min(requested,Math.max(1,(field.crop-.04)/.52)):1;
+        const amount=(1.5+p.proficiency.food*.8)*field.crop*field.fertility*
+          s.rules.farmYieldMultiplier*feasible;
+        field.crop=Math.max(.04,field.crop-.52*feasible);
+        distribute(s,h,'food',amount);
       } else field.crop = clamp(field.crop + .035 + .04 * p.proficiency.food, 0, 1);
     } else if (choice.name === 'wood' && wood) {
       const amt = Math.min(wood.wood,(1.7 + p.proficiency.gather * .8)*

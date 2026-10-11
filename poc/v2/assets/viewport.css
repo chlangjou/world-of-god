@@ -164,3 +164,28 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
 
 /* Miracle statuses are readable in the fixed resident inspector. */
 .divine-status{font-size:10px;color:#e6d698;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* Prayer-center navigation: three compact, clickable requests fit one inspector page.
+   A map center is an evaluation reference, not a guaranteed Miracle coverage zone. */
+.need-list{display:grid;grid-template-columns:minmax(0,1fr);gap:5px}
+.need-locate-card{display:flex;flex-direction:column;gap:2px;min-width:0;width:100%;
+  text-align:left;border:1px solid #52685d;border-radius:7px;background:#293b37;
+  color:#c5d6c9;padding:6px 8px;line-height:1.35;cursor:pointer}
+.need-locate-card:hover,.need-locate-card:focus-visible{border-color:#e8c789;background:#344740}
+.need-locate-card.is-located{border-color:#ffe2a2;box-shadow:inset 3px 0 #ffe2a2;background:#35463c}
+.need-head{display:flex;align-items:center;gap:6px;justify-content:space-between;min-width:0;width:100%}
+.need-head strong{font-size:11px;font-weight:700;color:#efd69e;white-space:nowrap;flex:0 0 auto}
+.need-head span{font-size:10px;color:#c0d2c6;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.need-detail{display:block;color:#b4c9bd;font-size:10px;min-width:0;width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.need-pager{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:5px}
+.need-pager small{font-size:10px;color:var(--muted)}
+.need-pager button,.need-clear{background:#273c37;color:var(--text);border:1px solid #4c6159;
+  border-radius:5px;padding:2px 10px;font-size:11px;cursor:pointer}
+.need-pager button:disabled{opacity:.4;cursor:not-allowed}
+.need-clear{display:block;margin:5px auto 0;padding:2px 8px;color:#e5d29b;font-size:10px}
+@media(max-width:650px){
+  .need-locate-card{padding:4px 7px;gap:1px}
+  .need-list{gap:3px}
+  .need-pager{margin-top:3px}
+}

@@ -62,3 +62,34 @@ test('three approaches make distinct, fixed first Miracle attempts without omnis
   assert.equal(E.miracleCommand(s,'intervention',2,plan).type,'confusion');
   assert.equal(E.miracleCommand(s,'missionary',1,plan).args.x,plan.frontier.x);
 });
+
+test('ablation channels independently permit fixed Miracle and Oracle slots',()=>{
+  const base={seed:'dry-stress',strategy:'development',days:30,budgetMs:12000};
+  const expected={
+    both:{m:1,o:1},'miracle-only':{m:1,o:0},
+    'oracle-only':{m:0,o:1},none:{m:0,o:0}
+  };
+  for(const [channels,{m,o}] of Object.entries(expected)){
+    const result=E.runScenario({...base,channels});
+    assert.equal(result.valid,true,channels);
+    assert.equal(result.aborted,false,channels);
+    assert.equal(result.channels,channels);
+    assert.equal(result.operations.miracleAttempts,m,channels+' Miracle slots');
+    assert.equal(result.operations.oracleAttempts,o,channels+' Oracle slots');
+    assert.equal(result.operations.miracleSuccess,m,channels+' legal miracle');
+    assert.equal(result.operations.oracleSuccess,o,channels+' legal Oracle');
+  }
+  assert.throws(()=>E.runScenario({...base,channels:'invalid'}),/Invalid channels/);
+});
+
+test('no-channels counterfactual matches passive baseline with same seed',()=>{
+  const none=E.runScenario({seed:'dry-stress',strategy:'development',
+    channels:'none',days:30,budgetMs:12000});
+  const passive=E.runScenario({seed:'dry-stress',strategy:'passive',
+    channels:'both',days:30,budgetMs:12000});
+  assert.deepEqual(none.final,passive.final);
+  assert.deepEqual(none.oracleEffects,passive.oracleEffects);
+  assert.deepEqual(none.propagation,passive.propagation);
+  assert.equal(none.operations.miracleAttempts,0);
+  assert.equal(none.operations.oracleAttempts,0);
+});

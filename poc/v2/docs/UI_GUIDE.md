@@ -182,3 +182,11 @@ The later approved gameplay contract **supersedes earlier hard-lock and always-g
 - An unaffordable forced cast is greyed out with readable reason, current DP and required DP. Reset the premium to 1× once the authoritative `readyAtHour` is reached.
 - Recasting a shorter-duration Miracle must **never decrease** an earlier longer cooldown deadline; other Miracle skills and enemy cooldown chains are unaffected.
 - `tests/miracle-parameters.test.cjs` checks the real UI button state/cost preview; simulation tests cover counters, save/restore, and the no-free-cast guarantee.
+
+## 15. AI difficulty with no extra omniscience (2026-10-12)
+
+- Keep three compact `aiDifficulty` entries in the existing topbar: `輕鬆`, `標準` (default), `原版 AI` (historical full-strength ceiling). Do not add a fourth amplified or superhuman difficulty.
+- The AI currently examines nearby real fields, Priests/Saints and known opposing Priests, **not** every possible location in a globally optimal search. It still avoids human UI inspection and aiming overhead, so lower decision cadence and Oracle timing are useful player-friendly compensations.
+- Difficulty controls AI policy only. It may be changed during play with **no world reset**; old saved games without a stored level keep the previous historical AI policy. When AI is disabled, the difficulty selector is disabled rather than silently changing the solo world.
+- Header controls must fit the existing single viewport at 1366×768 without increasing topbar height or adding a document scrollbar. Avoid long text inside select labels; put explanations in tooltips/help.
+- Testable scope: profile values, fixed top-level button placement, disabled state without AI, loaded value after restore and unchanged population/DP immediately after switching. [Full profile details](OPPONENT_DIFFICULTY_V0_3.md).

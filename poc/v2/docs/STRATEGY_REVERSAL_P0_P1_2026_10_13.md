@@ -5,6 +5,16 @@
 **Code:** `tools/strategy-reversal-evaluation.cjs` (hard-coded strategies), `tools/strategy-reversal-suite.cjs` (optional local isolated-subprocess runner)  
 **Status:** P0 passed, all eight P1 cases completed and validated. **P2 not executed.**
 
+**IMPORTANT CORRECTION (same-day channel ablation):** The P1 descriptions of strategy
+"reversing" AI advantage refer **only to the more volatile Devotion 20+ affiliation
+counts**, not to durable core faith. Subsequent [Miracle/Oracle isolation testing](STRATEGY_CHANNEL_ABLATION_2026_10_13.md)
+used **40+ core believers as the primary victory metric**: none of the 14 end
+states overtook AI in core followers; Development/Both on `dry-stress` and
+Development/Miracle-only or Both on `opponent-competition-replay` reached 12:12
+core parity. All three native villages still had zero 40+ core devotees at day 180.
+Treat all 20+ "victory" language in the original data tables below as provisional
+affiliation gains, not durable territorial conquest.
+
 ## Intent and resource guardrails
 
 Test whether different *deliberate but nonoptimizing* God strategies actually change religion competition outcomes without funding an expensive sandbox-graphics PoC, and avoid any monolithic long-running simulation.

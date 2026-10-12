@@ -13,7 +13,7 @@ Source review explains a plausible maturation delay: ordinary conversion starts 
 ## Method / bounded execution
 
 - Reuse the **actual** Web PoC v2 kernel, default Agriculture/Religion/Divine profiles, and the Normal (`standard`) AI opponent.
-- Start from **Genesis** for all four independently replayed worlds. These are **not** divergent branches loaded from the same Day-240 save; that separate P2 question is still open.
+- Start from **Genesis** for all four independently replayed worlds. These are **not** divergent branches loaded from the same Day-300 save; that separate P2 question is still open.
 - Compare only two matched pairs: `dry-stress` Passive vs Development/Both, and `opponent-competition-replay` Passive vs Missionary/Oracle-only.
 - Extend the existing hard-coded [P1 runner](../tools/strategy-reversal-evaluation.cjs) only by explicitly setting `--extended true`. The original default **180-day ceiling remains unchanged**.
 - For 360 days, use fixed Miracle slots at multiples of 21 (up to **17** attempts); Oracle slots at days **15, 105, 195, 285** (up to **four** attempts), preserving the rate. A disabled channel gets no compensating actions.
@@ -69,7 +69,7 @@ These patterns support **distinct early-to-mid-game strategies**. They do not pr
 
 **P1.1 passes a limited core-faith maturation demonstration. Do not increase the seed matrix or change core Faith numeric balance yet.**
 
-The next high-information, low-cost P2 should start from **one identical, saved Day-240 world** in which the AI already controls core believers in neutral settlements. Compare (a) no further player action and (b) a bounded, fixed late-player strategy over the following **120 days**, preserving all state and PRNG at the branch point. If nothing can dislodge established 40+ followers despite actual opposing miracles, evaluate whether a localized **Faith Contest / conversion-pressure** mechanism is needed, rather than tuning overall faith acquisition blindly.
+The next high-information, low-cost P2 should start from **one identical, saved Day-300 world** in which the AI already has several established 40+ core believers in neutral settlements. Compare (a) no further player action and (b) a bounded, fixed late-player strategy over the following **120 days**, preserving all state and PRNG at the branch point. If nothing can dislodge established 40+ followers despite actual opposing miracles, evaluate whether a localized **Faith Contest / conversion-pressure** mechanism is needed, rather than tuning overall faith acquisition blindly.
 
 ## Reproduce individual 360-day cases
 

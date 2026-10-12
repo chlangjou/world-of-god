@@ -64,7 +64,11 @@ test('rain reliably changes physical state, not food inventory; rejects invalid 
   assert.equal(W.castRain(a,{x:a.camp.x,y:a.camp.y,radius:7,intensity:1,durationDays:31}).ok,false);
   const ok=W.castRain(a,{x:a.camp.x,y:a.camp.y,radius:8,intensity:1,durationDays:12});
   assert.equal(ok.ok,true);assert.ok(a.god.dp<a.rules.initialDp);assert.equal(W.stats(a).food,before);
-  assert.equal(W.castRain(a,{x:a.camp.x,y:a.camp.y}).ok,false,'independent rain cooldown');
+  const surcharge=W.evalRain(a,{x:a.camp.x,y:a.camp.y});
+  assert.equal(surcharge.costMultiplier,2,'Rain is in its own 2x forced-cast interval');
+  assert.ok(surcharge.cost>a.god.dp,'the current DP cannot pay this forced cast');
+  assert.equal(W.castRain(a,{x:a.camp.x,y:a.camp.y}).ok,false,
+    'insufficient DP blocks an escalated cast, not cooldown alone');
   afterDays(a,10);afterDays(b,10);
   assert.ok(fields(a)>fields(b)+.06,`wetter world expected: ${fields(a)} vs ${fields(b)}`);
   afterDays(a,4);assert.equal(a.effects.length,0,'rain input expires on simulation clock');valid(a);

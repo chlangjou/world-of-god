@@ -12,7 +12,7 @@
 
 1. **No vertical scrolling in normal gameplay.** The world, intervention commands, current essentials and selected inspection content fit a single application viewport. Do not use page scrolling or independently scrolling resident lists. History is an explicit exception: it uses a scrollbar confined to its fixed-height inspector while other lists keep tabs, selection or pagination. No essential gameplay control may be clipped or pushed below the visible viewport.
 2. **Hints instead of permanent explanations.** Use short labels and current actionable values by default. Explain rules and concepts on hover/focus/click/touch as contextual Hints/Tooltips. Essential state (food, DP, time, cooldown, current warning, action availability) stays directly visible; hiding it in Hints would defeat situational awareness.
-3. **Unavailable Miracle = visibly greyed and non-castable.** If a Miracle is cooling down, the button becomes clearly inactive/grey and shows the remaining **simulation-time** cooldown. The player cannot enter targeting or execute the cast until it is available. When blocked for other reasons, show a truthful reason (e.g. insufficient DP, invalid area/permission) as well.
+3. **Unavailable Miracle = visibly greyed and non-castable.** During a cooldown, the Miracle remains usable if the God can afford its escalating forced-cast DP price; the action shows 2×, 3×, etc. Grey out only when DP or another mandatory condition makes casting unavailable. The player cannot enter targeting or execute the cast until it is available. When blocked for other reasons, show a truthful reason (e.g. insufficient DP, invalid area/permission) as well.
 
 These are UI/presentation constraints, **not gameplay balance changes**. Do not shorten Miracle cooldowns, auto-cast, bypass DP checks or alter faith/Oracle mechanics merely to make a button appear usable.
 
@@ -78,7 +78,7 @@ Miracle availability comes from the authoritative simulation evaluation (`evalRa
 | --- | --- | --- | --- |
 | **Ready** | Standard colored, high-contrast active button | Can enter targeting | Approx. DP cost; target/settings ready |
 | **Targeting** | Distinct selected state and map range preview | Map click issues validated cast; Esc/cancel exits | Cast area, intensity/duration and DP estimate |
-| **Cooldown** | **Greyed, visually inactive** | Cannot start new targeting or cast | `冷卻中 · 剩餘 N 模擬日` or useful remaining time |
+| **Cooldown with enough DP** | Available, clearly labeled `強制施放（N×）` | May target and cast at N× DP cost | Remaining simulated cooldown + actual next-cast DP |
 | **Insufficient DP** | Inactive/grey with distinct cost indicator | Cannot start/cast | Current DP, required DP, `神力不足` |
 | **Other invalid input / local capability** | Inactive with reason | Cannot execute; settings may remain editable | Concrete reason such as invalid center, intensity, local capability |
 | **Paused** | Preserve actual ready/cooldown status | UI may inspect/change settings; time stops | Countdown stays constant; casting policy remains simulation-owned |
@@ -86,7 +86,7 @@ Miracle availability comes from the authoritative simulation evaluation (`evalRa
 Implementation guidance:
 
 - Recalculate button state when sim time, DP, Miracle settings, selected target, Mastery or capability changes; do **not** use a wall-clock timer that counts down while paused.
-- While cooldown is active, **grey out `#rainBtn`**, disable activation and cancel any stale `armedRain` state after a successful cast. Keyboard shortcut `1` must honor the same availability check and must not arm a blocked cast.
+- While cooldown is active, **show the escalating DP multiplier and cost**. Keep `#rainBtn` usable when the next cast is affordable; grey it out only when the next real DP charge is unaffordable. Keyboard shortcut `1` uses the same rule; the final clicked center is revalidated by the simulator.
 - A disabled visual state **must not rely on color alone**: preserve the clear status/reason text and optionally a lock/hourglass icon. Keep contrast readable.
 - If the candidate target location is not yet specified, show center-dependent cost/permission as a provisional preview, and revalidate the final map click. Do not imply provisional eligibility is a final guarantee.
 - For multiple future Miracles, **each Miracle has independent cooldown and Mastery**. A blocked Rain button must not grey out unrelated available powers.
@@ -116,7 +116,7 @@ Test with both little and much content (e.g. 24 vs 40+ people; few vs 100+ recen
 - [ ] **Viewport:** normal gameplay at desktop baseline **1366×768** and **1920×1080**, 100% browser zoom, has no page-level vertical scrollbar; map, time and essential divine actions fit within the viewport. Test compact behavior at **1280×720**. Do not hide controls by clipping.
 - [ ] **Bounded History-only scrolling:** household/person lists still use pagination or selection, while History alone has a usable internal scrollbar with newest events above older events. No page-level scrollbar.
 - [ ] **Contextual hints:** long explanations removed from routine layout; Hints accessible through mouse hover, keyboard focus and touch interaction. Important DP/cooldown/shortage state is visible without hovering.
-- [ ] **Cooldown:** cast Rain, confirm it greys out and cannot be armed by button or shortcut; remaining **simulated** time is displayed; Pause freezes it, time acceleration advances it, availability recovers exactly when simulation cooldown ends.
+- [ ] **Cooldown:** cast Rain, confirm next cast is shown at 2× DP and remains targetable when affordable. Additional same-skill casts cost 3×, 4×, etc., and become unavailable when DP is insufficient. The countdown runs on simulated time and returns to 1× when complete.n ends.
 - [ ] **DP/capability:** low-DP and invalid-cast conditions show distinct, truthful reasons and never spend resources. The same simulator validation path applies to mouse and keyboard interaction.
 - [ ] **Oracle:** insufficient quota or same-Saint active intent clearly disables Oracle action without masquerading as a Miracle cooldown.
 - [ ] **Content stress:** adding people, prayers or events does not push the map/offscreen controls out of view; panels update without losing selection and UI state.
@@ -135,7 +135,7 @@ Suggested rollout: (1) fixed viewport and map-first layout; (2) compact panels, 
 - Replaced the long stacked page with a bounded `100%`-height header, top HUD and a workspace containing the map and a right-hand control/inspection rail. The map and selected divine action remain visible together.
 - Divine selection has **two layers**: Miracle/Oracle category tabs, then an extensible power-type dropdown (Rain or food-production Oracle currently implemented). Selected power parameters/actions appear only in the corresponding compact panel.
 - Resident inspection is a dropdown rather than an unbounded button list. Household cards are paginated; the History tab now uses one bounded internal scrollbar showing newest events first (retention 200), without document scrolling.
-- Rain reads live `evalRain` status. Cooldown and insufficient-DP states disable the cast/target control with a textual reason; the `1` shortcut shares the same check.
+- Rain reads live `evalRain` status. Cooldown means a higher DP multiplier rather than an unconditional disabled button. Insufficient DP disables the cast/target control with a textual reason; the `1` shortcut shares the same check.
 - Header File dropdown keeps save/load/import/export reachable without spending permanent horizontal width on each button.
 - Baseline viewport sizes **1280×720, 1366×768 and 1920×1080** remain manual visual acceptance checks; no verified browser screenshots were produced in this change.
 
@@ -161,7 +161,7 @@ Suggested rollout: (1) fixed viewport and map-first layout; (2) compact panels, 
 
 - The Miracle panel displays **projected cooldown in simulated days before casting**, updating with radius, intensity, duration, selected skill and its Mastery. A wide 5-day Rain cast may have a longer cooldown than a tiny one, but it must be meaningfully shorter than an otherwise identical 30-day cast at usable settings.
 - A successful cast starts the cooldown immediately. The remaining counter uses the **authoritative** `readyAtHour` and keeps running on simulated time, not wall time or the duration of the World effect. Preview values come from the same simulation evaluator and are quantized to the actual simulation tick.
-- Cooldown-active buttons remain disabled; changing the duration does not override an existing cooldown, reset a clock or trigger a cast. Instant effects have no duration-based cooldown scaling. Separate skills still have separate clocks.
+- Cooldown-active buttons now remain usable **only if** the God can pay the rising 2×, 3×, ... surcharge. Changing duration affects the new cast's own baseline and deadline but cannot shorten an already longer cooldown. Instant effects have no duration-based cooldown scaling. Separate skills still have separate clocks.
 
 
 ## 13. Fast-forward interruption for actual player concerns (2026-10-11)
@@ -172,3 +172,13 @@ Suggested rollout: (1) fixed viewport and map-first layout; (2) compact panels, 
 - Mere enemy talk without actual faith change, normal food labor, routine births and other nonurgent history should **not** stop accelerated playback. Repeat hostile preaching warnings can be throttled; a new conversion remains urgent.
 - The stopped speed is synchronized with speed buttons; old save history must not re-interrupt when loaded. Esc dismisses a previous hostile event marker. Existing viewport/pager and Miracle control requirements remain intact.
 - This incremental fast-forward change did **not** request additional dedicated simulations or tests. See [Indigenous World Genesis](WORLD_GENESIS_NATIVE_V0_2.md) for conditions and data ownership.
+
+## 14. Cooldown DP Escalation instead of a hard lock (2026-10-12)
+
+The later approved gameplay contract **supersedes earlier hard-lock and always-grey cooldown wording** in this guide. See [Cooldown DP Escalation v0.1](COOLDOWN_DP_ESCALATION_V0_1.md).
+
+- For the first cast of each Miracle, display base DP and normal cooldown.
+- During that same skill's cooldown, preview **the actual 2×, 3×, ... cost of this cast's own parameters**. Enter-targeting remains available while DP is sufficient; map click must validate again. Missing target, insufficient local presence, and other simulation checks still apply independently.
+- An unaffordable forced cast is greyed out with readable reason, current DP and required DP. Reset the premium to 1× once the authoritative `readyAtHour` is reached.
+- Recasting a shorter-duration Miracle must **never decrease** an earlier longer cooldown deadline; other Miracle skills and enemy cooldown chains are unaffected.
+- `tests/miracle-parameters.test.cjs` checks the real UI button state/cost preview; simulation tests cover counters, save/restore, and the no-free-cast guarantee.

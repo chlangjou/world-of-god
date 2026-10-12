@@ -12,6 +12,9 @@ const opponent=require('../config/opponent-v0.2.json');
 const STRATEGIES=Object.freeze(['passive','missionary','development','intervention']);
 const STUDY_SEEDS=Object.freeze(['dry-stress','opponent-competition-replay']);
 const CHANNELS=Object.freeze(['both','miracle-only','oracle-only','none']);
+// Extended study preserves exactly the two P1 Oracle slots in each 180-day interval.
+const oracleSlot=(day,extended=false)=>day===15||day===105||
+  (extended&&(day===195||day===285));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const round=(v,n=2)=>Number(Number(v||0).toFixed(n));
 
@@ -89,14 +92,16 @@ function checkpoint(s,day){
     natives};
 }
 function runScenario({seed='dry-stress',strategy='passive',days=180,
-  budgetMs=12000,checkpointDays=[0,30,90,180],channels='both'}={}){
+  budgetMs=12000,checkpointDays=[0,30,90,180,240,300,360],
+  channels='both',extended=false}={}){
   if(!STUDY_SEEDS.includes(seed))throw new Error('Unapproved seed: '+seed);
   if(!STRATEGIES.includes(strategy))throw new Error('Invalid strategy: '+strategy);
   if(!CHANNELS.includes(channels))throw new Error('Invalid channels: '+channels);
   const allowMiracle=channels==='both'||channels==='miracle-only';
   const allowOracle=channels==='both'||channels==='oracle-only';
-  if(!Number.isSafeInteger(days)||days<1||days>180)
-    throw new RangeError('P0/P1 only: days must be 1..180');
+  if(!Number.isSafeInteger(days)||days<1||days>(extended?360:180))
+    throw new RangeError(extended?'P1.1 only: days must be 1..360':
+      'P0/P1 only: days must be 1..180');
   if(!Number.isFinite(budgetMs)||budgetMs<1000||budgetMs>30000)
     throw new RangeError('budgetMs must be 1000..30000');
   const s=W.create({seed,balanceProfile:agriculture,religionProfile:religion,
@@ -133,7 +138,7 @@ function runScenario({seed='dry-stress',strategy='passive',days=180,
               reason:result.ok?null:result.reason||null});
         }
       }
-      if(allowOracle&&(day===15||day===105)){
+      if(allowOracle&&oracleSlot(day,extended)){
         operations.oracleAttempts++;
         const result=W.issueOracle(s,{saintId:s.religion.saints[0],
           intentType:oracleIntent(strategy),durationDays:80});
@@ -179,7 +184,8 @@ function runScenario({seed='dry-stress',strategy='passive',days=180,
     opponentNewBelievers:s.counts.opponentNewBelievers||0,
     opponentConversions:s.counts.opponentConversions||0
   };
-  return {version:'strategic-reversal-p1',seed,strategy,channels,
+  return {version:extended?'strategic-maturation-p1.1':'strategic-reversal-p1',
+    seed,strategy,channels,
     requestedDays:days,completedDays:completed,ticks:completed*3,
     elapsedMs:Date.now()-start,aborted:stopped,
     peakRssMb:peakRssBytes?round(peakRssBytes/1048576,1):null,
@@ -199,11 +205,12 @@ if(require.main===module){
   const result=runScenario({seed:args.seed||'dry-stress',
     strategy:args.strategy||'passive',days:Number(args.days||180),
     budgetMs:Number(args['budget-ms']||12000),
-    channels:args.channels||'both'});
+    channels:args.channels||'both',extended:args.extended==='true'});
   // One short line, intended for automation and end-of-run analysis only.
   console.log(JSON.stringify(result));
   if(result.aborted||!result.valid||result.completedDays!==result.requestedDays)
     process.exitCode=2;
 }
-module.exports={STRATEGIES,STUDY_SEEDS,CHANNELS,initialPlan,miracleCommand,
+module.exports={STRATEGIES,STUDY_SEEDS,CHANNELS,oracleSlot,
+  initialPlan,miracleCommand,
   checkpoint,runScenario};

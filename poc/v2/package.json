@@ -9,7 +9,8 @@
     "smoke": "node tests/smoke.cjs",
     "check:agriculture": "node tools/agriculture-balance-check.mjs --check && node tools/agriculture-climate-check.mjs --check",
     "build:standalone": "node tools/build-single.cjs",
-    "evaluate:strategy": "node --max-old-space-size=512 tools/strategy-reversal-evaluation.cjs"
+    "evaluate:strategy": "node --max-old-space-size=512 tools/strategy-reversal-evaluation.cjs",
+    "evaluate:strategy:suite": "node tools/strategy-reversal-suite.cjs"
   },
   "engines": {
     "node": ">=18"

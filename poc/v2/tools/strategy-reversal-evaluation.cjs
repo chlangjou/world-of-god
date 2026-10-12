@@ -60,15 +60,27 @@ function oracleIntent(strategy){
 }
 function checkpoint(s,day){
   const st=W.stats(s);
+  // Core Devotion >= 40, not lightly affiliated 20+, is the PRIMARY
+  // strategy outcome. Low-Devotion adoption remains diagnostic only.
+  const aligned=(religionId,threshold)=>s.people.filter(p=>
+    p.alive&&p.religionId===religionId&&p.devotion>=threshold);
+  const player80=aligned(s.religion.id,80).length;
+  const ai80=aligned(s.opponentReligion.id,80).length;
+  const aiPowerWeight=s.people.filter(p=>p.alive&&p.religionId===s.opponentReligion.id)
+    .reduce((n,p)=>n+W.faithfulWeight(p.devotion),0);
   const natives=s.settlements.filter(t=>t.native).map(t=>{
     const f=W.settlementReligionStats(s,t.id)||{};
     return {id:t.id,player:f.believers||0,ai:f.opponentBelievers||0,
+      playerCore:f.followers||0,aiCore:f.opponentFollowers||0,
       neutral:f.unaffiliated||0};
   });
   const counts=s.counts||{};
   return {day,people:st.people,player:st.believers,ai:st.opponentBelievers,
     playerCore:st.followers,aiCore:st.opponentFollowers,
-    lead:st.believers-st.opponentBelievers,
+    playerDevout80:player80,aiDevout80:ai80,
+    playerPowerWeight:st.devotionWeight,aiPowerWeight,
+    coreLead:st.followers-st.opponentFollowers,
+    lead:st.believers-st.opponentBelievers, // secondary: can fluctuate <40
     playerDp:round(s.god.dp),aiDp:round(s.opponentGod.dp),
     playerConversions:counts.rivalConversions||0,
     aiConversions:counts.opponentConversions||0,

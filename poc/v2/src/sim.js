@@ -124,13 +124,15 @@
     // switching panels and planning casts. They never alter DP, RNG, population,
     // perception radius or per-person faith mechanics.
     relaxed:{intervalMultiplier:2,startDelayDays:14,oracleDelayDays:54,
-      offensiveEveryTurns:0,maxForcedMultiplier:1},
+      offensiveEveryTurns:0,maxForcedMultiplier:1,
+      decisionStyle:'petition-first',observationRadius:6,fieldSampleStep:4,choiceBudget:1},
     standard:{intervalMultiplier:1.5,startDelayDays:8,oracleDelayDays:18,
-      offensiveEveryTurns:-1,maxForcedMultiplier:2},
-    // Ceiling = exact historical v0.2 baseline (12-day decisions, turn 4
-    // offensive opportunity, normal DP cost/elegibility). No superhuman buff.
+      offensiveEveryTurns:-1,maxForcedMultiplier:2,
+      decisionStyle:'situational',observationRadius:8,fieldSampleStep:2,choiceBudget:2},
+    // Ceiling = exact historical v0.2 policy, not a new optimizing agent.
     challenging:{intervalMultiplier:1,startDelayDays:0,oracleDelayDays:0,
-      offensiveEveryTurns:-1,maxForcedMultiplier:100}
+      offensiveEveryTurns:-1,maxForcedMultiplier:100,
+      decisionStyle:'historical',observationRadius:12,fieldSampleStep:1,choiceBudget:9}
   });
   const OPPONENT_DEFAULTS=Object.freeze({profileId:'opponent-v0.2',enabled:true,
     name:'暮影信仰',originMode:'separated-native',initialHouseholdIndexes:[4,5,6,7],
@@ -178,7 +180,11 @@
         startDelayDays:Math.round(clamp(num(configured.startDelayDays,defaults.startDelayDays),-12,90)),
         oracleDelayDays:Math.round(clamp(num(configured.oracleDelayDays,defaults.oracleDelayDays),0,180)),
         offensiveEveryTurns:Math.round(clamp(num(configured.offensiveEveryTurns,defaults.offensiveEveryTurns),-1,30)),
-        maxForcedMultiplier:Math.round(clamp(num(configured.maxForcedMultiplier,defaults.maxForcedMultiplier),1,100))
+        maxForcedMultiplier:Math.round(clamp(num(configured.maxForcedMultiplier,defaults.maxForcedMultiplier),1,100)),
+        decisionStyle:defaults.decisionStyle, // strategy is a named tier, not a numeric cheat
+        observationRadius:Math.round(clamp(num(configured.observationRadius,defaults.observationRadius),3,12)),
+        fieldSampleStep:Math.round(clamp(num(configured.fieldSampleStep,defaults.fieldSampleStep),1,8)),
+        choiceBudget:Math.round(clamp(num(configured.choiceBudget,defaults.choiceBudget),1,9))
       };
     }
     return r;
@@ -202,7 +208,11 @@
       oracleStartDay:Math.max(1,ai.startDay+difficulty.oracleDelayDays),
       offensiveEveryTurns:difficulty.offensiveEveryTurns<0?
         ai.offensiveEveryTurns:difficulty.offensiveEveryTurns,
-      maxForcedMultiplier:difficulty.maxForcedMultiplier
+      maxForcedMultiplier:difficulty.maxForcedMultiplier,
+      decisionStyle:difficulty.decisionStyle||'historical',
+      observationRadius:difficulty.observationRadius||7,
+      fieldSampleStep:difficulty.fieldSampleStep||1,
+      choiceBudget:difficulty.choiceBudget||1
     };
   }
   function allFaiths(s){return s.opponent?.enabled?[s.religion,s.opponentReligion]:[s.religion];}
@@ -2355,6 +2365,112 @@
         ['角色依照真實居民當前信仰與虔誠度維持，無法繼續代表原神明傳播']);
     }
   }
+  // Lower difficulties do not search all applicable Miracle types until a
+  // legal one appears. They use partial local observations and independent
+  // priorities, resembling a deity with limited attention, not a bad dice roll.
+  // World physics and actual cast validation remain identical on every tier.
+  function opponentLimitedTurn(s,faith,adherents,saint,policy,day){
+    const ai=s.opponent;
+    const priests=faith.priests.map(id=>adherents.find(p=>p.id===id)).filter(Boolean);
+    const source=priests[0]||saint||adherents.slice().sort((a,b)=>
+      b.devotion-a.devotion||a.id.localeCompare(b.id))[0];
+    if(!source)return;
+    const center={x:source.x,y:source.y},r=policy.observationRadius;
+    const visible=rayCells(s,center,r).filter(t=>t.terrain==='field');
+    // Ordinary gods perceive only a sample of familiar farmland rather than
+    // every crop's exact current yield at every point on the map.
+    const sampled=visible.filter((_,i)=>i%policy.fieldSampleStep===0);
+    const moisture=sampled.length?
+      sampled.reduce((n,t)=>n+t.moisture,0)/sampled.length:1;
+    const crop=sampled.length?
+      sampled.reduce((n,t)=>n+(t.crop||0),0)/sampled.length:1;
+    const injured=adherents.filter(p=>dist(p,center)<=r&&p.health<75);
+    const known=adherents.filter(p=>dist(p,center)<=r);
+    const core=known.filter(p=>p.devotion>=s.rules.faithThreshold);
+    const localPetitions=(faith.prayers||[]).filter(p=>p.status==='open'&&
+      p.center&&dist(p.center,center)<=r+3)
+      .sort((a,b)=>a.createdAtHour-b.createdAtHour||a.id.localeCompare(b.id));
+    const need=localPetitions[0]||null;
+    // Each easy/standard God can maintain one actual calling at a time; they
+    // don't automatically issue the competitive spread Oracle whenever legal.
+    if(saint&&day>=policy.oracleStartDay&&
+      !faith.oracles.some(o=>o.status==='active')){
+      let calling='religion.spread';
+      if(policy.decisionStyle==='petition-first'){
+        // Easy deity takes a long seasonal view of spiritual life; sometimes
+        // emphasizes daily survival instead of conversion optimization.
+        calling=need?.type==='food-shortage'||need?.type==='food-water'||
+          Math.floor(day/90)%2===0?'food.produce':'religion.spread';
+      }else{
+        const nearbyUnaffiliated=living(s).filter(p=>p.religionId===null&&
+          dist(p,center)<=r).length;
+        calling=need?.type==='food-shortage'||need?.type==='food-water'||
+          nearbyUnaffiliated===0?'food.produce':'religion.spread';
+      }
+      issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
+        intentType:calling,durationDays:ai.spreadOracleDurationDays});
+    }
+    const blessed={...center,radius:Math.max(3,Math.min(7,r)),intensity:.85,durationDays:10};
+    const rain={...center,radius:7,intensity:.8,durationDays:7};
+    const ripening={...center,radius:7,intensity:1,durationDays:9};
+    const efficiency={...blessed};
+    const localHeal={...center,radius:Math.max(3,Math.min(6,r)),intensity:1};
+    const nearbyFields=visible.length>0;
+    // A petition reports an actual request; its center is known through local
+    // religious communication, but the simulation still checks real targets.
+    const petitionArgs=need&&{x:need.center.x,y:need.center.y};
+    const prayerAction=need?.type==='food-water'?
+      ['rain',{...rain,...petitionArgs}]:
+      need?.type==='healing'?
+        ['heal',{...localHeal,...petitionArgs}]:
+      need?.type==='food-shortage'?
+        ['ripening',{...ripening,...petitionArgs}]:
+      need?.type==='shelter'?
+        ['efficiency',{...efficiency,...petitionArgs}]:null;
+    const action=[];
+    if(policy.decisionStyle==='petition-first'){
+      // A plausible, limited attention span: one known petition, otherwise
+      // one recurring routine; no fallback sweep of all unrelated spells.
+      if(prayerAction)action.push(prayerAction);
+      else if(ai.turns%3===0&&core.length)action.push(['efficiency',efficiency]);
+      else if(ai.turns%3===1&&nearbyFields)action.push(['ripening',ripening]);
+      else if(nearbyFields)action.push(['harvest',{...center,radius:6,intensity:.85}]);
+    }else{
+      const options=[];
+      const add=(type,args,priority)=>options.push({type,args,priority});
+      if(prayerAction)add(prayerAction[0],prayerAction[1],8.5);
+      if(injured.length)add('heal',localHeal,6.5+Math.min(injured.length,3)*.9);
+      if(nearbyFields&&moisture<.5)
+        add('rain',rain,6+Math.min(3,(.5-moisture)*9));
+      if(nearbyFields&&crop<.7)add('ripening',ripening,5.5+(1-crop)*2);
+      if(core.length)add('efficiency',efficiency,5.4);
+      if(nearbyFields&&crop>.3)
+        add('harvest',{...center,radius:6,intensity:.9},4.4);
+      if(policy.offensiveEveryTurns>0&&ai.turns%policy.offensiveEveryTurns===0){
+        const nearbyEnemy=s.religion.priests.map(id=>living(s).find(p=>p.id===id))
+          .filter(p=>p&&dist(p,center)<=r);
+        const target=nearbyEnemy.sort((a,b)=>dist(a,center)-dist(b,center))[0];
+        if(target)add('confusion',{x:target.x,y:target.y,radius:5,
+          intensity:.7,durationDays:7},5.6);
+      }
+      // Moderate AI has a stable seasonal emphasis: welfare, agriculture or
+      // expansion. It ranks only its few local alternatives and may overlook a
+      // lower-ranked viable cast. This is not injecting arbitrary failed casts.
+      const agenda=['heal','rain','ripening','efficiency','harvest','confusion'][
+        hash(s.seed+'|opponent-agenda|'+Math.floor(day/60))%6];
+      const score=v=>v.priority+(v.type===agenda?2.8:0);
+      options.sort((a,b)=>score(b)-score(a)||a.type.localeCompare(b.type));
+      for(const option of options.slice(0,policy.choiceBudget))
+        action.push([option.type,option.args]);
+    }
+    for(const [type,args] of action){
+      const input={...args,godId:s.opponentGod.id};
+      const check=evaluateMiracle(s,type,input);
+      if(!check.ok||check.costMultiplier>policy.maxForcedMultiplier)continue;
+      const result=castMiracle(s,type,input);
+      if(result.ok){ai.casts++;break;}
+    }
+  }
   function opponentTurn(s){
     const ai=s.opponent;
     if(!ai?.enabled)return;
@@ -2366,6 +2482,10 @@
       p.religionId===faith.id&&p.devotion>=20);
     if(!adherents.length)return;
     const saint=faith.saints.map(id=>adherents.find(p=>p.id===id)).find(Boolean);
+    if(policy.decisionStyle!=='historical'){
+      opponentLimitedTurn(s,faith,adherents,saint,policy,day);
+      return;
+    }
     if(saint&&day>=policy.oracleStartDay&&
       !faith.oracles.some(o=>o.status==='active'&&o.intentType==='religion.spread'))
       issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,

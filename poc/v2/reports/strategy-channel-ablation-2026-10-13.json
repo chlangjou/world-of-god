@@ -1,0 +1,505 @@
+{
+  "schema": "world-of-god/strategic-channel-ablation/v0.1",
+  "date": "2026-10-13",
+  "sourceBranch": "feature/opponent-difficulty-profiles-v0.3",
+  "engine": "actual poc/v2/src/sim.js evaluated via V8 isolate, not native Node.js process",
+  "opponentDifficulty": "standard",
+  "daysPerCase": 180,
+  "ticksPerCase": 540,
+  "thresholds": {
+    "believers": 20,
+    "core": 40,
+    "devout": 80
+  },
+  "note": "Only case end states, no raw world snapshots or per-tick traces. The AI can make decisions; player command channels are selectively disabled. Results are deterministic examples, not population win rates or isolated direct causation; RNG consumption and social feedback can diverge between arms.",
+  "cases": [
+    {
+      "seed": "dry-stress",
+      "strategy": "passive",
+      "channels": "none",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 6,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 0,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 18,
+        "ai": 73
+      },
+      "believers20": {
+        "player": 12,
+        "ai": 37
+      },
+      "success": {
+        "miracles": 0,
+        "oracles": 0
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5396
+    },
+    {
+      "seed": "dry-stress",
+      "strategy": "missionary",
+      "channels": "miracle-only",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 5,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 0,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 17,
+        "ai": 73
+      },
+      "believers20": {
+        "player": 12,
+        "ai": 37
+      },
+      "success": {
+        "miracles": 8,
+        "oracles": 0
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5511
+    },
+    {
+      "seed": "dry-stress",
+      "strategy": "missionary",
+      "channels": "oracle-only",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 7,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 0,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 20,
+        "ai": 74
+      },
+      "believers20": {
+        "player": 13,
+        "ai": 38
+      },
+      "success": {
+        "miracles": 0,
+        "oracles": 2
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5508
+    },
+    {
+      "seed": "dry-stress",
+      "strategy": "missionary",
+      "channels": "both",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 7,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 0,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 19,
+        "ai": 74
+      },
+      "believers20": {
+        "player": 12,
+        "ai": 38
+      },
+      "success": {
+        "miracles": 8,
+        "oracles": 2
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5575
+    },
+    {
+      "seed": "dry-stress",
+      "strategy": "development",
+      "channels": "miracle-only",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 11,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 2,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 35,
+        "ai": 75
+      },
+      "believers20": {
+        "player": 12,
+        "ai": 39
+      },
+      "success": {
+        "miracles": 8,
+        "oracles": 0
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5422
+    },
+    {
+      "seed": "dry-stress",
+      "strategy": "development",
+      "channels": "oracle-only",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 11,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 1,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 25,
+        "ai": 75
+      },
+      "believers20": {
+        "player": 12,
+        "ai": 39
+      },
+      "success": {
+        "miracles": 0,
+        "oracles": 2
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5576
+    },
+    {
+      "seed": "dry-stress",
+      "strategy": "development",
+      "channels": "both",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 12,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 3,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 59,
+        "ai": 57
+      },
+      "believers20": {
+        "player": 29,
+        "ai": 21
+      },
+      "success": {
+        "miracles": 8,
+        "oracles": 2
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5765
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "strategy": "passive",
+      "channels": "none",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 4,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 0,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 19,
+        "ai": 69
+      },
+      "believers20": {
+        "player": 15,
+        "ai": 33
+      },
+      "success": {
+        "miracles": 0,
+        "oracles": 0
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5444
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "strategy": "missionary",
+      "channels": "miracle-only",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 4,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 0,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 21,
+        "ai": 68
+      },
+      "believers20": {
+        "player": 17,
+        "ai": 32
+      },
+      "success": {
+        "miracles": 8,
+        "oracles": 0
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5531
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "strategy": "missionary",
+      "channels": "oracle-only",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 6,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 0,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 45,
+        "ai": 48
+      },
+      "believers20": {
+        "player": 39,
+        "ai": 12
+      },
+      "success": {
+        "miracles": 0,
+        "oracles": 2
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5349
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "strategy": "missionary",
+      "channels": "both",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 6,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 0,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 45,
+        "ai": 48
+      },
+      "believers20": {
+        "player": 39,
+        "ai": 12
+      },
+      "success": {
+        "miracles": 8,
+        "oracles": 2
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5664
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "strategy": "development",
+      "channels": "miracle-only",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 12,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 2,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 44,
+        "ai": 66
+      },
+      "believers20": {
+        "player": 20,
+        "ai": 30
+      },
+      "success": {
+        "miracles": 8,
+        "oracles": 0
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5378
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "strategy": "development",
+      "channels": "oracle-only",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 10,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 1,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 36,
+        "ai": 58
+      },
+      "believers20": {
+        "player": 24,
+        "ai": 22
+      },
+      "success": {
+        "miracles": 0,
+        "oracles": 2
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5477
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "strategy": "development",
+      "channels": "both",
+      "completedDays": 180,
+      "ticks": 540,
+      "valid": true,
+      "aborted": false,
+      "core40": {
+        "player": 12,
+        "ai": 12
+      },
+      "devout80": {
+        "player": 3,
+        "ai": 4
+      },
+      "faithPowerWeight": {
+        "player": 50,
+        "ai": 66
+      },
+      "believers20": {
+        "player": 20,
+        "ai": 30
+      },
+      "success": {
+        "miracles": 8,
+        "oracles": 2
+      },
+      "nativeVillageCore40": {
+        "player": 0,
+        "ai": 0
+      },
+      "elapsedV8Ms": 5855
+    }
+  ],
+  "summary": {
+    "uniqueMapSeeds": 2,
+    "uniquePlayerStrategies": 2,
+    "ablationArmsPerStrategy": 3,
+    "sharedPassivePerSeed": 1,
+    "executedCases": 14,
+    "totalTicks": 7560,
+    "slowestCaseV8Ms": 5855,
+    "core40PlayerLeadCases": 0,
+    "core40Ties": 3,
+    "allNativeVillageCore40Zero": true
+  }
+}

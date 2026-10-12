@@ -249,14 +249,17 @@
     const left=Math.max(0,(state.god.skills[id]?.readyAtHour||0)-state.hour);
     if(armedMiracle&&armedMiracle!==id)armedMiracle=null;
     $('rainCost').textContent=`Lv${state.god.skills[id]?.level||1} · 預估 ${preview.cost??'—'} DP`+
-      (preview.overcast?`（${preview.baseCost} × ${preview.costMultiplier}）`:'');
+      (preview.overcast?` · ${preview.costMultiplier}×`:'');
+    $('rainCost').title=preview.overcast?
+      `基本 ${preview.baseCost} DP × ${preview.costMultiplier} 次 = ${preview.cost} DP`:
+      `本次基本消耗 ${preview.baseCost??'—'} DP`;
     const forecast=Number.isFinite(preview.cooldownDays)?
       `本次預計冷卻 ${format(preview.cooldownDays,1)} 模擬日`:'無法估算冷卻';
     $('rainCooldown').textContent=left?
       `冷卻中 · 剩餘 ${format(left/24,1)} 日 · 強制施放 ${preview.costMultiplier}× · ${forecast}`:
       preview.reason||`已就緒 · ${forecast}`;
     $('rainBtn').textContent=armedMiracle?'取消選擇位置':
-      preview.overcast?`強制施放（${preview.costMultiplier}×）· 選擇位置`:'選擇施展位置';
+      preview.overcast?`強制施放 ${preview.costMultiplier}×`:'選擇施展位置';
     $('rainBtn').disabled=profileLoading||state.god.dp+1e-8<(preview.cost??Infinity);
     $('rainBtn').title=preview.reason||
       `點圖施放將依當下神力、連發倍率與目標重新驗證；${forecast}`;

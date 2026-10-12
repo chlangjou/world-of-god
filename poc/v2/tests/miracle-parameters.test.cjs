@@ -166,8 +166,10 @@ test('cooldown preview changes with selected Rain duration and matches the final
   // An affordable forced cast remains available even during the current cooldown.
   assert.equal(ui.el('rainBtn').disabled,false,
     'Cooldown is a surcharge, not a hard-disabled button');
-  assert.ok(ui.el('rainBtn').textContent.includes('強制施放（2×）'));
-  assert.ok(ui.el('rainCost').textContent.includes('× 2'));
+  assert.ok(ui.el('rainBtn').textContent.includes('強制施放 2×'));
+  assert.ok(ui.el('rainCost').textContent.includes('2×'));
+  assert.ok(ui.el('rainCost').title.includes('基本'),
+    'expanded cost calculation remains available as a tooltip');
   const before=s.god.dp;
   const secondPreview=W.evalRain(s,{x:s.camp.x,y:s.camp.y,
     radius:14,intensity:1,durationDays:5});

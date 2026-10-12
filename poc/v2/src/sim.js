@@ -2404,8 +2404,13 @@
       }else{
         const nearbyUnaffiliated=living(s).filter(p=>p.religionId===null&&
           dist(p,center)<=r).length;
-        calling=need?.type==='food-shortage'||need?.type==='food-water'||
-          nearbyUnaffiliated===0?'food.produce':'religion.spread';
+        const agenda=Math.floor(day/90)%3;
+        // Strong food petitions matter; otherwise this God alternates between
+        // community care and outward preaching instead of always selecting
+        // the instantaneous best expansion Oracle.
+        calling=need?.type==='food-shortage'&&agenda!==2?'food.produce':
+          (nearbyUnaffiliated>0||agenda===2)?'religion.spread':
+            'food.produce';
       }
       issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
         intentType:calling,durationDays:ai.spreadOracleDurationDays});

@@ -16,7 +16,13 @@ function fnv(s){
 }
 function casualPlayer({seed='valley-spring-01',playerSeed=1,
   secondsPerDay=2,minSessionSeconds=75,maxSessionSeconds=185,
-  durationDays=360,difficulty='standard',passive=false}={}){
+  durationDays=360,difficulty='standard',passive=false,style='balanced'}={}){
+  const styles={
+    wandering:{look:.34,oracle:.12,spread:.45,need:.35},
+    balanced:{look:.19,oracle:.23,spread:.55,need:.45},
+    missionary:{look:.19,oracle:.36,spread:.85,need:.42}
+  };
+  const tendency=styles[style]||styles.balanced;
   const s=W.create({seed,balanceProfile:agriculture,religionProfile:religion,
     divineProfile:divine,opponentProfile:{...opponent,difficulty}});
   let rng=fnv(seed+'|human|'+playerSeed),events=[],inspections=0,
@@ -52,13 +58,13 @@ function casualPlayer({seed='valley-spring-01',playerSeed=1,
       }
     }
     // Reading a state without issuing a command is a legitimate sandbox turn.
-    if(roll(.19)){events.push({day,action:'look'});nextDay=day+Math.max(1,Math.round(wait()/secondsPerDay));continue;}
+    if(roll(tendency.look)){events.push({day,action:'look'});nextDay=day+Math.max(1,Math.round(wait()/secondsPerDay));continue;}
     const prayerList=s.religion.prayers.filter(p=>p.status==='open').slice(-3);
-    const need=prayerList.length&&roll(.45)?choice(prayerList):null;
+    const need=prayerList.length&&roll(tendency.need)?choice(prayerList):null;
     if(need){inspections++;clicks+=2;} // needs tab and a single prayer card
-    if(roll(.23)){
+    if(roll(tendency.oracle)){
       const saint=s.religion.saints[0]; // visible in the Saint dropdown
-      const want=roll(.55)?'religion.spread':'food.produce';
+      const want=roll(tendency.spread)?'religion.spread':'food.produce';
       const result=W.issueOracle(s,{saintId:saint,intentType:want,durationDays:180});
       clicks+=4;oracles+=Number(result.ok);successful+=Number(result.ok);
       events.push({day,action:'oracle:'+want,ok:result.ok});
@@ -93,7 +99,7 @@ function casualPlayer({seed='valley-spring-01',playerSeed=1,
     nextDay=day+Math.max(1,Math.round(wait()/secondsPerDay));
   }
   const end=record(durationDays);
-  return {seed,playerSeed,secondsPerDay,passive,days:durationDays,
+  return {seed,playerSeed,secondsPerDay,passive,style,days:durationDays,
     sessions:tries,clicks,inspections,successful,casts,oracles,
     end,lead:end.player-end.ai,
     close:Math.abs(end.player-end.ai)<=10,

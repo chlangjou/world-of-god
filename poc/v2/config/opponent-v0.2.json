@@ -29,5 +29,35 @@
     "competition": "Neither side begins in the other's household or town. Expansion into native communities happens through in-world sermons, exchange, Oracle propagation and later demographic movements; no instant mass conversions.",
     "ai": "Rival Saint, Priest, Divine Power and Miracle/Oracle use existing fairness checks; no difficulty tier or optimized search policy yet.",
     "legacy": "Existing opponent-v0.1 saves retain their historical mixed-family positions. A no-opponent new browser world still has native populations; legacy saves remain unchanged."
+  },
+  "difficulty": "standard",
+  "difficultyProfiles": {
+    "relaxed": {
+      "intervalMultiplier": 1.75,
+      "startDelayDays": 14,
+      "oracleDelayDays": 42,
+      "offensiveEveryTurns": 0,
+      "maxForcedMultiplier": 1
+    },
+    "standard": {
+      "intervalMultiplier": 1,
+      "startDelayDays": 0,
+      "oracleDelayDays": 0,
+      "offensiveEveryTurns": -1,
+      "maxForcedMultiplier": 100
+    },
+    "challenging": {
+      "intervalMultiplier": 0.67,
+      "startDelayDays": -4,
+      "oracleDelayDays": 0,
+      "offensiveEveryTurns": 3,
+      "maxForcedMultiplier": 4
+    }
+  },
+  "difficultyNotes": {
+    "relaxed": "Casual: slower autonomous decisions, a later first active spread Oracle, no offensive attempts, and no DP-overcast. Real citizens and all economics remain unchanged.",
+    "standard": "Unchanged v0.2 policy: same initial households, DP, 12-day decision cadence, Oracle and offensive priority. Baseline replay remains byte-for-byte equal in world decisions.",
+    "challenging": "Faster autonomous decisions and earlier activation; more frequent possible offensive attempts, plus calculated forced-cast opportunities within the same DP budget and cooldown contract. No free Miracle or guaranteed conversion.",
+    "live": "The player may change AI difficulty mid-session without resetting population, changing stored Divine Power, or relocating households; saved worlds remember selected difficulty."
   }
 }

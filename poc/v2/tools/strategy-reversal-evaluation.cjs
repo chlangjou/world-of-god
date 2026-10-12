@@ -19,13 +19,15 @@ const round=(v,n=2)=>Number(Number(v||0).toFixed(n));
 function initialPlan(s){
   const villages=s.settlements.filter(t=>t.native);
   const stable=(a,b)=>a.id.localeCompare(b.id);
+  const signed=v=>distance(v,s.camp)-distance(v,s.opponentCamp);
+  // Map has three native villages: own-side, center and rival-side. The
+  // geographically nearest village to either God could be the SAME frontier
+  // village, so pick by relative geographical advantage, not raw proximity.
   return {
-    own:villages.slice().sort((a,b)=>distance(a,s.camp)-distance(b,s.camp)||stable(a,b))[0]||s.camp,
+    own:villages.slice().sort((a,b)=>signed(a)-signed(b)||stable(a,b))[0]||s.camp,
     frontier:villages.slice().sort((a,b)=>
-      Math.abs(distance(a,s.camp)-distance(a,s.opponentCamp))-
-      Math.abs(distance(b,s.camp)-distance(b,s.opponentCamp))||stable(a,b))[0]||s.camp,
-    rival:villages.slice().sort((a,b)=>
-      distance(a,s.opponentCamp)-distance(b,s.opponentCamp)||stable(a,b))[0]||s.camp
+      Math.abs(signed(a))-Math.abs(signed(b))||stable(a,b))[0]||s.camp,
+    rival:villages.slice().sort((a,b)=>signed(b)-signed(a)||stable(a,b))[0]||s.camp
   };
 }
 function miracleCommand(s,strategy,index,plan){

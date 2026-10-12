@@ -82,6 +82,24 @@ test('ablation channels independently permit fixed Miracle and Oracle slots',()=
   assert.throws(()=>E.runScenario({...base,channels:'invalid'}),/Invalid channels/);
 });
 
+test('40+ core, 80+ devout, and weighted Divine Power are tracked separately from 20+ recruits',()=>{
+  const x=E.runScenario({seed:'dry-stress',strategy:'passive',
+    channels:'none',days:30,budgetMs:12000});
+  const c=x.final;
+  assert.equal(c.coreLead,c.playerCore-c.aiCore);
+  assert.equal(c.lead,c.player-c.ai);
+  assert.ok(c.playerDevout80<=c.playerCore);
+  assert.ok(c.aiDevout80<=c.aiCore);
+  assert.ok(c.playerPowerWeight>=0&&c.aiPowerWeight>=0);
+  assert.equal(c.natives.length,3);
+  for(const village of c.natives){
+    assert.ok(village.playerCore<=village.player);
+    assert.ok(village.aiCore<=village.ai);
+  }
+  assert.equal(x.checks[0].playerCore,3,'Genesis player has three 40+ believers');
+  assert.equal(x.checks[0].aiCore,4,'Genesis AI has four 40+ believers');
+});
+
 test('no-channels counterfactual matches passive baseline with same seed',()=>{
   const none=E.runScenario({seed:'dry-stress',strategy:'development',
     channels:'none',days:30,budgetMs:12000});

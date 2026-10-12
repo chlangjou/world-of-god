@@ -87,6 +87,8 @@ The P1 time horizon also introduces a **measurement mismatch**: 180 days is enou
 
 Recommended next *small separate experiment*, after explicit approval: take just the most revealing paired cases (e.g. `dry-stress` Development/Both vs Passive; `opponent-competition-replay` Missionary/Oracle-only vs Passive) and extend from Day 180 to Day 360, in separate 30-day bounded child runs. **Do not add more Seed samples until durable village-core conversion is observable.** Evaluate at most two paired worlds at a time; if 40+ growth still fails despite hundreds of low-devotion converts, prioritize Faith Contest and maturation dynamics over balance parameter tuning.
 
+**Follow-up completed (P1.1, same date):** Four independently bounded **360-day** replays of the recommended matched pairs now show that initially low-devotion followers can mature into 40+ native-village cores. Development/Both on `dry-stress` reaches **23:16** Player:AI core at Day 360 versus **9:25** for Passive; Missionary/Oracle-only on `opponent-competition-replay` reaches **21:12** versus **8:24** for Passive. This corrects the earlier *time-horizon* uncertainty, but still does not test a late strategy switch against an already entrenched 40+ opponent. See [Strategy Maturation P1.1](STRATEGY_MATURATION_P1_1_2026_10_13.md).
+
 ## How to reproduce a single isolation
 
 In a checked-out repository, from `poc/v2`:

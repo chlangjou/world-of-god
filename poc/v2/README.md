@@ -105,9 +105,11 @@ UI 顯示本次倍率、所需 DP 及剩餘模擬時間。
 **Strategy Reversal P0/P1 完成（2026-10-13）：** 使用寫死的 Node.js 四組玩家策略，
 先用 90 天校準效能，再對兩張 AI 優勢地圖各執行 4 組 180 天策略對照。
 不逐 Tick 呼叫 AI、每場獨立設時限、只輸出結束與少量檢查點；
-兩張地圖皆有不同策略成功逆轉原本 AI 領先局勢。
+不同策略能翻轉 **20+ 一般信眾**的早期優勢，但後續隔離測試確認，
+**40+ 核心信徒最多只能追至平手，尚未證實穩定宗教勝利**。
 這是早期策略敏感度證據，不是整體勝率／晚期翻盤驗證。
-[完整執行數據與限制](docs/STRATEGY_REVERSAL_P0_P1_2026_10_13.md)。
+[原始 P0/P1 結果](docs/STRATEGY_REVERSAL_P0_P1_2026_10_13.md) ·
+[以核心信徒為主的 Miracle／Oracle 隔離測試與結束狀態](docs/STRATEGY_CHANNEL_ABLATION_2026_10_13.md)。
 可用 `npm run evaluate:strategy -- --seed dry-stress --strategy development --days 180`
 單場重跑，或以 `npm run evaluate:strategy:suite` 在本機逐場執行有硬超時的矩陣。
 

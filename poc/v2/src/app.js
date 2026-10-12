@@ -200,10 +200,13 @@
     state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{}),
       religionProfile:activeReligionProfile,divineProfile:activeDivineProfile,
       worldGenesisMode:'native',
-      opponentProfile:$('opponentMode').value==='ai'?activeOpponentProfile:null});
+      opponentProfile:$('opponentMode').value==='ai'?
+        {...(activeOpponentProfile||S.OPPONENT_DEFAULTS),
+          difficulty:$('aiDifficulty').value||'standard'}:null});
     if(divineKind==='miracle')configureMiracle(selectedPower());
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
     $('opponentMode').value=state.opponent?.enabled?'ai':'off';
+    if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
     paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
@@ -221,6 +224,15 @@
     }catch(err){activeProfile=previous;$('balanceProfile').value=previous?'agriculture':'original';say('Profile 載入失敗：'+err.message);}
     finally{profileLoading=false;$('balanceProfile').disabled=false;$('pauseBtn').disabled=false;render();}
   });
+  $('aiDifficulty').addEventListener('change',e=>{
+    if(profileLoading||!state.opponent?.enabled)return;
+    const result=S.setOpponentDifficulty(state,e.target.value);
+    if(!result.ok){e.target.value=state.opponent.difficulty;say(result.reason);return;}
+    const label={relaxed:'輕鬆',standard:'標準',challenging:'挑戰'}[result.difficulty];
+    // No world reset, no changed Faith, no free DP. Policy applies at the
+    // next real AI decision opportunity; normal remains the previous baseline.
+    render();say('AI 難度已切換為'+label+'；現有世界進度保留。');
+  });
   $('opponentMode').addEventListener('change',e=>{
     if(profileLoading)return;
     const requested=e.target.value;
@@ -236,7 +248,9 @@
     if(state.opponent?.enabled&&state.opponent.profileId!=='opponent-v0.1')
       activeOpponentProfile=state.opponent;
     $('balanceProfile').value=activeProfile?'agriculture':'original';
-    $('opponentMode').value=state.opponent?.enabled?'ai':'off';armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+    $('opponentMode').value=state.opponent?.enabled?'ai':'off';
+    $('aiDifficulty').value=state.opponent?.difficulty||'standard';
+    armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
@@ -290,6 +304,8 @@
     $('pauseBtn').disabled=profileLoading;
     $('balanceProfile').value=state.agriculture?'agriculture':'original';
     $('opponentMode').value=state.opponent?.enabled?'ai':'off';
+    $('aiDifficulty').disabled=profileLoading||!state.opponent?.enabled;
+    if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
     $('applyAgricultureBtn').disabled=profileLoading||!state.agriculture;
     $('mapStatus').textContent=profileLoading?'載入平衡設定中…':located?.location?
       `已定位 ${needTitles[located.prayer.type]||'需求'} · ${located.location.locationName} (${format(located.location.center.x)}, ${format(located.location.center.y)})`:
@@ -729,7 +745,8 @@
   $('helpBtn').onclick=()=>$('infoDialog').showModal();$('closeHelp').onclick=()=>$('infoDialog').close();
   // New playtests start with the latest experimental Agriculture profile.
   // Loading failure is explicit and falls back to the reproducible Original rules.
-  $('balanceProfile').disabled=true;$('opponentMode').disabled=true;$('resetBtn').disabled=true;
+  $('balanceProfile').disabled=true;$('opponentMode').disabled=true;
+  $('aiDifficulty').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
   Promise.allSettled([loadAgriculture(),loadReligion(),loadDivine(),loadOpponent()]).then(([agriculture,religion,divine,opponent])=>{
@@ -745,6 +762,8 @@
     say(failures.length?'Profile 載入失敗，採用內建預設：'+failures.join('；'):
       'Agriculture、Religion Propagation、Divine Powers 與 AI 對手已啟用。');
   }).finally(()=>{
-    profileLoading=false;$('balanceProfile').disabled=false;$('opponentMode').disabled=false;$('resetBtn').disabled=false;render();
+    profileLoading=false;$('balanceProfile').disabled=false;$('opponentMode').disabled=false;
+    $('aiDifficulty').disabled=!state.opponent?.enabled;
+    $('resetBtn').disabled=false;render();
   });
 })();

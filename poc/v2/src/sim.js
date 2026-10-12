@@ -117,11 +117,22 @@
     r.spreadOracleJoinBonus=clamp(r.spreadOracleJoinBonus,0,.5);
     return r;
   }
+  // Difficulty alters only autonomous opponent decision policies; the two Gods
+  // still share physical rules, Divine Power, costs and conversion mechanics.
+  const OPPONENT_DIFFICULTIES=Object.freeze({
+    relaxed:{intervalMultiplier:1.75,startDelayDays:14,oracleDelayDays:42,
+      offensiveEveryTurns:0,maxForcedMultiplier:1},
+    standard:{intervalMultiplier:1,startDelayDays:0,oracleDelayDays:0,
+      offensiveEveryTurns:-1,maxForcedMultiplier:100},
+    challenging:{intervalMultiplier:.67,startDelayDays:-4,oracleDelayDays:0,
+      offensiveEveryTurns:3,maxForcedMultiplier:4}
+  });
   const OPPONENT_DEFAULTS=Object.freeze({profileId:'opponent-v0.2',enabled:true,
     name:'暮影信仰',originMode:'separated-native',initialHouseholdIndexes:[4,5,6,7],
     nativeVillages:3,nativeHouseholdsPerVillage:3,minimumOriginDistance:29,
     championDevotion:53,familyDevotion:29,initialDp:42,startDay:14,
-    decisionIntervalDays:12,spreadOracleDurationDays:150,offensiveEveryTurns:4});
+    decisionIntervalDays:12,spreadOracleDurationDays:150,offensiveEveryTurns:4,
+    difficulty:'standard'});
   const OPPONENT_LEGACY_DEFAULTS=Object.freeze({...OPPONENT_DEFAULTS,
     profileId:'opponent-v0.1',originMode:'mixed',initialHouseholdIndexes:[5,6],
     nativeVillages:0});
@@ -150,7 +161,42 @@
       [...new Set(profile.initialHouseholdIndexes.filter(n=>Number.isInteger(n)&&n>=3&&n<10))]
         .slice(0,r.originMode==='mixed'?3:5):base.initialHouseholdIndexes.slice();
     r.name=typeof profile.name==='string'?profile.name.slice(0,30):base.name;
+    r.difficulty=Object.hasOwn(OPPONENT_DIFFICULTIES,profile?.difficulty)?
+      profile.difficulty:'standard';
+    r.difficultyProfiles={};
+    for(const [name,defaults] of Object.entries(OPPONENT_DIFFICULTIES)){
+      const configured=profile?.difficultyProfiles?.[name]||{};
+      r.difficultyProfiles[name]={
+        intervalMultiplier:clamp(num(configured.intervalMultiplier,defaults.intervalMultiplier),.45,3),
+        startDelayDays:Math.round(clamp(num(configured.startDelayDays,defaults.startDelayDays),-12,90)),
+        oracleDelayDays:Math.round(clamp(num(configured.oracleDelayDays,defaults.oracleDelayDays),0,180)),
+        offensiveEveryTurns:Math.round(clamp(num(configured.offensiveEveryTurns,defaults.offensiveEveryTurns),-1,30)),
+        maxForcedMultiplier:Math.round(clamp(num(configured.maxForcedMultiplier,defaults.maxForcedMultiplier),1,100))
+      };
+    }
     return r;
+  }
+  // Updating difficulty is a reversible policy change, not a world reset:
+  // population, RNG, faith, resources, effects and active cooldowns stay intact.
+  function setOpponentDifficulty(s,value){
+    if(!s.opponent?.enabled)return {ok:false,reason:'目前世界沒有 AI 對手'};
+    if(!Object.hasOwn(OPPONENT_DIFFICULTIES,value))
+      return {ok:false,reason:'未知的 AI 難度'};
+    s.opponent.difficulty=value;
+    return {ok:true,difficulty:value};
+  }
+  function opponentBehavior(s){
+    const ai=s.opponent;
+    const difficulty=ai?.difficultyProfiles?.[ai.difficulty]||
+      OPPONENT_DIFFICULTIES.standard;
+    return {
+      actionIntervalDays:Math.max(3,Math.round(ai.decisionIntervalDays*difficulty.intervalMultiplier)),
+      startDay:Math.max(1,ai.startDay+difficulty.startDelayDays),
+      oracleStartDay:Math.max(1,ai.startDay+difficulty.oracleDelayDays),
+      offensiveEveryTurns:difficulty.offensiveEveryTurns<0?
+        ai.offensiveEveryTurns:difficulty.offensiveEveryTurns,
+      maxForcedMultiplier:difficulty.maxForcedMultiplier
+    };
   }
   function allFaiths(s){return s.opponent?.enabled?[s.religion,s.opponentReligion]:[s.religion];}
   function faithOf(s,id){return allFaiths(s).find(f=>f.id===id)||null;}
@@ -2305,14 +2351,16 @@
   function opponentTurn(s){
     const ai=s.opponent;
     if(!ai?.enabled)return;
-    const day=days(s);
-    if(day<ai.startDay||day%ai.decisionIntervalDays!==0||ai.lastActionDay===day)return;
+    const day=days(s),policy=opponentBehavior(s);
+    if(day<policy.startDay||day%policy.actionIntervalDays!==0||
+      ai.lastActionDay===day)return;
     ai.lastActionDay=day;ai.turns++;
     const faith=s.opponentReligion,adherents=living(s).filter(p=>
       p.religionId===faith.id&&p.devotion>=20);
     if(!adherents.length)return;
     const saint=faith.saints.map(id=>adherents.find(p=>p.id===id)).find(Boolean);
-    if(saint&&!faith.oracles.some(o=>o.status==='active'&&o.intentType==='religion.spread'))
+    if(saint&&day>=policy.oracleStartDay&&
+      !faith.oracles.some(o=>o.status==='active'&&o.intentType==='religion.spread'))
       issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
         intentType:'religion.spread',durationDays:ai.spreadOracleDurationDays});
     // Real followers, physical farmland and local faith determine every target.
@@ -2323,7 +2371,7 @@
     const wet=localFields.reduce((sum,t)=>sum+t.moisture,0)/Math.max(1,localFields.length);
     const weak=adherents.filter(p=>dist(p,center)<=6&&p.health<85);
     const choices=[];
-    if(ai.turns%ai.offensiveEveryTurns===0){
+    if(policy.offensiveEveryTurns>0&&ai.turns%policy.offensiveEveryTurns===0){
       const enemyPriest=s.religion.priests.map(id=>living(s).find(p=>p.id===id))
         .filter(Boolean).sort((a,b)=>dist(a,center)-dist(b,center))[0];
       if(enemyPriest&&dist(enemyPriest,center)<12)
@@ -2343,7 +2391,8 @@
       choices.push(['efficiency',{...center,radius:7,intensity:.85,durationDays:10}]);
     for(const [type,args] of choices){
       const input={...args,godId:s.opponentGod.id};
-      if(!evaluateMiracle(s,type,input).ok)continue;
+      const evaluated=evaluateMiracle(s,type,input);
+      if(!evaluated.ok||evaluated.costMultiplier>policy.maxForcedMultiplier)continue;
       const cast=castMiracle(s,type,input);
       if(cast.ok){ai.casts++;break;}
     }
@@ -2768,8 +2817,10 @@
     if(!verdict.ok) throw new Error('無法讀取世界：'+verdict.errors.join('；'));
     return candidate;
   }
-  return {VERSION,DEFAULT_RULES,POWER_DEFAULTS,create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
+  return {VERSION,DEFAULT_RULES,POWER_DEFAULTS,OPPONENT_DIFFICULTIES,
+    create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
     evaluateMiracle,castMiracle,activeStatus,
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
-    settlementReligionStats,priestPetitions,prayerLocation,OPPONENT_DEFAULTS};
+    settlementReligionStats,priestPetitions,prayerLocation,OPPONENT_DEFAULTS,
+    setOpponentDifficulty};
 });

@@ -111,3 +111,32 @@ test('no-channels counterfactual matches passive baseline with same seed',()=>{
   assert.equal(none.operations.miracleAttempts,0);
   assert.equal(none.operations.oracleAttempts,0);
 });
+
+test('P1.1 duration is opt-in; four Oracle slots remain once per 90 days',()=>{
+  assert.throws(()=>E.runScenario({days:181}),e=>e.message.includes('P0/P1 only'));
+  assert.throws(()=>E.runScenario({days:361,extended:true}),e=>e.message.includes('P1.1 only'));
+  for(const day of [15,105]){
+    assert.equal(E.oracleSlot(day,false),true);
+    assert.equal(E.oracleSlot(day,true),true);
+  }
+  for(const day of [195,285]){
+    assert.equal(E.oracleSlot(day,false),false);
+    assert.equal(E.oracleSlot(day,true),true);
+  }
+  for(const day of [14,16,194,196,286,375])
+    assert.equal(E.oracleSlot(day,true),false);
+});
+
+test('P1.1 short replay retains P1 initial state and action counts',()=>{
+  const opts={seed:'dry-stress',strategy:'development',
+    channels:'both',days:30,budgetMs:12000};
+  const original=E.runScenario(opts);
+  const extended=E.runScenario({...opts,extended:true});
+  assert.equal(original.version,'strategic-reversal-p1');
+  assert.equal(extended.version,'strategic-maturation-p1.1');
+  assert.deepEqual(extended.final,original.final);
+  assert.deepEqual(extended.operations,original.operations);
+  assert.deepEqual(extended.checks,original.checks);
+  assert.equal(extended.valid,true);
+  assert.equal(extended.aborted,false);
+});

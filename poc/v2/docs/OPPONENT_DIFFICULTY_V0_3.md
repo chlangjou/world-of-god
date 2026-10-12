@@ -44,3 +44,7 @@ The current UI already has localized prayer cards, Priest prayer bubbles, per-Mi
 ## Tests
 
 `tests/opponent-difficulty.test.cjs` checks exact Genesis parity, policy timing and original ceiling, live reversible switching, identical save replay, migration of old saves, old mixed profile, and numeric tuning. The existing opponent, religion, native-world, Miracle and UI tests continue to apply.
+
+## Bounded P0/P1 strategy reversal study (2026-10-13)
+
+The decision-quality tier and human-facing pacing are not themselves strategic balance proof. A separate [P0/P1 strategy reversal evaluation](STRATEGY_REVERSAL_P0_P1_2026_10_13.md) exercises `passive`, `missionary`, `development`, and `intervention` for two matched seeds, with equal action slots and limited information. In each seed at least one player policy reversed the baseline AI lead by simulated day 180. Causality of conversions and late game recoverability remain unresolved. The separate Node scripts enforce bounded, resumable-by-case execution instead of a single huge batch.

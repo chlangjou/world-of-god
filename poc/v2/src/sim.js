@@ -120,12 +120,17 @@
   // Difficulty alters only autonomous opponent decision policies; the two Gods
   // still share physical rules, Divine Power, costs and conversion mechanics.
   const OPPONENT_DIFFICULTIES=Object.freeze({
-    relaxed:{intervalMultiplier:1.75,startDelayDays:14,oracleDelayDays:42,
+    // Slower policies approximate the human overhead of reading petitions,
+    // switching panels and planning casts. They never alter DP, RNG, population,
+    // perception radius or per-person faith mechanics.
+    relaxed:{intervalMultiplier:2,startDelayDays:14,oracleDelayDays:54,
       offensiveEveryTurns:0,maxForcedMultiplier:1},
-    standard:{intervalMultiplier:1,startDelayDays:0,oracleDelayDays:0,
-      offensiveEveryTurns:-1,maxForcedMultiplier:100},
-    challenging:{intervalMultiplier:.67,startDelayDays:-4,oracleDelayDays:0,
-      offensiveEveryTurns:3,maxForcedMultiplier:4}
+    standard:{intervalMultiplier:1.5,startDelayDays:8,oracleDelayDays:18,
+      offensiveEveryTurns:-1,maxForcedMultiplier:2},
+    // Ceiling = exact historical v0.2 baseline (12-day decisions, turn 4
+    // offensive opportunity, normal DP cost/elegibility). No superhuman buff.
+    challenging:{intervalMultiplier:1,startDelayDays:0,oracleDelayDays:0,
+      offensiveEveryTurns:-1,maxForcedMultiplier:100}
   });
   const OPPONENT_DEFAULTS=Object.freeze({profileId:'opponent-v0.2',enabled:true,
     name:'暮影信仰',originMode:'separated-native',initialHouseholdIndexes:[4,5,6,7],
@@ -162,7 +167,9 @@
         .slice(0,r.originMode==='mixed'?3:5):base.initialHouseholdIndexes.slice();
     r.name=typeof profile.name==='string'?profile.name.slice(0,30):base.name;
     r.difficulty=Object.hasOwn(OPPONENT_DIFFICULTIES,profile?.difficulty)?
-      profile.difficulty:'standard';
+      profile.difficulty:
+      // An explicitly instantiated legacy v0.1 setup keeps its old AI policy.
+      (r.originMode==='mixed'?'challenging':'standard');
     r.difficultyProfiles={};
     for(const [name,defaults] of Object.entries(OPPONENT_DIFFICULTIES)){
       const configured=profile?.difficultyProfiles?.[name]||{};
@@ -2770,7 +2777,11 @@
       candidate.attention.lastPreachingHour=-999999;
     if(candidate.opponent?.enabled){
       const previous=candidate.opponent;
-      candidate.opponent={...opponentRules(previous),
+      // Worlds saved before selectable difficulty used the historical 12-day
+      // baseline. Preserve that AI on load; do not silently apply a new preset.
+      const oldDifficulty=!Object.hasOwn(OPPONENT_DIFFICULTIES,previous.difficulty);
+      candidate.opponent={...opponentRules(oldDifficulty?
+        {...previous,difficulty:'challenging'}:previous),
         lastActionDay:Number.isFinite(previous.lastActionDay)?previous.lastActionDay:-1,
         turns:Number.isFinite(previous.turns)?previous.turns:0,
         casts:Number.isFinite(previous.casts)?previous.casts:0,

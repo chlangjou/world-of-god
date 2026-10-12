@@ -163,6 +163,21 @@ test('cooldown preview changes with selected Rain duration and matches the final
   assert.equal(s.god.skills.rain.readyAtHour-s.hour,
     Math.round(expected.cooldownDays*24/8)*8);
   assert.ok(ui.el('rainCooldown').textContent.includes('冷卻中'));
-  // Short casts still respect their own cooldown, not merely the active rain duration.
-  assert.equal(ui.el('rainBtn').disabled,true);
+  // An affordable forced cast remains available even during the current cooldown.
+  assert.equal(ui.el('rainBtn').disabled,false,
+    'Cooldown is a surcharge, not a hard-disabled button');
+  assert.ok(ui.el('rainBtn').textContent.includes('強制施放（2×）'));
+  assert.ok(ui.el('rainCost').textContent.includes('× 2'));
+  const before=s.god.dp;
+  const secondPreview=W.evalRain(s,{x:s.camp.x,y:s.camp.y,
+    radius:14,intensity:1,durationDays:5});
+  assert.equal(secondPreview.costMultiplier,2);
+  ui.el('rainBtn').onclick();
+  ui.canvas.listeners.click({clientX:(s.camp.x+.25)*unit,
+    clientY:(s.camp.y+.25)*unit});
+  assert.equal(s.god.dp,before-secondPreview.cost);
+  assert.equal(s.god.skills.rain.cooldownCastCount,2);
+  assert.ok(ui.el('rainCooldown').textContent.includes('強制施放 3×'));
+  assert.equal(ui.el('rainBtn').disabled,true,
+    'the button disables when next escalation cannot be afforded');
 });

@@ -35,14 +35,25 @@ test('duration-scaled Rain cooldown is charged from cast time and freezes when s
   const deadline=s.god.skills.rain.readyAtHour;
   assert.equal(deadline-s.hour,Math.round(estimate.cooldownDays*24/8)*8);
   assert.ok(deadline>s.hour+5*24,'cooldown and weather duration are distinct concepts');
-  assert.equal(W.castRain(s,args).ok,false,'cannot bypass cooldown by selecting short cast');
+  const next=W.evalRain(s,args);
+  assert.equal(next.costMultiplier,2,'an active cooldown doubles the next cast DP price');
+  const remaining=s.god.dp;
+  const forced=W.castRain(s,args);
+  assert.equal(forced.ok,true,'extra DP can force a new cast within the same cooldown');
+  assert.equal(forced.cost,next.baseCost*2);
+  assert.equal(s.god.dp,remaining-forced.cost);
+  assert.equal(s.god.skills.rain.readyAtHour,deadline,
+    'same-tick, same-duration overcast cannot shorten or extend the deadline');
+  const third=W.evalRain(s,args);
+  assert.equal(third.costMultiplier,3);
+  assert.equal(third.ok,false,'3x is rejected when DP cannot cover it');
   W.advanceTicks(s,3*5);
-  assert.ok(!s.effects.some(e=>e.type==='rain'),'rain stops at its selected five-day duration');
-  assert.equal(s.god.skills.rain.readyAtHour,deadline,'fixed cooldown deadline is not recomputed');
-  assert.equal(W.castRain(s,args).ok,false);
+  assert.ok(!s.effects.some(e=>e.type==='rain'),'both rain effects expire independently of cooldown');
+  assert.equal(s.god.skills.rain.readyAtHour,deadline,'cooldown deadline remains authoritative');
   W.advanceTicks(s,(deadline-s.hour)/s.rules.tickHours);
   assert.equal(s.hour,deadline);
-  assert.equal(W.evalRain(s,args).ok,true,'Rain is ready exactly at the computed deadline');
+  assert.equal(s.god.skills.rain.cooldownCastCount,0,'expiry resets the surcharge chain');
+  assert.equal(W.evalRain(s,args).costMultiplier,1,'base price is restored at deadline');
   assert.equal(W.validate(s).ok,true);
 });
 

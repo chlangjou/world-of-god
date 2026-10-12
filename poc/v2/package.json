@@ -5,7 +5,7 @@
   "description": "Modular Web PoC v2; main/docs retains design authority",
   "scripts": {
     "start": "node tools/serve.cjs",
-    "test": "node --test tests/core.test.cjs tests/layout.test.cjs tests/religion.test.cjs tests/granary.test.cjs tests/priest.test.cjs tests/divine-powers.test.cjs tests/need-location.test.cjs tests/miracle-parameters.test.cjs tests/miracle-cooldowns.test.cjs tests/opponent.test.cjs tests/native-world.test.cjs tests/miracle-faith-evidence.test.cjs",
+    "test": "node --test tests/core.test.cjs tests/layout.test.cjs tests/religion.test.cjs tests/granary.test.cjs tests/priest.test.cjs tests/divine-powers.test.cjs tests/need-location.test.cjs tests/miracle-parameters.test.cjs tests/miracle-cooldowns.test.cjs tests/opponent.test.cjs tests/native-world.test.cjs tests/miracle-faith-evidence.test.cjs tests/cooldown-escalation.test.cjs",
     "smoke": "node tests/smoke.cjs",
     "check:agriculture": "node tools/agriculture-balance-check.mjs --check && node tools/agriculture-climate-check.mjs --check",
     "build:standalone": "node tools/build-single.cjs"

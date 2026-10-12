@@ -228,9 +228,9 @@
     if(profileLoading||!state.opponent?.enabled)return;
     const result=S.setOpponentDifficulty(state,e.target.value);
     if(!result.ok){e.target.value=state.opponent.difficulty;say(result.reason);return;}
-    const label={relaxed:'輕鬆',standard:'標準',challenging:'挑戰'}[result.difficulty];
-    // No world reset, no changed Faith, no free DP. Policy applies at the
-    // next real AI decision opportunity; normal remains the previous baseline.
+    const label={relaxed:'輕鬆',standard:'標準',challenging:'原版 AI'}[result.difficulty];
+    // No world reset, no changed Faith, no free DP. The original AI remains
+    // the maximum mode, so new difficulty is not a free information advantage.
     render();say('AI 難度已切換為'+label+'；現有世界進度保留。');
   });
   $('opponentMode').addEventListener('change',e=>{

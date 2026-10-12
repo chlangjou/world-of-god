@@ -796,13 +796,42 @@
     const ticks=Math.max(1,Math.ceil(rawDays*24/s.rules.tickHours-1e-9));
     return ticks*s.rules.tickHours/24;
   }
+  // Each Miracle owns an independent surcharge chain while its own cooldown
+  // remains active: 1x normal, 2x first forced cast, 3x second forced cast, etc.
+  // Legacy saves with an active deadline represent one prior cast (2x next).
+  function miracleCooldownPrice(s,skill,baseCost){
+    const overcast=s.hour<skill.readyAtHour;
+    const prior=Number.isSafeInteger(skill.cooldownCastCount)&&skill.cooldownCastCount>=1
+      ? skill.cooldownCastCount:1;
+    const costMultiplier=overcast?prior+1:1;
+    return {baseCost,costMultiplier,overcast,cost:baseCost*costMultiplier};
+  }
+  function commitMiracleCooldown(s,skill,check){
+    // Recasting a shorter or narrower Miracle cannot erase a longer preexisting
+    // cooldown, even when the player pays extra DP to force the cast.
+    const deadline=s.hour+Math.round(check.cooldownDays*24/s.rules.tickHours)*s.rules.tickHours;
+    skill.readyAtHour=Math.max(skill.readyAtHour||0,deadline);
+    skill.cooldownCastCount=check.costMultiplier;
+  }
+  function resetReadyMiracleChains(s){
+    for(const god of [s.god,s.opponentGod]){
+      if(!god?.skills)continue;
+      for(const skill of Object.values(god.skills)){
+        if(skill.cooldownCastCount&&s.hour>=skill.readyAtHour)
+          skill.cooldownCastCount=0;
+      }
+    }
+  }
   function evalRain(s, input = {}) {
     const {god,faith,enemy}=actorFor(s,input.godId);
     const x = num(input.x, NaN), y = num(input.y, NaN);
     const radius = num(input.radius, s.rules.defaultRainRadius);
     const intensity = num(input.intensity, s.rules.defaultRainIntensity);
     const durationDays = num(input.durationDays, s.rules.defaultRainDays);
-    const cost = Math.ceil((7 + .09 * radius * radius + 6 * intensity + .4 * durationDays) / (1 + (god.skills.rain.level - 1) * .14));
+    const baseCost=Math.ceil((7+.09*radius*radius+6*intensity+.4*durationDays)/
+      (1+(god.skills.rain.level-1)*.14));
+    const price=miracleCooldownPrice(s,god.skills.rain,baseCost);
+    const {cost,costMultiplier,overcast}=price;
     const cooldownDays=castCooldownDays(s,{baseDays:s.rules.rainBaseCooldownDays,
       radius,intensity,referenceRadius:s.rules.defaultRainRadius,
       referenceIntensity:s.rules.defaultRainIntensity,durationDays,
@@ -812,9 +841,10 @@
     else if (!(radius >= 2 && radius <= s.rules.rainRadiusMax)) reason = '範圍不在可施展界線內';
     else if (!(intensity > 0 && intensity <= s.rules.rainSupportMaxIntensity)) reason = '目前僅開放一般支援型降雨強度';
     else if (!(durationDays >= 1 && durationDays <= s.rules.rainMaxDays)) reason = '單次降雨不可超過一個模擬月';
-    else if (s.hour < god.skills.rain.readyAtHour) reason = '喚雨仍在冷卻';
-    else if (god.dp + 1e-8 < cost) reason = '神力不足';
-    return { ok: !reason, reason, cost, cooldownDays, radius, intensity, durationDays,
+    else if (god.dp + 1e-8 < cost) reason = overcast?
+      '神力不足：冷卻期間強制施放需 '+cost+' DP（'+costMultiplier+'×）':'神力不足';
+    return { ok: !reason, reason, cost, baseCost, costMultiplier, overcast, cooldownDays,
+      radius, intensity, durationDays,
       center: { x, y }, presence: Number.isFinite(x) ? presenceAt(s, { x, y },faith.id) : null };
   }
   function castRain(s, input) {
@@ -826,13 +856,14 @@
       radius: test.radius, intensity: test.intensity, startsAtHour: s.hour,
       endsAtHour: s.hour + test.durationDays * 24, godId:god.id };
     s.effects.push(effect);
-    god.skills.rain.readyAtHour = s.hour + Math.round(test.cooldownDays * 24/8)*8;
+    commitMiracleCooldown(s,god.skills.rain,test);
     god.skills.rain.xp += Math.max(1, Math.round(test.radius * test.intensity * test.durationDays / 8));
     const skill = god.skills.rain;
     while (skill.level < 5 && skill.xp >= skill.level * skill.level * 30) skill.level++;
     s.counts.rainCasts++;
     log(s, 'miracle', `${enemy?faith.name+'的神明':'你'}向河谷施展降雨，雨雲將停留約 ${test.durationDays} 日。`,
-      [`直接效果：選定範圍增加降雨；不保證豐收`, `神力 -${test.cost}，喚雨冷卻 ${Math.round(test.cooldownDays)} 日`]);
+      [`直接效果：選定範圍增加降雨；不保證豐收`,
+       `神力 -${test.cost}（${test.costMultiplier}×）；喚雨冷卻至少至第 ${Math.ceil(god.skills.rain.readyAtHour/24)} 日`]);
     return { ...test, effectId: effect.id };
   }
 
@@ -876,8 +907,9 @@
     const intensity=num(input.intensity,def.defaultIntensity);
     const durationDays=def.instant?0:num(input.durationDays,def.defaultDurationDays);
     const center={x,y},skill=skillState(s,type,god);
-    const cost=Math.max(1,Math.ceil((def.baseCost+.045*radius*radius+3*intensity+
-      (def.instant?0:.17*durationDays))/(1+(skill.level-1)*.14)));
+    const baseCost=Math.max(1,Math.ceil((def.baseCost+.045*radius*radius+
+      3*intensity+(def.instant?0:.17*durationDays))/(1+(skill.level-1)*.14)));
+    const {cost,costMultiplier,overcast}=miracleCooldownPrice(s,skill,baseCost);
     const cooldownDays=castCooldownDays(s,{baseDays:def.cooldownDays,
       radius,intensity,referenceRadius:def.defaultRadius,
       referenceIntensity:def.defaultIntensity,durationDays,maxDays:def.maxDays,
@@ -901,9 +933,10 @@
     else if(['heal','efficiency','confusion','blindness'].includes(type)&&!people.length)
       reason=type==='heal'?'範圍內沒有需要治療的在世居民':
         type==='efficiency'?'範圍內沒有可祝福的己方信徒':'範圍內沒有可干擾的在世居民';
-    else if(s.hour<skill.readyAtHour)reason='此神蹟仍在冷卻';
-    else if(god.dp+1e-8<cost)reason='神力不足';
-    return {ok:!reason,reason,cost,cooldownDays,center,radius,intensity,durationDays,
+    else if(god.dp+1e-8<cost)reason=overcast?
+      '神力不足：冷卻期間強制施放需 '+cost+' DP（'+costMultiplier+'×）':'神力不足';
+    return {ok:!reason,reason,cost,baseCost,costMultiplier,overcast,cooldownDays,
+      center,radius,intensity,durationDays,
       presence,applicableFields:fields.length,applicablePeople:people.length,instant:!!def.instant,type};
   }
   function castMiracle(s,type,input={}){
@@ -972,7 +1005,7 @@
     }
     god.dp=Math.max(0,god.dp-check.cost);
     const skill=skillState(s,type,god);
-    skill.readyAtHour=s.hour+Math.max(8,Math.round(check.cooldownDays*24/8)*8);
+    commitMiracleCooldown(s,skill,check);
     skill.xp+=Math.max(1,Math.round(radius*intensity*(durationDays||1)/8));
     while(skill.level<5&&skill.xp>=skill.level*skill.level*30)skill.level++;
     s.counts.miracleCasts ||= {};
@@ -991,7 +1024,8 @@
     }
     log(s,'miracle',(enemy?faith.name+'的神明':'你')+'施展 '+tuning.powers[type].label+'，作用於 '+applied+' 個目標。',
       ['直接作用於世界或居民；實際後續結果仍由模擬決定',
-       '神力 -'+check.cost+'，冷卻約 '+Math.round(check.cooldownDays)+' 日']);
+       '神力 -'+check.cost+'（'+check.costMultiplier+'×），技能冷卻至少至第 '+
+         Math.ceil(skill.readyAtHour/24)+' 日']);
     return {...check,applied,actual};
   }
 
@@ -2578,7 +2612,8 @@
     if(!Number.isSafeInteger(ticks) || ticks<0 || ticks>50000) throw new RangeError('ticks must be integer 0..50000');
     for(let k=0;k<ticks;k++) {
       s.hour+=s.rules.tickHours;s.tick++;
-      expireStatuses(s);processOracles(s);processScheduledBirths(s);updateWorld(s);updatePeople(s);
+      resetReadyMiracleChains(s);expireStatuses(s);
+      processOracles(s);processScheduledBirths(s);updateWorld(s);updatePeople(s);
       if(s.tick%3===0) daily(s);
       if(s.hour>0 && s.hour%(s.rules.daysPerMonth*24)===0) demographic(s);
     }

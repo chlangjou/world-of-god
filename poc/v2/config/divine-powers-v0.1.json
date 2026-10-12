@@ -87,5 +87,6 @@
     }
   },
   "cooldownDurationFloorFraction": 0.18,
-  "cooldownPolicy": "Cooldown starts at cast time. Timed Miracle cooldown scales monotonically with cast duration (up to its max), plus moderately with radius/intensity and independently with Mastery. At equal radius/intensity, a 5-day cast has shorter cooldown than a 30-day cast. The 0.18 floor avoids zero-cost cooldown spamming; final readyAtHour rounds up to an 8-hour simulation tick."
+  "cooldownPolicy": "Cooldown is a per-Miracle DP escalation, not a hard casting lock. Cast #1 costs normal base DP; while that same skill is cooling, cast #2 costs 2x its current base DP, #3 3x, and so on. The next cast starts or extends (never shortens) that skill's existing cooldown deadline. When cooldown fully expires its chain resets to 1x. Other skills and the other God have independent cooldown chains. DP insufficiency still prevents casting; all actual targets/capability/cooldown-duration checks remain.",
+  "cooldownDPPolicy": "Fixed incremental 1x base DP for each additional cast within the same active cooldown. This first playable prototype intentionally has no second overcharge currency, no arbitrary maximum number of casts, and no global shared cooldown penalty."
 }

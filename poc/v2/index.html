@@ -23,6 +23,13 @@
       <label class="profile-picker opponent-picker" title="切換 AI 對手需以相同 Seed 重新創世；舊存檔保持原模式"><span>對手</span>
         <select id="opponentMode" aria-label="對手模式" disabled><option value="ai">AI 神</option><option value="off">無對手</option></select>
       </label>
+      <label class="profile-picker difficulty-picker" title="隨時調整 AI 決策積極度；不改人口、神力、信仰或既有世界進度"><span>難度</span>
+        <select id="aiDifficulty" aria-label="AI 對手難度（可即時切換）" disabled>
+          <option value="relaxed">輕鬆</option>
+          <option value="standard" selected>標準</option>
+          <option value="challenging">挑戰</option>
+        </select>
+      </label>
       <details id="fileMenu" class="file-menu">
         <summary title="存檔、讀檔、匯出及匯入">檔案</summary>
         <div class="file-menu-popover">

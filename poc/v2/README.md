@@ -84,6 +84,14 @@ Miracle / Oracle 擴充 v0.1 **已實作** **Ripening、Harvest、Heal、Efficie
 [Population](../../docs/POPULATION_MODEL.md)、
 [Settlement Economy](../../docs/SETTLEMENT_ECONOMY_OCCUPATIONS.md)。
 
+**Cooldown DP Escalation v0.1 已實作：** 每種 Miracle 各有自己的冷卻連發次數。
+首次施放 1× DP，冷卻中仍可用 **2×、3×、4×…** DP 強制施放；
+DP 不足才禁止，而不是冷卻中一律灰色停用。每次施放重新計算冷卻，
+**新時限不得縮短舊時限**；該技能完全冷卻後下一發恢復 1×。
+AI 與玩家共享費率，各 Miracle 不互相影響，已存遊戲的冷卻可直接沿用。
+UI 顯示本次倍率、所需 DP 及剩餘模擬時間。
+[施放與存檔規則](docs/COOLDOWN_DP_ESCALATION_V0_1.md)。
+
 ## 基本檢查
 
 基本操作：選 **Miracle** 後挑選能力，調整範圍、強度及（持續型能力的）天數，再按「選擇施展位置」並點地圖。**每種 Miracle 都會各自記住最後設定的範圍／強度／持續天數**，切換後返回自動恢復；切換 Miracle／Oracle 也會記住各自最後選的能力，方便連續施展。這是本頁面內的 UI 操作記憶，不會修改遊戲規則與世界存檔。選 **Oracle → 傳教**，指定 Saint 後發佈；自然 Priest 傳教不需 Oracle 仍持續進行。受影響居民可在地圖標記及居民檢視看到限時狀態。按 Esc 取消選點。每項神蹟有自己的 Cooldown。**持續型神蹟的冷卻依施展時間、範圍、強度與 Mastery 計算**，例如同範圍的 5 天降雨會比 30 天降雨更早冷卻；介面會在施放前顯示本次預計冷卻天數。

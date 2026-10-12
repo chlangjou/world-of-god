@@ -27,7 +27,7 @@
     "nativeCommunities": "Native homes and existing cultivated fields are pre-game world resources, not divine powers, and their residents have religionId=null, devotion=10. They autonomously work, build, pray only after adopting a faith, and can become new believers naturally.",
     "settlements": "Native villages exist from day 0 with independent membership, food reserves and construction rules. Each God's families can establish their own town through real house completion, not forced incorporation into nearby natives.",
     "competition": "Neither side begins in the other's household or town. Expansion into native communities happens through in-world sermons, exchange, Oracle propagation and later demographic movements; no instant mass conversions.",
-    "ai": "Only local current-condition heuristic is observed by AI (its Priest/Saint vicinity, nearby fields and known opponents). It does not optimize the entire map. Every mode uses identical world physics and costs; difficulty changes only action cadence, Oracle activation and offensive attempt opportunities. Highest mode reproduces previous AI policy.",
+    "ai": "Tiered decision quality, not only frequency: relaxed God attends one locally heard petition or a recurring personal ritual, uses coarsely sampled farmland and evaluates at most one Miracle. Standard God chooses from up to two plausible locally ranked choices based on nearby welfare, crops, petitions and seasonal agendas; does not scan every available spell. Original AI mode preserves the exact historical hard-coded local priority sequence. None has a global optimal map planner. All share the same real World rules, DP, cooldown and religious conversion.",
     "legacy": "Existing opponent-v0.1 saves retain their historical mixed-family positions. A no-opponent new browser world still has native populations; legacy saves remain unchanged."
   },
   "difficulty": "standard",
@@ -37,27 +37,39 @@
       "startDelayDays": 14,
       "oracleDelayDays": 54,
       "offensiveEveryTurns": 0,
-      "maxForcedMultiplier": 1
+      "maxForcedMultiplier": 1,
+      "decisionStyle": "petition-first",
+      "observationRadius": 6,
+      "fieldSampleStep": 4,
+      "choiceBudget": 1
     },
     "standard": {
       "intervalMultiplier": 1.5,
       "startDelayDays": 8,
       "oracleDelayDays": 18,
       "offensiveEveryTurns": -1,
-      "maxForcedMultiplier": 2
+      "maxForcedMultiplier": 2,
+      "decisionStyle": "situational",
+      "observationRadius": 8,
+      "fieldSampleStep": 2,
+      "choiceBudget": 2
     },
     "challenging": {
       "intervalMultiplier": 1,
       "startDelayDays": 0,
       "oracleDelayDays": 0,
       "offensiveEveryTurns": -1,
-      "maxForcedMultiplier": 100
+      "maxForcedMultiplier": 100,
+      "decisionStyle": "historical",
+      "observationRadius": 12,
+      "fieldSampleStep": 1,
+      "choiceBudget": 9
     }
   },
   "difficultyNotes": {
-    "relaxed": "初學：AI 每約 24 天思考一次，第 48 天左右才有第一次介入，傳教神諭更晚啟動，不主動干擾敵方，不強制連發。沒有給玩家額外物資或免費入教。",
-    "standard": "一般：考量真人需要看地圖、選擇 Miracle 與觀察祈願的操作時間，AI 約每 18 天思考一次，第一個主動決策約在第 36 天，神諭同步延後。其他成本與居民信仰規則不變。",
-    "challenging": "原版 AI：完整保留 2026-10-12 原先的標準 AI；每 12 天決策、原始神諭與干擾頻率，不增加額外速度、全地圖尋優、神力或免費效果。",
+    "relaxed": "休閒沙盒對手：以附近真實祈禱或自己的例行儀式作為決策主題；只檢查一個可能的神蹟，不會逐一嘗試所有合法神蹟；僅觀察周圍少數農田樣本。約每 24 天行動，沒有免費神力及作弊知識。",
+    "standard": "具備有限地區判斷：觀察周圍較多農田及信徒需求，依大致優先度和季節偏好只檢查兩項可行方案；神諭也會在民生與傳教目標間選擇。約每 18 天行動，不保證最優，但有其合理策略。",
+    "challenging": "原版 AI：維持舊有確定的候選順序和當地真實資訊檢查，沒有新增最佳化或更強的搜尋能力。最高難度只保留原本 AI 而不額外強化。",
     "live": "難度切換會保留人口、農地、信仰、物資、存檔及現有 Miracle 冷卻；舊存檔沒有 difficulty 欄位者會回復到原版 AI，不會悄悄變弱。"
   }
 }

@@ -160,13 +160,14 @@
     if(armedMiracle){armedMiracle=null;render();return;}
     const id=selectedPower(),target=cursor||state.camp;
     const result=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
-    const skill=state.god.skills[id];
-    if(skill?.readyAtHour>state.hour){say('此神蹟仍在冷卻');updateCost();return;}
-    if(state.god.dp<result.cost){say('目前 Divine Power 不足');updateCost();return;}
+    if(state.god.dp+1e-8<result.cost){
+      say(result.reason||'目前 Divine Power 不足');updateCost();return;
+    }
     // The cursor may currently be over an empty/no-presence area. Do not prevent
     // aiming elsewhere; every clicked map center is independently validated.
     armedMiracle=id;render();
-    say('請點擊地圖施展 '+powerMeta('miracle',id).label+'。Esc 可取消。');
+    say((result.overcast?'冷卻中強制施放（'+result.costMultiplier+'× DP）：':'請點擊地圖施展 ')+
+      powerMeta('miracle',id).label+'。Esc 可取消。');
   }
   function say(text) { const box=$('toast');box.textContent=text;box.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>box.classList.remove('visible'),3000); }
   function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,durationDays:+$('duration').value}; }
@@ -247,15 +248,18 @@
       preview=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
     const left=Math.max(0,(state.god.skills[id]?.readyAtHour||0)-state.hour);
     if(armedMiracle&&armedMiracle!==id)armedMiracle=null;
-    if(armedMiracle&&left>0)armedMiracle=null;
-    $('rainCost').textContent=`Lv${state.god.skills[id]?.level||1} · 預估 ${preview.cost??'—'} DP`;
+    $('rainCost').textContent=`Lv${state.god.skills[id]?.level||1} · 預估 ${preview.cost??'—'} DP`+
+      (preview.overcast?`（${preview.baseCost} × ${preview.costMultiplier}）`:'');
     const forecast=Number.isFinite(preview.cooldownDays)?
       `本次預計冷卻 ${format(preview.cooldownDays,1)} 模擬日`:'無法估算冷卻';
-    $('rainCooldown').textContent=left?`冷卻中 · 剩餘 ${Math.ceil(left/24)} 模擬日`:
+    $('rainCooldown').textContent=left?
+      `冷卻中 · 剩餘 ${format(left/24,1)} 日 · 強制施放 ${preview.costMultiplier}× · ${forecast}`:
       preview.reason||`已就緒 · ${forecast}`;
-    $('rainBtn').textContent=armedMiracle?'取消選擇位置':'選擇施展位置';
-    $('rainBtn').disabled=profileLoading||left>0||state.god.dp+1e-8<(preview.cost??Infinity);
-    $('rainBtn').title=preview.reason||`點圖施放將重新驗證；${forecast}`;
+    $('rainBtn').textContent=armedMiracle?'取消選擇位置':
+      preview.overcast?`強制施放（${preview.costMultiplier}×）· 選擇位置`:'選擇施展位置';
+    $('rainBtn').disabled=profileLoading||state.god.dp+1e-8<(preview.cost??Infinity);
+    $('rainBtn').title=preview.reason||
+      `點圖施放將依當下神力、連發倍率與目標重新驗證；${forecast}`;
     $('rainBtn').classList.toggle('secondary',!!armedMiracle);
   }
   function render() {
@@ -591,7 +595,8 @@
     if(x<0||y<0||x>=state.width||y>=state.height)return;
     if(armedMiracle){
       const id=armedMiracle,r=S.castMiracle(state,id,{x,y,...opts()});
-      say(r.ok?(powerMeta('miracle',id)?.label||id)+` 已施展，消耗 ${r.cost} DP；世界繼續自主運作。`:r.reason);
+      say(r.ok?(powerMeta('miracle',id)?.label||id)+
+        ` 已${r.overcast?'強制':''}施展（${r.costMultiplier}×），消耗 ${r.cost} DP；世界繼續自主運作。`:r.reason);
       if(r.ok)armedMiracle=null;
       render();return;
     }

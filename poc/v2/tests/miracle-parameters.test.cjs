@@ -183,3 +183,28 @@ test('cooldown preview changes with selected Rain duration and matches the final
   assert.equal(ui.el('rainBtn').disabled,true,
     'the button disables when next escalation cannot be afforded');
 });
+
+test('live AI difficulty selector preserves the current world and saved setting',async()=>{
+  const ui=await boot(),world=ui.world();
+  assert.ok(world.opponent?.enabled,'new World PoC starts with an actual AI opponent');
+  const difficulty=ui.el('aiDifficulty');
+  assert.equal(difficulty.value,'standard');
+  assert.equal(difficulty.disabled,false);
+  const before={hour:world.hour,people:JSON.stringify(world.people),
+    resources:JSON.stringify(world.settlements),dp:world.opponentGod.dp,
+    rng:world.opponentRng};
+  difficulty.value='relaxed';
+  difficulty.listeners.change({target:difficulty});
+  assert.equal(ui.world(),world,'changing difficulty never creates a new world');
+  assert.equal(world.opponent.difficulty,'relaxed');
+  assert.deepEqual({hour:world.hour,people:JSON.stringify(world.people),
+    resources:JSON.stringify(world.settlements),dp:world.opponentGod.dp,
+    rng:world.opponentRng},before,'AI policy switch changes no physical world state');
+  ui.el('saveBtn').onclick();
+  difficulty.value='challenging';
+  difficulty.listeners.change({target:difficulty});
+  assert.equal(world.opponent.difficulty,'challenging');
+  ui.el('loadBtn').onclick();
+  assert.equal(ui.world().opponent.difficulty,'relaxed','saved AI mode survives load');
+  assert.equal(ui.el('aiDifficulty').value,'relaxed','UI follows loaded world state');
+});

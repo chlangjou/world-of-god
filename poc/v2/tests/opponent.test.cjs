@@ -42,8 +42,12 @@ test('gods pay their own Divine Power, gain their own Mastery and have separate 
   const human=W.castMiracle(s,'rain',{x:s.camp.x,y:s.camp.y,radius:5,intensity:.8,durationDays:6});
   assert.equal(human.ok,true);
   assert.ok(s.god.skills.rain.readyAtHour>s.hour);
-  assert.equal(W.evaluateMiracle(s,'rain',{...at,godId:'g2'}).ok,false);
-  assert.equal(W.evaluateMiracle(s,'rain',{...at}).ok,false);
+  const opponentAgain=W.evaluateMiracle(s,'rain',{...at,godId:'g2'});
+  const playerAgain=W.evaluateMiracle(s,'rain',{...at});
+  assert.equal(opponentAgain.costMultiplier,2);
+  assert.equal(playerAgain.costMultiplier,2);
+  assert.equal(opponentAgain.ok,false,'AI is subject to the same unaffordable 2x price');
+  assert.equal(playerAgain.ok,false,'player also needs enough DP to force a repeat');
   good(s);
 });
 

@@ -10,6 +10,7 @@ const divine=require('../config/divine-powers-v0.1.json');
 const opponent=require('../config/opponent-v0.2.json');
 
 const SEED='dry-stress', FORK_DAY=300, MAX_AFTER_DAYS=120;
+const EXPECTED_FINGERPRINT='778899f9'; // fixed current-kernel passive Day-300 state
 const STRATEGIES=Object.freeze(['passive','frontier-welfare','frontier-offense']);
 const CHECKPOINTS=Object.freeze([300,330,360,390,420]);
 const TYPES=Object.freeze({
@@ -57,6 +58,8 @@ function prepareSnapshot({budgetMs=15000}={}){
   const verdict=W.validate(s);
   if(!verdict.ok)throw new Error('P2 Day-300 invalid: '+verdict.errors.slice(0,3));
   const snapshot=JSON.stringify(s),restored=W.restore(snapshot);
+  if(fingerprint(snapshot)!==EXPECTED_FINGERPRINT)
+    throw new Error('P2 kernel/config drift: Day-300 world fingerprint changed');
   if(JSON.stringify(restored)!==snapshot)
     throw new Error('P2 snapshot restore changed serialized state');
   const cohort=oldCohort(s);
@@ -101,6 +104,8 @@ function runBranch(snapshot,strategy='passive',{days=MAX_AFTER_DAYS,budgetMs=120
   if(typeof snapshot!=='string'||snapshot.length<10)
     throw new Error('P2 requires a serialized Day-300 save');
   const originalFingerprint=fingerprint(snapshot);
+  if(originalFingerprint!==EXPECTED_FINGERPRINT)
+    throw new Error('P2 source fingerprint mismatch: wrong Day-300 fork');
   const s=W.restore(snapshot);
   if(s.seed!==SEED||Math.floor(s.hour/24)!==FORK_DAY||
     !s.opponent?.enabled||s.opponent.difficulty!=='standard')
@@ -191,5 +196,5 @@ if(require.main===module){
       '--from reports/.snapshots/p2-day300.json --strategy passive|frontier-welfare|frontier-offense');
   }
 }
-module.exports={SEED,FORK_DAY,MAX_AFTER_DAYS,STRATEGIES,CHECKPOINTS,
+module.exports={SEED,FORK_DAY,MAX_AFTER_DAYS,EXPECTED_FINGERPRINT,STRATEGIES,CHECKPOINTS,
   fingerprint,prepareSnapshot,plannedMiracle,runBranch};

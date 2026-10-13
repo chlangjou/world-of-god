@@ -71,6 +71,8 @@ These patterns support **distinct early-to-mid-game strategies**. They do not pr
 
 The next high-information, low-cost P2 should start from **one identical, saved Day-300 world** in which the AI already has several established 40+ core believers in neutral settlements. Compare (a) no further player action and (b) a bounded, fixed late-player strategy over the following **120 days**, preserving all state and PRNG at the branch point. If nothing can dislodge established 40+ followers despite actual opposing miracles, evaluate whether a localized **Faith Contest / conversion-pressure** mechanism is needed, rather than tuning overall faith acquisition blindly.
 
+**P2 follow-up completed on the same date:** The recommended identical Day-300 save fork was executed as three bounded Day-300–420 branches. **None** of the late welfare, spreading or offensive interventions removed a single pre-existing 40+ rival core believer; 0/8 native original rival-core residents had a player faith attribution source within 11 units at the fork. Read [Late Comeback P2](STRATEGY_LATE_COMEBACK_P2_2026_10_13.md) for the full limitations and evidence. **Do not treat early Genesis-to-360 gains as proof that a late-start comeback is possible.**
+
 ## Reproduce individual 360-day cases
 
 From `poc/v2` on this feature branch, run **one case at a time**:

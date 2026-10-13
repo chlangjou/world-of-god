@@ -3,7 +3,7 @@
   const S = window.WoG2;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, activeReligionProfile = null, activeDivineProfile = null, activeOpponentProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
@@ -30,8 +30,11 @@
       {id:'blindness',label:'致盲 Blindness',hint:'暫時縮短居民尋找資源和農田的範圍'}
     ],
     oracle:[
-      {id:'food.produce',label:'糧食生產',hint:'Saint 傳遞生產優先意圖；居民自行決定工作'},
-      {id:'religion.spread',label:'傳教',hint:'Saint 動員傳教意願，Priest 保留原本自然佈道'}
+      {id:'food.produce',label:'存糧',hint:'優先實際糧食生產，會減少其他投入'},
+      {id:'family.nurture',label:'育兒',hint:'加強家人照顧與有條件的生育投入，拓荒機會較低'},
+      {id:'settlement.explore',label:'探索',hint:'提高建材、住房與拓荒優先度，非缺糧時減少農作投入'},
+      {id:'religion.spread',label:'傳教',hint:'Saint 動員傳教意願，仍依接觸與真實成果判斷'},
+      {id:'life.balance',label:'Reset · 回歸自主',hint:'神很滿意你們的行為，放下執著去追尋自己的需求'}
     ]
   };
   // Purely presentational input presets: each Miracle retains its last chosen
@@ -137,8 +140,11 @@
       $(id).setAttribute('aria-selected',String(category===kind));
     }
     const picker=$('divinePowerSelect');
-    picker.innerHTML=availablePowers[kind].map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
-    picker.value=availablePowers[kind].some(p=>p.id===rememberedPower[kind])?
+    const entries=kind==='oracle'&&!state.oracleStrategy?
+      availablePowers.oracle.filter(p=>['food.produce','religion.spread'].includes(p.id)):
+      availablePowers[kind];
+    picker.innerHTML=entries.map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+    picker.value=entries.some(p=>p.id===rememberedPower[kind])?
       rememberedPower[kind]:availablePowers[kind][0].id;
     rememberedPower[kind]=picker.value;
     if(kind==='miracle')configureMiracle(selectedPower());
@@ -196,14 +202,22 @@
     if(!response.ok)throw new Error('Opponent Profile 無法載入');
     return response.json();
   }
+  async function loadOracleStrategy(){
+    if(window.WOG_ORACLE_STRATEGY_PROFILE)return window.WOG_ORACLE_STRATEGY_PROFILE;
+    const response=await fetch('config/oracle-specialization-v0.1.json');
+    if(!response.ok)throw new Error('Oracle Specialization Profile 無法載入');
+    return response.json();
+  }
   function newWorld() {
     state=S.create({seed:state.seed,...(activeProfile?{balanceProfile:activeProfile}:{}),
       religionProfile:activeReligionProfile,divineProfile:activeDivineProfile,
+      oracleStrategyProfile:activeOracleStrategyProfile,
       worldGenesisMode:'native',
       opponentProfile:$('opponentMode').value==='ai'?
         {...(activeOpponentProfile||S.OPPONENT_DEFAULTS),
           difficulty:$('aiDifficulty').value||'standard'}:null});
     if(divineKind==='miracle')configureMiracle(selectedPower());
+    else showDivineKind('oracle');
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
     $('opponentMode').value=state.opponent?.enabled?'ai':'off';
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
@@ -245,12 +259,13 @@
   });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
   function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;activeDivineProfile=state.divinePowers;
+    activeOracleStrategyProfile=state.oracleStrategy||activeOracleStrategyProfile;
     if(state.opponent?.enabled&&state.opponent.profileId!=='opponent-v0.1')
       activeOpponentProfile=state.opponent;
     $('balanceProfile').value=activeProfile?'agriculture':'original';
     $('opponentMode').value=state.opponent?.enabled?'ai':'off';
     $('aiDifficulty').value=state.opponent?.difficulty||'standard';
-    armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+    armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
@@ -331,17 +346,22 @@
     const quota=saint&&state.religion.saintQuota?state.religion.saintQuota[saint.id]:null;
     $('saintQuota').textContent=quota?`${quota.quota} / ${state.rules.oracleQuota}`:'—';
     const intent=divineKind==='oracle'?selectedPower():'food.produce';
-    const active=state.religion.oracles.find(o=>o.status==='active'&&o.saintId===selectedSaintId&&o.intentType===intent);
+    const currentDirective=state.religion.oracles.find(o=>o.status==='active'&&o.saintId===selectedSaintId);
+    const active=intent==='life.balance'?currentDirective:
+      state.religion.oracles.find(o=>o.status==='active'&&o.saintId===selectedSaintId&&o.intentType===intent);
     $('oracleName').textContent=powerMeta('oracle',intent)?.label||'糧食生產';
     $('oracleHint').textContent=powerMeta('oracle',intent)?.hint||'Saint 傳遞意圖，居民自主行動';
     $('oracleStatus').textContent=active?
-      (intent==='religion.spread'?`持續中 · 已促成傳教 ${active.influenceSermonCount||0} 次`:
-        `持續中 · 已影響工作選擇 ${active.influenceWorkCount} 次`):'目前沒有有效指派';
+      (intent==='life.balance'?'目前特化：'+(powerMeta('oracle',active.intentType)?.label||active.intentType):
+       intent==='religion.spread'?'持續中 · 已傳教 '+(active.influenceSermonCount||0)+' 次':
+       '持續中 · 已採取相關工作 '+(active.influenceWorkCount||0)+' 次'):
+      (currentDirective?'Saint 正在執行 '+(powerMeta('oracle',currentDirective.intentType)?.label||current.intentType):
+        '目前沒有有效指派');
     $('oracleReason').textContent=active?active.propagatedAtHour===null?'Saint 已接收，準備向居民傳達。':
       `已傳播到 ${active.heardCount} 位可聆聽的居民；實際結果仍取決於當地活動。`:
       (saint?S.checkOracle(state,saint.id,intent).reason||'神諭不消耗 DP；會使用 Saint 個人接收額度。':'需要合格 Saint 和可用額度');
     $('oracleBtn').disabled=profileLoading||!saint||!S.checkOracle(state,saint?.id,intent).ok;
-    $('concludeBtn').hidden=!active;
+    $('concludeBtn').hidden=!active||intent==='life.balance'||!!state.oracleStrategy;
     $('concludeBtn').disabled=!active||!quota||quota.quota<=-1;
     const prayers=openPrayers();
     const answered=state.religion.prayers.filter(p=>p.status==='answered').slice(-1);
@@ -701,7 +721,7 @@
     rememberMiracleSettings();updateCost();draw();
   }));
   $('rainBtn').onclick=toggleMiracleTarget;
-  $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{saintId:selectedSaintId,intentType:selectedPower()});say(r.ok?'神諭已交給 Saint；居民稍後自主聆聽與回應。':r.reason);render();};
+  $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{saintId:selectedSaintId,intentType:selectedPower()});say(r.ok?(r.reset?'特化已解除；居民回歸自主需求。':'神諭已交給 Saint；居民稍後自主聆聽與回應。'):r.reason);render();};
   $('concludeBtn').onclick=()=>{const o=state.religion.oracles.find(v=>v.status==='active'&&v.saintId===selectedSaintId&&v.intentType===selectedPower());const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
   canvas.addEventListener('click',onMap);
   canvas.addEventListener('mousemove',e=>{const rect=canvas.getBoundingClientRect();cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};});
@@ -749,18 +769,19 @@
   $('aiDifficulty').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
-  Promise.allSettled([loadAgriculture(),loadReligion(),loadDivine(),loadOpponent()]).then(([agriculture,religion,divine,opponent])=>{
+  Promise.allSettled([loadAgriculture(),loadReligion(),loadDivine(),loadOpponent(),loadOracleStrategy()]).then(([agriculture,religion,divine,opponent,oracleStrategy])=>{
     activeProfile=agriculture.status==='fulfilled'?agriculture.value:null;
     activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
     activeDivineProfile=divine.status==='fulfilled'?divine.value:null;
     activeOpponentProfile=opponent.status==='fulfilled'?opponent.value:S.OPPONENT_DEFAULTS;
+    activeOracleStrategyProfile=oracleStrategy.status==='fulfilled'?oracleStrategy.value:null;
     // The initial unconfigured render displays the single-God placeholder.
     // Explicitly opt new browser worlds into the AI mode after profiles load.
     $('opponentMode').value='ai';
     newWorld();
-    const failures=[agriculture,religion,divine,opponent].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    const failures=[agriculture,religion,divine,opponent,oracleStrategy].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     say(failures.length?'Profile 載入失敗，採用內建預設：'+failures.join('；'):
-      'Agriculture、Religion Propagation、Divine Powers 與 AI 對手已啟用。');
+      'Agriculture、Religion、Divine Powers、AI 與 Oracle 特化已啟用。');
   }).finally(()=>{
     profileLoading=false;$('balanceProfile').disabled=false;$('opponentMode').disabled=false;
     $('aiDifficulty').disabled=!state.opponent?.enabled;

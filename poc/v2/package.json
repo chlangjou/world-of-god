@@ -5,13 +5,14 @@
   "description": "Modular Web PoC v2; main/docs retains design authority",
   "scripts": {
     "start": "node tools/serve.cjs",
-    "test": "node --test tests/core.test.cjs tests/layout.test.cjs tests/religion.test.cjs tests/granary.test.cjs tests/priest.test.cjs tests/divine-powers.test.cjs tests/need-location.test.cjs tests/miracle-parameters.test.cjs tests/miracle-cooldowns.test.cjs tests/opponent.test.cjs tests/native-world.test.cjs tests/miracle-faith-evidence.test.cjs tests/cooldown-escalation.test.cjs tests/opponent-difficulty.test.cjs tests/strategy-reversal-evaluation.test.cjs tests/strategy-late-comeback-p2.test.cjs",
+    "test": "node --test tests/core.test.cjs tests/layout.test.cjs tests/religion.test.cjs tests/granary.test.cjs tests/priest.test.cjs tests/divine-powers.test.cjs tests/need-location.test.cjs tests/miracle-parameters.test.cjs tests/miracle-cooldowns.test.cjs tests/opponent.test.cjs tests/native-world.test.cjs tests/miracle-faith-evidence.test.cjs tests/cooldown-escalation.test.cjs tests/opponent-difficulty.test.cjs tests/strategy-reversal-evaluation.test.cjs tests/strategy-late-comeback-p2.test.cjs tests/oracle-specialization.test.cjs",
     "smoke": "node tests/smoke.cjs",
     "check:agriculture": "node tools/agriculture-balance-check.mjs --check && node tools/agriculture-climate-check.mjs --check",
     "build:standalone": "node tools/build-single.cjs",
     "evaluate:strategy": "node --max-old-space-size=512 tools/strategy-reversal-evaluation.cjs",
     "evaluate:strategy:suite": "node tools/strategy-reversal-suite.cjs",
-    "evaluate:late": "node --max-old-space-size=512 tools/strategy-late-comeback-p2.cjs"
+    "evaluate:late": "node --max-old-space-size=512 tools/strategy-late-comeback-p2.cjs",
+    "evaluate:oracle": "node --max-old-space-size=512 tools/oracle-strategy-quick.cjs"
   },
   "engines": {
     "node": ">=18"

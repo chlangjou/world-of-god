@@ -1,0 +1,33 @@
+{
+  "profileId": "oracle-specialization-v0.1",
+  "status": "experimental-opt-in",
+  "description": "One persistent Saint calling. Reset returns believers to autonomous needs. Oracle differences reallocate feasible actions; cross-settlement core doubt requires real local deficit, demonstrated rival outcome, and live preaching contact.",
+  "reserveBias": 3.2,
+  "nurtureBias": 5.2,
+  "exploreBias": 4.5,
+  "offFocusPenalty": 2.2,
+  "nurtureConceptionMultiplier": 1.8,
+  "nurturePioneerMultiplier": 0.25,
+  "explorePioneerMultiplier": 2.2,
+  "aiFocusDays": 90,
+  "counterContactChance": 0.45,
+  "counterRepeatDays": 10,
+  "counterDoubtStep": 8,
+  "counterReachCells": 30,
+  "counterReserveAdvantageDays": 4,
+  "counterReserveTargetMaxDays": 8,
+  "counterCareGapDays": 13,
+  "counterEvidenceWorkMin": 3,
+  "counterHouseEvidenceDays": 90,
+  "semantics": {
+    "food": "food.produce increases real field/forage labor and reduces discretionary nonfood work. No free food.",
+    "nurture": "family.nurture trades away some other labor and frontier chances for care work, bounded child recovery and greater conception chance only with real family care.",
+    "explore": "settlement.explore improves feasible building/supply choices and pioneer opportunity, without creating homes or settlers.",
+    "counters": "food loses to demonstrated rival nurture when child care was missed; nurture loses to proven rival housing when its home pressure remains; explore loses to rival reserves when it has genuinely short food coverage. Cross-town live sermon encounter is sampled; no forced conversion. After credible doubt brings faith below the existing 40 threshold, time-bounded follow-up requires an actual current preacher from that source town. Existing below-20 conversion rules apply, no artificial followers.",
+    "reset": "life.balance ends active Saint specializations immediately, free of quota/DP, with zero rollback or direct Devotion changes; new specialization still consumes issue quota.",
+    "scope": "opt-in only. Does not rewrite existing saves or former P2 fingerprints. Local Divine Presence still controls aggressive miracles."
+  },
+  "counterBridgeDays": 75,
+  "counterBridgeDoubtChance": 0.36,
+  "counterBridgeConversionChance": 0.22
+}

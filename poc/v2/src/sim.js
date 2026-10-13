@@ -117,6 +117,44 @@
     r.spreadOracleJoinBonus=clamp(r.spreadOracleJoinBonus,0,.5);
     return r;
   }
+  // Optional experiment: finite effort, persistent Saint calling, earned counters.
+  const ORACLE_STRATEGY_DEFAULTS=Object.freeze({
+    profileId:'oracle-specialization-v0.1',
+    reserveBias:3.2,nurtureBias:5.2,exploreBias:4.5,offFocusPenalty:2.2,
+    nurtureConceptionMultiplier:1.8,nurturePioneerMultiplier:.25,
+    explorePioneerMultiplier:2.2,aiFocusDays:90,
+    counterContactChance:.45,counterRepeatDays:10,counterDoubtStep:8,
+    counterBridgeDays:75,counterBridgeDoubtChance:.36,counterBridgeConversionChance:.22,
+    counterReachCells:30,counterReserveAdvantageDays:4,
+    counterReserveTargetMaxDays:8,counterCareGapDays:13,
+    counterEvidenceWorkMin:3,counterHouseEvidenceDays:90
+  });
+  function oracleStrategyRules(profile){
+    if(profile?.profileId!==ORACLE_STRATEGY_DEFAULTS.profileId)return null;
+    const r={...ORACLE_STRATEGY_DEFAULTS};
+    for(const k of Object.keys(r))
+      if(k!=='profileId'&&Number.isFinite(profile[k]))r[k]=profile[k];
+    for(const k of ['reserveBias','nurtureBias','exploreBias','offFocusPenalty'])
+      r[k]=clamp(r[k],0,12);
+    for(const k of ['nurtureConceptionMultiplier','nurturePioneerMultiplier','explorePioneerMultiplier'])
+      r[k]=clamp(r[k],0,4);
+    for(const k of ['counterContactChance','counterBridgeDoubtChance','counterBridgeConversionChance'])
+      r[k]=clamp(r[k],0,1);
+    r.counterDoubtStep=Math.round(clamp(r.counterDoubtStep,1,10));
+    for(const k of ['aiFocusDays','counterRepeatDays','counterBridgeDays','counterReachCells',
+      'counterReserveAdvantageDays','counterReserveTargetMaxDays','counterCareGapDays',
+      'counterEvidenceWorkMin','counterHouseEvidenceDays'])
+      r[k]=Math.round(clamp(r[k],1,180));
+    return r;
+  }
+  const STRATEGY_COUNTERS=Object.freeze({
+    'food.produce':'family.nurture','family.nurture':'settlement.explore',
+    'settlement.explore':'food.produce'
+  });
+  const STRATEGY_LABELS=Object.freeze({
+    'food.produce':'存糧','family.nurture':'育兒','settlement.explore':'探索',
+    'religion.spread':'傳教'
+  });
   // Difficulty alters only autonomous opponent decision policies; the two Gods
   // still share physical rules, Divine Power, costs and conversion mechanics.
   const OPPONENT_DIFFICULTIES=Object.freeze({
@@ -609,6 +647,7 @@
       ? JSON.parse(JSON.stringify(config.balanceProfile)) : null;
     const seed = String(config.seed || 'valley-spring-01').slice(0, 100);
     const religionPropagation=religionRules(config.religionProfile);
+    const oracleStrategy=oracleStrategyRules(config.oracleStrategyProfile);
     const divinePowers=divinePowerRules(config.divineProfile);
     const opponent=opponentRules(config.opponentProfile);
     const initialMoisture = clamp(num(config.moisture, .52), .2, .9);
@@ -617,6 +656,7 @@
     const s = { version: VERSION, seed, rules, rng: hash(seed), religionRng:hash(seed+'|religion-v0.1'), hour: 0, tick: 0,
       width: rules.width, height: rules.height, tiles: [], people: [], households: [], settlements: [],
       camp: null, nativeWorld, religionPropagation, divinePowers,
+      ...(oracleStrategy?{oracleStrategy}:{}),
       attention:{seq:0,items:[],lastPreachingHour:-999999},
       opponent:opponent?{...opponent,lastActionDay:-1,turns:0,casts:0,oracleIssues:0}:null,
       opponentRng:opponent?hash(seed+'|opponent-v0.1'):null,
@@ -710,7 +750,11 @@
       rainReady: s.hour >= s.god.skills.rain.readyAtHour, rainReadyHour: s.god.skills.rain.readyAtHour,
       phase: s.environment.phase, births: s.counts.births, deaths: s.counts.deaths,
       rainActive: s.effects.filter(e=>(e.type||'rain')==='rain').length, householdsUnhoused: s.households.filter(h => !h.home).length,
-      workChoices: s.metrics.workChoices, oracleInfluenced: s.metrics.oracleInfluencedChoices };
+      workChoices: s.metrics.workChoices, oracleInfluenced: s.metrics.oracleInfluencedChoices,
+      strategyContacts:s.counts.strategyContacts||0,
+      strategyCoreDoubts:s.counts.strategyCoreDoubts||0,
+      strategyConceptions:s.counts.strategyConceptions||0,
+      strategyConversions:s.counts.strategyConversions||0 };
   }
   function rayCells(s, center, radius) {
     const out = [];
@@ -1164,10 +1208,18 @@
     }
   }
   function checkOracle(s, saintId, intentType,faith=s.religion) {
-    if (!['food.produce','religion.spread'].includes(intentType)) return { ok: false, reason: '這類神諭尚未實作' };
+    const allowed=s.oracleStrategy?
+      ['food.produce','family.nurture','settlement.explore','religion.spread','life.balance']:
+      ['food.produce','religion.spread'];
+    if(!allowed.includes(intentType))return {ok:false,reason:'這類神諭尚未實作'};
     const saint = s.people.find(p => p.id === saintId && p.alive);
     if (!saint || !faith.saints.includes(saintId)) return { ok: false, reason: '接收者必須是本宗教仍在世的 Saint' };
     const record = faith.saintQuota && faith.saintQuota[saintId];
+    const active=faith.oracles.filter(o=>o.saintId===saintId&&o.status==='active');
+    if(intentType==='life.balance')
+      return active.length?{ok:true,saint,active}:{ok:false,reason:'這位 Saint 目前沒有需要解除的特化'};
+    if(s.oracleStrategy&&active.length)
+      return {ok:false,reason:'請先發佈 Reset Oracle，結束目前特化'};
     if (!record || record.quota < 1) return { ok: false, reason: 'Saint 的神諭接收額度不足' };
     if (faith.oracles.some(o => o.saintId === saintId && o.intentType === intentType && o.status === 'active'))
       return { ok: false, reason: '這位 Saint 已經持有相同類型的有效神諭' };
@@ -1179,17 +1231,28 @@
     const intentType=input.intentType||'food.produce';
     const test = checkOracle(s, saintId, intentType,faith);
     if (!test.ok) return test;
-    const durationDays = clamp(num(input.durationDays, s.rules.oracleDurationDays), 1, 720);
+    if(intentType==='life.balance'){
+      for(const active of test.active){active.status='released';active.releasedAtHour=s.hour;}
+      log(s,'oracle',(enemy?faith.name+'：':'')+
+        '神很滿意你們的行為，放下心中的執著，去追尋你們自己的需求。',
+        ['這位 Saint 的特化已結束；居民依實際需求自主行動',
+         '已完成的食物、人口與住房不回溯；Reset 不消耗神力或接收額度']);
+      return {ok:true,reset:true,ended:test.active.length,saintId};
+    }
+    const durationDays=s.oracleStrategy?null:
+      clamp(num(input.durationDays, s.rules.oracleDurationDays), 1, 720);
     faith.saintQuota[saintId].quota--;
     const o = { id: 'o' + s.nextId++, godId: god.id, saintId,
       intentType, audience: 'local-community', issuedAtHour: s.hour,
-      expiresAtHour: s.hour + durationDays * 24, status: 'active', propagatedAtHour: null,
+      expiresAtHour: durationDays===null?null:s.hour+durationDays*24,
+      status: 'active', propagatedAtHour: null,
       reachRadius: s.rules.oracleCommunicationRadius, influenceWorkCount: 0,
       influenceSermonCount:0,heardCount: 0,
-      reachedSettlements:{}, fulfillmentCredited: false, progressFoodAtStart: stats(s).food };
+      reachedSettlements:{}, fulfillmentCredited: false, progressFoodAtStart: stats(s).food,
+      ...(s.oracleStrategy?{influenceCareCount:0,housesCompleted:0,lastHouseCompletedHour:null}:{}) };
     faith.oracles.push(o);
     if(enemy)s.opponent.oracleIssues++;
-    log(s, 'oracle', `${enemy?faith.name+'的神諭':'神諭'}交給 ${test.saint.name}：${intentType==='religion.spread'?'鼓勵信眾更積極地傳播信仰':'請讓族人重視糧食生產'}。`,
+    log(s, 'oracle', `${enemy?faith.name+'的神諭':'神諭'}交給 ${test.saint.name}：${s.oracleStrategy?STRATEGY_LABELS[intentType]:(intentType==='religion.spread'?'鼓勵信眾更積極地傳播信仰':'請讓族人重視糧食生產')}。`,
       ['Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定']);
     return { ok: true, oracleId: o.id, saintId, quotaLeft: faith.saintQuota[saintId].quota };
   }
@@ -1209,6 +1272,95 @@
     return p.alive&&p.religionId===faith.id&&p.devotion>=20&&
       p.stage==='adult'&&Number.isFinite(p.lastPreachHour)&&
       s.hour-p.lastPreachHour<=s.religionPropagation.pulseDays*24;
+  }
+  function strategyTownFoodDays(s,town){
+    const homes=s.households.filter(h=>town.householdIds.includes(h.id)&&householdMembers(s,h).length);
+    const need=homes.reduce((sum,h)=>sum+dailyFoodNeed(s,h),0);
+    const food=town.storage.food+homes.reduce((sum,h)=>sum+h.inventory.food,0);
+    return need>0?food/need:0;
+  }
+  function strategyCareInTown(s,town,windowDays){
+    return s.households.filter(h=>town.householdIds.includes(h.id)&&
+      householdMembers(s,h).some(p=>p.alive&&p.stage==='child')&&
+      householdMembers(s,h).some(p=>p.alive&&p.stage==='adult'&&
+        Number.isFinite(p.lastCareHour)&&s.hour-p.lastCareHour<=windowDays*24)).length;
+  }
+  // A rival core may doubt a SPECIFIC observed failure, not ordinary preaching.
+  // Contact is a probabilistic cross-town encounter with a real recent preacher;
+  // evidence must be attributable to an active opposing Oracle with real output.
+  function strategyCoreChallenge(s,p,challenger,remoteSources){
+    const rule=s.oracleStrategy;if(!rule||p.devotion<s.rules.faithThreshold)return null;
+    if(Number.isFinite(p.lastStrategyCounterHour)&&
+       s.hour-p.lastStrategyCounterHour<rule.counterRepeatDays*24)return null;
+    const own=strategyCalling(s,p).oracle;
+    const counterType=own&&STRATEGY_COUNTERS[own.intentType];
+    const target=personSettlement(s,p);
+    if(!counterType||!target)return null;
+    for(const [sourceId,preachers] of remoteSources){
+      if(sourceId===target.id)continue;
+      const source=s.settlements.find(t=>t.id===sourceId);
+      if(!source||dist(source,target)>rule.counterReachCells)continue;
+      for(const witness of preachers){
+        const oracle=strategyCalling(s,witness).oracle;
+        if(oracle?.intentType!==counterType||
+           (oracle.influenceWorkCount||0)<rule.counterEvidenceWorkMin)continue;
+        let proven=false,reason='';
+        if(counterType==='food.produce'){
+          const opponentDays=strategyTownFoodDays(s,source);
+          const localDays=strategyTownFoodDays(s,target);
+          proven=localDays<rule.counterReserveTargetMaxDays&&
+            opponentDays>=localDays+rule.counterReserveAdvantageDays;
+          reason='本地存糧不足，而外村因實際糧食勞動保有更多可及食物';
+        }else if(counterType==='family.nurture'){
+          const home=householdOf(s,p);
+          const hasChild=home&&householdMembers(s,home).some(v=>v.alive&&v.stage==='child');
+          const localCare=home&&householdMembers(s,home).some(v=>v.alive&&v.stage==='adult'&&
+            Number.isFinite(v.lastCareHour)&&s.hour-v.lastCareHour<=rule.counterCareGapDays*24);
+          proven=!!hasChild&&!localCare&&strategyCareInTown(s,source,rule.counterCareGapDays)>0;
+          reason='家中幼兒缺少近期照護，而外村有實際育兒行動';
+        }else if(counterType==='settlement.explore'){
+          const housingNeed=target.householdIds.some(id=>
+            s.households.some(h=>h.id===id&&!h.home&&householdMembers(s,h).length));
+          proven=housingNeed&&(oracle.housesCompleted||0)>0&&
+            Number.isFinite(oracle.lastHouseCompletedHour)&&
+            s.hour-oracle.lastHouseCompletedHour<=rule.counterHouseEvidenceDays*24;
+          reason='本地家庭缺少住所，而外村已實際新建房屋';
+        }
+        if(!proven)continue;
+        if(religionRand(s,challenger)>=rule.counterContactChance)return null;
+        const before=p.devotion;
+        p.devotion=Math.max(20,p.devotion-rule.counterDoubtStep);
+        p.lastStrategyCounterHour=s.hour;
+        p.lastStrategyEncounter={hour:s.hour,fromTownId:source.id,
+          challengerReligionId:challenger.id,counterOracleId:oracle.id,
+          ownOracleId:own.id,reason,devotionDelta:p.devotion-before};
+        s.counts.strategyContacts=(s.counts.strategyContacts||0)+1;
+        if(p.devotion<before){
+          s.counts.strategyCoreDoubts=(s.counts.strategyCoreDoubts||0)+1;
+        const side=challenger===s.religion?'playerStrategyCoreDoubts':'aiStrategyCoreDoubts';
+        s.counts[side]=(s.counts[side]||0)+1;
+          if(challenger===s.religion)s.counts.rivalDoubts=(s.counts.rivalDoubts||0)+1;
+          else s.counts.opponentDoubts=(s.counts.opponentDoubts||0)+1;
+          log(s,'faith',p.name+'在跨聚落交流後開始質疑原有的'+
+            STRATEGY_LABELS[own.intentType]+'方針。',
+            [reason,'消息來自'+source.name+'近期真實傳教者',
+             '對方神諭的行動成果已記錄；僅動搖信心，沒有強迫改宗']);
+        }
+        return {person:p,before,after:p.devotion,reason};
+      }
+    }
+    return null;
+  }
+  function strategyFollowupContact(s,p,faith,remoteSources){
+    const rule=s.oracleStrategy,encounter=p.lastStrategyEncounter;
+    if(!rule||!encounter||encounter.challengerReligionId!==faith.id||
+      s.hour-encounter.hour>rule.counterBridgeDays*24)return false;
+    const ownTown=personSettlement(s,p);
+    const source=s.settlements.find(t=>t.id===encounter.fromTownId);
+    if(!ownTown||!source||dist(source,ownTown)>rule.counterReachCells)return false;
+    // An evidence-backed encounter opens a finite follow-up relationship.
+    // Subsequent religious discussions still need a live outside preacher.
+    return (remoteSources.get(source.id)||[]).length>0;
   }
   function socialReligionPulse(s,faith=s.religion){
     const r=s.religionPropagation,id=faith.id,people=living(s);
@@ -1245,11 +1397,13 @@
         const field=cause==='family'?'householdAdoptions':cause==='exchange'?'interSettlementAdoptions':
           cause==='priest'||cause==='rival'?'priestAdoptions':'socialAdoptions';
         s.counts[field]=(s.counts[field]||0)+1;
-        if(cause==='rival')s.counts.rivalConversions=(s.counts.rivalConversions||0)+1;
+        if(cause==='rival'||cause==='strategy')s.counts.rivalConversions=(s.counts.rivalConversions||0)+1;
+        if(cause==='strategy')s.counts.strategyConversions=(s.counts.strategyConversions||0)+1;
         if(cause==='miracle')s.counts.miracleAdoptions=(s.counts.miracleAdoptions||0)+1;
       }else{
         s.counts.opponentNewBelievers=(s.counts.opponentNewBelievers||0)+1;
-        if(cause==='rival')s.counts.opponentConversions=(s.counts.opponentConversions||0)+1;
+        if(cause==='rival'||cause==='strategy')s.counts.opponentConversions=(s.counts.opponentConversions||0)+1;
+        if(cause==='strategy')s.counts.strategyConversions=(s.counts.strategyConversions||0)+1;
         if(cause==='miracle')s.counts.opponentMiracleAdoptions=(s.counts.opponentMiracleAdoptions||0)+1;
       }
     };
@@ -1257,7 +1411,12 @@
       const rival=p.religionId!==null&&p.religionId!==id;
       const impressed=divineInterest(s,p,faith);
       const convincing=impressed>=r.miracleInterestThreshold;
-      if(rival&&p.devotion>=s.rules.faithThreshold)continue;
+      if(rival&&p.devotion>=s.rules.faithThreshold){
+        const outcome=strategyCoreChallenge(s,p,faith,remoteSources);
+        if(outcome&&faith===s.opponentReligion)
+          pressuredPlayer.push({person:p,converted:false});
+        continue; // ordinary Priest teaching still cannot bypass 40+ devotion
+      }
       if(p.stage==='child'&&p.age<r.minimumChildAge)continue;
       const house=homes.get(p.householdId)||[];
       const guardians=p.stage==='child'?(p.parentIds?.length
@@ -1307,27 +1466,32 @@
       }
       if(!family&&!social&&!priest&&!exchange&&!convincing)continue;
       const sensitivity=.6+.8*p.receptivity;
+      const counterBridge=rival&&p.devotion<s.rules.faithThreshold&&
+        strategyFollowupContact(s,p,faith,remoteSources);
       if(rival){
         // Only a locally preaching Priest can challenge another affiliation in
         // this single-God PoC. 40+ rival devotion is protected above. Lower bands
         // first weaken over repeated credible encounters, then may freely convert.
-        if(!priest&&!convincing)continue;
+        if(!priest&&!convincing&&!counterBridge)continue;
         if(p.devotion>=20){
           const clear=nearbyPriests.some(q=>!activeStatus(s,q,'confusion'))?1:.5;
           const doubt=priest?clamp(r.priestRivalDoubtChance*sensitivity*
-            sermonAmplification*clear*(1+(convincing?.25:0)),0,.9):0;
+            sermonAmplification*clear*(1+(convincing?.25:0)),0,.9):
+            counterBridge?clamp(s.oracleStrategy.counterBridgeDoubtChance*sensitivity,0,.9):0;
           if(religionRand(s,faith)<doubt){
-            p.devotion=Math.max(19,p.devotion-r.priestRivalDoubtStep);
+            p.devotion=Math.max(19,p.devotion-(counterBridge&&!priest?
+              s.oracleStrategy.counterDoubtStep:r.priestRivalDoubtStep));
             if(faith===s.opponentReligion&&p.religionId===s.religion.id)
               pressuredPlayer.push({person:p,converted:false});
             const counter=faith===s.religion?'rivalDoubts':'opponentDoubts';
             s.counts[counter]=(s.counts[counter]||0)+1;
           }
         }else if(religionRand(s,faith)<clamp(
-          (priest?r.priestRivalConversionChance*sermonAmplification:0)+
+          (priest?r.priestRivalConversionChance*sermonAmplification:
+             counterBridge?s.oracleStrategy.counterBridgeConversionChance:0)+
           (convincing?r.miracleInterestJoinChance*Math.min(2.2,impressed/r.miracleInterestThreshold):0),
           0,.8)*sensitivity){
-          adopt(p,convincing&&!priest?'miracle':'rival');
+          adopt(p,convincing&&!priest&&!counterBridge?'miracle':counterBridge&&!priest?'strategy':'rival');
         }
         continue;
       }
@@ -1401,7 +1565,27 @@
     return town&&o.reachedSettlements?.[town.id] ? .8 : 0;
   }
 
+  // Only one dominant calling per person. 20+ own-faith membership and
+  // actual Saint/settlement communication are still required.
+  function strategyCalling(s,p){
+    if(!s.oracleStrategy||!p.alive||p.devotion<20)return {score:0,oracle:null};
+    const faith=faithOf(s,p.religionId);
+    if(!faith)return {score:0,oracle:null};
+    let best={score:0,oracle:null};
+    for(const o of faith.oracles){
+      if(o.status!=='active'||o.propagatedAtHour===null)continue;
+      const score=oracleContact(s,p,o,faith);
+      if(score>best.score||(score&&score===best.score&&
+          o.issuedAtHour>(best.oracle?.issuedAtHour??-1)))
+        best={score,oracle:o};
+    }
+    return best;
+  }
   function spreadCalling(s,p,faith=s.religion){
+    if(s.oracleStrategy){
+      const focus=strategyCalling(s,p);
+      return focus.oracle?.intentType==='religion.spread'?focus:{score:0,oracle:null};
+    }
     if(!p.alive||p.stage!=='adult'||p.religionId!==faith.id||p.devotion<20)
       return {score:0,oracle:null};
     let best={score:0,oracle:null};
@@ -1471,6 +1655,12 @@
     return best;
   }
   function workCalling(s, p) {
+    if(s.oracleStrategy){
+      const focus=strategyCalling(s,p);
+      return focus.oracle?.intentType==='food.produce'?
+        {score:(2.6+p.devotion/18)*focus.score,oracle:focus.oracle}:
+        {score:0,oracle:null};
+    }
     let strongest = { score: 0, oracle: null };
     const faith=faithOf(s,p.religionId);
     if(!faith||p.devotion<20)return strongest;
@@ -1648,6 +1838,25 @@
     const canBuild = !h.home && h.inventory.wood >= s.rules.hutWood && h.inventory.fiber >= s.rules.hutFiber;
     const call = workCalling(s, p);
     const foodBias = call.score;
+    const focus=s.oracleStrategy?strategyCalling(s,p).oracle:null;
+    // Reallocating a finite WORK shift creates opportunity costs, not free Buffs.
+    const focusBonus=name=>{
+      if(!focus)return 0;
+      const r=s.oracleStrategy,food=name==='farm'||name==='forage',
+        care=name==='care',expanding=['wood','fiber','stone','build','build_granary'].includes(name);
+      const safe=security.days>=4&&!scarce;
+      if(focus.intentType==='food.produce')
+        return care||expanding&&safe?-r.offFocusPenalty:0;
+      if(focus.intentType==='family.nurture'){
+        if(care)return r.nurtureBias;
+        return food&&safe?-r.offFocusPenalty:0;
+      }
+      if(focus.intentType==='settlement.explore'){
+        if(expanding)return r.exploreBias;
+        return food&&safe?-r.offFocusPenalty:0;
+      }
+      return 0;
+    };
     // Unmet shelter material needs still matter when food reserves make family care attractive.
     // This is decision pressure only: gathering and construction still require real work.
     const shelterMaterialBonus = !h.home && security.days >= 4
@@ -1667,6 +1876,8 @@
     // Oracle pressure can redirect willing people to feasible food activities.
     candidates.push({ name: 'care', score: 3.5 + (security.days >= (basic?.reserveComfortDays ?? s.agriculture?.workDemand?.reserveComfortDays ?? 11) ? (h.home ? (s.agriculture?.workDemand?.comfortableCareBonus ?? 5.0) : 5.0) : security.days >= (basic?.reserveRelaxDays ?? s.agriculture?.workDemand?.reserveRelaxDays ?? 7) ? 2.7 : 0) +
       (householdMembers(s,h).some(v=>v.stage==='child') ? .7 : 0), valid: true });
+    if(s.oracleStrategy)for(const candidate of candidates)
+      candidate.score+=focusBonus(candidate.name);
     if (!candidates.length) { p.activity = 'rest'; p.activityReason = '附近缺少可用資源，這次無法工作';
       p.lastDecision = { work: 'rest', hour: s.hour, reason: p.activityReason, foodDays: security.days, oracleInfluence: 0 }; return; }
     // Reasoned autonomous utility; no Oracle writes occupation, action or inventory directly.
@@ -1680,9 +1891,16 @@
     }
     candidates.sort((a,b)=> (b.score + specialization(b.name)) - (a.score + specialization(a.name)) || a.name.localeCompare(b.name));
     const choice = candidates[0];
-    const normalScores = candidates.map(x=>({name:x.name,score:x.score - ((x.name==='farm'||x.name==='forage')?foodBias:0) + specialization(x.name)}));
+    const normalScores = candidates.map(x=>({name:x.name,score:
+      x.score - ((x.name==='farm'||x.name==='forage')?foodBias:0) -
+      focusBonus(x.name)+specialization(x.name)}));
     normalScores.sort((a,b)=>b.score-a.score || a.name.localeCompare(b.name));
-    const shifted = !!(call.oracle && (choice.name === 'farm' || choice.name === 'forage') && normalScores[0].name !== choice.name);
+    const shifted=!!((call.oracle||focus)&&normalScores[0].name!==choice.name);
+    const focusedWork=!!focus&&(
+      focus.intentType==='food.produce'&&['farm','forage'].includes(choice.name)||
+      focus.intentType==='family.nurture'&&choice.name==='care'||
+      focus.intentType==='settlement.explore'&&
+        ['wood','fiber','stone','build','build_granary'].includes(choice.name));
     const foodDays = Number.isFinite(security.days) ? security.days.toFixed(1) : '充足';
     const workReasons = {
       forage: `附近仍有可採集的野生食物；家戶可及存糧約 ${foodDays} 天`,
@@ -1705,13 +1923,24 @@
     const reason = [workReasons[choice.name], ...modifiers].join('；');
     p.lastDecision = { work: choice.name, hour: s.hour, normalBest: normalScores[0].name,
       foodDays: security.days, sharedFoodAccess: !!security.town,
-      oracleInfluence: (choice.name==='farm'||choice.name==='forage')?foodBias:0,
+      oracleInfluence: (choice.name==='farm'||choice.name==='forage')?foodBias:
+        focusBonus(choice.name),
       changedByOracle: shifted, reason };
     p.activity = choice.name;
     p.activityReason = reason;
     p.lastWorkHour = s.hour;
     s.metrics.workChoices++;
-    if (shifted) { s.metrics.oracleInfluencedChoices++; call.oracle.influenceWorkCount++; p.lastOracleWorkHour = s.hour; }
+    if(s.oracleStrategy){
+      if(focusedWork){
+        focus.influenceWorkCount++;
+        p.lastOracleWorkHour=s.hour;
+        if(focus.intentType==='family.nurture')focus.influenceCareCount++;
+      }
+      if(shifted)s.metrics.oracleInfluencedChoices++;
+    }else if(shifted){
+      s.metrics.oracleInfluencedChoices++;call.oracle.influenceWorkCount++;p.lastOracleWorkHour=s.hour;
+    }
+    if(s.oracleStrategy&&choice.name==='care')p.lastCareHour=s.hour;
     if (choice.name === 'forage' && forage) {
       const amount = Math.min(forage.forage, (.6 + p.proficiency.gather * .45)*
         (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));
@@ -1768,7 +1997,17 @@
         (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency'));
       if (h.buildProgress >= s.rules.hutWork) {
         h.home = true;
+        if(s.oracleStrategy)h.completedAtHour=s.hour;
+        if(focus?.intentType==='settlement.explore'){
+          focus.housesCompleted=(focus.housesCompleted||0)+1;
+          focus.lastHouseCompletedHour=s.hour;
+        }
       }
+    }else if(choice.name==='care'&&focus?.intentType==='family.nurture'){
+      // Actual child care takes this person's work block; recovery is bounded,
+      // does not create food and provides no benefit when everyone is healthy.
+      for(const child of householdMembers(s,h).filter(v=>v.stage==='child'&&v.alive))
+        if(child.health<98)child.health=Math.min(98,child.health+.35);
     }
     p.x = h.x + (choice.name === 'farm' && field ? clamp(field.x - h.x,-2,2) * .28 : 0);
     p.y = h.y + (choice.name === 'farm' && field ? clamp(field.y - h.y,-2,2) * .28 : 0);
@@ -2393,7 +2632,20 @@
     const need=localPetitions[0]||null;
     // Each easy/standard God can maintain one actual calling at a time; they
     // don't automatically issue the competitive spread Oracle whenever legal.
-    if(saint&&day>=policy.oracleStartDay&&
+    if(s.oracleStrategy&&saint&&day>=policy.oracleStartDay){
+      // AI holds a strategy long enough to matter; resetting requires sufficient
+      // quota for the replacement. No privileged fast-forward or resources.
+      const active=faith.oracles.find(o=>o.status==='active'&&o.saintId===saint.id);
+      const season=Math.floor(Math.max(0,day-policy.oracleStartDay)/s.oracleStrategy.aiFocusDays);
+      const wanted=(need?.type==='food-shortage'||need?.type==='food-water')?
+        'food.produce':['food.produce','family.nurture','settlement.explore'][season%3];
+      const quota=faith.saintQuota?.[saint.id]?.quota??0;
+      if(active&&active.intentType!==wanted&&quota>0&&
+        day*24-active.issuedAtHour>=s.oracleStrategy.aiFocusDays*24)
+        issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,intentType:'life.balance'});
+      if(!faith.oracles.some(o=>o.status==='active'&&o.saintId===saint.id))
+        issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,intentType:wanted});
+    }else if(saint&&day>=policy.oracleStartDay&&
       !faith.oracles.some(o=>o.status==='active')){
       let calling='religion.spread';
       if(policy.decisionStyle==='petition-first'){
@@ -2491,10 +2743,15 @@
       opponentLimitedTurn(s,faith,adherents,saint,policy,day);
       return;
     }
-    if(saint&&day>=policy.oracleStartDay&&
-      !faith.oracles.some(o=>o.status==='active'&&o.intentType==='religion.spread'))
-      issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
-        intentType:'religion.spread',durationDays:ai.spreadOracleDurationDays});
+    if(saint&&day>=policy.oracleStartDay){
+      if(s.oracleStrategy){
+        if(!faith.oracles.some(o=>o.status==='active'&&o.saintId===saint.id))
+          issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
+            intentType:['food.produce','family.nurture','settlement.explore'][Math.floor(day/90)%3]});
+      }else if(!faith.oracles.some(o=>o.status==='active'&&o.intentType==='religion.spread'))
+        issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
+          intentType:'religion.spread',durationDays:ai.spreadOracleDurationDays});
+    }
     // Real followers, physical farmland and local faith determine every target.
     const priests=faith.priests.map(id=>adherents.find(p=>p.id===id)).filter(Boolean);
     const candidate=priests[0]||saint||adherents.sort((a,b)=>b.devotion-a.devotion||a.id.localeCompare(b.id))[0];
@@ -2561,15 +2818,16 @@
       if(!owner) {
         o.status='saint_dead';
         log(s,'oracle','聆聽者離世，屬於他的神諭停止傳播。',['不自動轉移給下一位 Saint；既有生活成果繼續存在']);
-      } else if(s.hour>=o.expiresAtHour) {
+      } else if(Number.isFinite(o.expiresAtHour)&&s.hour>=o.expiresAtHour) {
         o.status='expired';
-        log(s,'oracle',(o.intentType==='religion.spread'?'傳教':'糧食')+'神諭的效期自然結束。',['到期免費，已完成的生活成果不回溯']);
+        log(s,'oracle',(s.oracleStrategy?(STRATEGY_LABELS[o.intentType]||'神諭'):
+          (o.intentType==='religion.spread'?'傳教':'糧食'))+'神諭的效期自然結束。',['到期免費，已完成的生活成果不回溯']);
       } else if (o.propagatedAtHour===null && s.hour>=o.issuedAtHour+24) {
         o.propagatedAtHour=s.hour;
         const town=personSettlement(s,owner);
         if(town)(o.reachedSettlements ||= {})[town.id]={hour:s.hour,via:'saint'};
         o.heardCount=living(s).filter(p=>oracleContact(s,p,o,faith)>0).length;
-        log(s,'oracle',`${owner.name} 開始向附近居民講述${o.intentType==='religion.spread'?'傳教':'糧食'}神諭；${o.heardCount} 人有機會聽見。`,
+        log(s,'oracle',`${owner.name} 開始向附近居民講述${s.oracleStrategy?(STRATEGY_LABELS[o.intentType]||'神諭'):(o.intentType==='religion.spread'?'傳教':'糧食')}神諭；${o.heardCount} 人有機會聽見。`,
           ['Saint 接收內容可靠','傳播受個人距離與社群影響，不是向全地圖強制廣播']);
       }
     }
@@ -2647,10 +2905,15 @@
     if((accessibleSettlement(s,ah)?.id||null)!==(accessibleSettlement(s,bh)?.id||null))return false;
     return foodSecurity(s,ah).days>=F.requiredFoodDays&&foodSecurity(s,bh).days>=F.requiredFoodDays;
   }
-  function familyHomeSite(s,origin,F) {
+  function familyHomeSite(s,origin,F,calling=null) {
     const town=accessibleSettlement(s,origin);
     const count=town?s.households.filter(h=>accessibleSettlement(s,h)?.id===town.id&&householdMembers(s,h).length).length:0;
-    const pioneer=town&&count>=F.pioneerAfterHouseholds&&rand(s)<F.pioneerChance;
+    const multiplier=!s.oracleStrategy?1:
+      calling==='settlement.explore'?s.oracleStrategy.explorePioneerMultiplier:
+      calling==='family.nurture'?s.oracleStrategy.nurturePioneerMultiplier:
+      calling==='food.produce'?.7:1;
+    const pioneer=town&&count>=F.pioneerAfterHouseholds&&
+      rand(s)<clamp(F.pioneerChance*multiplier,0,1);
     function choose(center,inner,outer,remote) {
       let best=null,score=-Infinity;
       for(let y=Math.max(1,Math.floor(center.y-outer));y<Math.min(s.height-1,Math.ceil(center.y+outer));y++)
@@ -2699,7 +2962,7 @@
       const others=living(s).filter(b=>b.genderRole==='fertilize'&&compatiblePartners(s,a,b,F))
         .sort((x,y)=>dist(householdOf(s,a),householdOf(s,x))-dist(householdOf(s,a),householdOf(s,y))||x.id.localeCompare(y.id));
       if(!others.length||rand(s)>F.pairChancePerMonth)continue;
-      const partner=others[0],ah=householdOf(s,a),bh=householdOf(s,partner),site=familyHomeSite(s,ah,F);
+      const partner=others[0],ah=householdOf(s,a),bh=householdOf(s,partner),site=familyHomeSite(s,ah,F,strategyCalling(s,a).oracle?.intentType);
       if(!site)continue;
       const food=F.startupFoodDays*2*s.rules.foodNeedAdult;
       if(!transferStartupFood(s,ah,bh,food,F))continue;
@@ -2751,8 +3014,14 @@
         if(security.days<s.rules.conceptionMinFoodDays)continue;
         const dependentCount=householdMembers(s,h).filter(v=>v.stage==='child').length;
         const spaceFactor=clamp(1-(dependentCount-1)*.14,.4,1);
-        if(rand(s)<s.rules.conceptionChancePerMonth*spaceFactor) {
+        const nurture=s.oracleStrategy&&
+          strategyCalling(s,p).oracle?.intentType==='family.nurture'&&
+          householdMembers(s,h).some(v=>v.lastCareHour>=s.hour-30*24);
+        const chance=s.rules.conceptionChancePerMonth*spaceFactor*
+          (nurture?s.oracleStrategy.nurtureConceptionMultiplier:1);
+        if(rand(s)<clamp(chance,0,1)) {
           p.pregnancyDueHour=s.hour+9*monthHours(s);
+          if(nurture)s.counts.strategyConceptions=(s.counts.strategyConceptions||0)+1;
           // Pregnancy is current private state; an ordinary conception is not a major history entry.
         }
       }
@@ -2893,6 +3162,7 @@
       !Number.isFinite(formerReligion.priestRivalDoubtChance))
       formerReligion.priestJoinChance=RELIGION_DEFAULTS.priestJoinChance;
     candidate.religionPropagation=religionRules(formerReligion);
+    if(candidate.oracleStrategy)candidate.oracleStrategy=oracleStrategyRules(candidate.oracleStrategy);
     candidate.divinePowers=divinePowerRules(candidate.divinePowers);
     candidate.attention ||= {seq:0,items:[],lastPreachingHour:-999999};
     candidate.attention.items ||= [];
@@ -2953,7 +3223,7 @@
     if(!verdict.ok) throw new Error('無法讀取世界：'+verdict.errors.join('；'));
     return candidate;
   }
-  return {VERSION,DEFAULT_RULES,POWER_DEFAULTS,OPPONENT_DIFFICULTIES,
+  return {VERSION,DEFAULT_RULES,POWER_DEFAULTS,OPPONENT_DIFFICULTIES,ORACLE_STRATEGY_DEFAULTS,
     create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
     evaluateMiracle,castMiracle,activeStatus,
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,

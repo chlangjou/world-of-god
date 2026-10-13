@@ -1,0 +1,958 @@
+{
+  "schema": "world-of-god/oracle-quick-v0.1",
+  "seed": "dry-stress",
+  "forkDay": 45,
+  "afterDays": 60,
+  "identicalSnapshotFingerprint": "63326a32",
+  "oldAIcoreCohort": 12,
+  "autonomousAI": "standard",
+  "assertions": "World behavior only, no injected player followers or forced conversions. Mechanistic fixture tests separately verify Reset.",
+  "preparationMs": 1850,
+  "totalElapsedMs": 15712,
+  "cases": [
+    {
+      "arm": "passive",
+      "actions": [],
+      "checkpoints": [
+        {
+          "day": 45,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            14,
+            16
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 1000,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [],
+          "valid": true
+        },
+        {
+          "day": 60,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            14,
+            19
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 1415,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [],
+          "valid": true
+        },
+        {
+          "day": 75,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            16,
+            25
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 2087,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [],
+          "valid": true
+        },
+        {
+          "day": 90,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            13,
+            28
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 3053,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [],
+          "valid": true
+        },
+        {
+          "day": 105,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            12,
+            34
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 4182,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [],
+          "valid": true
+        }
+      ],
+      "originalAIcoreTrace": [],
+      "elapsedMs": 2537
+    },
+    {
+      "arm": "reserve",
+      "actions": [
+        {
+          "day": 46,
+          "intent": "food.produce",
+          "ok": true,
+          "reason": null
+        }
+      ],
+      "checkpoints": [
+        {
+          "day": 45,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            14,
+            16
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 1000,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [],
+          "valid": true
+        },
+        {
+          "day": 60,
+          "core": [
+            7,
+            12
+          ],
+          "believers20": [
+            16,
+            19
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 1874,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [
+            {
+              "intent": "food.produce",
+              "worked": 112,
+              "care": 0,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 75,
+          "core": [
+            7,
+            12
+          ],
+          "believers20": [
+            18,
+            22
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 3377,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [
+            {
+              "intent": "food.produce",
+              "worked": 232,
+              "care": 0,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 90,
+          "core": [
+            7,
+            12
+          ],
+          "believers20": [
+            17,
+            24
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 4815,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [
+            {
+              "intent": "food.produce",
+              "worked": 352,
+              "care": 0,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 105,
+          "core": [
+            8,
+            12
+          ],
+          "believers20": [
+            15,
+            30
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 6093,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [
+            {
+              "intent": "food.produce",
+              "worked": 472,
+              "care": 0,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        }
+      ],
+      "originalAIcoreTrace": [],
+      "elapsedMs": 2971
+    },
+    {
+      "arm": "nurture",
+      "actions": [
+        {
+          "day": 46,
+          "intent": "family.nurture",
+          "ok": true,
+          "reason": null
+        }
+      ],
+      "checkpoints": [
+        {
+          "day": 45,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            14,
+            16
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 1000,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [],
+          "valid": true
+        },
+        {
+          "day": 60,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            14,
+            19
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 6,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 6,
+          "playerCoreCounterDoubts": 6,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 6,
+          "food": 1384,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 1,
+          "focus": [
+            {
+              "intent": "family.nurture",
+              "worked": 112,
+              "care": 112,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 75,
+          "core": [
+            3,
+            11
+          ],
+          "believers20": [
+            13,
+            25
+          ],
+          "originalAIcore40": 11,
+          "originalAIbelow40": 1,
+          "originalAIeverBelow40": 1,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 10,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 11,
+          "playerCoreCounterDoubts": 11,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 11,
+          "food": 2331,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 1,
+          "focus": [
+            {
+              "intent": "family.nurture",
+              "worked": 236,
+              "care": 236,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 90,
+          "core": [
+            3,
+            10
+          ],
+          "believers20": [
+            13,
+            31
+          ],
+          "originalAIcore40": 10,
+          "originalAIbelow40": 2,
+          "originalAIeverBelow40": 3,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 11,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 18,
+          "playerCoreCounterDoubts": 18,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 18,
+          "food": 3454,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 1,
+          "focus": [
+            {
+              "intent": "family.nurture",
+              "worked": 355,
+              "care": 355,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 105,
+          "core": [
+            3,
+            8
+          ],
+          "believers20": [
+            13,
+            32
+          ],
+          "originalAIcore40": 8,
+          "originalAIbelow40": 4,
+          "originalAIeverBelow40": 4,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 12,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 31,
+          "playerCoreCounterDoubts": 31,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 31,
+          "food": 4428,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 1,
+          "focus": [
+            {
+              "intent": "family.nurture",
+              "worked": 475,
+              "care": 475,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        }
+      ],
+      "originalAIcoreTrace": [
+        {
+          "id": "p15",
+          "start": 41,
+          "min": 24,
+          "everBelow40": true,
+          "everChangedReligion": false,
+          "final": 24
+        },
+        {
+          "id": "p18",
+          "start": 40,
+          "min": 28,
+          "everBelow40": true,
+          "everChangedReligion": false,
+          "final": 29
+        },
+        {
+          "id": "p21",
+          "start": 43,
+          "min": 31,
+          "everBelow40": true,
+          "everChangedReligion": false,
+          "final": 31
+        },
+        {
+          "id": "p24",
+          "start": 42,
+          "min": 31,
+          "everBelow40": true,
+          "everChangedReligion": false,
+          "final": 31
+        }
+      ],
+      "elapsedMs": 2779
+    },
+    {
+      "arm": "explore",
+      "actions": [
+        {
+          "day": 46,
+          "intent": "settlement.explore",
+          "ok": true,
+          "reason": null
+        }
+      ],
+      "checkpoints": [
+        {
+          "day": 45,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            14,
+            16
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 1000,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [],
+          "valid": true
+        },
+        {
+          "day": 60,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            14,
+            19
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 1384,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [
+            {
+              "intent": "settlement.explore",
+              "worked": 0,
+              "care": 0,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 75,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            15,
+            25
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 2059,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [
+            {
+              "intent": "settlement.explore",
+              "worked": 0,
+              "care": 0,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 90,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            12,
+            28
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 2616,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [
+            {
+              "intent": "settlement.explore",
+              "worked": 0,
+              "care": 0,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 105,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            12,
+            33
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 3492,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [
+            {
+              "intent": "settlement.explore",
+              "worked": 0,
+              "care": 0,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        }
+      ],
+      "originalAIcoreTrace": [],
+      "elapsedMs": 2589
+    },
+    {
+      "arm": "nurture-reset-reserve",
+      "actions": [
+        {
+          "day": 46,
+          "intent": "family.nurture",
+          "ok": true,
+          "reason": null
+        },
+        {
+          "day": 76,
+          "intent": "life.balance",
+          "ok": true,
+          "reason": null
+        },
+        {
+          "day": 76,
+          "intent": "food.produce",
+          "ok": true,
+          "reason": null
+        }
+      ],
+      "checkpoints": [
+        {
+          "day": 45,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            14,
+            16
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 0,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 0,
+          "playerCoreCounterDoubts": 0,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 0,
+          "food": 1000,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 0,
+          "focus": [],
+          "valid": true
+        },
+        {
+          "day": 60,
+          "core": [
+            3,
+            12
+          ],
+          "believers20": [
+            14,
+            19
+          ],
+          "originalAIcore40": 12,
+          "originalAIbelow40": 0,
+          "originalAIeverBelow40": 0,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 6,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 6,
+          "playerCoreCounterDoubts": 6,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 6,
+          "food": 1384,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 1,
+          "focus": [
+            {
+              "intent": "family.nurture",
+              "worked": 112,
+              "care": 112,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 75,
+          "core": [
+            3,
+            11
+          ],
+          "believers20": [
+            13,
+            25
+          ],
+          "originalAIcore40": 11,
+          "originalAIbelow40": 1,
+          "originalAIeverBelow40": 1,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 10,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 11,
+          "playerCoreCounterDoubts": 11,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 11,
+          "food": 2331,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 1,
+          "focus": [
+            {
+              "intent": "family.nurture",
+              "worked": 236,
+              "care": 236,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 90,
+          "core": [
+            7,
+            11
+          ],
+          "believers20": [
+            13,
+            31
+          ],
+          "originalAIcore40": 11,
+          "originalAIbelow40": 1,
+          "originalAIeverBelow40": 1,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 10,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 11,
+          "playerCoreCounterDoubts": 11,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 11,
+          "food": 4004,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 1,
+          "focus": [
+            {
+              "intent": "food.produce",
+              "worked": 112,
+              "care": 0,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        },
+        {
+          "day": 105,
+          "core": [
+            7,
+            11
+          ],
+          "believers20": [
+            12,
+            31
+          ],
+          "originalAIcore40": 11,
+          "originalAIbelow40": 1,
+          "originalAIeverBelow40": 1,
+          "originalAIeverChangedReligion": 0,
+          "originalAIcounterContacted": 10,
+          "naturalRivalConversions": 0,
+          "realContactDoubts": 11,
+          "playerCoreCounterDoubts": 11,
+          "aiCoreCounterDoubts": 0,
+          "strategyConversions": 0,
+          "totalContactEvents": 11,
+          "food": 5442,
+          "housed": "17/17",
+          "births": 0,
+          "conceptions": 1,
+          "focus": [
+            {
+              "intent": "food.produce",
+              "worked": 232,
+              "care": 0,
+              "houses": 0
+            }
+          ],
+          "valid": true
+        }
+      ],
+      "originalAIcoreTrace": [
+        {
+          "id": "p15",
+          "start": 41,
+          "min": 24,
+          "everBelow40": true,
+          "everChangedReligion": false,
+          "final": 24
+        }
+      ],
+      "elapsedMs": 2672
+    }
+  ],
+  "date": "2026-10-13",
+  "sourceCommit": "f40b882ea97d10a3d63fa93f10ff210875a8630d",
+  "sourceEngineBlob": "caf26fc2751101cdcb05851f0508ead63bb94ef6",
+  "executionEngine": "V8 isolate (same src/sim.js, independent Node CI pending)",
+  "baselineLegacyFingerprint": "778899f9",
+  "notes": [
+    "One genuine Day-45 saved-world fork. All five independent arms preserve baseline RNG, land, people, AI policies and opponent Presence.",
+    "Day-45 world has no new housing demand; exploration cannot create house construction work artificially.",
+    "Evidence-based doubts do not imply a faith conversion or victory."
+  ]
+}

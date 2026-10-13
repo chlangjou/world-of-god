@@ -1,0 +1,59 @@
+name: Oracle specialization regression
+
+on:
+  push:
+    branches:
+      - feature/opponent-difficulty-profiles-v0.3
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/oracle-specialization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate JavaScript syntax
+        working-directory: poc/v2
+        run: |
+          node --check src/sim.js
+          node --check src/app.js
+          node --check tools/oracle-strategy-quick.cjs
+      - name: Run entire existing test suite
+        working-directory: poc/v2
+        run: npm test
+      - name: Build standalone browser artifact
+        working-directory: poc/v2
+        run: npm run build:standalone
+      - name: Run bounded five-arm strategy check
+        working-directory: poc/v2
+        run: npm run evaluate:oracle -- --days 60 --budget-ms 30000 --out reports/oracle-strategy-quick-2026-10-13.json
+      - name: Assert genuine strategy outcomes, not mere 20+ affiliation fluctuation
+        working-directory: poc/v2
+        run: |
+          node - <<'JS'
+          const assert=require('node:assert/strict');
+          const r=require('./reports/oracle-strategy-quick-2026-10-13.json');
+          assert.equal(r.forkDay,45);
+          assert.equal(r.afterDays,60);
+          assert.equal(r.cases.length,5);
+          const by=Object.fromEntries(r.cases.map(x=>[x.arm,x]));
+          for(const item of r.cases){
+            assert.ok(item.checkpoints.every(x=>x.valid),item.arm);
+            assert.ok(item.actions.every(x=>x.ok),item.arm);
+          }
+          const end=name=>by[name].checkpoints.at(-1);
+          assert.equal(end('passive').originalAIbelow40,0);
+          assert.ok(end('nurture').originalAIbelow40>end('passive').originalAIbelow40);
+          assert.ok(end('reserve').food>end('passive').food);
+          assert.ok(by['nurture-reset-reserve'].actions.some(a=>a.intent==='life.balance'&&a.ok));
+          console.log('Oracle strategy assertions pass',r.identicalSnapshotFingerprint);
+          JS

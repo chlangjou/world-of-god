@@ -64,7 +64,7 @@ function prepareSnapshot({budgetMs=15000}={}){
     throw new Error('P2 snapshot restore changed serialized state');
   const cohort=oldCohort(s);
   return {snapshot,metadata:{
-    seed:SEED,day:FORK_DAY,ticks:s.tick,bytes:snapshot.length,
+    seed:SEED,day:FORK_DAY,ticks:s.tick,jsCodeUnits:snapshot.length,
     fingerprintAlgorithm:'FNV1a32',fingerprint:fingerprint(snapshot),
     originalCoreCount:cohort.all.length,nativeOriginalCoreCount:cohort.native.length,
     attribution:attributionReach(s,cohort.native),initial:E.checkpoint(s,FORK_DAY),
@@ -160,7 +160,7 @@ function runBranch(snapshot,strategy='passive',{days=MAX_AFTER_DAYS,budgetMs=120
     peakRssMb:peakRssBytes?round(peakRssBytes/1048576):null,
     aborted,valid:verdict.ok,validationErrors:verdict.errors.slice(0,3),
     sourceFingerprintAlgorithm:'FNV1a32',sourceFingerprint:originalFingerprint,
-    sourceBytes:snapshot.length,originalRivalCore:cohortReview(s,cohort.all),
+    sourceJsCodeUnits:snapshot.length,originalRivalCore:cohortReview(s,cohort.all),
     originalNativeRivalCore:cohortReview(s,cohort.native),
     originalNativeCoreAttributionReach:attr,
     conversionDeltas:{

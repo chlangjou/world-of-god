@@ -8,7 +8,7 @@
   "fork": {
     "day": 300,
     "ticks": 900,
-    "serializedBytes": 853910,
+    "serializedJsCodeUnits": 853910,
     "algorithm": "FNV1a32 (noncryptographic)",
     "fingerprint": "778899f9",
     "identicalRestore": true,

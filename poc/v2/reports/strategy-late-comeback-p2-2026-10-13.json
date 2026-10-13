@@ -1,0 +1,609 @@
+{
+  "schema": "world-of-god/strategy-late-comeback-p2/v0.1",
+  "date": "2026-10-13",
+  "sourceBranch": "feature/opponent-difficulty-profiles-v0.3",
+  "seed": "dry-stress",
+  "opponentDifficulty": "standard",
+  "engine": "Actual poc/v2/src/sim.js executed in a V8 isolate; native Node memory was not measured",
+  "fork": {
+    "day": 300,
+    "ticks": 900,
+    "serializedBytes": 853910,
+    "algorithm": "FNV1a32 (noncryptographic)",
+    "fingerprint": "778899f9",
+    "identicalRestore": true,
+    "initialCore40": {
+      "player": 8,
+      "ai": 20
+    },
+    "initialBelievers20": {
+      "player": 12,
+      "ai": 39
+    },
+    "initialFaithPowerWeight": {
+      "player": 20,
+      "ai": 83
+    },
+    "initialNativeCoreAI": 8,
+    "initialNativePlayerBelievers20": 0,
+    "originalNativeAIcoreWithinPlayerFaithContext": {
+      "radius": 11,
+      "eligible": 0,
+      "total": 8
+    }
+  },
+  "branchDays": 120,
+  "ticksPerBranch": 360,
+  "checkpoints": [
+    300,
+    330,
+    360,
+    390,
+    420
+  ],
+  "policy": "fixed at fork, Oracle religion.spread days 301 and 391, Miracle slots days 321/342/363/384/405, fixed own-side/frontier native villages, no per-tick optimizer or fallback casts",
+  "cases": [
+    {
+      "valid": true,
+      "aborted": false,
+      "finalDay": 420,
+      "originalAIcoreCohort": {
+        "atFork": 20,
+        "stillAI40": 20,
+        "loweredBelow40": 0,
+        "convertedToPlayer": 0,
+        "dead": 0
+      },
+      "originalNativeAIcoreCohort": {
+        "atFork": 8,
+        "stillAI40": 8,
+        "loweredBelow40": 0,
+        "convertedToPlayer": 0,
+        "dead": 0
+      },
+      "conversionDeltas": {
+        "playerRivalConversions": 0,
+        "playerMiracleAdoptions": 0,
+        "aiRivalConversions": 0
+      },
+      "strategy": "passive",
+      "elapsedV8Ms": 4048,
+      "miracleSuccess": 0,
+      "miracleAttempts": 0,
+      "oracleSuccess": 0,
+      "oracleAttempts": 0,
+      "casts": [],
+      "checkpoints": [
+        {
+          "day": 300,
+          "core40": {
+            "player": 8,
+            "ai": 20
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 4
+            },
+            "n2": {
+              "player": 0,
+              "ai": 0
+            },
+            "n3": {
+              "player": 0,
+              "ai": 4
+            }
+          }
+        },
+        {
+          "day": 330,
+          "core40": {
+            "player": 9,
+            "ai": 24
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 2
+            },
+            "n3": {
+              "player": 0,
+              "ai": 5
+            }
+          }
+        },
+        {
+          "day": 360,
+          "core40": {
+            "player": 9,
+            "ai": 25
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 3
+            },
+            "n3": {
+              "player": 0,
+              "ai": 5
+            }
+          }
+        },
+        {
+          "day": 390,
+          "core40": {
+            "player": 10,
+            "ai": 26
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 3
+            },
+            "n3": {
+              "player": 0,
+              "ai": 6
+            }
+          }
+        },
+        {
+          "day": 420,
+          "core40": {
+            "player": 10,
+            "ai": 29
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 5
+            },
+            "n3": {
+              "player": 0,
+              "ai": 7
+            }
+          }
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "aborted": false,
+      "finalDay": 420,
+      "originalAIcoreCohort": {
+        "atFork": 20,
+        "stillAI40": 20,
+        "loweredBelow40": 0,
+        "convertedToPlayer": 0,
+        "dead": 0
+      },
+      "originalNativeAIcoreCohort": {
+        "atFork": 8,
+        "stillAI40": 8,
+        "loweredBelow40": 0,
+        "convertedToPlayer": 0,
+        "dead": 0
+      },
+      "conversionDeltas": {
+        "playerRivalConversions": 0,
+        "playerMiracleAdoptions": 0,
+        "aiRivalConversions": 0
+      },
+      "strategy": "frontier-welfare",
+      "elapsedV8Ms": 4104,
+      "miracleSuccess": 5,
+      "miracleAttempts": 5,
+      "oracleSuccess": 2,
+      "oracleAttempts": 2,
+      "casts": [
+        {
+          "day": 321,
+          "type": "ripening",
+          "target": "n1",
+          "success": true
+        },
+        {
+          "day": 342,
+          "type": "rain",
+          "target": "n3",
+          "success": true
+        },
+        {
+          "day": 363,
+          "type": "harvest",
+          "target": "n1",
+          "success": true
+        },
+        {
+          "day": 384,
+          "type": "ripening",
+          "target": "n3",
+          "success": true
+        },
+        {
+          "day": 405,
+          "type": "rain",
+          "target": "n1",
+          "success": true
+        }
+      ],
+      "checkpoints": [
+        {
+          "day": 300,
+          "core40": {
+            "player": 8,
+            "ai": 20
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 4
+            },
+            "n2": {
+              "player": 0,
+              "ai": 0
+            },
+            "n3": {
+              "player": 0,
+              "ai": 4
+            }
+          }
+        },
+        {
+          "day": 330,
+          "core40": {
+            "player": 9,
+            "ai": 24
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 2
+            },
+            "n3": {
+              "player": 0,
+              "ai": 5
+            }
+          }
+        },
+        {
+          "day": 360,
+          "core40": {
+            "player": 9,
+            "ai": 25
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 3
+            },
+            "n3": {
+              "player": 0,
+              "ai": 5
+            }
+          }
+        },
+        {
+          "day": 390,
+          "core40": {
+            "player": 9,
+            "ai": 26
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 3
+            },
+            "n3": {
+              "player": 0,
+              "ai": 6
+            }
+          }
+        },
+        {
+          "day": 420,
+          "core40": {
+            "player": 9,
+            "ai": 29
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 5
+            },
+            "n3": {
+              "player": 0,
+              "ai": 7
+            }
+          }
+        }
+      ]
+    },
+    {
+      "valid": true,
+      "aborted": false,
+      "finalDay": 420,
+      "originalAIcoreCohort": {
+        "atFork": 20,
+        "stillAI40": 20,
+        "loweredBelow40": 0,
+        "convertedToPlayer": 0,
+        "dead": 0
+      },
+      "originalNativeAIcoreCohort": {
+        "atFork": 8,
+        "stillAI40": 8,
+        "loweredBelow40": 0,
+        "convertedToPlayer": 0,
+        "dead": 0
+      },
+      "conversionDeltas": {
+        "playerRivalConversions": 0,
+        "playerMiracleAdoptions": 0,
+        "aiRivalConversions": 0
+      },
+      "strategy": "frontier-offense",
+      "elapsedV8Ms": 4044,
+      "miracleSuccess": 0,
+      "miracleAttempts": 5,
+      "oracleSuccess": 2,
+      "oracleAttempts": 2,
+      "casts": [
+        {
+          "day": 321,
+          "type": "confusion",
+          "target": "n1",
+          "success": false,
+          "reason": "當地神性臨在不足，無法發動破壞／干擾神蹟"
+        },
+        {
+          "day": 342,
+          "type": "drought",
+          "target": "n3",
+          "success": false,
+          "reason": "當地神性臨在不足，無法發動破壞／干擾神蹟"
+        },
+        {
+          "day": 363,
+          "type": "lightning",
+          "target": "n1",
+          "success": false,
+          "reason": "當地神性臨在不足，無法發動破壞／干擾神蹟"
+        },
+        {
+          "day": 384,
+          "type": "confusion",
+          "target": "n3",
+          "success": false,
+          "reason": "當地神性臨在不足，無法發動破壞／干擾神蹟"
+        },
+        {
+          "day": 405,
+          "type": "drought",
+          "target": "n1",
+          "success": false,
+          "reason": "當地神性臨在不足，無法發動破壞／干擾神蹟"
+        }
+      ],
+      "checkpoints": [
+        {
+          "day": 300,
+          "core40": {
+            "player": 8,
+            "ai": 20
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 4
+            },
+            "n2": {
+              "player": 0,
+              "ai": 0
+            },
+            "n3": {
+              "player": 0,
+              "ai": 4
+            }
+          }
+        },
+        {
+          "day": 330,
+          "core40": {
+            "player": 9,
+            "ai": 24
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 2
+            },
+            "n3": {
+              "player": 0,
+              "ai": 5
+            }
+          }
+        },
+        {
+          "day": 360,
+          "core40": {
+            "player": 9,
+            "ai": 25
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 3
+            },
+            "n3": {
+              "player": 0,
+              "ai": 5
+            }
+          }
+        },
+        {
+          "day": 390,
+          "core40": {
+            "player": 9,
+            "ai": 26
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 3
+            },
+            "n3": {
+              "player": 0,
+              "ai": 6
+            }
+          }
+        },
+        {
+          "day": 420,
+          "core40": {
+            "player": 9,
+            "ai": 29
+          },
+          "believers20": {
+            "player": 12,
+            "ai": 39
+          },
+          "nativeCore40": {
+            "n1": {
+              "player": 0,
+              "ai": 5
+            },
+            "n2": {
+              "player": 0,
+              "ai": 5
+            },
+            "n3": {
+              "player": 0,
+              "ai": 7
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "cases": 3,
+    "preparationElapsedV8Ms": 9738,
+    "branchesElapsedV8Ms": 12196,
+    "totalSimulationTicks": 1980,
+    "allValid": true,
+    "abortedCount": 0,
+    "coreReversals": 0,
+    "originalCoreDefections": 0,
+    "originalCoreLost40": 0,
+    "miracleWelfareSuccess": 5,
+    "offensiveMiracleRejected": 5,
+    "creditedDirectMiracleAdoptions": 0
+  },
+  "limitations": [
+    "One fixed seed and only two narrow reactive policies; not evidence that any possible human strategy must fail",
+    "The unchanged AI core is consistent with geography and the attribution/presence gates, but RNG trajectories may differ after interventions",
+    "No balancing parameter or rule was changed; physical world still evolves autonomously",
+    "One prepared day-300 snapshot was cloned in-memory for each branch; snapshot bytes were not committed to the repo",
+    "Each experiment was run in a bounded V8 isolate, not a native Node child with measured RSS."
+  ]
+}

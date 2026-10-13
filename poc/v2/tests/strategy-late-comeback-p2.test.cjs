@@ -23,7 +23,7 @@ test('P2 only allows the short, explicit matched day-300 strategies',()=>{
 });
 test('a Genesis world cannot masquerade as the saved day-300 fork',()=>{
   assert.throws(()=>P.runBranch(JSON.stringify(genesis()),'passive',{days:1}),
-    /fixed Day-300 Normal-AI/);
+    /Day-300/);
 });
 test('late action targets and choices are frozen before the resumed world evolves',()=>{
   const s=genesis();

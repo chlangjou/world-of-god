@@ -92,6 +92,107 @@ test('visible 40+ counter pressure requires a real rival doctrine, live preachin
   assert.ok(below>0,'actual AI core must weaken from evidence-driven nurture in this fixed seed');
   assert.ok((s.counts.playerStrategyCoreDoubts||0)>0);
   assert.ok(s.people.some(p=>p.lastStrategyEncounter?.challengerReligionId===s.religion.id));
-  assert.equal(s.counts.strategyConversions||0,0,'doubt is not an automatic conversion');
+  // A conversion is allowed after real contacts, repeated doubt and the
+  // original low-Devotion conversion gate. It is never automatic on issue.
+  assert.ok((s.counts.strategyConversions||0)<=original.length);
+  for(const person of s.people.filter(p=>original.includes(p.id)&&
+    p.religionId===s.religion.id)){
+    assert.ok(person.lastStrategyEncounter?.counterOracleId,
+      'converted former core must have witnessed a real counterpart');
+  }
   assert.ok(W.validate(s).ok);
+});
+
+test('Oracle defenses follow the explicit reciprocal matrix, not an automatic attack',()=>{
+  const s=fresh();
+  const f=(own,rival)=>W.oracleFaithDefense(s.oracleStrategy,own,rival);
+  const pairs=[
+    ['family.nurture','food.produce',1.6,.4],
+    ['food.produce','settlement.explore',1.6,.4],
+    ['settlement.explore','family.nurture',1.6,.4],
+    ['family.nurture','default',1.2,.8],
+    ['food.produce','default',1.2,.8],
+    // No explored rule was given for this matchup: do not invent one.
+    ['settlement.explore','default',1,1]
+  ];
+  for(const [a,b,forward,reverse] of pairs){
+    assert.equal(f(a,b),forward,a+' defense against '+b);
+    assert.equal(f(b,a),reverse,b+' defense against '+a);
+  }
+  for(const a of ['default','food.produce','family.nurture','settlement.explore']){
+    assert.equal(f(a,a),1,'equal strategies have no intrinsic advantage');
+    assert.equal(f(a,'religion.spread'),f(a,'default'),
+      'routine spreading is not a fifth defensive attribute');
+  }
+  assert.equal(W.oracleFaithDefense({},'food.produce','family.nurture'),1);
+  assert.equal(W.oracleFaithDefense({...s.oracleStrategy,faithDefenseEnabled:false},
+    'food.produce','family.nurture'),1);
+});
+test('configurable defense safely clamps matrix and cannot alter matching strategies',()=>{
+  const s=W.create({oracleStrategyProfile:{...S,
+    faithDefenseChanceCeiling:99,
+    faithDefenseMatrix:{'food.produce':{
+      'family.nurture':0,'food.produce':20,'default':9
+    }}}});
+  assert.equal(s.oracleStrategy.faithDefenseChanceCeiling,.95);
+  assert.equal(W.oracleFaithDefense(s.oracleStrategy,'food.produce','family.nurture'),.25);
+  assert.equal(W.oracleFaithDefense(s.oracleStrategy,'food.produce','food.produce'),1);
+  assert.equal(W.oracleFaithDefense(s.oracleStrategy,'food.produce','default'),2);
+  assert.equal(W.oracleFaithDefense(s.oracleStrategy,'family.nurture','food.produce'),1.6);
+});
+test('issuing a strong Oracle cannot directly debuff or convert a rival core',()=>{
+  const s=fresh(),saint=mature(s);
+  const prior=s.people.filter(p=>p.alive&&p.religionId===s.opponentReligion.id&&p.devotion>=40)
+    .map(p=>[p.id,p.devotion,p.religionId]);
+  const issued=W.issueOracle(s,{saintId:saint,intentType:'family.nurture'});
+  assert.equal(issued.ok,true);
+  assert.deepEqual(s.people.filter(p=>prior.some(x=>x[0]===p.id))
+    .map(p=>[p.id,p.devotion,p.religionId]),prior);
+  assert.equal(s.counts.strategyCoreDoubts||0,0);
+});
+
+test('faith defense rescales only earned contact chance, and clamps extreme values',()=>{
+  const s=fresh(),r=s.oracleStrategy;
+  const chance=(def,att)=>W.oracleDefenseContactChance(r,def,att);
+  const base=r.counterContactChance;
+  assert.equal(chance('food.produce','food.produce'),base);
+  assert.equal(chance('default','default'),base);
+  assert.equal(chance('food.produce','family.nurture'),r.faithDefenseChanceCeiling,
+    '0.4 resistance is strong but bounded by the encounter cap');
+  assert.equal(chance('family.nurture','food.produce'),base/1.6);
+  assert.equal(chance('default','food.produce'),base/.8);
+  assert.equal(chance('food.produce','default'),base/1.2);
+  assert.ok(chance('food.produce','family.nurture')>
+    chance('family.nurture','food.produce'));
+  assert.equal(W.oracleDefenseContactChance({...r,faithDefenseEnabled:false},
+    'food.produce','family.nurture'),base);
+  assert.ok(chance('food.produce','family.nurture')<=.95);
+});
+
+test('Reset immediately replaces a weak doctrine defense with neutral defense',()=>{
+  const s=fresh(),saint=mature(s);
+  const first=W.issueOracle(s,{saintId:saint,intentType:'food.produce'});
+  assert.equal(first.ok,true);
+  const active=()=>s.religion.oracles.find(o=>o.saintId===saint&&o.status==='active');
+  assert.equal(W.oracleFaithDefense(s.oracleStrategy,active()?.intentType,'family.nurture'),.4);
+  const snapshot=s.people.map(p=>[p.id,p.religionId,p.devotion]);
+  const reset=W.issueOracle(s,{saintId:saint,intentType:'life.balance'});
+  assert.equal(reset.ok,true);
+  assert.equal(active(),undefined);
+  assert.equal(W.oracleFaithDefense(s.oracleStrategy,active()?.intentType,'family.nurture'),.8);
+  assert.deepEqual(s.people.map(p=>[p.id,p.religionId,p.devotion]),snapshot,
+    'Reset adjusts defense but never changes Devotion without an event');
+});
+
+test('an earlier v0.1 Oracle save without the opt-in flag keeps prior balancing',()=>{
+  const profile={...S};
+  delete profile.faithDefenseEnabled;
+  delete profile.faithDefenseMatrix;
+  const s=W.create({oracleStrategyProfile:profile});
+  assert.equal(s.oracleStrategy.faithDefenseEnabled,false);
+  assert.equal(W.oracleFaithDefense(s.oracleStrategy,'food.produce','family.nurture'),1);
+  assert.equal(W.oracleDefenseContactChance(s.oracleStrategy,'food.produce','family.nurture'),
+    profile.counterContactChance);
+  const restored=W.restore(JSON.stringify(s));
+  assert.equal(restored.oracleStrategy.faithDefenseEnabled,false);
 });

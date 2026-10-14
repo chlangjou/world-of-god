@@ -12,7 +12,8 @@
     "evaluate:strategy": "node --max-old-space-size=512 tools/strategy-reversal-evaluation.cjs",
     "evaluate:strategy:suite": "node tools/strategy-reversal-suite.cjs",
     "evaluate:late": "node --max-old-space-size=512 tools/strategy-late-comeback-p2.cjs",
-    "evaluate:oracle": "node --max-old-space-size=512 tools/oracle-strategy-quick.cjs"
+    "evaluate:oracle": "node --max-old-space-size=512 tools/oracle-strategy-quick.cjs",
+    "evaluate:oracle:matrix": "node --max-old-space-size=512 tools/oracle-faith-defense-matrix.cjs"
   },
   "engines": {
     "node": ">=18"

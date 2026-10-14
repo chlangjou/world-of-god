@@ -1,0 +1,504 @@
+{
+  "schema": "world-of-god/oracle-defense-cross-seed-v0.1",
+  "date": "2026-10-14",
+  "horizonDays": 60,
+  "seeds": [
+    {
+      "seed": "opponent-competition-replay",
+      "forkFingerprint": "b6326139",
+      "originalAIcoreCount": 6,
+      "cases": [
+        {
+          "name": "nurture-v-food:neutral",
+          "oracleChoices": {
+            "player": "family.nurture",
+            "AI": "food.produce"
+          },
+          "defenseMode": "uniform",
+          "actions": [
+            {
+              "side": "player",
+              "intent": "family.nurture",
+              "day": 46,
+              "ok": true
+            }
+          ],
+          "checkpointResults": [
+            {
+              "day": 45,
+              "core40": [
+                3,
+                6
+              ],
+              "originalAIcoreStill40": 6,
+              "originalAIcoreBelow40": 0,
+              "originalAIeverBelow40": 0,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 0,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 751,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 60,
+              "core40": [
+                3,
+                5
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 2,
+              "originalAIeverBelow40": 2,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 7,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 1013,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 75,
+              "core40": [
+                3,
+                10
+              ],
+              "originalAIcoreStill40": 5,
+              "originalAIcoreBelow40": 1,
+              "originalAIeverBelow40": 2,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 9,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 1773,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 90,
+              "core40": [
+                3,
+                5
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 2,
+              "originalAIeverBelow40": 2,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 16,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 2485,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 105,
+              "core40": [
+                4,
+                6
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 2,
+              "originalAIeverBelow40": 2,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 26,
+              "aiEvidenceDoubts": 1,
+              "strategyConversions": 0,
+              "totalFood": 3055,
+              "housed": "17/17",
+              "valid": true
+            }
+          ],
+          "originalAIcoreTrace": [
+            {
+              "id": "p20",
+              "below": true,
+              "converted": false,
+              "start": 42,
+              "min": 33,
+              "final": 38
+            },
+            {
+              "id": "p23",
+              "below": true,
+              "converted": false,
+              "start": 40,
+              "min": 19,
+              "final": 20
+            }
+          ],
+          "finalFood": 3055,
+          "forkFood": 751.05567,
+          "elapsedMs": 2983
+        },
+        {
+          "name": "nurture-v-food:proposed",
+          "oracleChoices": {
+            "player": "family.nurture",
+            "AI": "food.produce"
+          },
+          "defenseMode": "proposed",
+          "actions": [
+            {
+              "side": "player",
+              "intent": "family.nurture",
+              "day": 46,
+              "ok": true
+            }
+          ],
+          "checkpointResults": [
+            {
+              "day": 45,
+              "core40": [
+                3,
+                6
+              ],
+              "originalAIcoreStill40": 6,
+              "originalAIcoreBelow40": 0,
+              "originalAIeverBelow40": 0,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 0,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 751,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 60,
+              "core40": [
+                3,
+                4
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 2,
+              "originalAIeverBelow40": 2,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 8,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 1013,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 75,
+              "core40": [
+                3,
+                8
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 2,
+              "originalAIeverBelow40": 2,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 12,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 1784,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 90,
+              "core40": [
+                3,
+                6
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 2,
+              "originalAIeverBelow40": 2,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 16,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 2459,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 105,
+              "core40": [
+                4,
+                6
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 2,
+              "originalAIeverBelow40": 2,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 20,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 3056,
+              "housed": "17/17",
+              "valid": true
+            }
+          ],
+          "originalAIcoreTrace": [
+            {
+              "id": "p20",
+              "below": true,
+              "converted": false,
+              "start": 42,
+              "min": 19,
+              "final": 23
+            },
+            {
+              "id": "p23",
+              "below": true,
+              "converted": false,
+              "start": 40,
+              "min": 19,
+              "final": 19
+            }
+          ],
+          "finalFood": 3056,
+          "forkFood": 751.05567,
+          "elapsedMs": 2730
+        }
+      ],
+      "totalMs": 7801
+    },
+    {
+      "seed": "valley-spring-01",
+      "forkFingerprint": "4cf7fd2a",
+      "originalAIcoreCount": 5,
+      "cases": [
+        {
+          "name": "nurture-v-food:neutral",
+          "oracleChoices": {
+            "player": "family.nurture",
+            "AI": "food.produce"
+          },
+          "defenseMode": "uniform",
+          "actions": [
+            {
+              "side": "player",
+              "intent": "family.nurture",
+              "day": 46,
+              "ok": true
+            }
+          ],
+          "checkpointResults": [
+            {
+              "day": 45,
+              "core40": [
+                3,
+                5
+              ],
+              "originalAIcoreStill40": 5,
+              "originalAIcoreBelow40": 0,
+              "originalAIeverBelow40": 0,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 0,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 887,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 60,
+              "core40": [
+                3,
+                6
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 1,
+              "originalAIeverBelow40": 1,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 3,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 1188,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 75,
+              "core40": [
+                3,
+                9
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 1,
+              "originalAIeverBelow40": 1,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 5,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 1921,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 90,
+              "core40": [
+                3,
+                7
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 1,
+              "originalAIeverBelow40": 1,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 13,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 2607,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 105,
+              "core40": [
+                3,
+                7
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 1,
+              "originalAIeverBelow40": 1,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 22,
+              "aiEvidenceDoubts": 2,
+              "strategyConversions": 0,
+              "totalFood": 3161,
+              "housed": "17/17",
+              "valid": true
+            }
+          ],
+          "originalAIcoreTrace": [
+            {
+              "id": "p23",
+              "below": true,
+              "converted": false,
+              "start": 42,
+              "min": 21,
+              "final": 23
+            }
+          ],
+          "finalFood": 3161,
+          "forkFood": 887.34151,
+          "elapsedMs": 2666
+        },
+        {
+          "name": "nurture-v-food:proposed",
+          "oracleChoices": {
+            "player": "family.nurture",
+            "AI": "food.produce"
+          },
+          "defenseMode": "proposed",
+          "actions": [
+            {
+              "side": "player",
+              "intent": "family.nurture",
+              "day": 46,
+              "ok": true
+            }
+          ],
+          "checkpointResults": [
+            {
+              "day": 45,
+              "core40": [
+                3,
+                5
+              ],
+              "originalAIcoreStill40": 5,
+              "originalAIcoreBelow40": 0,
+              "originalAIeverBelow40": 0,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 0,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 887,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 60,
+              "core40": [
+                3,
+                4
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 1,
+              "originalAIeverBelow40": 1,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 8,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 1167,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 75,
+              "core40": [
+                3,
+                8
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 1,
+              "originalAIeverBelow40": 1,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 12,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 0,
+              "totalFood": 1747,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 90,
+              "core40": [
+                3,
+                5
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 1,
+              "originalAIeverBelow40": 1,
+              "originalAIConverted": 0,
+              "playerEvidenceDoubts": 19,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 1,
+              "totalFood": 2212,
+              "housed": "17/17",
+              "valid": true
+            },
+            {
+              "day": 105,
+              "core40": [
+                3,
+                5
+              ],
+              "originalAIcoreStill40": 4,
+              "originalAIcoreBelow40": 0,
+              "originalAIeverBelow40": 1,
+              "originalAIConverted": 1,
+              "playerEvidenceDoubts": 23,
+              "aiEvidenceDoubts": 0,
+              "strategyConversions": 3,
+              "totalFood": 2598,
+              "housed": "17/17",
+              "valid": true
+            }
+          ],
+          "originalAIcoreTrace": [
+            {
+              "id": "p23",
+              "below": true,
+              "converted": true,
+              "start": 42,
+              "min": 19,
+              "final": 21
+            }
+          ],
+          "finalFood": 2598,
+          "forkFood": 887.34151,
+          "elapsedMs": 2508
+        }
+      ],
+      "totalMs": 7205
+    }
+  ],
+  "notes": "Identical fork per seed; fixed player Nurture versus actual AI Food doctrine, standard AI remains active; core >=40 primary, 20+ secondary; results vary by seed."
+}

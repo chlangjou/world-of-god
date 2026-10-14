@@ -29,6 +29,7 @@ jobs:
           node --check src/sim.js
           node --check src/app.js
           node --check tools/oracle-strategy-quick.cjs
+          node --check tools/oracle-faith-defense-matrix.cjs
       - name: Compare full test suite with the unmodified parent baseline
         working-directory: poc/v2
         shell: bash
@@ -86,4 +87,53 @@ jobs:
           assert.ok(end('reserve').food>end('passive').food);
           assert.ok(by['nurture-reset-reserve'].actions.some(a=>a.intent==='life.balance'&&a.ok));
           console.log('Oracle strategy assertions pass',r.identicalSnapshotFingerprint);
+          JS
+      - name: Eight-arm faith defense matchup evaluation
+        working-directory: poc/v2
+        run: npm run evaluate:oracle:matrix -- --days 60 --budget-ms 30000 --out reports/oracle-faith-defense-matrix-2026-10-14.json
+      - name: Assert strategy matrix makes progress only through real world outcomes
+        working-directory: poc/v2
+        run: |
+          node - <<'JS'
+          const assert=require('node:assert/strict');
+          const r=require('./reports/oracle-faith-defense-matrix-2026-10-14.json');
+          assert.equal(r.forkDay,45);
+          assert.equal(r.days,60);
+          assert.equal(r.cases.length,8);
+          const by=Object.fromEntries(r.cases.map(c=>[c.name,c]));
+          for(const c of r.cases){
+            assert.ok(c.checkpointResults.every(p=>p.valid),c.name);
+            assert.ok(c.actions.every(a=>a.ok),c.name);
+          }
+          const end=name=>by[name].checkpointResults.at(-1);
+          assert.equal(end('passive').originalAIeverBelow40,0);
+          assert.equal(end('same-food').originalAIeverBelow40,0);
+          assert.ok(end('nurture-v-food:proposed').originalAIeverBelow40>
+            end('nurture-v-food:neutral').originalAIeverBelow40);
+          assert.ok(end('nurture-v-food:proposed').playerEvidenceDoubts>0);
+          assert.equal(end('food-v-explore').originalAIeverBelow40,0,
+            'No artificial starving target may be created');
+          assert.equal(end('explore-v-nurture').originalAIeverBelow40,0,
+            'No artificial housing need may be created');
+          console.log('Faith defense matrix: bounded real-world core changes verified');
+          JS
+      - name: Cross-seed short comparisons
+        working-directory: poc/v2
+        run: |
+          set -e
+          npm run evaluate:oracle:matrix -- --seed opponent-competition-replay --days 60 --only nurture-v-food:neutral,nurture-v-food:proposed --out reports/oracle-matrix-seed-b.json > /dev/null
+          npm run evaluate:oracle:matrix -- --seed valley-spring-01 --days 60 --only nurture-v-food:neutral,nurture-v-food:proposed --out reports/oracle-matrix-seed-c.json > /dev/null
+          node - <<'JS'
+          const assert=require('node:assert/strict');
+          for(const name of ['b','c']){
+            const r=require('./reports/oracle-matrix-seed-'+name+'.json');
+            assert.equal(r.cases.length,2);
+            assert.ok(r.cases.every(c=>c.checkpointResults.every(p=>p.valid)));
+            assert.equal(r.cases[0].name,'nurture-v-food:neutral');
+            assert.equal(r.cases[1].name,'nurture-v-food:proposed');
+            console.log(name,r.cases.map(c=>({
+              mode:c.defenseMode,coreEverBelow40:c.checkpointResults.at(-1).originalAIeverBelow40,
+              naturalConverted:c.checkpointResults.at(-1).originalAIConverted
+            })));
+          }
           JS

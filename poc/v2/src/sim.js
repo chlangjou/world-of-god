@@ -117,6 +117,41 @@
     r.spreadOracleJoinBonus=clamp(r.spreadOracleJoinBonus,0,.5);
     return r;
   }
+  // Named Oracle defense is contextual resistance, not automatic Faith changes.
+  // Rows = defender, columns = challenger. Unspecified explore/default remains 1:1.
+  const ORACLE_DEFENSE_TYPES=Object.freeze([
+    'default','food.produce','family.nurture','settlement.explore'
+  ]);
+  const ORACLE_DEFENSE_DEFAULTS=Object.freeze({
+    'default':{
+      'default':1,'food.produce':.8,'family.nurture':.8,'settlement.explore':1
+    },
+    'food.produce':{
+      'default':1.2,'food.produce':1,'family.nurture':.4,'settlement.explore':1.6
+    },
+    'family.nurture':{
+      'default':1.2,'food.produce':1.6,'family.nurture':1,'settlement.explore':.4
+    },
+    'settlement.explore':{
+      'default':1,'food.produce':.4,'family.nurture':1.6,'settlement.explore':1
+    }
+  });
+  function defenseIntent(intent){
+    return ORACLE_DEFENSE_TYPES.includes(intent)?intent:'default';
+  }
+  function oracleFaithDefense(profile,defenderIntent,challengerIntent){
+    if(!profile?.faithDefenseEnabled)return 1;
+    const a=defenseIntent(defenderIntent),b=defenseIntent(challengerIntent);
+    return clamp(num(profile.faithDefenseMatrix?.[a]?.[b],
+      ORACLE_DEFENSE_DEFAULTS[a][b]),.25,2);
+  }
+  function oracleDefenseContactChance(profile,defenderIntent,challengerIntent){
+    const base=clamp(num(profile?.counterContactChance,.45),0,1);
+    const defense=oracleFaithDefense(profile,defenderIntent,challengerIntent);
+    const ceiling=profile?.faithDefenseEnabled?
+      clamp(num(profile.faithDefenseChanceCeiling,.9),.3,.95):1;
+    return clamp(base/defense,0,ceiling);
+  }
   // Optional experiment: finite effort, persistent Saint calling, earned counters.
   const ORACLE_STRATEGY_DEFAULTS=Object.freeze({
     profileId:'oracle-specialization-v0.1',
@@ -127,7 +162,8 @@
     counterBridgeDays:75,counterBridgeDoubtChance:.36,counterBridgeConversionChance:.22,
     counterReachCells:30,counterReserveAdvantageDays:4,
     counterReserveTargetMaxDays:8,counterCareGapDays:13,
-    counterEvidenceWorkMin:3,counterHouseEvidenceDays:90
+    counterEvidenceWorkMin:3,counterHouseEvidenceDays:90,
+    faithDefenseEnabled:true,faithDefenseChanceCeiling:.90
   });
   function oracleStrategyRules(profile){
     if(profile?.profileId!==ORACLE_STRATEGY_DEFAULTS.profileId)return null;
@@ -138,9 +174,23 @@
       r[k]=clamp(r[k],0,12);
     for(const k of ['nurtureConceptionMultiplier','nurturePioneerMultiplier','explorePioneerMultiplier'])
       r[k]=clamp(r[k],0,4);
-    for(const k of ['counterContactChance','counterBridgeDoubtChance','counterBridgeConversionChance'])
+    for(const k of ['counterContactChance','counterBridgeDoubtChance','counterBridgeConversionChance',
+      'faithDefenseChanceCeiling'])
       r[k]=clamp(r[k],0,1);
     r.counterDoubtStep=Math.round(clamp(r.counterDoubtStep,1,10));
+    // Previous v0.1 saves without the matrix flag retain their old balance.
+    r.faithDefenseEnabled=profile?.faithDefenseEnabled===true;
+    r.faithDefenseChanceCeiling=clamp(r.faithDefenseChanceCeiling,.3,.95);
+    r.faithDefenseMatrix={};
+    for(const defending of ORACLE_DEFENSE_TYPES){
+      const line={};
+      for(const challenging of ORACLE_DEFENSE_TYPES){
+        const fallback=ORACLE_DEFENSE_DEFAULTS[defending][challenging];
+        line[challenging]=defending===challenging?1:
+          clamp(num(profile?.faithDefenseMatrix?.[defending]?.[challenging],fallback),.25,2);
+      }
+      r.faithDefenseMatrix[defending]=line;
+    }
     for(const k of ['aiFocusDays','counterRepeatDays','counterBridgeDays','counterReachCells',
       'counterReserveAdvantageDays','counterReserveTargetMaxDays','counterCareGapDays',
       'counterEvidenceWorkMin','counterHouseEvidenceDays'])
@@ -1293,32 +1343,35 @@
     if(Number.isFinite(p.lastStrategyCounterHour)&&
        s.hour-p.lastStrategyCounterHour<rule.counterRepeatDays*24)return null;
     const own=strategyCalling(s,p).oracle;
+    const ownIntent=defenseIntent(own?.intentType);
     const counterType=own&&STRATEGY_COUNTERS[own.intentType];
     const target=personSettlement(s,p);
-    if(!counterType||!target)return null;
+    if(!target||(!counterType&&!rule.faithDefenseEnabled))return null;
     for(const [sourceId,preachers] of remoteSources){
       if(sourceId===target.id)continue;
       const source=s.settlements.find(t=>t.id===sourceId);
       if(!source||dist(source,target)>rule.counterReachCells)continue;
       for(const witness of preachers){
         const oracle=strategyCalling(s,witness).oracle;
-        if(oracle?.intentType!==counterType||
+        const challengerIntent=defenseIntent(oracle?.intentType);
+        if(challengerIntent==='default'||
+           (!rule.faithDefenseEnabled&&challengerIntent!==counterType)||
            (oracle.influenceWorkCount||0)<rule.counterEvidenceWorkMin)continue;
         let proven=false,reason='';
-        if(counterType==='food.produce'){
+        if(challengerIntent==='food.produce'){
           const opponentDays=strategyTownFoodDays(s,source);
           const localDays=strategyTownFoodDays(s,target);
           proven=localDays<rule.counterReserveTargetMaxDays&&
             opponentDays>=localDays+rule.counterReserveAdvantageDays;
           reason='本地存糧不足，而外村因實際糧食勞動保有更多可及食物';
-        }else if(counterType==='family.nurture'){
+        }else if(challengerIntent==='family.nurture'){
           const home=householdOf(s,p);
           const hasChild=home&&householdMembers(s,home).some(v=>v.alive&&v.stage==='child');
           const localCare=home&&householdMembers(s,home).some(v=>v.alive&&v.stage==='adult'&&
             Number.isFinite(v.lastCareHour)&&s.hour-v.lastCareHour<=rule.counterCareGapDays*24);
           proven=!!hasChild&&!localCare&&strategyCareInTown(s,source,rule.counterCareGapDays)>0;
           reason='家中幼兒缺少近期照護，而外村有實際育兒行動';
-        }else if(counterType==='settlement.explore'){
+        }else if(challengerIntent==='settlement.explore'){
           const housingNeed=target.householdIds.some(id=>
             s.households.some(h=>h.id===id&&!h.home&&householdMembers(s,h).length));
           proven=housingNeed&&(oracle.housesCompleted||0)>0&&
@@ -1327,13 +1380,19 @@
           reason='本地家庭缺少住所，而外村已實際新建房屋';
         }
         if(!proven)continue;
-        if(religionRand(s,challenger)>=rule.counterContactChance)return null;
+        const defense=oracleFaithDefense(rule,ownIntent,challengerIntent);
+        // Defense is a resistance divisor on genuine, sampled social encounters.
+        // The ratio does not inflict unconditional damage or change the 40+ gate.
+        const chance=oracleDefenseContactChance(rule,ownIntent,challengerIntent);
+        if(religionRand(s,challenger)>=chance)return null;
         const before=p.devotion;
         p.devotion=Math.max(20,p.devotion-rule.counterDoubtStep);
         p.lastStrategyCounterHour=s.hour;
         p.lastStrategyEncounter={hour:s.hour,fromTownId:source.id,
           challengerReligionId:challenger.id,counterOracleId:oracle.id,
-          ownOracleId:own.id,reason,devotionDelta:p.devotion-before};
+          ownOracleId:own?.id||null,
+          defenderIntent:ownIntent,challengerIntent,defenseMultiplier:defense,
+          effectiveContactChance:chance,reason,devotionDelta:p.devotion-before};
         s.counts.strategyContacts=(s.counts.strategyContacts||0)+1;
         if(p.devotion<before){
           s.counts.strategyCoreDoubts=(s.counts.strategyCoreDoubts||0)+1;
@@ -1342,9 +1401,10 @@
           if(challenger===s.religion)s.counts.rivalDoubts=(s.counts.rivalDoubts||0)+1;
           else s.counts.opponentDoubts=(s.counts.opponentDoubts||0)+1;
           log(s,'faith',p.name+'在跨聚落交流後開始質疑原有的'+
-            STRATEGY_LABELS[own.intentType]+'方針。',
+            (STRATEGY_LABELS[ownIntent]||'自主生活')+'方針。',
             [reason,'消息來自'+source.name+'近期真實傳教者',
-             '對方神諭的行動成果已記錄；僅動搖信心，沒有強迫改宗']);
+             '對方神諭的行動成果已記錄；沒有強迫改宗',
+             '此輪信仰防禦 '+Math.round(defense*100)+'%，有效接觸機率 '+Math.round(chance*100)+'%']);
         }
         return {person:p,before,after:p.devotion,reason};
       }
@@ -1468,6 +1528,9 @@
       const sensitivity=.6+.8*p.receptivity;
       const counterBridge=rival&&p.devotion<s.rules.faithThreshold&&
         strategyFollowupContact(s,p,faith,remoteSources);
+      const bridgeDefense=counterBridge?oracleFaithDefense(s.oracleStrategy,
+        strategyCalling(s,p).oracle?.intentType,
+        p.lastStrategyEncounter?.challengerIntent):1;
       if(rival){
         // Only a locally preaching Priest can challenge another affiliation in
         // this single-God PoC. 40+ rival devotion is protected above. Lower bands
@@ -1477,7 +1540,7 @@
           const clear=nearbyPriests.some(q=>!activeStatus(s,q,'confusion'))?1:.5;
           const doubt=priest?clamp(r.priestRivalDoubtChance*sensitivity*
             sermonAmplification*clear*(1+(convincing?.25:0)),0,.9):
-            counterBridge?clamp(s.oracleStrategy.counterBridgeDoubtChance*sensitivity,0,.9):0;
+            counterBridge?clamp(s.oracleStrategy.counterBridgeDoubtChance*sensitivity/bridgeDefense,0,.9):0;
           if(religionRand(s,faith)<doubt){
             p.devotion=Math.max(19,p.devotion-(counterBridge&&!priest?
               s.oracleStrategy.counterDoubtStep:r.priestRivalDoubtStep));
@@ -1488,7 +1551,7 @@
           }
         }else if(religionRand(s,faith)<clamp(
           (priest?r.priestRivalConversionChance*sermonAmplification:
-             counterBridge?s.oracleStrategy.counterBridgeConversionChance:0)+
+             counterBridge?s.oracleStrategy.counterBridgeConversionChance/bridgeDefense:0)+
           (convincing?r.miracleInterestJoinChance*Math.min(2.2,impressed/r.miracleInterestThreshold):0),
           0,.8)*sensitivity){
           adopt(p,convincing&&!priest&&!counterBridge?'miracle':counterBridge&&!priest?'strategy':'rival');
@@ -3224,6 +3287,7 @@
     return candidate;
   }
   return {VERSION,DEFAULT_RULES,POWER_DEFAULTS,OPPONENT_DIFFICULTIES,ORACLE_STRATEGY_DEFAULTS,
+    ORACLE_DEFENSE_DEFAULTS,oracleFaithDefense,oracleDefenseContactChance,
     create,advanceTicks,stats,faithfulWeight,presenceAt,evalRain,castRain,
     evaluateMiracle,castMiracle,activeStatus,
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,

@@ -30,10 +30,10 @@
       {id:'blindness',label:'致盲 Blindness',hint:'暫時縮短居民尋找資源和農田的範圍'}
     ],
     oracle:[
-      {id:'food.produce',label:'存糧',hint:'優先實際糧食生產，會減少其他投入'},
-      {id:'family.nurture',label:'育兒',hint:'加強家人照顧與有條件的生育投入，拓荒機會較低'},
-      {id:'settlement.explore',label:'探索',hint:'提高建材、住房與拓荒優先度，非缺糧時減少農作投入'},
-      {id:'religion.spread',label:'傳教',hint:'Saint 動員傳教意願，仍依接觸與真實成果判斷'},
+      {id:'food.produce',label:'存糧',hint:'提高糧食安全、較能抵擋探索；忽略家庭照護時容易被育兒成果說服'},
+      {id:'family.nurture',label:'育兒',hint:'加強真實照護，較能說服缺少照護的存糧居民；居住不足時容易被探索成果說服'},
+      {id:'settlement.explore',label:'探索',hint:'提高住房與拓荒，較能抵擋育兒；缺糧時容易被有實際存糧的宗教說服'},
+      {id:'religion.spread',label:'傳教',hint:'Saint 動員真實傳教；防禦視同預設，普通傳教不直接影響40+核心'},
       {id:'life.balance',label:'Reset · 回歸自主',hint:'神很滿意你們的行為，放下執著去追尋自己的需求'}
     ]
   };

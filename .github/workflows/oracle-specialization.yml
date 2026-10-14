@@ -32,6 +32,7 @@ jobs:
           node --check tools/oracle-faith-defense-matrix.cjs
           node --check tools/oracle-30-core-ratio-sweep.cjs
           node --check tools/oracle-core30-cadence-loss-sweep.cjs
+          node --check tools/oracle-attraction-evidence-study.cjs
       - name: Compare full test suite with the unmodified parent baseline
         working-directory: poc/v2
         shell: bash
@@ -221,4 +222,67 @@ jobs:
             by['5pt-14d'].summary.AIeverBelow40);
           console.log('Cadence/loss sweep validated:',data.cases.length,
             'arms from one identical 15:15 core world');
+          JS
+
+      - name: Evidence-attraction paired comparison on three 15v15 seeds
+        working-directory: poc/v2
+        shell: bash
+        run: |
+          set -euo pipefail
+          for seed in dry-stress opponent-competition-replay valley-spring-01; do
+            npm run evaluate:oracle:attraction -- --seed "$seed" \
+              --budget-ms 15000 \
+              --out "reports/oracle-attraction-${seed}-node-2026-10-15.json" > /dev/null
+          done
+      - name: Verify advantage causes retained net conversions, not just 40 decline
+        working-directory: poc/v2
+        run: |
+          node - <<'JS'
+          const assert=require('node:assert/strict');
+          const study=require('./tools/oracle-attraction-evidence-study.cjs');
+          const samples=['dry-stress','opponent-competition-replay','valley-spring-01'];
+          for(const seed of samples){
+            const r=require('./reports/oracle-attraction-'+seed+'-node-2026-10-15.json');
+            assert.equal(r.seed,seed);
+            assert.equal(r.mainWindowDays,100);
+            assert.equal(r.retentionWindowDays,30);
+            assert.equal(r.cases.length,6);
+            assert.deepEqual(r.fixedStartingCore,{player:15,AI:15,devotion:60});
+            assert.equal(r.initialSnapshotFingerprint,
+              require('./tools/oracle-30-core-ratio-sweep.cjs').hash(
+                JSON.stringify(study.fixedSimulation(seed))),
+              'Fingerprint must be recomputed inside the same Node runtime');
+            assert.equal(r.nominalLossRatePerDay.original,
+              r.nominalLossRatePerDay.scaled);
+            const arm=(c,p)=>r.cases.find(v=>v.channel===c&&v.ratio===p);
+            for(const c of r.cases){
+              assert.ok(c.issued.every(Boolean));
+              assert.ok(c.checkpoints.every(x=>x.valid));
+              assert.equal(c.checkpoints[0].sourceEvidence.attributionConversions,0);
+              assert.equal(c.checkpoints.find(x=>x.day===100).originalAlive,30);
+              assert.equal(c.checkpoints.find(x=>x.day===130).originalAlive,30);
+            }
+            for(const ratio of ['neutral','advantage','reverse'])
+              assert.equal(arm('devotion-only',ratio).score.originalAIConverted,0,
+                'Devotion-only scaled loss must not manufacture a conversion');
+            const base=arm('earned-attraction','neutral');
+            const adv=arm('earned-attraction','advantage');
+            const rev=arm('earned-attraction','reverse');
+            const net=x=>x.score.advantagedNetOriginalConversions;
+            assert.ok(net(adv)>net(base),seed+': advantage must beat neutral');
+            assert.ok(net(adv)>net(rev),seed+': advantage must beat reversed');
+            assert.ok(net(adv)>0,seed+': actual net religious change required');
+            assert.equal(adv.score.originalAIStayedNewFaith30d,
+              adv.score.originalAIConverted,'Conversion must last the retention period');
+            assert.equal(adv.score.originalPlayerConverted,0);
+            assert.ok(adv.converted.length>=net(adv));
+            for(const p of adv.converted){
+              assert.ok(p.sourceTownId&&p.oracleId);
+              assert.ok(p.observations>=5);
+              assert.ok(p.earnedAttraction>=p.fromDevotion);
+            }
+            console.log(seed,'net advantage/neutral/reverse:',
+              net(adv),net(base),net(rev),
+              'day130:',adv.score.day130NewFaithAmongOriginalAI);
+          }
           JS

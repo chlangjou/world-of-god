@@ -189,7 +189,23 @@
     for(const k of ['counterContactChance','counterBridgeDoubtChance','counterBridgeConversionChance',
       'faithDefenseChanceCeiling'])
       r[k]=clamp(r[k],0,1);
-    r.counterDoubtStep=Math.round(clamp(r.counterDoubtStep,1,10));
+    if(profile.counterFractionalLoss===true){
+      r.counterFractionalLoss=true;
+      r.counterDoubtStep=clamp(r.counterDoubtStep,.25,10);
+    }else r.counterDoubtStep=Math.round(clamp(r.counterDoubtStep,1,10));
+    if(profile.counterPairedRandom===true)r.counterPairedRandom=true;
+    if(profile.counterAttractionEnabled===true){
+      r.counterAttractionEnabled=true;
+      r.counterAttractionGain=clamp(num(profile.counterAttractionGain,6),.5,15);
+      r.counterAttractionMinEvidence=Math.round(clamp(
+        num(profile.counterAttractionMinEvidence,5),2,20));
+      r.counterAttractionMargin=clamp(num(profile.counterAttractionMargin,0),0,20);
+      r.counterAttractionConversionChance=clamp(
+        num(profile.counterAttractionConversionChance,.3),0,.8);
+      r.counterAttractionMaxChance=clamp(num(profile.counterAttractionMaxChance,.55),.05,.9);
+      r.counterAttractionRecencyDays=clamp(
+        num(profile.counterAttractionRecencyDays,21),7,120);
+    }
     // Previous v0.1 saves without the matrix flag retain their old balance.
     r.faithDefenseEnabled=profile?.faithDefenseEnabled===true;
     // Do not append new optional flags to old-world state: historic v0.1
@@ -1358,6 +1374,41 @@
       householdMembers(s,h).some(p=>p.alive&&p.stage==='adult'&&
         Number.isFinite(p.lastCareHour)&&s.hour-p.lastCareHour<=windowDays*24)).length;
   }
+  function strategyEvidenceRandom(s,p,challenger,stage){
+    if(!s.oracleStrategy?.counterPairedRandom)
+      return religionRand(s,challenger);
+    return hash(s.seed+'|oracle-counter-paired-v1|'+p.id+'|'+
+      challenger.id+'|'+stage+'|'+s.hour)/4294967296;
+  }
+  // Independent evidence-backed attraction tracks how credible the *other*
+  // religion has become. It is not the same state as loss of old Devotion.
+  // Strictly opt-in; mere Oracle issuance/ordinary sermons cannot create it.
+  function creditStrategyAttraction(s,p,challenger,oracle,source){
+    const rule=s.oracleStrategy;
+    if(!rule?.counterAttractionEnabled)return;
+    const entries=p.strategyAttraction ||= {};
+    const e=entries[challenger.id] ||= {score:0,observations:0};
+    e.score=Math.min(100,e.score+rule.counterAttractionGain);
+    e.observations++;
+    e.lastEvidenceHour=s.hour;
+    e.sourceTownId=source.id;
+    e.oracleId=oracle.id;
+    s.counts.strategyAttractionEvidence=(s.counts.strategyAttractionEvidence||0)+1;
+  }
+  function strategyAttractionOffer(s,p,challenger,remoteSources){
+    const rule=s.oracleStrategy,entry=p.strategyAttraction?.[challenger.id];
+    if(!rule?.counterAttractionEnabled||!entry||
+      entry.observations<rule.counterAttractionMinEvidence||
+      entry.score<p.devotion+rule.counterAttractionMargin||
+      s.hour-entry.lastEvidenceHour>rule.counterAttractionRecencyDays*24||
+      !strategyFollowupContact(s,p,challenger,remoteSources))return null;
+    const witnesses=remoteSources.get(entry.sourceTownId)||[];
+    if(!witnesses.some(w=>strategyCalling(s,w).oracle?.id===entry.oracleId))
+      return null;
+    const excess=Math.max(0,entry.score-p.devotion-rule.counterAttractionMargin);
+    return {entry,chance:clamp(rule.counterAttractionConversionChance*
+      (1+excess/20),0,rule.counterAttractionMaxChance)};
+  }
   // A rival core may doubt a SPECIFIC observed failure, not ordinary preaching.
   // Contact is a probabilistic cross-town encounter with a real recent preacher;
   // evidence must be attributable to an active opposing Oracle with real output.
@@ -1412,10 +1463,11 @@
         // Defense is a resistance divisor on genuine, sampled social encounters.
         // The ratio does not inflict unconditional damage or change the 40+ gate.
         const chance=oracleDefenseContactChance(rule,ownIntent,challengerIntent);
-        if(religionRand(s,challenger)>=chance)return null;
+        if(strategyEvidenceRandom(s,p,challenger,'core')>=chance)return null;
         const before=p.devotion;
         p.devotion=Math.max(20,p.devotion-rule.counterDoubtStep);
         p.lastStrategyCounterHour=s.hour;
+        creditStrategyAttraction(s,p,challenger,oracle,source);
         if(rule.counterRepeatIncludesFollowup&&rule.counterDiagnosticsEnabled)
           (p.strategyCounterHistory ||= []).push({hour:s.hour,
             phase:'core',defenderDevotionBefore:before,loss:before-p.devotion,
@@ -1502,6 +1554,22 @@
         if(cause==='miracle')s.counts.opponentMiracleAdoptions=(s.counts.opponentMiracleAdoptions||0)+1;
       }
     };
+    const considerAttraction=(p)=>{
+      const offer=strategyAttractionOffer(s,p,faith,remoteSources);
+      if(!offer)return false;
+      s.counts.strategyAttractionOffers=(s.counts.strategyAttractionOffers||0)+1;
+      if(strategyEvidenceRandom(s,p,faith,'attraction')>=offer.chance)return false;
+      const oldDevotion=p.devotion,earned=offer.entry.score,
+        evidenceCount=offer.entry.observations,source=offer.entry.sourceTownId,
+        oracleId=offer.entry.oracleId;
+      adopt(p,'strategy');
+      p.devotion=clamp(Math.floor(earned-5),20,39);
+      p.lastStrategicConversion={hour:s.hour,fromDevotion:oldDevotion,
+        sourceTownId:source,oracleId,observations:evidenceCount,
+        earnedAttraction:earned};
+      s.counts.strategyAttractionConversions=(s.counts.strategyAttractionConversions||0)+1;
+      return true;
+    };
     for(const p of people){
       const rival=p.religionId!==null&&p.religionId!==id;
       const impressed=divineInterest(s,p,faith);
@@ -1510,6 +1578,7 @@
         const outcome=strategyCoreChallenge(s,p,faith,remoteSources);
         if(outcome&&faith===s.opponentReligion)
           pressuredPlayer.push({person:p,converted:false});
+        considerAttraction(p);
         continue; // ordinary Priest teaching still cannot bypass 40+ devotion
       }
       if(p.stage==='child'&&p.age<r.minimumChildAge)continue;
@@ -1564,6 +1633,7 @@
       const counterBridge=rival&&p.devotion<s.rules.faithThreshold&&
         strategyFollowupContact(s,p,faith,remoteSources);
       if(rival){
+        if(considerAttraction(p))continue;
         // Only a locally preaching Priest can challenge another affiliation in
         // this single-God PoC. 40+ rival devotion is protected above. Lower bands
         // first weaken over repeated credible encounters, then may freely convert.
@@ -1576,7 +1646,9 @@
               s.oracleStrategy.counterBridgeDoubtChance*sensitivity,
               strategyCalling(s,p).oracle?.intentType,
               p.lastStrategyEncounter?.challengerIntent,.9):0;
-          if(religionRand(s,faith)<doubt){
+          const doubtRoll=counterBridge&&!priest?
+            strategyEvidenceRandom(s,p,faith,'followup-doubt'):religionRand(s,faith);
+          if(doubtRoll<doubt){
             const priorDevotion=p.devotion;
             p.devotion=Math.max(19,p.devotion-(counterBridge&&!priest?
               s.oracleStrategy.counterDoubtStep:r.priestRivalDoubtStep));
@@ -1594,7 +1666,8 @@
             const counter=faith===s.religion?'rivalDoubts':'opponentDoubts';
             s.counts[counter]=(s.counts[counter]||0)+1;
           }
-        }else if(religionRand(s,faith)<clamp(
+        }else if((counterBridge&&!priest?
+          strategyEvidenceRandom(s,p,faith,'followup-convert'):religionRand(s,faith))<clamp(
           (priest?r.priestRivalConversionChance*sermonAmplification:
              counterBridge?oracleDefenseScale(s.oracleStrategy,
                s.oracleStrategy.counterBridgeConversionChance*sensitivity,

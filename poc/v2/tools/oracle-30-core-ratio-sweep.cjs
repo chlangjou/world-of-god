@@ -25,7 +25,7 @@ const OFFSETS=[[3,0],[-3,0],[0,3],[0,-3],[4,3]];
 const RATIOS=Object.freeze(T.ratios.map(x=>({...x})));
 const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return ('00000000'+(h>>>0).toString(16)).slice(-8);};
 
-function fixture(){
+function fixture({seed=SEED}={}){
   const special={...S,
     counterContactChance:T.fixedContactBase,
     counterDoubtStep:T.fixedDoubtStep,counterRepeatDays:T.fixedRepeatDays,
@@ -33,7 +33,7 @@ function fixture(){
     counterBridgeConversionChance:T.fixedBridgeConversionChance,
     faithDefenseChanceCeiling:T.faithContactCap,
     faithDefenseModel:T.model,counterDiagnosticsEnabled:true};
-  const s=W.create({seed:SEED,balanceProfile:A,religionProfile:R,
+  const s=W.create({seed,balanceProfile:A,religionProfile:R,
     divineProfile:D,oracleStrategyProfile:special,
     opponentProfile:{...O,difficulty:'standard',startDay:360}});
   const keep=new Set([...PLAYER_HOMES,...AI_HOMES]);

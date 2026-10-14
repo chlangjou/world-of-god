@@ -1,0 +1,63 @@
+{
+  "profileId": "oracle-attraction-evidence-study-v0.1",
+  "description": "Hypothesis test, not live balance: proportional 5 Devotion points / 14 days -> 2.5 points / 7 days, without changing 40 core threshold. Separately track earned evidence attraction and conditional choice of another faith.",
+  "startingDevotion": 60,
+  "initialPerFaith": 15,
+  "initialTotal": 30,
+  "forkDay": 10,
+  "studyDays": 100,
+  "retentionDays": 30,
+  "seeds": [
+    "dry-stress",
+    "opponent-competition-replay",
+    "valley-spring-01"
+  ],
+  "original": {
+    "lossPoints": 5,
+    "repeatDays": 14
+  },
+  "scaled": {
+    "lossPoints": 2.5,
+    "repeatDays": 7,
+    "allPhaseRepeat": true
+  },
+  "ratioPairs": [
+    {
+      "id": "neutral",
+      "nurtureDefense": 1,
+      "foodDefense": 1
+    },
+    {
+      "id": "advantage",
+      "nurtureDefense": 1.6,
+      "foodDefense": 0.4
+    },
+    {
+      "id": "reverse",
+      "nurtureDefense": 0.4,
+      "foodDefense": 1.6
+    }
+  ],
+  "cases": [
+    "devotion-only",
+    "earned-attraction"
+  ],
+  "pairedRandom": true,
+  "attraction": {
+    "gainPerCredibleObservation": 8,
+    "minEvidenceObservations": 5,
+    "minimumMarginOverRemainingDevotion": 0,
+    "conversionChance": 0.3,
+    "maxConversionChance": 0.55,
+    "recencyDays": 21
+  },
+  "evidenceGuards": {
+    "requireActualChallengerOracle": true,
+    "requireLivePreacher": true,
+    "requireRepeatedCredibleContacts": true,
+    "prohibitOrdinary40PlusSermonConversion": true,
+    "requireAttractionAboveCurrentDevotion": true,
+    "conversionIsProbabilistic": true
+  },
+  "passCriterion": "Compared with both neutral and reversed defense in the same seed: advantaged policy must win positive *net original-follower conversions* and retain converts 30 additional days. This is diagnostic evidence, not proof of general game balance."
+}

@@ -1,0 +1,402 @@
+{
+  "schema": "world-of-god/oracle-evidence-attraction-comparison/v0.1",
+  "date": "2026-10-15",
+  "sourceBaseCommit": "839fd74954ab503e401b3342f6240f929692264f",
+  "engineBlob": "5e5ba9e599b63a2d6b3a3ceaae892a1c19eb931d",
+  "runnerBlob": "dac6ede570dc85a3de2a27b9777a4e1dee661ed4",
+  "configurationBlob": "a8a9ef33e5eaac903c59dcef826cd49ae94536ed",
+  "controlledFixtureSource": "poc/v2/tools/oracle-30-core-ratio-sweep.cjs",
+  "primaryHorizonDays": 100,
+  "retentionHorizonDays": 30,
+  "startingDevotion": 60,
+  "corePerSide": 15,
+  "nominalScaledRate": 0.35714285714285715,
+  "attributionHypothesis": "Independent earned attraction allows exceptional voluntary reassessment after repeated true Oracle evidence, not routine 40+ sermons.",
+  "pairedRandom": true,
+  "data": [
+    {
+      "seed": "dry-stress",
+      "forkFingerprintV8": "663ff1ac",
+      "arms": [
+        {
+          "channel": "devotion-only",
+          "ratio": "neutral",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 0,
+          "firstConversionDay": null,
+          "earnedEvidence": 0,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "devotion-only",
+          "ratio": "advantage",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 0,
+          "firstConversionDay": null,
+          "earnedEvidence": 0,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "devotion-only",
+          "ratio": "reverse",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 0,
+          "firstConversionDay": null,
+          "earnedEvidence": 0,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "earned-attraction",
+          "ratio": "neutral",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 8,
+          "firstConversionDay": null,
+          "earnedEvidence": 100,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": {
+              "day": 117,
+              "reason": "saint_departed"
+            }
+          },
+          "valid": true
+        },
+        {
+          "channel": "earned-attraction",
+          "ratio": "advantage",
+          "convertedAICore": 3,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 3,
+          "retainedOriginalConversions30d": 3,
+          "originalAIConvertedByDay130": 12,
+          "firstConversionDay": 95,
+          "earnedEvidence": 131,
+          "offers": 6,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "earned-attraction",
+          "ratio": "reverse",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 1,
+          "firstConversionDay": null,
+          "earnedEvidence": 83,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        }
+      ]
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "forkFingerprintV8": "02866502",
+      "arms": [
+        {
+          "channel": "devotion-only",
+          "ratio": "neutral",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 0,
+          "firstConversionDay": null,
+          "earnedEvidence": 0,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "devotion-only",
+          "ratio": "advantage",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 0,
+          "firstConversionDay": null,
+          "earnedEvidence": 0,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "devotion-only",
+          "ratio": "reverse",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 0,
+          "firstConversionDay": null,
+          "earnedEvidence": 0,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "earned-attraction",
+          "ratio": "neutral",
+          "convertedAICore": 1,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 1,
+          "retainedOriginalConversions30d": 1,
+          "originalAIConvertedByDay130": 2,
+          "firstConversionDay": 95,
+          "earnedEvidence": 90,
+          "offers": 1,
+          "activeOracles": {
+            "player": null,
+            "AI": {
+              "day": 96,
+              "reason": "saint_departed"
+            }
+          },
+          "valid": true
+        },
+        {
+          "channel": "earned-attraction",
+          "ratio": "advantage",
+          "convertedAICore": 5,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 5,
+          "retainedOriginalConversions30d": 5,
+          "originalAIConvertedByDay130": 11,
+          "firstConversionDay": 81,
+          "earnedEvidence": 123,
+          "offers": 9,
+          "activeOracles": {
+            "player": null,
+            "AI": {
+              "day": 96,
+              "reason": "saint_departed"
+            }
+          },
+          "valid": true
+        },
+        {
+          "channel": "earned-attraction",
+          "ratio": "reverse",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 3,
+          "firstConversionDay": null,
+          "earnedEvidence": 82,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": {
+              "day": 124,
+              "reason": "saint_departed"
+            }
+          },
+          "valid": true
+        }
+      ]
+    },
+    {
+      "seed": "valley-spring-01",
+      "forkFingerprintV8": "d00428a0",
+      "arms": [
+        {
+          "channel": "devotion-only",
+          "ratio": "neutral",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 0,
+          "firstConversionDay": null,
+          "earnedEvidence": 0,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "devotion-only",
+          "ratio": "advantage",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 0,
+          "firstConversionDay": null,
+          "earnedEvidence": 0,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "devotion-only",
+          "ratio": "reverse",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 0,
+          "firstConversionDay": null,
+          "earnedEvidence": 0,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "earned-attraction",
+          "ratio": "neutral",
+          "convertedAICore": 1,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 1,
+          "retainedOriginalConversions30d": 1,
+          "originalAIConvertedByDay130": 3,
+          "firstConversionDay": 88,
+          "earnedEvidence": 97,
+          "offers": 1,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        },
+        {
+          "channel": "earned-attraction",
+          "ratio": "advantage",
+          "convertedAICore": 3,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 3,
+          "retainedOriginalConversions30d": 3,
+          "originalAIConvertedByDay130": 11,
+          "firstConversionDay": 74,
+          "earnedEvidence": 125,
+          "offers": 8,
+          "activeOracles": {
+            "player": null,
+            "AI": {
+              "day": 117,
+              "reason": "saint_departed"
+            }
+          },
+          "valid": true
+        },
+        {
+          "channel": "earned-attraction",
+          "ratio": "reverse",
+          "convertedAICore": 0,
+          "convertedPlayerCore": 0,
+          "netOriginalConversions": 0,
+          "retainedOriginalConversions30d": 0,
+          "originalAIConvertedByDay130": 1,
+          "firstConversionDay": null,
+          "earnedEvidence": 93,
+          "offers": 0,
+          "activeOracles": {
+            "player": null,
+            "AI": null
+          },
+          "valid": true
+        }
+      ]
+    }
+  ],
+  "sensitivityGain6": {
+    "description": "Independent V8 runs with only attractionGain changed to 6; remainder identical",
+    "bySeed": [
+      {
+        "seed": "dry-stress",
+        "at100": {
+          "neutral": 0,
+          "advantage": 2,
+          "reverse": 0
+        },
+        "advantageAt130": 8
+      },
+      {
+        "seed": "opponent-competition-replay",
+        "at100": {
+          "neutral": 1,
+          "advantage": 2,
+          "reverse": 0
+        },
+        "advantageAt130": 7
+      },
+      {
+        "seed": "valley-spring-01",
+        "at100": {
+          "neutral": 0,
+          "advantage": 1,
+          "reverse": 0
+        },
+        "advantageAt130": 11
+      }
+    ]
+  },
+  "conclusion": {
+    "mechanismSupportedOnlyInControlledPairedFixtures": true,
+    "originalMechanismPassed": false,
+    "allThreeSeedsShowAdvantageAtDay100": true,
+    "highPost100CascadeIsUnresolvedBalanceRisk": true,
+    "naturalMapWithoutPairedRandomUntested": true,
+    "twoOtherStrategyCountersUntested": true
+  },
+  "caveats": [
+    "The chance mechanism permits earned-attraction conversion while original Devotion may be >=40; this is opt-in research and a proposed exception, not an accepted game rule.",
+    "Credible contact is from actual in-world social exchange approximation, not a fully modeled traveler system.",
+    "Three chosen seeds are not a statistically representative evaluation. The 30-person fixture equalizes housing, storage and team membership."
+  ]
+}

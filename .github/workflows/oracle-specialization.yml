@@ -31,6 +31,7 @@ jobs:
           node --check tools/oracle-strategy-quick.cjs
           node --check tools/oracle-faith-defense-matrix.cjs
           node --check tools/oracle-30-core-ratio-sweep.cjs
+          node --check tools/oracle-core30-cadence-loss-sweep.cjs
       - name: Compare full test suite with the unmodified parent baseline
         working-directory: poc/v2
         shell: bash
@@ -172,4 +173,52 @@ jobs:
           assert.ok(by['neutral-1:1'].outcome.AIeverBelow40>0,
             'even 1:1 can cross 40 with earned repeated contact');
           console.log('100-day / 30 core diagnostic sweep validated',r.forkFingerprint);
+          JS
+
+      - name: Run bounded 26-arm loss and contact cadence sweep
+        working-directory: poc/v2
+        run: npm run evaluate:oracle:cadence -- --budget-ms 12000 --out reports/oracle-core30-cadence-loss-sweep-2026-10-14.json > /dev/null
+      - name: Verify same world and consistent per-person repeat windows
+        working-directory: poc/v2
+        run: |
+          node - <<'JS'
+          const assert=require('node:assert/strict');
+          const sweep=require('./tools/oracle-core30-cadence-loss-sweep.cjs');
+          const data=require('./reports/oracle-core30-cadence-loss-sweep-2026-10-14.json');
+          assert.equal(data.days,100);
+          assert.deepEqual(data.originalCore,{player:15,AI:15});
+          assert.equal(data.cases.length,26);
+          assert.equal(data.startCohort.length,30);
+          assert.ok(data.startCohort.every(x=>x[2]===60));
+          assert.equal(data.fingerprint,sweep.stamp(JSON.stringify(sweep.prepare())),
+            'Save checksum is checked in the same Node runtime');
+          const by=Object.fromEntries(data.cases.map(c=>[c.name,c]));
+          assert.ok(by['legacy-8pt-10d']);
+          assert.ok(by['5pt-14d']);
+          assert.ok(by['8pt-10d']);
+          for(const c of data.cases){
+            assert.equal(c.checkpoints[0].elapsedDays,0);
+            assert.equal(c.checkpoints.at(-1).elapsedDays,100);
+            assert.ok(c.checkpoints.every(t=>t.valid));
+            assert.equal(c.originalCohort.length,30);
+            assert.ok(c.originalCohort.every(x=>x.initialDevotion===60));
+            assert.ok(c.issued.player&&c.issued.AI);
+            if(c.followupUsesSameInterval){
+              assert.equal(c.summary.invalidGaps,0,c.name);
+              for(const person of c.eventTraces){
+                for(let j=1;j<person.events.length;j++)
+                  assert.ok(person.events[j].hour-person.events[j-1].hour >= c.repeatDays*24,
+                    'Credited encounters too close '+c.name+' '+person.personId);
+              }
+            }
+          }
+          assert.equal(by['5pt-10d'].summary.AIeverBelow40,
+            by['5pt-14d'].summary.AIeverBelow40);
+          assert.ok(by['5pt-14d'].summary.AIeverBelow40>0);
+          assert.equal(by['5pt-14d'].summary.AIconverted,0);
+          assert.equal(by['5pt-14d'].oracleStopped.AI,null);
+          assert.ok(by['legacy-8pt-10d'].summary.AIeverBelow40>
+            by['5pt-14d'].summary.AIeverBelow40);
+          console.log('Cadence/loss sweep validated:',data.cases.length,
+            'arms from one identical 15:15 core world');
           JS

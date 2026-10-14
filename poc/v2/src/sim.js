@@ -197,6 +197,10 @@
     if(profile.faithDefenseModel==='odds-scaled')r.faithDefenseModel='odds-scaled';
     else if(Object.hasOwn(profile,'faithDefenseModel'))r.faithDefenseModel='linear-clamped';
     if(profile.counterDiagnosticsEnabled===true)r.counterDiagnosticsEnabled=true;
+    // Optional timing experiment: historically counterRepeatDays gated only 40+
+    // challenges. Opt in to covering below-40 evidence follow-up as well.
+    if(profile.counterRepeatIncludesFollowup===true)
+      r.counterRepeatIncludesFollowup=true;
     r.faithDefenseChanceCeiling=clamp(r.faithDefenseChanceCeiling,.3,.95);
     r.faithDefenseMatrix={};
     for(const defending of ORACLE_DEFENSE_TYPES){
@@ -1412,6 +1416,10 @@
         const before=p.devotion;
         p.devotion=Math.max(20,p.devotion-rule.counterDoubtStep);
         p.lastStrategyCounterHour=s.hour;
+        if(rule.counterRepeatIncludesFollowup&&rule.counterDiagnosticsEnabled)
+          (p.strategyCounterHistory ||= []).push({hour:s.hour,
+            phase:'core',defenderDevotionBefore:before,loss:before-p.devotion,
+            challengerFaithId:challenger.id});
         p.lastStrategyEncounter={hour:s.hour,fromTownId:source.id,
           challengerReligionId:challenger.id,counterOracleId:oracle.id,
           ownOracleId:own?.id||null,
@@ -1439,6 +1447,9 @@
     const rule=s.oracleStrategy,encounter=p.lastStrategyEncounter;
     if(!rule||!encounter||encounter.challengerReligionId!==faith.id||
       s.hour-encounter.hour>rule.counterBridgeDays*24)return false;
+    if(rule.counterRepeatIncludesFollowup&&
+      Number.isFinite(p.lastStrategyCounterHour)&&
+      s.hour-p.lastStrategyCounterHour<rule.counterRepeatDays*24)return false;
     const ownTown=personSettlement(s,p);
     const source=s.settlements.find(t=>t.id===encounter.fromTownId);
     if(!ownTown||!source||dist(source,ownTown)>rule.counterReachCells)return false;
@@ -1566,8 +1577,18 @@
               strategyCalling(s,p).oracle?.intentType,
               p.lastStrategyEncounter?.challengerIntent,.9):0;
           if(religionRand(s,faith)<doubt){
+            const priorDevotion=p.devotion;
             p.devotion=Math.max(19,p.devotion-(counterBridge&&!priest?
               s.oracleStrategy.counterDoubtStep:r.priestRivalDoubtStep));
+            if(counterBridge&&!priest&&s.oracleStrategy.counterRepeatIncludesFollowup){
+              p.lastStrategyCounterHour=s.hour;
+              if(s.oracleStrategy.counterDiagnosticsEnabled){
+                (p.strategyCounterHistory ||= []).push({hour:s.hour,
+                  phase:'followup',defenderDevotionBefore:priorDevotion,
+                  loss:priorDevotion-p.devotion,challengerFaithId:faith.id});
+                s.counts.strategyFollowupDoubts=(s.counts.strategyFollowupDoubts||0)+1;
+              }
+            }
             if(faith===s.opponentReligion&&p.religionId===s.religion.id)
               pressuredPlayer.push({person:p,converted:false});
             const counter=faith===s.religion?'rivalDoubts':'opponentDoubts';
@@ -1581,6 +1602,13 @@
                p.lastStrategyEncounter?.challengerIntent,.8)/sensitivity:0)+
           (convincing?r.miracleInterestJoinChance*Math.min(2.2,impressed/r.miracleInterestThreshold):0),
           0,.8)*sensitivity){
+          if(counterBridge&&!priest&&s.oracleStrategy.counterRepeatIncludesFollowup){
+            p.lastStrategyCounterHour=s.hour;
+            if(s.oracleStrategy.counterDiagnosticsEnabled)
+              (p.strategyCounterHistory ||= []).push({hour:s.hour,
+                phase:'conversion',defenderDevotionBefore:p.devotion,
+                loss:0,challengerFaithId:faith.id});
+          }
           adopt(p,convincing&&!priest&&!counterBridge?'miracle':counterBridge&&!priest?'strategy':'rival');
         }
         continue;

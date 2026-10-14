@@ -1,0 +1,46 @@
+{
+  "profileId": "oracle-core30-cadence-loss-sweep-v0.1",
+  "description": "Controlled 15 Nurture vs 15 Food core, all initial Devotion 60; 100 days; sweep Devotion percentage-point loss and repeat interval. All other rules fixed, with optional below-40 follow-up timing gate.",
+  "fixedRatio": {
+    "nurtureDefense": 1.6,
+    "foodDefense": 0.4
+  },
+  "defenseModel": "odds-scaled",
+  "seed": "dry-stress",
+  "runDays": 100,
+  "initialCorePerSide": 15,
+  "initialDevotion": 60,
+  "lossPoints": [
+    3,
+    4,
+    5,
+    6,
+    8
+  ],
+  "repeatDays": [
+    7,
+    10,
+    14,
+    21,
+    28
+  ],
+  "checkpoints": [
+    0,
+    20,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "baselineReference": {
+    "lossPoints": 8,
+    "repeatDays": 10,
+    "legacyFollowupTiming": true
+  },
+  "tieFollowupToRepeatDays": true,
+  "evidenceRules": "No forced conversion or synthetic sermons. Faith 40+ core challenged only after real unmet need, actual Oracle result and a recent source preacher. Below40 follow-up retains finite source window and now respects same repeat interval in opt-in mode.",
+  "warning": "A 3-point Devotion change means 3 percentage points out of 100, not 3% of the current Devotion. Diagnostic equalized populations/houses do not prove natural-game balancing."
+}

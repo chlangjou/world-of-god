@@ -21,7 +21,7 @@ This is an explicitly *constructed diagnostic* (not an organically generated 30-
 
 Run normal simulation through Day 10 to allow **natural Saint and Priest emergence**. Require all 30 residents still at 60 before the Day-10 snapshot. Fork identical saves, issue one legal `family.nurture` (player) and one `food.produce` (AI) Oracle. Both sides keep their original choices; the AI replanner/Miracles are suppressed until Day 360, so no extra AI actions confound the comparison. The world still applies its existing rule that a Saint losing qualification ends the Oracle. The runner **does not restore a failed Saint's authority**; that termination is reported because it partially interrupts the intended fixed-policy period.
 
-Six 100-day replay branches share the identical Day-10 serialized fingerprint **`663ff1ac`**. All are bounded and individually validated. Their initial Faith defense and per-person Devotion are identical; only the two opposing matrix entries differ.
+Six 100-day replay branches share an identical Day-10 snapshot **within the same runtime**. The non-cryptographic serialized fingerprint is **`c59f85fd` in Node.js 22 CI** versus **`663ff1ac` in the V8 isolate**. These different serializations produced the same six scenario outcomes; do not hardcode a fingerprint obtained in one runtime as the expected fingerprint for another. All are bounded and individually validated. Their initial Faith defense and per-person Devotion are identical; only the two opposing matrix entries differ.
 
 ## 3. Results (same seed, 100 days)
 
@@ -55,6 +55,6 @@ npm run evaluate:oracle:core30 -- --days 100 --budget-ms 15000 --out reports/ora
 npm run evaluate:oracle:core30 -- --only 1.6:0.4 --model linear-clamped --days 100
 ```
 
-Tunable ratios and fixed 30-person fixture parameters live in `config/oracle-30-core-ratio-sweep-v0.1.json`. The experimental runner is `tools/oracle-30-core-ratio-sweep.cjs`. The original profile `config/oracle-specialization-v0.1.json` has **not** been changed, including its normal 1.6:0.4 defenses and default linear cap. Old opt-in v0.1 `dry-stress` Day-45 snapshot fingerprint remains **`ef11b77b`**, and the legacy pre-Oracle Day-300 fingerprint remains **`778899f9`**.
+Tunable ratios and fixed 30-person fixture parameters live in `config/oracle-30-core-ratio-sweep-v0.1.json`. The experimental runner is `tools/oracle-30-core-ratio-sweep.cjs`. The original profile `config/oracle-specialization-v0.1.json` has **not** been changed, including its normal 1.6:0.4 defenses and default linear cap. Old opt-in v0.1 `dry-stress` Day-45 snapshot fingerprint remains **`ef11b77b` in the V8 isolate**, and the legacy pre-Oracle Day-300 fingerprint remains **`778899f9` in the same isolate**. These are *runtime-specific serialization checks*, not universal cross-runtime golden hashes.
 
 **Follow-up decision:** Instead of widening 1.6:0.4 directly to 5.5:0.2, test whether **8-point repeated faith loss** and **10-day minimum spacing** should be lowered/slowed; otherwise the near-frontier fixture can weaken 11/15 core even with a neutral matrix. A separate experiment can hold absolute initial pressures constant while rebalancing the two populations' risk. Do not merge these diagnostic odds into general gameplay without further evidence.

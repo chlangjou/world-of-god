@@ -20,8 +20,8 @@
     "doubtStep": 8,
     "repeatDays": 10
   },
-  "forkFingerprint": "663ff1ac",
-  "prepareMs": 446,
+  "forkFingerprint": "c59f85fd",
+  "prepareMs": 99,
   "cases": [
     {
       "name": "neutral-1:1",
@@ -709,7 +709,7 @@
         "eligibleForAI": 45,
         "creditedPlayerDoubts": 56
       },
-      "durationMs": 4087
+      "durationMs": 426
     },
     {
       "name": "1.6:0.4",
@@ -1399,7 +1399,7 @@
         "eligibleForAI": 30,
         "creditedPlayerDoubts": 59
       },
-      "durationMs": 3797
+      "durationMs": 334
     },
     {
       "name": "2.2:0.35",
@@ -2087,7 +2087,7 @@
         "eligibleForAI": 30,
         "creditedPlayerDoubts": 55
       },
-      "durationMs": 3678
+      "durationMs": 310
     },
     {
       "name": "3.0:0.30",
@@ -2775,7 +2775,7 @@
         "eligibleForAI": 30,
         "creditedPlayerDoubts": 56
       },
-      "durationMs": 3724
+      "durationMs": 288
     },
     {
       "name": "4.0:0.25",
@@ -3463,7 +3463,7 @@
         "eligibleForAI": 30,
         "creditedPlayerDoubts": 56
       },
-      "durationMs": 3648
+      "durationMs": 291
     },
     {
       "name": "5.5:0.20",
@@ -4151,15 +4151,10 @@
         "eligibleForAI": 30,
         "creditedPlayerDoubts": 58
       },
-      "durationMs": 3773
+      "durationMs": 290
     }
   ],
   "warning": "This is a controlled stress test, NOT naturally emerging gameplay evidence. Ordinary preaching still cannot directly challenge >=40.",
-  "sourceCommit": "f5ccb9b7ee648726a4ef9f9af826875d45e70ab0",
-  "engineBlob": "4d782ad9432e27c342e5b68c19d2e200d0794ef0",
-  "runnerBlob": "eee124c6ad89eaf42f8e0a012bb15bc3d5a66cdd",
-  "configBlob": "b0a31447aa1a01dc3ac81e495755f0baf5b21014",
-  "experimentalDate": "2026-10-14",
   "originalLinearClamped": {
     "ratio": "1.6:0.4",
     "probability": {
@@ -4189,11 +4184,21 @@
       }
     }
   },
+  "executionEnvironment": "Node.js 22 / GitHub Actions (full 6-arm result parsed from run 38543609652)",
+  "crossRuntimeFingerprints": {
+    "node22": "c59f85fd",
+    "v8Isolate": "663ff1ac"
+  },
+  "engineBlob": "4d782ad9432e27c342e5b68c19d2e200d0794ef0",
+  "runnerBlob": "eee124c6ad89eaf42f8e0a012bb15bc3d5a66cdd",
+  "configBlob": "b0a31447aa1a01dc3ac81e495755f0baf5b21014",
+  "sourceCommit": "7f9cbced96a6d2a4c63c1b0d13ee6c99b6fea8a5",
   "notes": [
     "Initial 30 residents (15+15) all Devotion 60. Existing genetic/skills/person properties retained; world genesis households filtered to 10, moved to two comparable camps, and initialized with prebuilt homes and equal 45 shared Food per camp.",
     "This is an intentionally controlled diagnostic fixture, not proof of natural religion expansion. AI policy disabled until day 360 so both parties have fixed Oracle choices; no scripted Miracle and no forced Faith change.",
     "Ordinary preaching remains unable to challenge Devotion >=40. Oracle counters require an observed, attributed need gap and an active source preacher. Encounter odds model is opt-in and does not change the live linear-clamped profile.",
     "A Saint dropping below 40 causes its Oracle to terminate under existing rules; recorded rather than bypassed. Thus selected policy never changes manually, but may become inactive.",
     "Rate formulas monotone; realized 100-day core outcomes need not be monotone due to feedback and deterministic RNG differences."
-  ]
+  ],
+  "validation": "All six case-by-case outcomes verified identical in Node 22 and V8 isolate; only serial fingerprint/runtime telemetry differs between engines."
 }

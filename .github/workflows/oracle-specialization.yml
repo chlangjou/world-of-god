@@ -140,7 +140,7 @@ jobs:
           JS
       - name: Sweep 30 Devotion-60 core citizens for exactly 100 days
         working-directory: poc/v2
-        run: npm run evaluate:oracle:core30 -- --days 100 --budget-ms 15000 --out reports/oracle-30-core-ratio-sweep-2026-10-14.json
+        run: npm run evaluate:oracle:core30 -- --days 100 --budget-ms 15000 --out reports/oracle-30-core-ratio-sweep-2026-10-14.json > /dev/null
       - name: Verify controlled core trajectory and unsaturated ratios
         working-directory: poc/v2
         run: |
@@ -159,7 +159,12 @@ jobs:
             assert.ok(c.checkpoints.at(-1).contact.eligible>0,c.name);
             assert.ok(c.cohort.every(p=>p.initial===60),c.name);
           }
-          assert.equal(r.forkFingerprint,'663ff1ac');
+          const sweep=require('./tools/oracle-30-core-ratio-sweep.cjs');
+          // FNV on JSON can differ across V8 runtimes. Rebuild the exact
+          // fixture using the SAME Node executable rather than hardcoding
+          // a hash obtained from a separate JavaScript isolate.
+          const ownFingerprint=sweep.hash(JSON.stringify(sweep.fixture()));
+          assert.equal(r.forkFingerprint,ownFingerprint);
           assert.ok(by['5.5:0.20'].eligibleContactProbability.foodDefender>
             by['1.6:0.4'].eligibleContactProbability.foodDefender);
           assert.ok(by['5.5:0.20'].eligibleContactProbability.nurtureDefender<

@@ -1,0 +1,48 @@
+{
+  "profileId": "oracle-30-core-ratio-sweep-v0.1",
+  "seed": "dry-stress",
+  "forkDay": 10,
+  "runDays": 100,
+  "initialPeople": 30,
+  "perFaith": 15,
+  "initialDevotion": 60,
+  "model": "odds-scaled",
+  "fixedContactBase": 0.45,
+  "fixedDoubtStep": 8,
+  "fixedRepeatDays": 10,
+  "fixedBridgeDoubtChance": 0.36,
+  "fixedBridgeConversionChance": 0.22,
+  "faithContactCap": 0.9,
+  "ratios": [
+    {
+      "name": "neutral-1:1",
+      "nurture": 1,
+      "food": 1
+    },
+    {
+      "name": "1.6:0.4",
+      "nurture": 1.6,
+      "food": 0.4
+    },
+    {
+      "name": "2.2:0.35",
+      "nurture": 2.2,
+      "food": 0.35
+    },
+    {
+      "name": "3.0:0.30",
+      "nurture": 3,
+      "food": 0.3
+    },
+    {
+      "name": "4.0:0.25",
+      "nurture": 4,
+      "food": 0.25
+    },
+    {
+      "name": "5.5:0.20",
+      "nurture": 5.5,
+      "food": 0.2
+    }
+  ]
+}

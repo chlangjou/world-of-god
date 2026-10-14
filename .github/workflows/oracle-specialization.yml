@@ -30,6 +30,7 @@ jobs:
           node --check src/app.js
           node --check tools/oracle-strategy-quick.cjs
           node --check tools/oracle-faith-defense-matrix.cjs
+          node --check tools/oracle-30-core-ratio-sweep.cjs
       - name: Compare full test suite with the unmodified parent baseline
         working-directory: poc/v2
         shell: bash
@@ -136,4 +137,34 @@ jobs:
               naturalConverted:c.checkpointResults.at(-1).originalAIConverted
             })));
           }
+          JS
+      - name: Sweep 30 Devotion-60 core citizens for exactly 100 days
+        working-directory: poc/v2
+        run: npm run evaluate:oracle:core30 -- --days 100 --budget-ms 15000 --out reports/oracle-30-core-ratio-sweep-2026-10-14.json
+      - name: Verify controlled core trajectory and unsaturated ratios
+        working-directory: poc/v2
+        run: |
+          node - <<'JS'
+          const assert=require('node:assert/strict');
+          const r=require('./reports/oracle-30-core-ratio-sweep-2026-10-14.json');
+          assert.equal(r.initialPeople,30);
+          assert.equal(r.runDays,100);
+          assert.equal(r.cases.length,6);
+          assert.deepEqual(r.initialCore40,{player:15,AI:15});
+          const by=Object.fromEntries(r.cases.map(c=>[c.name,c]));
+          for(const c of r.cases){
+            assert.ok(c.oracleIssued.every(Boolean),c.name);
+            assert.equal(c.checkpoints.at(-1).elapsed,100);
+            assert.ok(c.checkpoints.every(cp=>cp.valid&&cp.population===30),c.name);
+            assert.ok(c.checkpoints.at(-1).contact.eligible>0,c.name);
+            assert.ok(c.cohort.every(p=>p.initial===60),c.name);
+          }
+          assert.equal(r.forkFingerprint,'663ff1ac');
+          assert.ok(by['5.5:0.20'].eligibleContactProbability.foodDefender>
+            by['1.6:0.4'].eligibleContactProbability.foodDefender);
+          assert.ok(by['5.5:0.20'].eligibleContactProbability.nurtureDefender<
+            by['1.6:0.4'].eligibleContactProbability.nurtureDefender);
+          assert.ok(by['neutral-1:1'].outcome.AIeverBelow40>0,
+            'even 1:1 can cross 40 with earned repeated contact');
+          console.log('100-day / 30 core diagnostic sweep validated',r.forkFingerprint);
           JS

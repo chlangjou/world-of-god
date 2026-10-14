@@ -142,15 +142,27 @@
   function oracleFaithDefense(profile,defenderIntent,challengerIntent){
     if(!profile?.faithDefenseEnabled)return 1;
     const a=defenseIntent(defenderIntent),b=defenseIntent(challengerIntent);
+    const expanded=profile.faithDefenseModel==='odds-scaled';
     return clamp(num(profile.faithDefenseMatrix?.[a]?.[b],
-      ORACLE_DEFENSE_DEFAULTS[a][b]),.25,2);
+      ORACLE_DEFENSE_DEFAULTS[a][b]),expanded?.15:.25,expanded?6:2);
   }
   function oracleDefenseContactChance(profile,defenderIntent,challengerIntent){
     const base=clamp(num(profile?.counterContactChance,.45),0,1);
     const defense=oracleFaithDefense(profile,defenderIntent,challengerIntent);
     const ceiling=profile?.faithDefenseEnabled?
       clamp(num(profile.faithDefenseChanceCeiling,.9),.3,.95):1;
-    return clamp(base/defense,0,ceiling);
+    // Odds scaling is diagnostic and opt-in. Unlike P/defense clamped at 90%,
+    // it keeps .4 and .2 distinguishable while retaining the 1.0 baseline.
+    const chance=profile?.faithDefenseModel==='odds-scaled'?
+      base/(base+defense*(1-base)):base/defense;
+    return clamp(chance,0,ceiling);
+  }
+  function oracleDefenseScale(profile,baseline,defenderIntent,challengerIntent,ceiling){
+    const p=clamp(baseline,0,1);
+    const defense=oracleFaithDefense(profile,defenderIntent,challengerIntent);
+    const chance=profile?.faithDefenseModel==='odds-scaled'?
+      p/(p+defense*(1-p)):p/defense;
+    return clamp(Number.isFinite(chance)?chance:0,0,ceiling);
   }
   // Optional experiment: finite effort, persistent Saint calling, earned counters.
   const ORACLE_STRATEGY_DEFAULTS=Object.freeze({
@@ -180,6 +192,11 @@
     r.counterDoubtStep=Math.round(clamp(r.counterDoubtStep,1,10));
     // Previous v0.1 saves without the matrix flag retain their old balance.
     r.faithDefenseEnabled=profile?.faithDefenseEnabled===true;
+    // Do not append new optional flags to old-world state: historic v0.1
+    // save fingerprints and non-experimental behavior remain identical.
+    if(profile.faithDefenseModel==='odds-scaled')r.faithDefenseModel='odds-scaled';
+    else if(Object.hasOwn(profile,'faithDefenseModel'))r.faithDefenseModel='linear-clamped';
+    if(profile.counterDiagnosticsEnabled===true)r.counterDiagnosticsEnabled=true;
     r.faithDefenseChanceCeiling=clamp(r.faithDefenseChanceCeiling,.3,.95);
     r.faithDefenseMatrix={};
     for(const defending of ORACLE_DEFENSE_TYPES){
@@ -187,7 +204,9 @@
       for(const challenging of ORACLE_DEFENSE_TYPES){
         const fallback=ORACLE_DEFENSE_DEFAULTS[defending][challenging];
         line[challenging]=defending===challenging?1:
-          clamp(num(profile?.faithDefenseMatrix?.[defending]?.[challenging],fallback),.25,2);
+          clamp(num(profile?.faithDefenseMatrix?.[defending]?.[challenging],fallback),
+            r.faithDefenseModel==='odds-scaled'?.15:.25,
+            r.faithDefenseModel==='odds-scaled'?6:2);
       }
       r.faithDefenseMatrix[defending]=line;
     }
@@ -1380,6 +1399,11 @@
           reason='本地家庭缺少住所，而外村已實際新建房屋';
         }
         if(!proven)continue;
+        if(rule.counterDiagnosticsEnabled){
+          s.counts.strategyEligibleChecks=(s.counts.strategyEligibleChecks||0)+1;
+          const side=challenger===s.religion?'playerEligibleChecks':'aiEligibleChecks';
+          s.counts[side]=(s.counts[side]||0)+1;
+        }
         const defense=oracleFaithDefense(rule,ownIntent,challengerIntent);
         // Defense is a resistance divisor on genuine, sampled social encounters.
         // The ratio does not inflict unconditional damage or change the 40+ gate.
@@ -1528,9 +1552,6 @@
       const sensitivity=.6+.8*p.receptivity;
       const counterBridge=rival&&p.devotion<s.rules.faithThreshold&&
         strategyFollowupContact(s,p,faith,remoteSources);
-      const bridgeDefense=counterBridge?oracleFaithDefense(s.oracleStrategy,
-        strategyCalling(s,p).oracle?.intentType,
-        p.lastStrategyEncounter?.challengerIntent):1;
       if(rival){
         // Only a locally preaching Priest can challenge another affiliation in
         // this single-God PoC. 40+ rival devotion is protected above. Lower bands
@@ -1540,7 +1561,10 @@
           const clear=nearbyPriests.some(q=>!activeStatus(s,q,'confusion'))?1:.5;
           const doubt=priest?clamp(r.priestRivalDoubtChance*sensitivity*
             sermonAmplification*clear*(1+(convincing?.25:0)),0,.9):
-            counterBridge?clamp(s.oracleStrategy.counterBridgeDoubtChance*sensitivity/bridgeDefense,0,.9):0;
+            counterBridge?oracleDefenseScale(s.oracleStrategy,
+              s.oracleStrategy.counterBridgeDoubtChance*sensitivity,
+              strategyCalling(s,p).oracle?.intentType,
+              p.lastStrategyEncounter?.challengerIntent,.9):0;
           if(religionRand(s,faith)<doubt){
             p.devotion=Math.max(19,p.devotion-(counterBridge&&!priest?
               s.oracleStrategy.counterDoubtStep:r.priestRivalDoubtStep));
@@ -1551,7 +1575,10 @@
           }
         }else if(religionRand(s,faith)<clamp(
           (priest?r.priestRivalConversionChance*sermonAmplification:
-             counterBridge?s.oracleStrategy.counterBridgeConversionChance/bridgeDefense:0)+
+             counterBridge?oracleDefenseScale(s.oracleStrategy,
+               s.oracleStrategy.counterBridgeConversionChance*sensitivity,
+               strategyCalling(s,p).oracle?.intentType,
+               p.lastStrategyEncounter?.challengerIntent,.8)/sensitivity:0)+
           (convincing?r.miracleInterestJoinChance*Math.min(2.2,impressed/r.miracleInterestThreshold):0),
           0,.8)*sensitivity){
           adopt(p,convincing&&!priest&&!counterBridge?'miracle':counterBridge&&!priest?'strategy':'rival');

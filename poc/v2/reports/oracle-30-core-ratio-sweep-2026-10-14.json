@@ -1,0 +1,4199 @@
+{
+  "schema": "world-of-god/oracle-30-core-100-day-ratio-sweep/v0.1",
+  "sourceBranch": "feature/opponent-difficulty-profiles-v0.3",
+  "scenario": "diagnostic fixed 30; 15 player Nurture, 15 AI Food, all Devotion 60",
+  "seed": "dry-stress",
+  "dayFork": 10,
+  "runDays": 100,
+  "headless": true,
+  "defenseModel": "odds-scaled",
+  "baselineCounterContactChance": 0.45,
+  "fixedOracleRule": "Both legally issued immediately after naturally created Saint/Priest; AI starts only after Day360; no dynamic policy switches. Oracle may end if Saint loses eligibility.",
+  "environment": "real Agriculture / Religion / Divine / Presence world simulation, but equalized prebuilt initial houses, food and settlement membership",
+  "initialPeople": 30,
+  "initialCore40": {
+    "player": 15,
+    "AI": 15
+  },
+  "fixedBaseline": {
+    "contactChance": 0.45,
+    "doubtStep": 8,
+    "repeatDays": 10
+  },
+  "forkFingerprint": "663ff1ac",
+  "prepareMs": 446,
+  "cases": [
+    {
+      "name": "neutral-1:1",
+      "defense": {
+        "nurture": 1,
+        "food": 1
+      },
+      "eligibleContactProbability": {
+        "nurtureDefender": 0.45,
+        "foodDefender": 0.45
+      },
+      "oracleIssued": [
+        true,
+        true
+      ],
+      "oracleTerminated": {
+        "player": null,
+        "AI": null
+      },
+      "checkpoints": [
+        {
+          "elapsed": 0,
+          "realDay": 10,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 60
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 366,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 10,
+          "realDay": 20,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 66
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 443,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 20,
+          "realDay": 30,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 62.4
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 15,
+            "forPlayer": 15,
+            "forAI": 0,
+            "actual": 7,
+            "playerDoubts": 7,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 395,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 30,
+          "realDay": 40,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 60.8
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 23,
+            "forPlayer": 23,
+            "forAI": 0,
+            "actual": 10,
+            "playerDoubts": 10,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 806,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 40,
+          "realDay": 50,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 54.33
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 54,
+            "forPlayer": 39,
+            "forAI": 15,
+            "actual": 27,
+            "playerDoubts": 23,
+            "aiDoubts": 4,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1183,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 50,
+          "realDay": 60,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 50.8
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 67,
+            "forPlayer": 52,
+            "forAI": 15,
+            "actual": 34,
+            "playerDoubts": 30,
+            "aiDoubts": 4,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1433,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 75,
+          "realDay": 85,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 10
+          },
+          "originalAI": {
+            "everBelow40": 5,
+            "nowBelow40": 5,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 40.47
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 119,
+            "forPlayer": 89,
+            "forAI": 30,
+            "actual": 60,
+            "playerDoubts": 49,
+            "aiDoubts": 11,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 2434,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 100,
+          "realDay": 110,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 4
+          },
+          "originalAI": {
+            "everBelow40": 11,
+            "nowBelow40": 11,
+            "everBelow20": 3,
+            "converted": 1,
+            "meanDevotion": 33.13
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 152,
+            "forPlayer": 107,
+            "forAI": 45,
+            "actual": 77,
+            "playerDoubts": 56,
+            "aiDoubts": 21,
+            "conversions": 1
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 3028,
+          "housed": 10,
+          "valid": true
+        }
+      ],
+      "cohort": [
+        {
+          "id": "p1",
+          "team": "r1",
+          "initial": 60,
+          "min": 48,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 48,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p2",
+          "team": "r1",
+          "initial": 60,
+          "min": 47,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 47,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p3",
+          "team": "r1",
+          "initial": 60,
+          "min": 44,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 44,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p4",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 55,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p5",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p6",
+          "team": "r1",
+          "initial": 60,
+          "min": 44,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 44,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p7",
+          "team": "r1",
+          "initial": 60,
+          "min": 46,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 46,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p8",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p9",
+          "team": "r1",
+          "initial": 60,
+          "min": 44,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 44,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p10",
+          "team": "r1",
+          "initial": 60,
+          "min": 53,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 56,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p11",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p12",
+          "team": "r1",
+          "initial": 60,
+          "min": 44,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 44,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p13",
+          "team": "r2",
+          "initial": 60,
+          "min": 37,
+          "firstBelow40": 60,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 37,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p14",
+          "team": "r2",
+          "initial": 60,
+          "min": 34,
+          "firstBelow40": 81,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 35,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p15",
+          "team": "r2",
+          "initial": 60,
+          "min": 26,
+          "firstBelow40": 88,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 26,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p16",
+          "team": "r2",
+          "initial": 60,
+          "min": 53,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 54,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p17",
+          "team": "r2",
+          "initial": 60,
+          "min": 38,
+          "firstBelow40": 81,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 39,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p18",
+          "team": "r2",
+          "initial": 60,
+          "min": 42,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 42,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p19",
+          "team": "r2",
+          "initial": 60,
+          "min": 45,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 45,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p20",
+          "team": "r2",
+          "initial": 60,
+          "min": 21,
+          "firstBelow40": 74,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 22,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p21",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p22",
+          "team": "r2",
+          "initial": 60,
+          "min": 33,
+          "firstBelow40": 95,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 33,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p23",
+          "team": "r2",
+          "initial": 60,
+          "min": 36,
+          "firstBelow40": 95,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 36,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p24",
+          "team": "r2",
+          "initial": 60,
+          "min": 28,
+          "firstBelow40": 88,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 28,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p25",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 55,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p26",
+          "team": "r1",
+          "initial": 60,
+          "min": 53,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 53,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p27",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p34",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 81,
+          "firstConverted": 88,
+          "finalDevotion": 20,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p35",
+          "team": "r2",
+          "initial": 60,
+          "min": 42,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 42,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p36",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 74,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        }
+      ],
+      "outcome": {
+        "AIeverBelow40": 11,
+        "AIbelow40AtEnd": 11,
+        "AIeverBelow20": 3,
+        "AIConverted": 1,
+        "playerEverBelow40": 0,
+        "coreAtEnd": {
+          "player": 15,
+          "AI": 4
+        },
+        "eligibleForPlayer": 107,
+        "eligibleForAI": 45,
+        "creditedPlayerDoubts": 56
+      },
+      "durationMs": 4087
+    },
+    {
+      "name": "1.6:0.4",
+      "defense": {
+        "nurture": 1.6,
+        "food": 0.4
+      },
+      "eligibleContactProbability": {
+        "nurtureDefender": 0.3383458646616541,
+        "foodDefender": 0.6716417910447761
+      },
+      "oracleIssued": [
+        true,
+        true
+      ],
+      "oracleTerminated": {
+        "player": null,
+        "AI": {
+          "day": 82,
+          "reason": "saint_departed",
+          "saintDevotion": 38
+        }
+      },
+      "checkpoints": [
+        {
+          "elapsed": 0,
+          "realDay": 10,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 60
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 366,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 10,
+          "realDay": 20,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 66
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 443,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 20,
+          "realDay": 30,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 61.87
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 15,
+            "forPlayer": 15,
+            "forAI": 0,
+            "actual": 8,
+            "playerDoubts": 8,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 395,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 30,
+          "realDay": 40,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 59.27
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 22,
+            "forPlayer": 22,
+            "forAI": 0,
+            "actual": 13,
+            "playerDoubts": 13,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 806,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 40,
+          "realDay": 50,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 52.87
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 54,
+            "forPlayer": 39,
+            "forAI": 15,
+            "actual": 28,
+            "playerDoubts": 26,
+            "aiDoubts": 2,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1183,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 50,
+          "realDay": 60,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 49.93
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 64,
+            "forPlayer": 49,
+            "forAI": 15,
+            "actual": 34,
+            "playerDoubts": 32,
+            "aiDoubts": 2,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1433,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 75,
+          "realDay": 85,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 4
+          },
+          "originalAI": {
+            "everBelow40": 11,
+            "nowBelow40": 11,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 35.47
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 111,
+            "forPlayer": 81,
+            "forAI": 30,
+            "actual": 65,
+            "playerDoubts": 56,
+            "aiDoubts": 9,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 2434,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 100,
+          "realDay": 110,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 1
+          },
+          "originalAI": {
+            "everBelow40": 14,
+            "nowBelow40": 14,
+            "everBelow20": 5,
+            "converted": 1,
+            "meanDevotion": 24.6
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 115,
+            "forPlayer": 85,
+            "forAI": 30,
+            "actual": 68,
+            "playerDoubts": 59,
+            "aiDoubts": 9,
+            "conversions": 1
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": []
+          },
+          "food": 2533,
+          "housed": 10,
+          "valid": true
+        }
+      ],
+      "cohort": [
+        {
+          "id": "p1",
+          "team": "r1",
+          "initial": 60,
+          "min": 53,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 55,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p2",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 54,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p3",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p4",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 55,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p5",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p6",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p7",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p8",
+          "team": "r1",
+          "initial": 60,
+          "min": 53,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 57,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p9",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p10",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 55,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p11",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p12",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p13",
+          "team": "r2",
+          "initial": 60,
+          "min": 22,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 22,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p14",
+          "team": "r2",
+          "initial": 60,
+          "min": 21,
+          "firstBelow40": 74,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 21,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p15",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 88,
+          "firstConverted": 95,
+          "finalDevotion": 21,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p16",
+          "team": "r2",
+          "initial": 60,
+          "min": 23,
+          "firstBelow40": 81,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 23,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p17",
+          "team": "r2",
+          "initial": 60,
+          "min": 43,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 44,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p18",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 81,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p19",
+          "team": "r2",
+          "initial": 60,
+          "min": 22,
+          "firstBelow40": 81,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 22,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p20",
+          "team": "r2",
+          "initial": 60,
+          "min": 25,
+          "firstBelow40": 74,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 25,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p21",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 81,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p22",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 88,
+          "firstConverted": null,
+          "finalDevotion": 20,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p23",
+          "team": "r2",
+          "initial": 60,
+          "min": 35,
+          "firstBelow40": 74,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 37,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p24",
+          "team": "r2",
+          "initial": 60,
+          "min": 28,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 28,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p25",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p26",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p27",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p34",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p35",
+          "team": "r2",
+          "initial": 60,
+          "min": 27,
+          "firstBelow40": 74,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 29,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p36",
+          "team": "r2",
+          "initial": 60,
+          "min": 20,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 20,
+          "finalFaith": "r2"
+        }
+      ],
+      "outcome": {
+        "AIeverBelow40": 14,
+        "AIbelow40AtEnd": 14,
+        "AIeverBelow20": 5,
+        "AIConverted": 1,
+        "playerEverBelow40": 0,
+        "coreAtEnd": {
+          "player": 15,
+          "AI": 1
+        },
+        "eligibleForPlayer": 85,
+        "eligibleForAI": 30,
+        "creditedPlayerDoubts": 59
+      },
+      "durationMs": 3797
+    },
+    {
+      "name": "2.2:0.35",
+      "defense": {
+        "nurture": 2.2,
+        "food": 0.35
+      },
+      "eligibleContactProbability": {
+        "nurtureDefender": 0.2710843373493976,
+        "foodDefender": 0.7003891050583657
+      },
+      "oracleIssued": [
+        true,
+        true
+      ],
+      "oracleTerminated": {
+        "player": null,
+        "AI": {
+          "day": 75,
+          "reason": "saint_departed",
+          "saintDevotion": 37
+        }
+      },
+      "checkpoints": [
+        {
+          "elapsed": 0,
+          "realDay": 10,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 60
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 366,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 10,
+          "realDay": 20,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 66
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 443,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 20,
+          "realDay": 30,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 61.33
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 15,
+            "forPlayer": 15,
+            "forAI": 0,
+            "actual": 9,
+            "playerDoubts": 9,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 395,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 30,
+          "realDay": 40,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 59.27
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 21,
+            "forPlayer": 21,
+            "forAI": 0,
+            "actual": 13,
+            "playerDoubts": 13,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 806,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 40,
+          "realDay": 50,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 52.73
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 53,
+            "forPlayer": 38,
+            "forAI": 15,
+            "actual": 29,
+            "playerDoubts": 26,
+            "aiDoubts": 3,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1183,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 50,
+          "realDay": 60,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 48.73
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 64,
+            "forPlayer": 49,
+            "forAI": 15,
+            "actual": 37,
+            "playerDoubts": 34,
+            "aiDoubts": 3,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1433,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 75,
+          "realDay": 85,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 4
+          },
+          "originalAI": {
+            "everBelow40": 12,
+            "nowBelow40": 11,
+            "everBelow20": 1,
+            "converted": 0,
+            "meanDevotion": 33.73
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 107,
+            "forPlayer": 77,
+            "forAI": 30,
+            "actual": 62,
+            "playerDoubts": 55,
+            "aiDoubts": 7,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": []
+          },
+          "food": 2434,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 100,
+          "realDay": 110,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 4
+          },
+          "originalAI": {
+            "everBelow40": 12,
+            "nowBelow40": 11,
+            "everBelow20": 6,
+            "converted": 3,
+            "meanDevotion": 30.2
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 107,
+            "forPlayer": 77,
+            "forAI": 30,
+            "actual": 62,
+            "playerDoubts": 55,
+            "aiDoubts": 7,
+            "conversions": 3
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": []
+          },
+          "food": 2311,
+          "housed": 10,
+          "valid": true
+        }
+      ],
+      "cohort": [
+        {
+          "id": "p1",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p2",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p3",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p4",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p5",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 53,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p6",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p7",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 54,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p8",
+          "team": "r1",
+          "initial": 60,
+          "min": 47,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 48,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p9",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p10",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p11",
+          "team": "r1",
+          "initial": 60,
+          "min": 46,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 49,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p12",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p13",
+          "team": "r2",
+          "initial": 60,
+          "min": 22,
+          "firstBelow40": 60,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 23,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p14",
+          "team": "r2",
+          "initial": 60,
+          "min": 31,
+          "firstBelow40": 74,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 31,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p15",
+          "team": "r2",
+          "initial": 60,
+          "min": 26,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 27,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p16",
+          "team": "r2",
+          "initial": 60,
+          "min": 30,
+          "firstBelow40": 74,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 32,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p17",
+          "team": "r2",
+          "initial": 60,
+          "min": 50,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 50,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p18",
+          "team": "r2",
+          "initial": 60,
+          "min": 50,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 50,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p19",
+          "team": "r2",
+          "initial": 60,
+          "min": 46,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 48,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p20",
+          "team": "r2",
+          "initial": 60,
+          "min": 39,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 42,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p21",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 81,
+          "firstConverted": 88,
+          "finalDevotion": 23,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p22",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p23",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 88,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p24",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 74,
+          "firstConverted": 88,
+          "finalDevotion": 22,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p25",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p26",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p27",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p34",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p35",
+          "team": "r2",
+          "initial": 60,
+          "min": 28,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 28,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p36",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 81,
+          "firstConverted": 88,
+          "finalDevotion": 20,
+          "finalFaith": "r1"
+        }
+      ],
+      "outcome": {
+        "AIeverBelow40": 12,
+        "AIbelow40AtEnd": 11,
+        "AIeverBelow20": 6,
+        "AIConverted": 3,
+        "playerEverBelow40": 0,
+        "coreAtEnd": {
+          "player": 15,
+          "AI": 4
+        },
+        "eligibleForPlayer": 77,
+        "eligibleForAI": 30,
+        "creditedPlayerDoubts": 55
+      },
+      "durationMs": 3678
+    },
+    {
+      "name": "3.0:0.30",
+      "defense": {
+        "nurture": 3,
+        "food": 0.3
+      },
+      "eligibleContactProbability": {
+        "nurtureDefender": 0.21428571428571427,
+        "foodDefender": 0.7317073170731707
+      },
+      "oracleIssued": [
+        true,
+        true
+      ],
+      "oracleTerminated": {
+        "player": null,
+        "AI": {
+          "day": 68,
+          "reason": "saint_departed",
+          "saintDevotion": 37
+        }
+      },
+      "checkpoints": [
+        {
+          "elapsed": 0,
+          "realDay": 10,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 60
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 366,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 10,
+          "realDay": 20,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 66
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 443,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 20,
+          "realDay": 30,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 61.33
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 15,
+            "forPlayer": 15,
+            "forAI": 0,
+            "actual": 9,
+            "playerDoubts": 9,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 395,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 30,
+          "realDay": 40,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 58.73
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 21,
+            "forPlayer": 21,
+            "forAI": 0,
+            "actual": 14,
+            "playerDoubts": 14,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 806,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 40,
+          "realDay": 50,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 51.67
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 52,
+            "forPlayer": 37,
+            "forAI": 15,
+            "actual": 30,
+            "playerDoubts": 28,
+            "aiDoubts": 2,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1183,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 50,
+          "realDay": 60,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 47.13
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 62,
+            "forPlayer": 47,
+            "forAI": 15,
+            "actual": 39,
+            "playerDoubts": 37,
+            "aiDoubts": 2,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1433,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 75,
+          "realDay": 85,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 4
+          },
+          "originalAI": {
+            "everBelow40": 11,
+            "nowBelow40": 11,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 34.13
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 102,
+            "forPlayer": 72,
+            "forAI": 30,
+            "actual": 63,
+            "playerDoubts": 56,
+            "aiDoubts": 7,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": []
+          },
+          "food": 2180,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 100,
+          "realDay": 110,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 4
+          },
+          "originalAI": {
+            "everBelow40": 11,
+            "nowBelow40": 11,
+            "everBelow20": 6,
+            "converted": 2,
+            "meanDevotion": 28.67
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 102,
+            "forPlayer": 72,
+            "forAI": 30,
+            "actual": 63,
+            "playerDoubts": 56,
+            "aiDoubts": 7,
+            "conversions": 2
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": []
+          },
+          "food": 2057,
+          "housed": 10,
+          "valid": true
+        }
+      ],
+      "cohort": [
+        {
+          "id": "p1",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p2",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p3",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p4",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 56,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p5",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p6",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p7",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 55,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p8",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p9",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p10",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 54,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p11",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 54,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p12",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p13",
+          "team": "r2",
+          "initial": 60,
+          "min": 20,
+          "firstBelow40": 60,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 20,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p14",
+          "team": "r2",
+          "initial": 60,
+          "min": 22,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 22,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p15",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p16",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p17",
+          "team": "r2",
+          "initial": 60,
+          "min": 44,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 45,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p18",
+          "team": "r2",
+          "initial": 60,
+          "min": 42,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 42,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p19",
+          "team": "r2",
+          "initial": 60,
+          "min": 45,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 45,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p20",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p21",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 81,
+          "firstConverted": 95,
+          "finalDevotion": 23,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p22",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 81,
+          "firstConverted": 88,
+          "finalDevotion": 19,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p23",
+          "team": "r2",
+          "initial": 60,
+          "min": 35,
+          "firstBelow40": 60,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 38,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p24",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 88,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p25",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p26",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p27",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p34",
+          "team": "r2",
+          "initial": 60,
+          "min": 30,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 31,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p35",
+          "team": "r2",
+          "initial": 60,
+          "min": 27,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 27,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p36",
+          "team": "r2",
+          "initial": 60,
+          "min": 42,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 42,
+          "finalFaith": "r2"
+        }
+      ],
+      "outcome": {
+        "AIeverBelow40": 11,
+        "AIbelow40AtEnd": 11,
+        "AIeverBelow20": 6,
+        "AIConverted": 2,
+        "playerEverBelow40": 0,
+        "coreAtEnd": {
+          "player": 15,
+          "AI": 4
+        },
+        "eligibleForPlayer": 72,
+        "eligibleForAI": 30,
+        "creditedPlayerDoubts": 56
+      },
+      "durationMs": 3724
+    },
+    {
+      "name": "4.0:0.25",
+      "defense": {
+        "nurture": 4,
+        "food": 0.25
+      },
+      "eligibleContactProbability": {
+        "nurtureDefender": 0.16981132075471697,
+        "foodDefender": 0.7659574468085106
+      },
+      "oracleIssued": [
+        true,
+        true
+      ],
+      "oracleTerminated": {
+        "player": null,
+        "AI": {
+          "day": 68,
+          "reason": "saint_departed",
+          "saintDevotion": 37
+        }
+      },
+      "checkpoints": [
+        {
+          "elapsed": 0,
+          "realDay": 10,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 60
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 366,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 10,
+          "realDay": 20,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 66
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 443,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 20,
+          "realDay": 30,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 60.73
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 15,
+            "forPlayer": 15,
+            "forAI": 0,
+            "actual": 10,
+            "playerDoubts": 10,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 395,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 30,
+          "realDay": 40,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 58.67
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 20,
+            "forPlayer": 20,
+            "forAI": 0,
+            "actual": 14,
+            "playerDoubts": 14,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 806,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 40,
+          "realDay": 50,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 51.67
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 51,
+            "forPlayer": 36,
+            "forAI": 15,
+            "actual": 30,
+            "playerDoubts": 28,
+            "aiDoubts": 2,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1183,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 50,
+          "realDay": 60,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 47.13
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 62,
+            "forPlayer": 47,
+            "forAI": 15,
+            "actual": 39,
+            "playerDoubts": 37,
+            "aiDoubts": 2,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1433,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 75,
+          "realDay": 85,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 5
+          },
+          "originalAI": {
+            "everBelow40": 11,
+            "nowBelow40": 10,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 33.2
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 99,
+            "forPlayer": 69,
+            "forAI": 30,
+            "actual": 62,
+            "playerDoubts": 56,
+            "aiDoubts": 6,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": []
+          },
+          "food": 2180,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 100,
+          "realDay": 110,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 5
+          },
+          "originalAI": {
+            "everBelow40": 11,
+            "nowBelow40": 10,
+            "everBelow20": 3,
+            "converted": 2,
+            "meanDevotion": 29
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 99,
+            "forPlayer": 69,
+            "forAI": 30,
+            "actual": 62,
+            "playerDoubts": 56,
+            "aiDoubts": 6,
+            "conversions": 2
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": []
+          },
+          "food": 2057,
+          "housed": 10,
+          "valid": true
+        }
+      ],
+      "cohort": [
+        {
+          "id": "p1",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 54,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p2",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p3",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p4",
+          "team": "r1",
+          "initial": 60,
+          "min": 53,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 56,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p5",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p6",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p7",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 54,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p8",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p9",
+          "team": "r1",
+          "initial": 60,
+          "min": 44,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 44,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p10",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p11",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p12",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p13",
+          "team": "r2",
+          "initial": 60,
+          "min": 30,
+          "firstBelow40": 60,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 30,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p14",
+          "team": "r2",
+          "initial": 60,
+          "min": 39,
+          "firstBelow40": 60,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 42,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p15",
+          "team": "r2",
+          "initial": 60,
+          "min": 42,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 42,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p16",
+          "team": "r2",
+          "initial": 60,
+          "min": 22,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 22,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p17",
+          "team": "r2",
+          "initial": 60,
+          "min": 21,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 21,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p18",
+          "team": "r2",
+          "initial": 60,
+          "min": 42,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 42,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p19",
+          "team": "r2",
+          "initial": 60,
+          "min": 43,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 44,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p20",
+          "team": "r2",
+          "initial": 60,
+          "min": 21,
+          "firstBelow40": 60,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 23,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p21",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p22",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 81,
+          "firstConverted": 88,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p23",
+          "team": "r2",
+          "initial": 60,
+          "min": 21,
+          "firstBelow40": 60,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 21,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p24",
+          "team": "r2",
+          "initial": 60,
+          "min": 42,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 42,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p25",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p26",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p27",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p34",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 81,
+          "firstConverted": 88,
+          "finalDevotion": 21,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p35",
+          "team": "r2",
+          "initial": 60,
+          "min": 21,
+          "firstBelow40": 60,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 21,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p36",
+          "team": "r2",
+          "initial": 60,
+          "min": 26,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 26,
+          "finalFaith": "r2"
+        }
+      ],
+      "outcome": {
+        "AIeverBelow40": 11,
+        "AIbelow40AtEnd": 10,
+        "AIeverBelow20": 3,
+        "AIConverted": 2,
+        "playerEverBelow40": 0,
+        "coreAtEnd": {
+          "player": 15,
+          "AI": 5
+        },
+        "eligibleForPlayer": 69,
+        "eligibleForAI": 30,
+        "creditedPlayerDoubts": 56
+      },
+      "durationMs": 3648
+    },
+    {
+      "name": "5.5:0.20",
+      "defense": {
+        "nurture": 5.5,
+        "food": 0.2
+      },
+      "eligibleContactProbability": {
+        "nurtureDefender": 0.1294964028776978,
+        "foodDefender": 0.8035714285714285
+      },
+      "oracleIssued": [
+        true,
+        true
+      ],
+      "oracleTerminated": {
+        "player": null,
+        "AI": {
+          "day": 75,
+          "reason": "saint_departed",
+          "saintDevotion": 37
+        }
+      },
+      "checkpoints": [
+        {
+          "elapsed": 0,
+          "realDay": 10,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 60
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 366,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 10,
+          "realDay": 20,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 66
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 0,
+            "forPlayer": 0,
+            "forAI": 0,
+            "actual": 0,
+            "playerDoubts": 0,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 443,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 20,
+          "realDay": 30,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 60.2
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 15,
+            "forPlayer": 15,
+            "forAI": 0,
+            "actual": 11,
+            "playerDoubts": 11,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 395,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 30,
+          "realDay": 40,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 58.67
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 19,
+            "forPlayer": 19,
+            "forAI": 0,
+            "actual": 14,
+            "playerDoubts": 14,
+            "aiDoubts": 0,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 806,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 40,
+          "realDay": 50,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 51.07
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 50,
+            "forPlayer": 35,
+            "forAI": 15,
+            "actual": 32,
+            "playerDoubts": 29,
+            "aiDoubts": 3,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1183,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 50,
+          "realDay": 60,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 15
+          },
+          "originalAI": {
+            "everBelow40": 0,
+            "nowBelow40": 0,
+            "everBelow20": 0,
+            "converted": 0,
+            "meanDevotion": 46.53
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 61,
+            "forPlayer": 46,
+            "forAI": 15,
+            "actual": 41,
+            "playerDoubts": 38,
+            "aiDoubts": 3,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": [
+              "food.produce"
+            ]
+          },
+          "food": 1433,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 75,
+          "realDay": 85,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 2
+          },
+          "originalAI": {
+            "everBelow40": 13,
+            "nowBelow40": 13,
+            "everBelow20": 2,
+            "converted": 0,
+            "meanDevotion": 29.53
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 102,
+            "forPlayer": 72,
+            "forAI": 30,
+            "actual": 64,
+            "playerDoubts": 58,
+            "aiDoubts": 6,
+            "conversions": 0
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": []
+          },
+          "food": 2431,
+          "housed": 10,
+          "valid": true
+        },
+        {
+          "elapsed": 100,
+          "realDay": 110,
+          "population": 30,
+          "core40": {
+            "player": 15,
+            "AI": 2
+          },
+          "originalAI": {
+            "everBelow40": 13,
+            "nowBelow40": 13,
+            "everBelow20": 10,
+            "converted": 3,
+            "meanDevotion": 24.2
+          },
+          "originalPlayer": {
+            "everBelow40": 0,
+            "converted": 0
+          },
+          "contact": {
+            "eligible": 102,
+            "forPlayer": 72,
+            "forAI": 30,
+            "actual": 64,
+            "playerDoubts": 58,
+            "aiDoubts": 6,
+            "conversions": 3
+          },
+          "activeOracles": {
+            "player": [
+              "family.nurture"
+            ],
+            "AI": []
+          },
+          "food": 2308,
+          "housed": 10,
+          "valid": true
+        }
+      ],
+      "cohort": [
+        {
+          "id": "p1",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p2",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 55,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p3",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p4",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p5",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 55,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p6",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p7",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 54,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p8",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p9",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p10",
+          "team": "r1",
+          "initial": 60,
+          "min": 53,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 55,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p11",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 56,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p12",
+          "team": "r1",
+          "initial": 60,
+          "min": 52,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 52,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p13",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 81,
+          "firstConverted": 95,
+          "finalDevotion": 20,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p14",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 88,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p15",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 81,
+          "firstConverted": 88,
+          "finalDevotion": 19,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p16",
+          "team": "r2",
+          "initial": 60,
+          "min": 23,
+          "firstBelow40": 74,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 24,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p17",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p18",
+          "team": "r2",
+          "initial": 60,
+          "min": 42,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 42,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p19",
+          "team": "r2",
+          "initial": 60,
+          "min": 44,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 45,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p20",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p21",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 74,
+          "firstConverted": 88,
+          "finalDevotion": 23,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p22",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 74,
+          "firstBelow20": 95,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p23",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 74,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p24",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 67,
+          "firstBelow20": 81,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p25",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p26",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p27",
+          "team": "r1",
+          "initial": 60,
+          "min": 60,
+          "firstBelow40": null,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 60,
+          "finalFaith": "r1"
+        },
+        {
+          "id": "p34",
+          "team": "r2",
+          "initial": 60,
+          "min": 21,
+          "firstBelow40": 60,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 22,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p35",
+          "team": "r2",
+          "initial": 60,
+          "min": 19,
+          "firstBelow40": 60,
+          "firstBelow20": 81,
+          "firstConverted": null,
+          "finalDevotion": 19,
+          "finalFaith": "r2"
+        },
+        {
+          "id": "p36",
+          "team": "r2",
+          "initial": 60,
+          "min": 34,
+          "firstBelow40": 67,
+          "firstBelow20": null,
+          "firstConverted": null,
+          "finalDevotion": 35,
+          "finalFaith": "r2"
+        }
+      ],
+      "outcome": {
+        "AIeverBelow40": 13,
+        "AIbelow40AtEnd": 13,
+        "AIeverBelow20": 10,
+        "AIConverted": 3,
+        "playerEverBelow40": 0,
+        "coreAtEnd": {
+          "player": 15,
+          "AI": 2
+        },
+        "eligibleForPlayer": 72,
+        "eligibleForAI": 30,
+        "creditedPlayerDoubts": 58
+      },
+      "durationMs": 3773
+    }
+  ],
+  "warning": "This is a controlled stress test, NOT naturally emerging gameplay evidence. Ordinary preaching still cannot directly challenge >=40.",
+  "sourceCommit": "f5ccb9b7ee648726a4ef9f9af826875d45e70ab0",
+  "engineBlob": "4d782ad9432e27c342e5b68c19d2e200d0794ef0",
+  "runnerBlob": "eee124c6ad89eaf42f8e0a012bb15bc3d5a66cdd",
+  "configBlob": "b0a31447aa1a01dc3ac81e495755f0baf5b21014",
+  "experimentalDate": "2026-10-14",
+  "originalLinearClamped": {
+    "ratio": "1.6:0.4",
+    "probability": {
+      "nurtureDefender": 0.28125,
+      "foodDefender": 0.9
+    },
+    "outcome": {
+      "AIeverBelow40": 12,
+      "AIbelow40AtEnd": 12,
+      "AIeverBelow20": 6,
+      "AIConverted": 0,
+      "playerEverBelow40": 0,
+      "coreAtEnd": {
+        "player": 15,
+        "AI": 3
+      },
+      "eligibleForPlayer": 67,
+      "eligibleForAI": 30,
+      "creditedPlayerDoubts": 57
+    },
+    "oracleTerminated": {
+      "player": null,
+      "AI": {
+        "day": 68,
+        "reason": "saint_departed",
+        "saintDevotion": 35
+      }
+    }
+  },
+  "notes": [
+    "Initial 30 residents (15+15) all Devotion 60. Existing genetic/skills/person properties retained; world genesis households filtered to 10, moved to two comparable camps, and initialized with prebuilt homes and equal 45 shared Food per camp.",
+    "This is an intentionally controlled diagnostic fixture, not proof of natural religion expansion. AI policy disabled until day 360 so both parties have fixed Oracle choices; no scripted Miracle and no forced Faith change.",
+    "Ordinary preaching remains unable to challenge Devotion >=40. Oracle counters require an observed, attributed need gap and an active source preacher. Encounter odds model is opt-in and does not change the live linear-clamped profile.",
+    "A Saint dropping below 40 causes its Oracle to terminate under existing rules; recorded rather than bypassed. Thus selected policy never changes manually, but may become inactive.",
+    "Rate formulas monotone; realized 100-day core outcomes need not be monotone due to feedback and deterministic RNG differences."
+  ]
+}

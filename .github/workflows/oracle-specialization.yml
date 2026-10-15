@@ -79,7 +79,7 @@ jobs:
           const html=fs.readFileSync('World-of-God-Playable.html','utf8');
           assert.ok(html.startsWith('<!doctype html>'));
           for(const item of ['window.WOG_PLAYTEST_PROFILE','window.WOG_ORACLE_STRATEGY_PROFILE',
-            'id="playtestScenario"','window.WOG_PLAYTEST=API','strategyAttraction']){
+            'id="playtestScenario"','root.WOG_PLAYTEST=API','strategyAttraction']){
             assert.ok(html.includes(item),item);
           }
           assert.ok(!html.includes('<script src='));

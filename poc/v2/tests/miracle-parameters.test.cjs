@@ -5,6 +5,10 @@ const W=require('../src/sim.js');
 const ag=require('../config/balance-agriculture-v0.1.json');
 const religion=require('../config/religion-propagation-v0.1.json');
 const divine=require('../config/divine-powers-v0.1.json');
+const opponent=require('../config/opponent-v0.2.json');
+const strategy=require('../config/oracle-specialization-v0.1.json');
+const playtest=require('../src/playtest.js');
+const playtestConfig=require('../config/playable-evidence-v0.1.json');
 
 class Element {
   constructor(id){
@@ -43,8 +47,14 @@ async function boot(){
   canvas.getContext=()=>ctx;
   const doc={getElementById:get,querySelectorAll:()=>[],addEventListener(){},
     activeElement:{tagName:'BODY'}};
+  // Existing UI interaction regressions exercise the original open-ended
+  // native mode, not the opt-in 30-person scripted duel. Supply the real new
+  // runtime dependencies rather than silently using the unconfigured world.
   const win={WoG2:W,WOG_AGRICULTURE_PROFILE:ag,
-    WOG_RELIGION_PROFILE:religion,WOG_DIVINE_PROFILE:divine};
+    WOG_RELIGION_PROFILE:religion,WOG_DIVINE_PROFILE:divine,
+    WOG_OPPONENT_PROFILE:opponent,WOG_ORACLE_STRATEGY_PROFILE:strategy,
+    WOG_PLAYTEST:playtest,
+    WOG_PLAYTEST_PROFILE:{...playtestConfig,defaultScenario:'native'}};
   const memory=new Map(),storage={
     setItem(key,value){memory.set(key,value);},
     getItem(key){return memory.get(key)||null;}

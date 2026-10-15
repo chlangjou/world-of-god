@@ -79,6 +79,12 @@ test('paid credibility (not bare doctrine) is required for advantaged conversion
     favored.score.originalAIConverted);
   assert.equal(favored.score.originalPlayerConverted,0);
   assert.ok(favored.converted.length>0);
+  // Confirmed design exception: multiple authentic outcomes may support a
+  // voluntary faith switch while ORIGINAL Devotion is still 40+.
+  const previouslyCommitted=favored.converted.filter(p=>
+    p.firstConversionDay<=100&&p.fromDevotion>=40);
+  assert.ok(previouslyCommitted.length>0,
+    'evidence-led switching of a committed believer is not restricted by the ordinary <20 gate');
   for(const changed of favored.converted){
     assert.equal(changed.originalFaith,'r2');
     assert.ok(changed.observations>=T.attraction.minEvidenceObservations);

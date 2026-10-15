@@ -13,6 +13,7 @@ Spatial miracle rules: [DIVINE_PRESENCE_MIRACLES.md](DIVINE_PRESENCE_MIRACLES.md
 - Religion may become dormant if followers vanish; a future Divine Spark may allow revival. Dormancy/revival specifics remain future design work.
 - Mortal affiliations use the compact #5 person state (`religion_id?`, `devotion 0..100`, optional receptivity). Do not store extensive individual sermon/prayer histories.
 - #5 rules remain authoritative: weighted divine contribution `0:1:2:4:8`; ordinary rival preaching does not readily overturn 40+ Devotion; evidence from attributed Miracle / fulfilled Oracle is the primary source of large durable Devotion changes; conversion rules and temporary Fervor / Low Morale follow #5.
+- **#5 confirmed evidence exception (2026-10-15):** repeated, attributable, meaningful outcomes from a competing God can support a resident's **voluntary** conversion even while original Devotion is still 20+ or 40+. This does **not** make routine sermons capable of instantly converting committed followers; it is a distinct evidence-and-individual-choice route. The current PoC implementation is experimental and numerical tuning is not yet authoritative.
 
 ## 2. Two-way divine communication
 

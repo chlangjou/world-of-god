@@ -82,24 +82,26 @@ A simple first-pass probability shift is:
 
 for eligible weak believers inside effective Priest influence.
 
-### Conversion hysteresis
+### Conversion hysteresis and evidence-led voluntary conversion
 
-A person at 40+ is a committed believer and normally resists rival preaching.
+**Design decision confirmed 2026-10-15 (feature-branch amendment):** A person who repeatedly experiences **credible, attributable, meaningful outcomes** from another religion may **voluntarily convert while their original Devotion is still 20+ or even 40+**. The old Devotion threshold is **not a universal prerequisite** for conversion.
 
-A person at 39 or below becomes vulnerable to rival religious influence.
+Keep two distinct routes; do not conflate an ordinary sermon with strong evidence:
 
-Actual conversion requires both:
+1. **Ordinary/weak-faith route.** A person at 40+ is committed and resists ordinary rival Priest preaching. At 39 or below, weakening through normal social/religious influences becomes possible; PoC's current ordinary cross-faith conversion logic requires reaching its own low-Devotion eligibility band (currently below 20). That rule remains for this route.
+2. **Exceptional earned-evidence route.** Repeated observed **Miracle benefits or fulfilled Oracle outcomes** attributable to another God may independently establish trust in that rival religion. The resident considers both their remaining commitment to the old religion and earned evidence for the new one, then makes an **autonomous, probabilistic** decision. **No automatic faith switch** occurs merely because a God casts a Miracle, issues an Oracle, or has a Priest preach. A 40+ original Devotion score does not automatically block this extraordinary route.
 
-1. Devotion at 39 or below, and
-2. exposure to a convincing rival Miracle / Oracle effect.
+Evidence must be causally grounded in genuine observed/communicated results, have credible identification of its God, require more than a one-off encounter, and respect local needs and social transmission. Repetition of one unchanged result must not become an infinite free conversion generator. Exact scoring, retention, repeated-evidence deduplication, competing claims and decay remain balance/implementation questions.
 
-On conversion:
+The previous simple conversion initialization proposal,
 
 ```text
 new_devotion = max(20, old_devotion - 5)
 ```
 
-This prevents instant full-confidence conversion and gives the new religion a consolidation phase.
+is a **first-pass ordinary-route proposal**, not a rule governing the evidence-led exception. In the current experimental PoC, a voluntary evidence-driven convert begins with a **new-faith Devotion of 20–39**, allowing a consolidation period rather than inheriting their old Devotion or instantly granting a new 40+ core. The precise starting value is **not yet finalized**.
+
+**Decision versus implementation status:** The voluntary evidence exception is **accepted design**. The existing opt-in `poc/v2` research implementation and its numerical thresholds/probabilities are **experimental**; ordinary default worlds and old saves are not silently migrated. Reference: [Evidence-attraction PoC study](../poc/v2/docs/ORACLE_EARNED_ATTRACTION_STUDY_2026_10_15.md).
 
 ### Gameplay objective
 

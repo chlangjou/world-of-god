@@ -3,6 +3,16 @@
 這是從 `web-mvp-0` 移入 `main/poc/v2/` 的**獨立模組化 Web 試玩版**。
 不改動 `main/docs/` 正式 God–World 規則，也不取代 Godot PoC。
 
+## 宗教爭奪試玩版 v0.1（2026-10-15）
+
+**直接離線試玩：**在 GitHub 找到 [World-of-God-Playable.html](World-of-God-Playable.html)，按 **Download raw file** 後，雙擊下載的 HTML 檔。單檔已內嵌 CSS、遊戲程式及全部 Profile，**不需 Node.js、不需網路，也不要直接雙擊原始 `index.html`**。
+
+此試玩包預設 **30 人宗教對決**：雙方各 15 名 Devotion 60 的核心信徒、自然形成的 Saint/Priest 和可運作的聚落；AI 已發布「存糧」Oracle，暫不更改策略。玩家選 **Oracle → 育兒 → 傳下神諭 → 開始 → 16×**，觀察約 100 個模擬日。目標是原 15 名 AI 信徒中至少 **淨爭取 3 人**；新增信徒起始 20–39，所以大字 40+ 核心數不會立即增加，請看畫面的「淨改宗」進度。居民面板可查「異教信任」和改宗前 Devotion，歷史面板可看可歸因的改宗事件。
+
+頂端「場景」可選 **自然河谷**：保留正常世界創生、三個中立原生聚落、AI 自主行動和未必能短期跨聚落接觸的結果。換場景會重開世界，請先儲存／匯出。離線單檔的普通版本 `npm run build:standalone` 也包含以上兩種玩法，預設進入宗教對決。
+
+**界線：**30 人對決是人工設定初始人口、住屋和雙宗教歸屬的教學情境，不是自然演化證明；玩家需真正選對 Oracle 並讓居民自主工作、交流，系統不會固定塞信徒或無條件改宗。已確認「反覆可信成果可使居民在原 Devotion 40+ 自主改宗」的設計原則，**吸引力數值及 100 日後可能過快的連鎖改宗仍是 PoC 實驗**。本次只提交在 `feature/opponent-difficulty-profiles-v0.3`，沒有改動 `main`。詳見 [試玩交付與已知限制](docs/PLAYABLE_EVIDENCE_V0_1.md)。
+
 ## 快速啟動
 
 需要 Node.js 18 以上，無外部套件，**不用 npm install**：

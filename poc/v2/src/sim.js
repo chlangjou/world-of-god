@@ -1568,6 +1568,15 @@
         sourceTownId:source,oracleId,observations:evidenceCount,
         earnedAttraction:earned};
       s.counts.strategyAttractionConversions=(s.counts.strategyAttractionConversions||0)+1;
+      // A visible consequence, not the Oracle cast itself. Preserve the actual
+      // resident's before/after Faith and the evidence source for inspection.
+      const sourceName=s.settlements.find(t=>t.id===source)?.name||source;
+      log(s,'faith',p.name+' 反覆見證 '+faith.name+' 的真實成果後，自主選擇改宗。',
+        ['原信仰 Devotion '+Math.round(oldDevotion*10)/10+
+         '；新宗教 Devotion '+p.devotion,
+         '已有 '+evidenceCount+' 次可信觀察，累積信任 '+Math.round(earned*10)/10,
+         '來源：'+sourceName+'；有效神諭：'+oracleId,
+         '不是單次施放或普通傳教強迫改宗']);
       return true;
     };
     for(const p of people){

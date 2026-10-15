@@ -4,16 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#111d1f">
-  <title>World of God — 河谷初生 · Web PoC v2</title>
+  <title>World of God — 宗教對決試玩版 · Web PoC</title>
   <link rel="stylesheet" href="assets/style-base.css">
   <link rel="stylesheet" href="assets/viewport.css">
   <link rel="stylesheet" href="assets/file-menu.css">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brand-icon" aria-hidden="true">✧</span><div><b>WORLD OF GOD</b><small>河谷初生 · WEB POC V2</small></div></div>
+    <div class="brand"><span class="brand-icon" aria-hidden="true">✧</span><div><b>WORLD OF GOD</b><small>宗教競爭 · PLAYTEST V0.1</small></div></div>
     <div class="date-box" aria-label="模擬時間"><strong id="day">第 1 日</strong><small id="weather">和暖時節</small></div>
     <div class="header-actions">
+      <label class="profile-picker scenario-picker" title="選擇宗教對決或自然河谷；切換會重新創世"><span>場景</span>
+        <select id="playtestScenario" aria-label="選擇試玩情境" disabled>
+          <option value="duel" selected>30人宗教對決</option>
+          <option value="native">自然河谷</option>
+        </select>
+      </label>
       <label class="profile-picker" title="選擇的設定套用於下一個新世界，切換時會重新創世"><span>Balance</span>
         <select id="balanceProfile" aria-label="目前使用的 Balance Profile" disabled>
           <option value="agriculture">Agriculture v0.1</option>
@@ -41,7 +47,7 @@
         </div>
       </details>
       <button id="helpBtn" class="btn ghost" title="玩法及操作說明">說明</button>
-      <button id="resetBtn" class="btn outline" title="以目前 Profile 重新創世">重新創世</button>
+      <button id="resetBtn" class="btn outline" title="以目前試玩情境與 Profile 重新創世">重新創世</button>
     </div>
   </header>
   <main class="main">
@@ -136,6 +142,8 @@
   </main>
   <dialog id="infoDialog"><div class="dialog-head"><h2>World of God 操作</h2><button id="closeHelp" class="btn ghost">關閉</button></div>
     <div class="help-text"><p><strong>世界：</strong>居民自行耕作、建立聚落、成長與遷移；神明不直接指派工作。</p>
+      <p><strong>快速開始 — 30人宗教對決：</strong>預設兩個宗教各有15名 Devotion 60 的信徒；兩邊都有既有住屋及已自然出現的 Saint／Priest。AI 已對聆聽者傳下「存糧」神諭，暫不自行改變方針。請切換 Oracle，選「育兒」，按「傳下神諭」，再按「開始／16×」。100個模擬日內目標是從對方原15名信徒中取得至少3人淨改宗。右上角可切換「自然河谷」玩正常拓荒與AI互動。</p>
+      <p><strong>信仰爭奪：</strong>核心信徒的門檻仍是 Devotion 40。普通傳教不能直接改宗40+；但多次見證可歸因的真實神諭成果，加上仍有實際傳教接觸，居民可能自主轉向另一宗教，即使原 Devotion 尚未跌到20。這套數值是測試版：100天後可能發生過快的連鎖轉宗，不代表最終平衡。可在「居民」檢視異教信任和改宗依據，在「歷史」看轉宗事件。對決開場是刻意設計的受控場景，不是自然生成的勝率證據。</p>
       <p><strong>兩層神意操作：</strong>先選 Miracle／Oracle 類別，再從下拉清單選能力。Miracle 可以指定地圖目標；Oracle 由 Saint 傳達。</p>
       <p><strong>神蹟：</strong>從選單選擇降雨、促熟、豐收、治療、效率祝福、乾旱、雷擊、混亂或致盲。依能力調整範圍、強度與時間；按施展再點地圖。沒有目標、神力不足或當地臨在不足時不消耗 DP。每項神蹟獨立熟練度和冷卻，並各自保留上次的範圍、強度與持續天數；冷卻中若神力足夠仍可強制施放，DP 依同技能本輪次數計為 2×、3×、4×…，完全冷卻後恢復 1×，不影響其他 Miracle；切回神蹟時不必重新設定。持續型神蹟的冷卻也取決於施展時間：同條件下 5 天降雨比 30 天降雨更快恢復，預計冷卻時間會隨滑桿即時更新。</p><p><strong>神諭策略（實驗）：</strong>存糧／育兒／探索各自偏重有限行動時間，也留下其他需求的弱點；同一 Saint 一次只能有一個持續方針。Reset「神很滿意你們的行為，放下心中的執著去追尋自己的需求」解除特化、不消耗額度，不清空既有成果。對手須有真實成果與跨聚落接觸才可能動搖既有核心。傳教不直接改宗。</p>
       <p><strong>需求定位：</strong>在「需求」分頁點選任一祈求，即可在地圖標出來源中心與座標。缺雨祈求還會顯示當時農田的需求評估範圍；這是定位參考，不代表施展神蹟時會自動覆蓋全部農田。多筆祈求可翻頁，Priest 祈求泡泡也可以定位。定位不消耗 Divine Power。</p>
@@ -148,6 +156,6 @@
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <input id="importFile" type="file" accept="application/json,.json" hidden>
-  <script src="src/sim.js"></script><script src="src/app.js"></script>
+  <script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/app.js"></script>
 </body>
 </html>

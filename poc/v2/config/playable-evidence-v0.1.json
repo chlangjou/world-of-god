@@ -1,0 +1,58 @@
+{
+  "profileId": "playable-evidence-v0.1",
+  "status": "feature-branch-playtest-only",
+  "description": "Playable Web PoC of Oracle specialization, genuine cross-settlement evidence, voluntary earned faith conversion, and ability to inspect both. No edits to main or legacy saves.",
+  "defaultScenario": "duel",
+  "duel": {
+    "label": "30 人宗教對決",
+    "seed": "dry-stress",
+    "initialDevotion": 60,
+    "originalPeoplePerGod": 15,
+    "originalHouseholdsPerGod": 5,
+    "startDay": 10,
+    "opponentStrategy": "food.produce",
+    "suggestedPlayerOracle": "family.nurture",
+    "startAIDecisionsOnDay": 360,
+    "challengeDays": 100,
+    "goalNetOriginalConversions": 3,
+    "note": "Designed, symmetrical scenario with prebuilt homes and initial equal affiliation. Not a natural game world or proof of organic contact."
+  },
+  "native": {
+    "label": "自然河谷",
+    "seed": "valley-spring-01",
+    "difficulty": "standard",
+    "note": "Original separated origins, neutral villages, development and normal opponent AI. Credible cross-town faith conversions may be rare until genuine connections form."
+  },
+  "faith": {
+    "shared": {
+      "faithDefenseEnabled": true,
+      "faithDefenseModel": "odds-scaled",
+      "counterFractionalLoss": true,
+      "counterDoubtStep": 2.5,
+      "counterRepeatDays": 7,
+      "counterRepeatIncludesFollowup": true,
+      "counterAttractionEnabled": true,
+      "counterAttractionMinEvidence": 5,
+      "counterAttractionMargin": 0,
+      "counterAttractionConversionChance": 0.3,
+      "counterAttractionMaxChance": 0.55,
+      "counterAttractionRecencyDays": 21,
+      "faithDefenseChanceCeiling": 0.9
+    },
+    "duel": {
+      "counterPairedRandom": true,
+      "counterAttractionGain": 8,
+      "comment": "Paired experimental RNG, original controlled experiment intended for reproducible mechanism demonstration; can trigger a post-day-100 conversion cascade."
+    },
+    "native": {
+      "counterPairedRandom": false,
+      "counterAttractionGain": 6,
+      "comment": "Normal world religion RNG. Conservative evidence gain, but not yet balanced or verified against natural map contact gaps."
+    }
+  },
+  "warnings": [
+    "The accepted voluntary conversion principle is design authority; this particular attraction gain/probability is experimental.",
+    "A correct counter may not defeat the rival in an unconnected natural map.",
+    "Old saved worlds retain their old mode and no forced upgrade."
+  ]
+}

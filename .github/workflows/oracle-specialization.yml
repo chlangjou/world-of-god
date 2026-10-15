@@ -28,6 +28,7 @@ jobs:
         run: |
           node --check src/sim.js
           node --check src/app.js
+          node --check src/playtest.js
           node --check tools/oracle-strategy-quick.cjs
           node --check tools/oracle-faith-defense-matrix.cjs
           node --check tools/oracle-30-core-ratio-sweep.cjs
@@ -67,6 +68,25 @@ jobs:
       - name: Build standalone browser artifact
         working-directory: poc/v2
         run: npm run build:standalone
+      - name: Verify offline playable HTML matches source rebuild
+        working-directory: poc/v2
+        run: |
+          set -euo pipefail
+          test -s World-of-God-Playable.html
+          cmp dist/World-of-God-PoC-v2.html World-of-God-Playable.html
+          node - <<'JS'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const html=fs.readFileSync('World-of-God-Playable.html','utf8');
+          assert.ok(html.startsWith('<!doctype html>'));
+          for(const item of ['window.WOG_PLAYTEST_PROFILE','window.WOG_ORACLE_STRATEGY_PROFILE',
+            'id="playtestScenario"','window.WOG_PLAYTEST=API','strategyAttraction']){
+            assert.ok(html.includes(item),item);
+          }
+          assert.ok(!html.includes('<script src='));
+          assert.ok(!html.includes('<link rel="stylesheet" href='));
+          assert.ok(html.length>250000);
+          console.log('Offline playable verified:',html.length,'UTF-8 code units');
+          JS
       - name: Run bounded five-arm strategy check
         working-directory: poc/v2
         run: npm run evaluate:oracle -- --days 60 --budget-ms 30000 --out reports/oracle-strategy-quick-2026-10-13.json

@@ -12,6 +12,8 @@ body{display:flex;flex-direction:column;min-height:0}
 .profile-picker select,.power-picker select,.compact-select select{background:#223433;color:var(--text);border:1px solid #4c6660;border-radius:7px;padding:6px 8px;max-width:100%;font-size:12px}
 .profile-picker select{width:151px}
 .opponent-picker select{width:79px}
+.scenario-picker select{width:135px;font-size:11px}
+.metric #devotionMetric{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .difficulty-picker select{width:68px}
 .date-box{border:0;padding:0;min-width:98px;white-space:nowrap;flex:0 0 auto}
 .date-box strong{display:inline;color:var(--accent);font-size:14px;margin:0 7px 0 0}

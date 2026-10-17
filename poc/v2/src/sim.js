@@ -6,6 +6,10 @@
   if (root) root.WoG2 = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
+  // Mobility is a shared world subsystem; it neither issues Oracle nor converts anyone.
+  const MOBILITY=(typeof module==='object'&&module.exports)?
+    require('./mobility.js'):globalThis.WoGMobility;
+  if(!MOBILITY)throw Error('WoGMobility module must load before sim.js');
   const VERSION = 'mvp0-web-2';
   const DEFAULT_RULES = Object.freeze({
     width: 64, height: 64, initialHouseholds: 8, tickHours: 8, daysPerMonth: 30,
@@ -736,6 +740,7 @@
       ? JSON.parse(JSON.stringify(config.balanceProfile)) : null;
     const seed = String(config.seed || 'valley-spring-01').slice(0, 100);
     const religionPropagation=religionRules(config.religionProfile);
+    const mobility=MOBILITY.normalize(config.mobilityProfile);
     const oracleStrategy=oracleStrategyRules(config.oracleStrategyProfile);
     const divinePowers=divinePowerRules(config.divineProfile);
     const opponent=opponentRules(config.opponentProfile);
@@ -744,7 +749,7 @@
       opponent?.originMode==='separated-native';
     const s = { version: VERSION, seed, rules, rng: hash(seed), religionRng:hash(seed+'|religion-v0.1'), hour: 0, tick: 0,
       width: rules.width, height: rules.height, tiles: [], people: [], households: [], settlements: [],
-      camp: null, nativeWorld, religionPropagation, divinePowers,
+      camp: null, nativeWorld, religionPropagation, mobility, contactLog:[], divinePowers,
       ...(oracleStrategy?{oracleStrategy}:{}),
       attention:{seq:0,items:[],lastPreachingHour:-999999},
       opponent:opponent?{...opponent,lastActionDay:-1,turns:0,casts:0,oracleIssues:0}:null,
@@ -1228,7 +1233,7 @@
   function personSettlement(s,p){
     const town=s.settlements.find(t=>t.id===p.settlementId);
     return town && town.householdIds.includes(p.householdId) &&
-      dist(town,p)<=s.rules.settlementClusterDistance ? town : null;
+      (s.mobility?.enabled||dist(town,p)<=s.rules.settlementClusterDistance) ? town : null;
   }
   function settlementReligionStats(s,townId){
     const town=s.settlements.find(t=>t.id===townId);
@@ -1424,8 +1429,10 @@
     for(const [sourceId,preachers] of remoteSources){
       if(sourceId===target.id)continue;
       const source=s.settlements.find(t=>t.id===sourceId);
-      if(!source||dist(source,target)>rule.counterReachCells)continue;
+      if(!source||(!s.mobility?.enabled&&dist(source,target)>rule.counterReachCells))continue;
       for(const witness of preachers){
+        const meeting=s.mobility?.enabled?MOBILITY.recentContact(s,p,witness,challenger.id):null;
+        if(s.mobility?.enabled&&(!meeting||meeting.hour===p.lastStrategyCounterMeetingHour))continue;
         const oracle=strategyCalling(s,witness).oracle;
         const challengerIntent=defenseIntent(oracle?.intentType);
         if(challengerIntent==='default'||
@@ -1467,12 +1474,13 @@
         const before=p.devotion;
         p.devotion=Math.max(20,p.devotion-rule.counterDoubtStep);
         p.lastStrategyCounterHour=s.hour;
+        if(meeting)p.lastStrategyCounterMeetingHour=meeting.hour;
         creditStrategyAttraction(s,p,challenger,oracle,source);
         if(rule.counterRepeatIncludesFollowup&&rule.counterDiagnosticsEnabled)
           (p.strategyCounterHistory ||= []).push({hour:s.hour,
             phase:'core',defenderDevotionBefore:before,loss:before-p.devotion,
             challengerFaithId:challenger.id});
-        p.lastStrategyEncounter={hour:s.hour,fromTownId:source.id,
+        p.lastStrategyEncounter={hour:s.hour,meetingHour:meeting?.hour??null,fromTownId:source.id,
           challengerReligionId:challenger.id,counterOracleId:oracle.id,
           ownOracleId:own?.id||null,
           defenderIntent:ownIntent,challengerIntent,defenseMultiplier:defense,
@@ -1504,10 +1512,14 @@
       s.hour-p.lastStrategyCounterHour<rule.counterRepeatDays*24)return false;
     const ownTown=personSettlement(s,p);
     const source=s.settlements.find(t=>t.id===encounter.fromTownId);
-    if(!ownTown||!source||dist(source,ownTown)>rule.counterReachCells)return false;
+    if(!ownTown||!source||(!s.mobility?.enabled&&dist(source,ownTown)>rule.counterReachCells))return false;
     // An evidence-backed encounter opens a finite follow-up relationship.
     // Subsequent religious discussions still need a live outside preacher.
-    return (remoteSources.get(source.id)||[]).length>0;
+    const preachers=remoteSources.get(source.id)||[];
+    return s.mobility?.enabled?preachers.some(q=>{
+      const contact=MOBILITY.recentContact(s,p,q,faith.id);
+      return !!contact&&contact.hour>(encounter.meetingHour??encounter.hour);
+    }):preachers.length>0;
   }
   function socialReligionPulse(s,faith=s.religion){
     const r=s.religionPropagation,id=faith.id,people=living(s);
@@ -1623,11 +1635,13 @@
       let social=false, nearbySpread=0;
       for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
         for(const q of preachers.get(cell(bx+dx,by+dy))||[]){
-          if(q.id===p.id||dist(q,p)>r.contactRadius)continue;
+          if(q.id===p.id||(s.mobility?.enabled?!MOBILITY.recentContact(s,p,q,faith.id):
+             dist(q,p)>r.contactRadius))continue;
           social=true;nearbySpread=Math.max(nearbySpread,Math.min(3,q.spreadSermonsSincePulse||0));
         }
       }
-      const nearbyPriests=priestSources.filter(q=>dist(q,p)<=r.contactRadius);
+      const nearbyPriests=priestSources.filter(q=>s.mobility?.enabled?
+        !!MOBILITY.recentContact(s,p,q,faith.id):dist(q,p)<=r.contactRadius);
       const priest=nearbyPriests.length>0;
       const priestSpread=Math.max(0,...nearbyPriests.map(q=>Math.min(3,q.spreadSermonsSincePulse||0)));
       const sermonAmplification=1+s.divinePowers.spreadSermonBonus*priestSpread;
@@ -1635,7 +1649,9 @@
       let exchange=false;
       if(town)for(const other of s.settlements){
         if(other.id!==town.id&&remoteSources.has(other.id)&&
-          dist(town,other)<=r.interSettlementReach){exchange=true;break;}
+          (s.mobility?.enabled?(remoteSources.get(other.id)||[]).some(q=>
+            !!MOBILITY.recentContact(s,p,q,faith.id)):
+            dist(town,other)<=r.interSettlementReach)){exchange=true;break;}
       }
       if(!family&&!social&&!priest&&!exchange&&!convincing)continue;
       const sensitivity=.6+.8*p.receptivity;
@@ -1816,7 +1832,8 @@
           personSettlement(s,p)?.id===town.id))continue;
         const connected=Object.keys(o.reachedSettlements).some(sourceId=>{
           const source=s.settlements.find(t=>t.id===sourceId);
-          return source&&dist(source,town)<=r.interSettlementReach;
+          return source&&dist(source,town)<=r.interSettlementReach&&
+            (!s.mobility?.enabled||MOBILITY.townContact(s,faith,source.id,town.id));
         });
         if(!connected)continue;
         const priest=faith.priests.some(id=>people.some(p=>p.id===id&&personSettlement(s,p)?.id===town.id));
@@ -2209,8 +2226,12 @@
       for(const child of householdMembers(s,h).filter(v=>v.stage==='child'&&v.alive))
         if(child.health<98)child.health=Math.min(98,child.health+.35);
     }
-    p.x = h.x + (choice.name === 'farm' && field ? clamp(field.x - h.x,-2,2) * .28 : 0);
-    p.y = h.y + (choice.name === 'farm' && field ? clamp(field.y - h.y,-2,2) * .28 : 0);
+    const workPlace=choice.name==='farm'?field:choice.name==='forage'?forage:
+      choice.name==='wood'?wood:choice.name==='stone'?stone:choice.name==='fiber'?fiber:null;
+    if(!MOBILITY.workLocation(s,p,h,workPlace)){
+      p.x=h.x+(choice.name==='farm'&&field?clamp(field.x-h.x,-2,2)*.28:0);
+      p.y=h.y+(choice.name==='farm'&&field?clamp(field.y-h.y,-2,2)*.28:0);
+    }
     if(statusActive){
       const currentTown=accessibleSettlement(s,h);
       const currentMaterials=['wood','stone','fiber'].reduce((n,k)=>
@@ -2232,7 +2253,10 @@
     const phase = s.tick % 3;
     for (const p of s.people) {
       if (!p.alive) continue;
-      if (phase === 0) { p.activity = 'rest'; p.activityReason = '每日固定的休息與恢復時段'; }
+      if(s.mobility?.enabled&&p.mobilityTrip){MOBILITY.step(s,p,distribute);continue;}
+      if (phase === 0) {
+        if(s.mobility?.enabled){const h=householdOf(s,p);if(h){p.x=h.x;p.y=h.y;}}
+        p.activity = 'rest'; p.activityReason = '每日固定的休息與恢復時段'; }
       else if (phase === 2) {
         const faith=faithOf(s,p.religionId);
         const priest=!!faith?.priests.includes(p.id);
@@ -2256,9 +2280,13 @@
           p.activity==='pray'?'利用非工作時段祈禱':
           p.stage==='child'?'兒童由家人照顧，也可能接受宗教教育':'非工作時段，用於家戶生活及照料';
       }
-      else if (p.stage === 'adult' && p.health >= 20) performWork(s,p);
+      else if (p.stage === 'adult' && p.health >= 20){
+         if(MOBILITY.begin(s,p))MOBILITY.step(s,p,distribute);
+         else performWork(s,p);
+       }
       else { p.activity = 'family'; p.activityReason = '目前生命階段或健康狀況不適合一般工作'; }
     }
+    MOBILITY.record(s);
   }
   function updateWorld(s) {
     const day = days(s);
@@ -3362,6 +3390,8 @@
       !Number.isFinite(formerReligion.priestRivalDoubtChance))
       formerReligion.priestJoinChance=RELIGION_DEFAULTS.priestJoinChance;
     candidate.religionPropagation=religionRules(formerReligion);
+    candidate.mobility=MOBILITY.normalize(candidate.mobility);
+    candidate.contactLog=Array.isArray(candidate.contactLog)?candidate.contactLog:[];
     if(candidate.oracleStrategy)candidate.oracleStrategy=oracleStrategyRules(candidate.oracleStrategy);
     candidate.divinePowers=divinePowerRules(candidate.divinePowers);
     candidate.attention ||= {seq:0,items:[],lastPreachingHour:-999999};
@@ -3429,5 +3459,5 @@
     evaluateMiracle,castMiracle,activeStatus,
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
     settlementReligionStats,priestPetitions,prayerLocation,OPPONENT_DEFAULTS,
-    setOpponentDifficulty};
+    setOpponentDifficulty,MOBILITY_DEFAULTS:MOBILITY.BASE};
 });

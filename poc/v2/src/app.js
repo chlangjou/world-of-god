@@ -3,7 +3,7 @@
   const S = window.WoG2, Playtest = window.WOG_PLAYTEST;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, activeReligionProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
@@ -12,7 +12,7 @@
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
   const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
-  const taskName = {rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',dead:'已離世'};
+  const taskName = {rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',travel:'短期出訪中',visit:'資源熱點停留',dead:'已離世'};
   const stageName = {adult:'成年人',child:'兒童',elder:'長者'};
   const occupationName = {food_producer:'糧食生產者',gatherer:'採集者',dependent:'受扶養者'};
   // First layer: action category; second layer: available power within that category.
@@ -209,6 +209,12 @@
     if(!response.ok)throw new Error('Religion Propagation Profile 無法載入');
     return response.json();
   }
+  async function loadMobility(){
+    if(window.WOG_MOBILITY_PROFILE)return window.WOG_MOBILITY_PROFILE;
+    const response=await fetch('config/mobility-contact-v0.1.json');
+    if(!response.ok)throw new Error('Mobility Contact Profile 無法載入');
+    return response.json();
+  }
   async function loadOpponent(){
     if(window.WOG_OPPONENT_PROFILE)return window.WOG_OPPONENT_PROFILE;
     const response=await fetch('config/opponent-v0.2.json');
@@ -236,6 +242,7 @@
       oracleStrategyProfile:activeOracleStrategyProfile,
       opponentProfile:activeOpponentProfile||S.OPPONENT_DEFAULTS,
       balanceProfile:activeProfile,religionProfile:activeReligionProfile,
+       mobilityProfile:activeMobilityProfile,
       divineProfile:activeDivineProfile,
       opponentMode:$('opponentMode').value,
       difficulty:$('aiDifficulty').value||'standard'
@@ -303,6 +310,7 @@
   });
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
   function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;activeDivineProfile=state.divinePowers;
+      activeMobilityProfile=state.mobility||activeMobilityProfile;
     $('playtestScenario').value=scenarioId();
     activeOracleStrategyProfile=state.oracleStrategy||activeOracleStrategyProfile;
     if(state.opponent?.enabled&&state.opponent.profileId!=='opponent-v0.1')
@@ -350,6 +358,11 @@
     $('peopleMetric').textContent=st.people;
     $('familiesMetric').textContent=`${st.households} 個家戶 · 出生 ${st.births} / 死亡 ${st.deaths}`;
     $('townMetric').textContent=st.settlements>1?`${st.settlements} 處聚落`:st.settlements?state.settlements[0].name:'尚未形成';
+    $('townMetric').title=state.mobility?.enabled?
+      '實體出訪完成 '+(state.counts.resourceVisitsCompleted||0)+
+      ' 趟；跨聚落實際接觸 '+(state.counts.crossTownMeetings||0)+
+      ' 次；必須在 '+state.mobility.contactRadius+' 格內遇見':
+      '此舊世界仍使用既有的抽象接觸模型';
     $('houseMetric').textContent=`${st.houses}/${st.households} 有住所 · 新成家 ${st.newFamilies||0}`;
     const dailyNeed=state.people.filter(p=>p.alive).reduce((a,p)=>a+(p.stage==='child'?state.rules.foodNeedChild:state.rules.foodNeedAdult),0);
     $('foodMetric').textContent=format(st.food);
@@ -521,6 +534,12 @@
       const statusText=Object.entries(p.divineStatuses||{}).filter(([,v])=>v.endsAtHour>state.hour)
         .map(([key,v])=>(S.POWER_DEFAULTS[key]?.label||key)+` · 剩餘 ${Math.ceil((v.endsAtHour-state.hour)/24)} 日`).join('／');
       const activeReason=p.activityReason?`<div class="reason" title="${html(p.activityReason)}" tabindex="0"><b>此刻行動：</b>${html(p.activityReason)}</div>`:'';
+      const physicalMeetings=state.mobility?.enabled?(state.contactLog||[]).filter(e=>
+        e.a===p.id||e.b===p.id):[];
+      const contactedPeople=new Set(physicalMeetings.map(e=>e.a===p.id?e.b:e.a));
+      const outOfTown=physicalMeetings.filter(e=>e.aTownId&&e.bTownId&&e.aTownId!==e.bTownId).length;
+      const meetingHint=state.mobility?.enabled?
+        `<div class="reason" title="限近7日內真實小人同時距離不超過3格；每日同一對最多計一次" tabindex="0">實體接觸：${contactedPeople.size} 人 · 跨村 ${outOfTown} 次${p.mobilityTrip?' · 出訪中':''}</div>`:'';
       const evidence=p.lastFaithEvidence&&state.hour-p.lastFaithEvidence.hour<=90*24?
         `<div class="reason" title="真實神蹟或神諭成果造成的信仰改變；並非施法就直接改宗" tabindex="0"><b>最近的信仰證據：</b>${html(p.lastFaithEvidence.cause)}${p.lastFaithEvidence.change?
           ' · '+(p.lastFaithEvidence.change>0?'+':'')+format(p.lastFaithEvidence.change):''}</div>`:'';
@@ -537,7 +556,7 @@
         `<div title="必須反覆得到其他宗教真正的成果，才可能自主改宗">異教信任：${html(attraction)}</div>`:'';
       const conversionHint=p.lastStrategicConversion?
         `<div title="不是普通傳教直接越過40門檻">自主改宗：原信仰 ${format(p.lastStrategicConversion.fromDevotion,1)} · 累積可信觀察 ${p.lastStrategicConversion.observations} 次</div>`:'';
-      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'}${nativeInfo} · ${religious}</div>${roleInfo}${statusText?`<div class="divine-status">限時狀態：${html(statusText)}</div>`:''}<div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${evidence}${impressionHint}${attractionHint}${conversionHint}${activeReason}<div class="reason" title="${html(dec?.reason||'尚未進行工作決策')}" tabindex="0">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
+      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'}${nativeInfo} · ${religious}</div>${roleInfo}${statusText?`<div class="divine-status">限時狀態：${html(statusText)}</div>`:''}<div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${evidence}${impressionHint}${attractionHint}${conversionHint}${meetingHint}${activeReason}<div class="reason" title="${html(dec?.reason||'尚未進行工作決策')}" tabindex="0">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
     }
     // History alone scrolls inside the fixed-size inspector; newest events stay first.
     const feed=$('events');
@@ -624,6 +643,10 @@
       c.fillStyle=rivalSaint?'#ff7d98':rivalPriest?'#f0a070':rival?'#cf7775':
         saint?'#80e4eb':priest?'#c4a2fa':p.devotion>=40?'#f6d2a0':p.devotion>=20?'#e1e6c2':'#bcd9d2';
       c.fill();c.strokeStyle='#21342fcc';c.lineWidth=1.4;c.stroke();
+      if(p.mobilityTrip){
+        c.strokeStyle='#f4e2ae';c.lineWidth=1.2;c.setLineDash([2,2]);
+        c.beginPath();c.arc(px,py,size*.56,0,Math.PI*2);c.stroke();c.setLineDash([]);
+      }
       if(saint&&priest){c.strokeStyle='#c4a2fa';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.53,0,Math.PI*2);c.stroke();}
       if(rivalSaint&&rivalPriest){c.strokeStyle='#ffb06d';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.53,0,Math.PI*2);c.stroke();}
       // Temporary statuses remain visible without obscuring Saint/Priest role colors.
@@ -836,9 +859,10 @@
   $('aiDifficulty').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
-  Promise.allSettled([loadAgriculture(),loadReligion(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest()]).then(([agriculture,religion,divine,opponent,oracleStrategy,playtest])=>{
+  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest])=>{
     activeProfile=agriculture.status==='fulfilled'?agriculture.value:null;
     activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
+    activeMobilityProfile=mobility.status==='fulfilled'?mobility.value:null;
     activeDivineProfile=divine.status==='fulfilled'?divine.value:null;
     activeOpponentProfile=opponent.status==='fulfilled'?opponent.value:S.OPPONENT_DEFAULTS;
     activeOracleStrategyProfile=oracleStrategy.status==='fulfilled'?oracleStrategy.value:null;
@@ -850,7 +874,7 @@
     // Explicitly opt new browser worlds into the AI mode after profiles load.
     $('opponentMode').value='ai';
     newWorld();
-    const failures=[agriculture,religion,divine,opponent,oracleStrategy,playtest].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     say(failures.length?'Profile 載入失敗：'+failures.join('；'):
       '宗教對決已就緒。AI 選存糧；選育兒 Oracle → 傳下神諭 → 開始。');
   }).catch(err=>{

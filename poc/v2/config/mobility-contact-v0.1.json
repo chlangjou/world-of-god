@@ -1,0 +1,24 @@
+{
+  "profileId": "mobility-contact-v0.1",
+  "status": "experimental-runtime-profile",
+  "loadedByRuntime": true,
+  "description": "Generic physical resource trips and <=3-cell face-to-face contacts. New playable worlds enable it; old saves without this profile remain on historical contact semantics.",
+  "enabled": true,
+  "contactRadius": 3,
+  "contactWindowDays": 7,
+  "tripChancePerDay": 0.35,
+  "tripCooldownDays": 6,
+  "minTripCells": 9,
+  "maxTripCells": 27,
+  "stepsPerTick": 7,
+  "onsiteTicks": 2,
+  "workSiteReach": 7,
+  "fordSpacing": 16,
+  "maxContacts": 6000,
+  "semantics": {
+    "travel": "At most stepsPerTick cardinal non-river cells per 8-hour activity tick, with fords at fixed y rows. Trips start from a resident's household, find a reachable real resource site by bounded BFS, spend actual work/leisure ticks away, then return with physically collected resources.",
+    "contact": "Same-tick sampled positions of actual individuals must be within contactRadius cells. ContactLog records both IDs, snapshot affiliations, residential settlements, distance and actual encounter coordinate; one pair at most once per simulated day.",
+    "religion": "Shared encounters provide the provenance for local sermons and cross-settlement faith/oracle evidence. Ordinary preaching still cannot weaken a 40+ rival. Counter/oracle outcome gates remain separate.",
+    "persistence": "Restore of historical saves with no mobility field defaults to disabled. ContactLog is a capped short-lived cache and movementTrace is never saved. No auto-teleporting followers, forced conversions, or extra food."
+  }
+}

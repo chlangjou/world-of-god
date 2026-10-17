@@ -39,7 +39,7 @@ test('the v0.1 movement profile is opt-in; old saves stay on historical contacts
   assert.equal(Mobility.BASE.contactRadius,3);
 });
 
-test('real, reachable resource visits and same-time <=3-cell encounters occur',()=>{
+test('real, reachable resource visits and same-time <=5-cell encounters occur',()=>{
   const s=create();
   W.advanceTicks(s,3*30);
   assert.equal(W.validate(s).ok,true);
@@ -62,7 +62,7 @@ test('real, reachable resource visits and same-time <=3-cell encounters occur',(
   const people=new Map(s.people.map(p=>[p.id,p]));
   const pairs=new Set();
   for(const e of s.contactLog){
-    assert.ok(e.distance<=3+1e-9,'meeting occurred within three cells');
+    assert.ok(e.distance<=5+1e-9,'meeting occurred within five cells');
     assert.ok(e.hour>=s.hour-s.mobility.contactWindowDays*24,
       'expired contacts must be removed');
     assert.notEqual(people.get(e.a).householdId,people.get(e.b).householdId,
@@ -105,8 +105,11 @@ test('same 15:15 world: no trip gives zero cross-faith meetings, trips create at
     'credible Oracle outcomes must now be capable of reaching opponent core in a natural world');
   assert.ok((active.counts.strategyAttractionEvidence||0)>0,
     'earned attraction must have a real, attributable meeting');
-  assert.equal(P.score(active).oldAICoreStill,15,
-    'a few credible doubts are not proof of core conversion');
-  assert.equal(P.score(active).net,0,
-    'this test checks real contact, not an artificial forced religion reversal');
+  assert.ok(P.score(active).oldAICoreStill<=15);
+  for(const p of active.people.filter(p=>active.playtest.originalRivalIds.includes(p.id)&&
+    p.religionId===active.religion.id)){
+    assert.ok(p.lastStrategicConversion,'original AI core must not convert from speech alone');
+    assert.ok(p.lastStrategicConversion.observations>=active.oracleStrategy.counterAttractionMinEvidence,
+      'earned conversion requires credible evidence');
+  }
 });

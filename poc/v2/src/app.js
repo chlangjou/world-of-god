@@ -356,6 +356,11 @@
     $('day').textContent=`第 ${st.day} 日`;
     $('weather').textContent=st.phase==='dry'?'乾旱期':st.phase==='rainy'?'雨季':'和暖時節';
     $('peopleMetric').textContent=st.people;
+    const campingWounded=state.people.filter(p=>p.alive&&p.campInjury&&
+      !p.campInjury.recoveredAtHour&&p.health<95).length;
+    $('peopleMetric').title=campingWounded?
+      '目前 '+campingWounded+' 位野營傷者，可使用 Heal（地圖紅色十字）':
+      '目前沒有未痊癒的野營傷者';
     $('familiesMetric').textContent=`${st.households} 個家戶 · 出生 ${st.births} / 死亡 ${st.deaths}`;
     $('townMetric').textContent=st.settlements>1?`${st.settlements} 處聚落`:st.settlements?state.settlements[0].name:'尚未形成';
     $('townMetric').title=state.mobility?.enabled?
@@ -534,12 +539,17 @@
       const statusText=Object.entries(p.divineStatuses||{}).filter(([,v])=>v.endsAtHour>state.hour)
         .map(([key,v])=>(S.POWER_DEFAULTS[key]?.label||key)+` · 剩餘 ${Math.ceil((v.endsAtHour-state.hour)/24)} 日`).join('／');
       const activeReason=p.activityReason?`<div class="reason" title="${html(p.activityReason)}" tabindex="0"><b>此刻行動：</b>${html(p.activityReason)}</div>`:'';
+      const injury=p.campInjury&&!p.campInjury.recoveredAtHour&&p.health<95?
+        `<div class="divine-status" title="稀有資源區野營發生的非致命意外；同一次出訪不會重複受傷">野營受傷 · 健康 ${format(p.health)} / 100 · 可使用 Heal</div>`:'';
+      const storedGold=(h?.inventory.gold||0)+
+        (state.settlements.find(t=>t.id===p.settlementId)?.storage.gold||0);
+      const goldHint=storedGold?`<div title="金礦暫作資源收藏，尚無完整交易用途">金礦存量：${format(storedGold,1)}</div>`:'';
       const physicalMeetings=state.mobility?.enabled?(state.contactLog||[]).filter(e=>
         e.a===p.id||e.b===p.id):[];
       const contactedPeople=new Set(physicalMeetings.map(e=>e.a===p.id?e.b:e.a));
       const outOfTown=physicalMeetings.filter(e=>e.aTownId&&e.bTownId&&e.aTownId!==e.bTownId).length;
       const meetingHint=state.mobility?.enabled?
-        `<div class="reason" title="限近7日內真實小人同時距離不超過3格；每日同一對最多計一次" tabindex="0">實體接觸：${contactedPeople.size} 人 · 跨村 ${outOfTown} 次${p.mobilityTrip?' · 出訪中':''}</div>`:'';
+        `<div class="reason" title="限近7日內真實小人同時距離不超過5格；每日同一對最多計一次" tabindex="0">實體接觸：${contactedPeople.size} 人 · 跨村 ${outOfTown} 次${p.mobilityTrip?' · 出訪中':''}</div>`:'';
       const evidence=p.lastFaithEvidence&&state.hour-p.lastFaithEvidence.hour<=90*24?
         `<div class="reason" title="真實神蹟或神諭成果造成的信仰改變；並非施法就直接改宗" tabindex="0"><b>最近的信仰證據：</b>${html(p.lastFaithEvidence.cause)}${p.lastFaithEvidence.change?
           ' · '+(p.lastFaithEvidence.change>0?'+':'')+format(p.lastFaithEvidence.change):''}</div>`:'';
@@ -556,7 +566,7 @@
         `<div title="必須反覆得到其他宗教真正的成果，才可能自主改宗">異教信任：${html(attraction)}</div>`:'';
       const conversionHint=p.lastStrategicConversion?
         `<div title="不是普通傳教直接越過40門檻">自主改宗：原信仰 ${format(p.lastStrategicConversion.fromDevotion,1)} · 累積可信觀察 ${p.lastStrategicConversion.observations} 次</div>`:'';
-      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'}${nativeInfo} · ${religious}</div>${roleInfo}${statusText?`<div class="divine-status">限時狀態：${html(statusText)}</div>`:''}<div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${evidence}${impressionHint}${attractionHint}${conversionHint}${meetingHint}${activeReason}<div class="reason" title="${html(dec?.reason||'尚未進行工作決策')}" tabindex="0">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
+      $('personDetail').innerHTML=`<h3>${html(p.name)} · ${current.age} 歲</h3><div>${html(h?.name||'')} · ${stageName[p.stage]||'居民'}${nativeInfo} · ${religious}</div>${roleInfo}${statusText?`<div class="divine-status">限時狀態：${html(statusText)}</div>`:''}<div>信仰 ${format(p.devotion)} / 100 · 健康 ${format(p.health)} · 飢餓 ${format(p.hunger*100)}%</div><div>職業：${occupationName[p.occupation]||html(p.occupation)} · 此刻：${taskName[p.activity]||html(p.activity)}</div>${evidence}${impressionHint}${attractionHint}${conversionHint}${meetingHint}${injury}${goldHint}${activeReason}<div class="reason" title="${html(dec?.reason||'尚未進行工作決策')}" tabindex="0">${dec?`${workDay}工作選擇：${taskName[dec.work]||html(dec.work)}。${html(dec.reason)}${dec.oracleInfluence>0?`（神諭加權 +${format(dec.oracleInfluence,1)}）`:''}${dec.changedByOracle?' · 神諭實際改變了最高優先工作的選擇':''}`:'尚未進行工作決策。'}</div>`;
     }
     // History alone scrolls inside the fixed-size inspector; newest events stay first.
     const feed=$('events');
@@ -593,6 +603,16 @@
       c.fillStyle=color;c.fillRect(t.x*size,t.y*size,Math.ceil(size+.1),Math.ceil(size+.1));
       if(t.terrain==='forest' && ((t.x*7+t.y*13)%3===0)){c.fillStyle='#2d5242';c.fillRect(t.x*size+size*.27,t.y*size+size*.15,size*.5,size*.63)}
       if(t.terrain==='field' && t.crop>.18){c.strokeStyle=t.crop>.5?'#ead49b':'#af9759';c.lineWidth=.75;c.beginPath();c.moveTo(t.x*size+size*.22,t.y*size+size*.75);c.lineTo(t.x*size+size*.78,t.y*size+size*.20);c.stroke();}
+    }
+    // Sparse, perpetual resource sites act as visible shared destinations.
+    for(const site of state.mobilityHotspots||[]){
+      const px=(site.x+.5)*size,py=(site.y+.5)*size,rich=site.kind==='gold';
+      c.save();c.fillStyle=rich?'#d9a43c':'#b8ad99';
+      c.strokeStyle=rich?'#fff0a7':'#e3dacf';c.lineWidth=1.4;
+      c.beginPath();c.arc(px,py,size*.70,0,2*Math.PI);c.fill();c.stroke();
+      c.fillStyle=rich?'#44300e':'#343a36';c.textAlign='center';
+      c.textBaseline='middle';c.font='bold '+Math.max(8,Math.floor(size*.95))+'px system-ui';
+      c.fillText(rich?'金':'石',px,py);c.restore();
     }
     c.strokeStyle='#c7c7ab80';c.lineWidth=1;
     for(const h of state.households) {
@@ -646,6 +666,12 @@
       if(p.mobilityTrip){
         c.strokeStyle='#f4e2ae';c.lineWidth=1.2;c.setLineDash([2,2]);
         c.beginPath();c.arc(px,py,size*.56,0,Math.PI*2);c.stroke();c.setLineDash([]);
+      }
+      if(p.campInjury&&!p.campInjury.recoveredAtHour&&p.health<95){
+        c.save();c.strokeStyle='#e53f48';c.lineWidth=Math.max(2,size*.25);
+        c.beginPath();c.moveTo(px-size*.35,py-size*.72);
+        c.lineTo(px+size*.35,py-size*.72);
+        c.moveTo(px,py-size*1.05);c.lineTo(px,py-size*.38);c.stroke();c.restore();
       }
       if(saint&&priest){c.strokeStyle='#c4a2fa';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.53,0,Math.PI*2);c.stroke();}
       if(rivalSaint&&rivalPriest){c.strokeStyle='#ffb06d';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.53,0,Math.PI*2);c.stroke();}

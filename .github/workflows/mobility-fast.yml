@@ -1,0 +1,39 @@
+name: World of God fast regression
+on:
+  push:
+    branches:
+      - feature/opponent-difficulty-profiles-v0.3
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/mobility-fast.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  movement-and-oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        working-directory: poc/v2
+        run: |
+          node --check src/mobility.js
+          node --check src/sim.js
+          node --check src/app.js
+          node --check src/playtest.js
+      - name: Fast physical contact, injury, Heal and Oracle matrix tests
+        working-directory: poc/v2
+        run: npm run test:fast
+      - name: Build and verify offline standalone
+        working-directory: poc/v2
+        run: |
+          npm run build:standalone
+          cmp dist/World-of-God-PoC-v2.html World-of-God-Playable.html
+          grep -q 'window.WOG_MOBILITY_PROFILE' World-of-God-Playable.html
+          grep -q 'WoGMobility' World-of-God-Playable.html

@@ -2,9 +2,9 @@
   "profileId": "mobility-contact-v0.1",
   "status": "experimental-runtime-profile",
   "loadedByRuntime": true,
-  "description": "Generic physical resource trips and <=3-cell face-to-face contacts. New playable worlds enable it; old saves without this profile remain on historical contact semantics.",
+  "description": "Resource hotspots, 5-cell simultaneous physical contact, rare perpetual quarries/gold deposits, guarded camping injuries and actual long-distance Priest missions.",
   "enabled": true,
-  "contactRadius": 3,
+  "contactRadius": 5,
   "contactWindowDays": 7,
   "tripChancePerDay": 0.35,
   "tripCooldownDays": 6,
@@ -16,9 +16,21 @@
   "fordSpacing": 16,
   "maxContacts": 6000,
   "semantics": {
-    "travel": "At most stepsPerTick cardinal non-river cells per 8-hour activity tick, with fords at fixed y rows. Trips start from a resident's household, find a reachable real resource site by bounded BFS, spend actual work/leisure ticks away, then return with physically collected resources.",
-    "contact": "Same-tick sampled positions of actual individuals must be within contactRadius cells. ContactLog records both IDs, snapshot affiliations, residential settlements, distance and actual encounter coordinate; one pair at most once per simulated day.",
-    "religion": "Shared encounters provide the provenance for local sermons and cross-settlement faith/oracle evidence. Ordinary preaching still cannot weaken a 40+ rival. Counter/oracle outcome gates remain separate.",
-    "persistence": "Restore of historical saves with no mobility field defaults to disabled. ContactLog is a capped short-lived cache and movementTrace is never saved. No auto-teleporting followers, forced conversions, or extra food."
-  }
+    "travel": "Adults may walk to actual fixed scarce resource nodes or nearby gathering sites. Each trip uses real path steps, scarce resources have infinite deposits and long on-site camping, missionary Priests travel to populated foreign settlements.",
+    "contact": "Simultaneous sampled positions within 5 tiles, with real participant IDs, beliefs and encounter coordinates. Same pair counted at most once per day; observations persist for 7 days.",
+    "camping": "On special-resource camps roll once per trip, with at least 45 days between injuries and no additional wound before recovery. Damage is nonlethal, Heal repairs normal health, UI highlights wounded citizens.",
+    "preaching": "Priests may travel without divine orders, but active spread Oracle greatly increases departures and actual local recruiting opportunities. No direct 40+ conversion from ordinary speech.",
+    "persistence": "Existing saves without mobility stay disabled; already saved v0.1 maps are not silently reseeded with rare resources. New worlds use resource hotspots."
+  },
+  "specialOnsiteTicks": 6,
+  "quarryCount": 6,
+  "goldCount": 2,
+  "resourceSpacingCells": 10,
+  "campInjuryChance": 0.12,
+  "campInjuryCooldownDays": 45,
+  "campInjuryMinHealth": 60,
+  "missionBaseChancePerDay": 0.1,
+  "missionSpreadChancePerDay": 0.65,
+  "missionStayTicks": 9,
+  "missionMaxTripCells": 96
 }

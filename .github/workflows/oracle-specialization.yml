@@ -1,12 +1,8 @@
 name: Oracle specialization regression
 
+# Long historical multi-seed evaluations are opt-in, not repeated on every push.
+# Fast push regression lives in mobility-fast.yml.
 on:
-  push:
-    branches:
-      - feature/opponent-difficulty-profiles-v0.3
-    paths:
-      - 'poc/v2/**'
-      - '.github/workflows/oracle-specialization.yml'
   workflow_dispatch:
 
 permissions:

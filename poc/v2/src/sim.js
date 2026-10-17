@@ -85,7 +85,7 @@
     efficiencyDirectDevotion:14,efficiencyWitnessDevotion:2,
     harvestWitnessDevotion:2,ripeningWitnessDevotion:2,
     ripeningEvidenceMinimumCrop:2.5,rainWitnessDevotion:3,
-    spreadOracleJoinBonus:.11
+    spreadOracleJoinBonus:.11,spreadPriestJoinMultiplier:1.4
   });
   function religionRules(profile){
     const r={...RELIGION_DEFAULTS};
@@ -119,33 +119,32 @@
       r[k]=clamp(r[k],0,35);
     r.ripeningEvidenceMinimumCrop=clamp(r.ripeningEvidenceMinimumCrop,.1,50);
     r.spreadOracleJoinBonus=clamp(r.spreadOracleJoinBonus,0,.5);
+    r.spreadPriestJoinMultiplier=clamp(r.spreadPriestJoinMultiplier,1,2.5);
     return r;
   }
-  // Named Oracle defense is contextual resistance, not automatic Faith changes.
-  // Rows = defender, columns = challenger. Unspecified explore/default remains 1:1.
+  // Matrix rows defend, columns challenge. Ratios require actual outcomes.
   const ORACLE_DEFENSE_TYPES=Object.freeze([
-    'default','food.produce','family.nurture','settlement.explore'
+    'default','food.produce','family.nurture','settlement.explore','religion.spread'
   ]);
   const ORACLE_DEFENSE_DEFAULTS=Object.freeze({
-    'default':{
-      'default':1,'food.produce':.8,'family.nurture':.8,'settlement.explore':1
-    },
-    'food.produce':{
-      'default':1.2,'food.produce':1,'family.nurture':.4,'settlement.explore':1.6
-    },
-    'family.nurture':{
-      'default':1.2,'food.produce':1.6,'family.nurture':1,'settlement.explore':.4
-    },
-    'settlement.explore':{
-      'default':1,'food.produce':.4,'family.nurture':1.6,'settlement.explore':1
-    }
+    'default':{'default':1,'food.produce':.8,'family.nurture':.8,
+      'settlement.explore':.8,'religion.spread':.8},
+    'food.produce':{'default':1.2,'food.produce':1,'family.nurture':.4,
+      'settlement.explore':1.6,'religion.spread':.6},
+    'family.nurture':{'default':1.2,'food.produce':1.6,'family.nurture':1,
+      'settlement.explore':.4,'religion.spread':.6},
+    'settlement.explore':{'default':1.2,'food.produce':.4,'family.nurture':1.6,
+      'settlement.explore':1,'religion.spread':.6},
+    'religion.spread':{'default':1.2,'food.produce':1.4,'family.nurture':1.4,
+      'settlement.explore':1.4,'religion.spread':1}
   });
-  function defenseIntent(intent){
+  function defenseIntent(intent,profile){
+    if(intent==='religion.spread'&&!profile?.spreadMatrixEnabled)return 'default';
     return ORACLE_DEFENSE_TYPES.includes(intent)?intent:'default';
   }
   function oracleFaithDefense(profile,defenderIntent,challengerIntent){
     if(!profile?.faithDefenseEnabled)return 1;
-    const a=defenseIntent(defenderIntent),b=defenseIntent(challengerIntent);
+    const a=defenseIntent(defenderIntent,profile),b=defenseIntent(challengerIntent,profile);
     const expanded=profile.faithDefenseModel==='odds-scaled';
     return clamp(num(profile.faithDefenseMatrix?.[a]?.[b],
       ORACLE_DEFENSE_DEFAULTS[a][b]),expanded?.15:.25,expanded?6:2);
@@ -178,7 +177,7 @@
     counterBridgeDays:75,counterBridgeDoubtChance:.36,counterBridgeConversionChance:.22,
     counterReachCells:30,counterReserveAdvantageDays:4,
     counterReserveTargetMaxDays:8,counterCareGapDays:13,
-    counterEvidenceWorkMin:3,counterHouseEvidenceDays:90,
+    counterEvidenceWorkMin:3,counterHouseEvidenceDays:90,counterSpreadRecruitMin:1,
     faithDefenseEnabled:true,faithDefenseChanceCeiling:.90
   });
   function oracleStrategyRules(profile){
@@ -193,6 +192,7 @@
     for(const k of ['counterContactChance','counterBridgeDoubtChance','counterBridgeConversionChance',
       'faithDefenseChanceCeiling'])
       r[k]=clamp(r[k],0,1);
+    r.counterSpreadRecruitMin=Math.round(clamp(r.counterSpreadRecruitMin,1,10));
     if(profile.counterFractionalLoss===true){
       r.counterFractionalLoss=true;
       r.counterDoubtStep=clamp(r.counterDoubtStep,.25,10);
@@ -217,6 +217,7 @@
     if(profile.faithDefenseModel==='odds-scaled')r.faithDefenseModel='odds-scaled';
     else if(Object.hasOwn(profile,'faithDefenseModel'))r.faithDefenseModel='linear-clamped';
     if(profile.counterDiagnosticsEnabled===true)r.counterDiagnosticsEnabled=true;
+    if(profile.spreadMatrixEnabled===true)r.spreadMatrixEnabled=true;
     // Optional timing experiment: historically counterRepeatDays gated only 40+
     // challenges. Opt in to covering below-40 evidence follow-up as well.
     if(profile.counterRepeatIncludesFollowup===true)
@@ -792,6 +793,7 @@
         }
       }
     }
+    MOBILITY.seedHotspots(s);
     if (agriculture) {s.counts.newFields=0;s.counts.newFamilies=0;s.counts.newSettlements=0;}
     if (agriculture) for (const t of s.tiles) if (t.terrain === 'field') {
       const L=agriculture.land, cap=L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
@@ -1157,6 +1159,7 @@
       for(const p of people)if(p.health<100){
         const healed=Math.min(100-p.health,30*intensity*Math.max(.45,1-dist(p,center)/Math.max(1,radius)*.5));
         p.health+=healed;actual+=healed;applied++;
+        MOBILITY.recoverWound(s,p);
         if(healed>=s.religionPropagation.healMinRecovery)
           healedPeople.push({person:p,amount:Math.round(
             s.religionPropagation.healDirectDevotion*Math.min(1.3,.6+healed/25))});
@@ -1422,7 +1425,7 @@
     if(Number.isFinite(p.lastStrategyCounterHour)&&
        s.hour-p.lastStrategyCounterHour<rule.counterRepeatDays*24)return null;
     const own=strategyCalling(s,p).oracle;
-    const ownIntent=defenseIntent(own?.intentType);
+    const ownIntent=defenseIntent(own?.intentType,s.oracleStrategy);
     const counterType=own&&STRATEGY_COUNTERS[own.intentType];
     const target=personSettlement(s,p);
     if(!target||(!counterType&&!rule.faithDefenseEnabled))return null;
@@ -1434,10 +1437,14 @@
         const meeting=s.mobility?.enabled?MOBILITY.recentContact(s,p,witness,challenger.id):null;
         if(s.mobility?.enabled&&(!meeting||meeting.hour===p.lastStrategyCounterMeetingHour))continue;
         const oracle=strategyCalling(s,witness).oracle;
-        const challengerIntent=defenseIntent(oracle?.intentType);
+        const challengerIntent=defenseIntent(oracle?.intentType,s.oracleStrategy);
         if(challengerIntent==='default'||
            (!rule.faithDefenseEnabled&&challengerIntent!==counterType)||
-           (oracle.influenceWorkCount||0)<rule.counterEvidenceWorkMin)continue;
+           (challengerIntent==='religion.spread'?
+             (oracle.actualRecruits||0)<rule.counterSpreadRecruitMin||
+             !challenger.priests.includes(witness.id)||
+             (oracle.influenceSermonCount||0)<3:
+             (oracle.influenceWorkCount||0)<rule.counterEvidenceWorkMin))continue;
         let proven=false,reason='';
         if(challengerIntent==='food.produce'){
           const opponentDays=strategyTownFoodDays(s,source);
@@ -1459,6 +1466,11 @@
             Number.isFinite(oracle.lastHouseCompletedHour)&&
             s.hour-oracle.lastHouseCompletedHour<=rule.counterHouseEvidenceDays*24;
           reason='本地家庭缺少住所，而外村已實際新建房屋';
+        }else if(challengerIntent==='religion.spread'){
+          // This requires an *earned* recruit through a real missionary meeting.
+          // Sermons alone, even repeated sermons, do not break 40+ protection.
+          proven=s.mobility?.enabled&&(oracle.actualRecruits||0)>=rule.counterSpreadRecruitMin;
+          reason='見證外村祭司的長程佈道，且已有自主入教的真實成果';
         }
         if(!proven)continue;
         if(rule.counterDiagnosticsEnabled){
@@ -1632,18 +1644,25 @@
       }
       if(p.religionId===id&&p.devotion>=r.ordinaryConsolidationCap)continue;
       const bx=Math.floor(p.x/scale),by=Math.floor(p.y/scale);
-      let social=false, nearbySpread=0;
-      for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
-        for(const q of preachers.get(cell(bx+dx,by+dy))||[]){
-          if(q.id===p.id||(s.mobility?.enabled?!MOBILITY.recentContact(s,p,q,faith.id):
-             dist(q,p)>r.contactRadius))continue;
-          social=true;nearbySpread=Math.max(nearbySpread,Math.min(3,q.spreadSermonsSincePulse||0));
-        }
+      let social=false,nearbySpread=0;
+      // A visitor may already have returned home: genuine meeting provenance
+      // survives for seven days, even if the sermon source is now far away.
+      const candidatePreachers=s.mobility?.enabled?
+        people.filter(q=>recentPreacher(s,q,faith)):
+        Array.from({length:9},(_,i)=>
+          preachers.get(cell(bx+i%3-1,by+Math.floor(i/3)-1))||[]).flat();
+      for(const q of candidatePreachers){
+        if(q.id===p.id||(s.mobility?.enabled?
+          !MOBILITY.recentContact(s,p,q,faith.id):dist(q,p)>r.contactRadius))continue;
+        social=true;nearbySpread=Math.max(nearbySpread,Math.min(3,q.spreadSermonsSincePulse||0));
       }
       const nearbyPriests=priestSources.filter(q=>s.mobility?.enabled?
         !!MOBILITY.recentContact(s,p,q,faith.id):dist(q,p)<=r.contactRadius);
       const priest=nearbyPriests.length>0;
       const priestSpread=Math.max(0,...nearbyPriests.map(q=>Math.min(3,q.spreadSermonsSincePulse||0)));
+      const spreadPriestSource=s.mobility?.enabled?nearbyPriests.find(q=>
+        spreadCalling(s,q,faith).oracle):null;
+      const spreadMultiplier=spreadPriestSource?r.spreadPriestJoinMultiplier:1;
       const sermonAmplification=1+s.divinePowers.spreadSermonBonus*priestSpread;
       const town=personSettlement(s,p);
       let exchange=false;
@@ -1666,7 +1685,7 @@
         if(p.devotion>=20){
           const clear=nearbyPriests.some(q=>!activeStatus(s,q,'confusion'))?1:.5;
           const doubt=priest?clamp(r.priestRivalDoubtChance*sensitivity*
-            sermonAmplification*clear*(1+(convincing?.25:0)),0,.9):
+            sermonAmplification*clear*spreadMultiplier*(1+(convincing?.25:0)),0,.9):
             counterBridge?oracleDefenseScale(s.oracleStrategy,
               s.oracleStrategy.counterBridgeDoubtChance*sensitivity,
               strategyCalling(s,p).oracle?.intentType,
@@ -1693,7 +1712,7 @@
           }
         }else if((counterBridge&&!priest?
           strategyEvidenceRandom(s,p,faith,'followup-convert'):religionRand(s,faith))<clamp(
-          (priest?r.priestRivalConversionChance*sermonAmplification:
+          (priest?r.priestRivalConversionChance*sermonAmplification*spreadMultiplier:
              counterBridge?oracleDefenseScale(s.oracleStrategy,
                s.oracleStrategy.counterBridgeConversionChance*sensitivity,
                strategyCalling(s,p).oracle?.intentType,
@@ -1706,6 +1725,13 @@
               (p.strategyCounterHistory ||= []).push({hour:s.hour,
                 phase:'conversion',defenderDevotionBefore:p.devotion,
                 loss:0,challengerFaithId:faith.id});
+          }
+          if(spreadPriestSource&&MOBILITY.recentContact(s,p,spreadPriestSource,faith.id)){
+            const credited=spreadCalling(s,spreadPriestSource,faith).oracle;
+            if(credited){
+              credited.actualRecruits=(credited.actualRecruits||0)+1;
+              s.counts.spreadOracleRecruits=(s.counts.spreadOracleRecruits||0)+1;
+            }
           }
           adopt(p,convincing&&!priest&&!counterBridge?'miracle':counterBridge&&!priest?'strategy':'rival');
         }
@@ -1731,13 +1757,24 @@
            (exchange?r.settlementVisitChance:0)+oracleOpportunity)*sensitivity,0,.65);
         const confusedPriest=nearbyPriests.length&&nearbyPriests.every(q=>activeStatus(s,q,'confusion')>0);
         const preacherClarity=confusedPriest?.45:1;
-        const priestBonus=priest?r.priestJoinChance*sensitivity*sermonAmplification*preacherClarity:0;
+        const spreadPriests=s.mobility?.enabled?nearbyPriests.filter(q=>
+          spreadCalling(s,q,faith).oracle):[];
+        const priestBonus=priest?r.priestJoinChance*sensitivity*
+          sermonAmplification*preacherClarity*
+          spreadMultiplier:0;
         const evidenceBonus=convincing?
           r.miracleInterestJoinChance*Math.min(2.3,impressed/r.miracleInterestThreshold)*sensitivity:0;
         const rolled=religionRand(s,faith);
         if(rolled<clamp(baseline+priestBonus+evidenceBonus,0,.85)){
           const cause=rolled>=baseline+priestBonus?'miracle':
             rolled>=baseline?'priest':family?'family':social?'social':'exchange';
+          if(s.mobility?.enabled&&['priest','social'].includes(cause)&&spreadPriests.length){
+            const preacher=spreadPriests[0],active=spreadCalling(s,preacher,faith).oracle;
+            if(active&&MOBILITY.recentContact(s,p,preacher,faith.id)){
+              active.actualRecruits=(active.actualRecruits||0)+1;
+              s.counts.spreadOracleRecruits=(s.counts.spreadOracleRecruits||0)+1;
+            }
+          }
           adopt(p,cause);
         }
       }
@@ -1925,9 +1962,9 @@
     const settlement = accessibleSettlement(s, h);
     if (settlement) {
       const privatePart = amount * s.rules.householdShare;
-      h.inventory[kind] += privatePart;
-      settlement.storage[kind] += amount - privatePart;
-    } else h.inventory[kind] += amount;
+      h.inventory[kind]=(h.inventory[kind]||0)+privatePart;
+      settlement.storage[kind]=(settlement.storage[kind]||0)+amount-privatePart;
+    } else h.inventory[kind]=(h.inventory[kind]||0)+amount;
     if(kind==='food'){
       s.counts.foodFromLabor+=amount;s.lastFoodOutput+=amount;
       const local=s.metrics.foodProductionByTown ||= {};
@@ -2183,7 +2220,8 @@
     } else if (choice.name === 'stone' && stone) {
       const amt = Math.min(stone.stone,(1.2 + p.proficiency.gather * .6)*
         (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));
-      stone.stone -= amt; distribute(s, h, 'stone', amt);
+      if(stone.resourceNode!=='stone')stone.stone-=amt;
+      distribute(s,h,'stone',amt);
     } else if (choice.name === 'fiber' && fiber) {
       const amt = Math.min(fiber.fiber,(1.4 + p.proficiency.gather * .7)*
         (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));

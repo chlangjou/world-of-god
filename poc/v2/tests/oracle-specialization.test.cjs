@@ -112,18 +112,22 @@ test('Oracle defenses follow the explicit reciprocal matrix, not an automatic at
     ['settlement.explore','family.nurture',1.6,.4],
     ['family.nurture','default',1.2,.8],
     ['food.produce','default',1.2,.8],
-    // No explored rule was given for this matchup: do not invent one.
-    ['settlement.explore','default',1,1]
+    ['settlement.explore','default',1.2,.8],
+    ['religion.spread','default',1.2,.8],
+    ['religion.spread','food.produce',1.4,.6],
+    ['religion.spread','family.nurture',1.4,.6],
+    ['religion.spread','settlement.explore',1.4,.6]
   ];
   for(const [a,b,forward,reverse] of pairs){
     assert.equal(f(a,b),forward,a+' defense against '+b);
     assert.equal(f(b,a),reverse,b+' defense against '+a);
   }
-  for(const a of ['default','food.produce','family.nurture','settlement.explore']){
+  for(const a of ['default','food.produce','family.nurture','settlement.explore','religion.spread'])
     assert.equal(f(a,a),1,'equal strategies have no intrinsic advantage');
-    assert.equal(f(a,'religion.spread'),f(a,'default'),
-      'routine spreading is not a fifth defensive attribute');
-  }
+  const historical=W.create({oracleStrategyProfile:{...S,spreadMatrixEnabled:false}});
+  assert.equal(W.oracleFaithDefense(historical.oracleStrategy,'religion.spread','food.produce'),.8,
+    'old saved Worlds keep Spread as the default defense');
+  assert.equal(W.oracleFaithDefense(historical.oracleStrategy,'food.produce','religion.spread'),1.2);
   assert.equal(W.oracleFaithDefense({},'food.produce','family.nurture'),1);
   assert.equal(W.oracleFaithDefense({...s.oracleStrategy,faithDefenseEnabled:false},
     'food.produce','family.nurture'),1);

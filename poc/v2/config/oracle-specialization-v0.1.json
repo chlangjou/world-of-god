@@ -26,7 +26,7 @@
     "counters": "food loses to demonstrated rival nurture when child care was missed; nurture loses to proven rival housing when its home pressure remains; explore loses to rival reserves when it has genuinely short food coverage. Cross-town live sermon encounter is sampled; no forced conversion. After credible doubt brings faith below the existing 40 threshold, time-bounded follow-up requires an actual current preacher from that source town. Existing below-20 conversion rules apply, no artificial followers.",
     "reset": "life.balance ends active Saint specializations immediately, free of quota/DP, with zero rollback or direct Devotion changes; new specialization still consumes issue quota.",
     "scope": "opt-in only. Does not rewrite existing saves or former P2 fingerprints. Local Divine Presence still controls aggressive miracles.",
-    "faithDefense": "Row is the receiving citizen's doctrine and column the credible challenger Oracle. Defensive multiplier 0.4 means resistance at 40%, 1.6 means 160%; chance of earned doubt is counterContactChance / defense, capped at faithDefenseChanceCeiling. After a witnessed event, the same resistance applies to bounded below-40/below-20 follow-up. No continuous Faith damage. Missing explore/default is intentionally 1:1; same vs same is always 1:1."
+    "faithDefense": "Defense matrix rows=defender, columns=challenger. Spread vs other specialization: resistance 1.4 vs 0.6, only when the active spread Oracle has a real personally met Priest plus verifiable autonomous recruits. Food/Nurture/Explore vs default: 1.2 vs 0.8; no automatic faith damage."
   },
   "counterBridgeDays": 75,
   "counterBridgeDoubtChance": 0.36,
@@ -38,25 +38,38 @@
       "default": 1,
       "food.produce": 0.8,
       "family.nurture": 0.8,
-      "settlement.explore": 1
+      "settlement.explore": 0.8,
+      "religion.spread": 0.8
     },
     "food.produce": {
       "default": 1.2,
       "food.produce": 1,
       "family.nurture": 0.4,
-      "settlement.explore": 1.6
+      "settlement.explore": 1.6,
+      "religion.spread": 0.6
     },
     "family.nurture": {
       "default": 1.2,
       "food.produce": 1.6,
       "family.nurture": 1,
-      "settlement.explore": 0.4
+      "settlement.explore": 0.4,
+      "religion.spread": 0.6
     },
     "settlement.explore": {
-      "default": 1,
+      "default": 1.2,
       "food.produce": 0.4,
       "family.nurture": 1.6,
-      "settlement.explore": 1
+      "settlement.explore": 1,
+      "religion.spread": 0.6
+    },
+    "religion.spread": {
+      "default": 1.2,
+      "food.produce": 1.4,
+      "family.nurture": 1.4,
+      "settlement.explore": 1.4,
+      "religion.spread": 1
     }
-  }
+  },
+  "spreadMatrixEnabled": true,
+  "counterSpreadRecruitMin": 1
 }

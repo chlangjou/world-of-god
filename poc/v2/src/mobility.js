@@ -10,9 +10,14 @@ if(root)root.WoGMobility=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const BASE=Object.freeze({profileId:'mobility-contact-v0.1',enabled:false,
-  contactRadius:3,contactWindowDays:7,tripChancePerDay:.35,
+  contactRadius:5,contactWindowDays:7,tripChancePerDay:.35,
   tripCooldownDays:6,minTripCells:9,maxTripCells:27,
-  stepsPerTick:7,onsiteTicks:2,workSiteReach:7,fordSpacing:16,maxContacts:6000});
+  stepsPerTick:7,onsiteTicks:2,specialOnsiteTicks:6,
+  workSiteReach:7,fordSpacing:16,maxContacts:6000,
+  quarryCount:6,goldCount:2,resourceSpacingCells:10,
+  campInjuryChance:.12,campInjuryCooldownDays:45,campInjuryMinHealth:60,
+  missionBaseChancePerDay:.10,missionSpreadChancePerDay:.65,
+  missionStayTicks:9,missionMaxTripCells:96});
 const bound=(x,a,b)=>Math.max(a,Math.min(b,x));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const day=s=>Math.floor(s.hour/24);
@@ -23,7 +28,7 @@ function normalize(profile){
     m.enabled=profile.enabled===true;
     for(const k of Object.keys(m))if(typeof m[k]==='number'&&Number.isFinite(profile[k]))m[k]=profile[k];
   }
-  m.contactRadius=bound(m.contactRadius,1,5);
+  m.contactRadius=bound(m.contactRadius,1,8);
   m.contactWindowDays=Math.round(bound(m.contactWindowDays,1,30));
   m.tripChancePerDay=bound(m.tripChancePerDay,0,1);
   m.tripCooldownDays=Math.round(bound(m.tripCooldownDays,0,90));
@@ -34,6 +39,15 @@ function normalize(profile){
   m.workSiteReach=bound(m.workSiteReach,1,16);
   m.fordSpacing=Math.round(bound(m.fordSpacing,8,32));
   m.maxContacts=Math.round(bound(m.maxContacts,500,20000));
+  for(const k of ['quarryCount','goldCount','resourceSpacingCells','specialOnsiteTicks',
+    'missionStayTicks','missionMaxTripCells','campInjuryCooldownDays'])
+    m[k]=Math.round(bound(m[k],1,k==='missionMaxTripCells'?256:90));
+  m.quarryCount=bound(m.quarryCount,2,12);
+  m.goldCount=bound(m.goldCount,1,6);
+  m.campInjuryChance=bound(m.campInjuryChance,0,.5);
+  m.campInjuryMinHealth=bound(m.campInjuryMinHealth,35,90);
+  for(const k of ['missionBaseChancePerDay','missionSpreadChancePerDay'])
+    m[k]=bound(m[k],0,1);
   return m;
 }
 function home(s,p){return s.households.find(h=>h.id===p.householdId);}
@@ -50,11 +64,88 @@ function available(t,p){
     (p.occupation==='gatherer'?1.5:1)*
       (Math.min(wood,15)*.25+Math.min(stone,18)*.13+Math.min(fiber,10)*.12);
 }
-function plan(s,p){
+
+function seedHotspots(s){
+  if(!s.mobility?.enabled)return;
+  const m=s.mobility,w=s.width,h=s.height,chosen=[],areas=[];
+  const locations=[s.camp,s.opponentCamp,...(s.settlements||[])].filter(Boolean);
+  const targets=[
+    locations[0]||{x:w*.2,y:h*.5},locations[1]||{x:w*.75,y:h*.25},
+    {x:w*.17,y:h*.2},{x:w*.8,y:h*.75},
+    {x:w*.26,y:h*.77},{x:w*.75,y:h*.2},
+    {x:w*.48,y:h*.4},{x:w*.5,y:h*.7}];
+  function choose(kind,count){
+    for(let i=0;i<count;i++){
+      const anchor=kind==='stone'?targets[i%6]:targets[6+(i%2)];
+      let best=null,score=-Infinity;
+      for(const t of s.tiles){
+        if(t.terrain==='river'||t.terrain==='field')continue;
+        if(chosen.some(x=>distance(x,t)<m.resourceSpacingCells))continue;
+        const jitter=(hash(s.seed+'|resource-node|'+kind+'|'+i+'|'+t.x+'|'+t.y)%1000)/1000;
+        const quality=kind==='stone'&&t.terrain==='rock'?1.5:0;
+        const rating=-distance(t,anchor)+quality+jitter;
+        if(rating>score){score=rating;best=t;}
+      }
+      if(!best)continue;
+      best.resourceNode=kind;
+      if(kind==='stone')best.stone=1000;
+      else best.gold=1000;
+      chosen.push({x:best.x,y:best.y,kind});
+      areas.push({kind,x:best.x,y:best.y});
+    }
+  }
+  // Legacy worlds preserve their old diffuse stone. Scarce nodes exist only
+  // in mobility-enabled new worlds and always remain productive.
+  for(const t of s.tiles)if(t.terrain!=='river')t.stone=0;
+  choose('stone',m.quarryCount);
+  choose('gold',m.goldCount);
+  s.mobilityHotspots=areas;
+}
+function activeSpread(s,p){
+  const faith=[s.religion,s.opponentReligion].find(f=>f&&f.id===p.religionId);
+  if(!faith||!faith.priests.includes(p.id))return null;
+  return faith.oracles.find(o=>o.status==='active'&&
+    o.intentType==='religion.spread'&&Number.isFinite(o.propagatedAtHour)&&
+    (o.reachedSettlements?.[p.settlementId]||
+      s.people.some(q=>q.id===o.saintId&&q.alive&&distance(p,q)<=o.reachRadius)))||null;
+}
+function recoverWound(s,p){
+  if(p.campInjury&&!p.campInjury.recoveredAtHour&&p.health>=95)
+    p.campInjury.recoveredAtHour=s.hour;
+}
+function campRisk(s,p,trip){
+  if(trip.campChecked)return;
+  trip.campChecked=true;
+  if(trip.purpose!=='resource'||!['gold','stone'].includes(trip.resourceKind))return;
+  recoverWound(s,p);
+  const m=s.mobility;
+  if(p.campInjury&&!p.campInjury.recoveredAtHour)return;
+  if(Number.isFinite(p.lastCampInjuryAtHour)&&
+    s.hour-p.lastCampInjuryAtHour<m.campInjuryCooldownDays*24)return;
+  const dice=hash(s.seed+'|camp-injury|'+p.id+'|'+trip.startedAtHour)/4294967296;
+  if(dice>=m.campInjuryChance||p.health<=m.campInjuryMinHealth)return;
+  const damage=10+(hash(s.seed+'|camp-damage|'+p.id+'|'+trip.startedAtHour)%9);
+  const before=p.health;
+  p.health=Math.max(m.campInjuryMinHealth,p.health-damage);
+  const applied=before-p.health;
+  if(applied<=0)return;
+  p.campInjury={hour:s.hour,damage:applied,resource:trip.resourceKind,
+    x:p.x,y:p.y,recoveredAtHour:null};
+  p.lastCampInjuryAtHour=s.hour;
+  s.counts.campInjuries=(s.counts.campInjuries||0)+1;
+}
+
+function plan(s,p,purpose='resource'){
   const m=s.mobility,h=home(s,p);
   if(!h||!s.tiles.length)return null;
   const sx=Math.round(bound(h.x,0,s.width-1)),sy=Math.round(bound(h.y,0,s.height-1));
   if(!walkable(s,sx,sy))return null;
+  const mission=purpose==='mission',possible=mission?
+    s.households.filter(target=>target.id!==h.id&&
+      s.people.some(q=>q.alive&&q.householdId===target.id&&
+        q.settlementId!==p.settlementId&&q.religionId!==p.religionId)):[];
+  if(mission&&!possible.length)return null;
+  const limit=mission?m.missionMaxTripCells:m.maxTripCells;
   const start=sy*s.width+sx,prev=new Int32Array(s.tiles.length),
     steps=new Int16Array(s.tiles.length),queue=[start];
   prev.fill(-1);steps.fill(-1);steps[start]=0;
@@ -62,17 +153,22 @@ function plan(s,p){
   for(let cursor=0;cursor<queue.length;cursor++){
     const idx=queue[cursor],length=steps[idx],x=idx%s.width,y=Math.floor(idx/s.width);
     if(length>=m.minTripCells&&cell(s,x,y).terrain!=='river'){
-      let strength=available(cell(s,x,y),p);
+      const t=cell(s,x,y);
+      let strength=mission?(possible.some(q=>distance(t,q)<=2)?40:0):available(t,p);
       for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0]]){
         const nx=x+dx,ny=y+dy;
         if(nx>=0&&ny>=0&&nx<s.width&&ny<s.height)
           strength+=.45*available(cell(s,nx,ny),p);
       }
       const jitter=(hash(s.seed+'|hotspot|'+p.id+'|'+Math.floor(day(s)/14)+'|'+idx)%1000)/1000*.65;
-      const score=strength-length*.025+jitter;
-      if(strength>=2&&score>quality){quality=score;best=idx;}
+      const nodeWeight=p.occupation==='gatherer'&&!mission?
+        (t.resourceNode==='stone'?65:t.resourceNode==='gold'?75:0):0;
+      const score=strength+nodeWeight-length*(mission?.14:.025)+jitter;
+      if((mission?strength>0:strength+nodeWeight>=2)&&score>quality){
+        quality=score;best=idx;
+      }
     }
-    if(length>=m.maxTripCells)continue;
+    if(length>=limit)continue;
     for(const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){
       const nx=x+dx,ny=y+dy;
       if(!walkable(s,nx,ny))continue;
@@ -85,7 +181,9 @@ function plan(s,p){
   const path=[];
   for(let idx=best;idx!==start;idx=prev[idx]){if(idx<0)return null;path.push(idx);}
   path.push(start);path.reverse();
-  return {path,index:0,phase:'out',siteTicks:0,
+  const site=s.tiles[best];
+  return {path,index:0,phase:'out',siteTicks:0,purpose,
+    resourceKind:mission?null:site.resourceNode||null,
     origin:{x:h.x,y:h.y},cargo:null,startedAtHour:s.hour};
 }
 function begin(s,p){
@@ -93,15 +191,35 @@ function begin(s,p){
   if(!m?.enabled||p.stage!=='adult'||p.health<35||p.hunger>.7||
     (Number.isFinite(p.lastVisitStartHour)&&s.hour-p.lastVisitStartHour<m.tripCooldownDays*24))
     return false;
-  if(hash(s.seed+'|visit|'+p.id+'|'+day(s))/4294967296>=m.tripChancePerDay)return false;
-  const trip=plan(s,p);
+  const spread=activeSpread(s,p);
+  const priest=[s.religion,s.opponentReligion].some(f=>f?.priests.includes(p.id));
+  const chance=spread?m.missionSpreadChancePerDay:
+    priest?m.missionBaseChancePerDay:0;
+  const missionRoll=hash(s.seed+'|mission|'+p.id+'|'+day(s))/4294967296;
+  let trip=priest&&missionRoll<chance?plan(s,p,'mission'):null;
+  if(!trip){
+    if(hash(s.seed+'|visit|'+p.id+'|'+day(s))/4294967296>=m.tripChancePerDay)
+      return false;
+    trip=plan(s,p);
+  }
   if(!trip)return false;
+  if(trip.purpose==='mission'&&spread)trip.spreadOracleId=spread.id;
   p.mobilityTrip=trip;p.lastVisitStartHour=s.hour;
-  s.counts.resourceVisitsStarted=(s.counts.resourceVisitsStarted||0)+1;
+  if(trip.purpose==='mission')
+    s.counts.missionTripsStarted=(s.counts.missionTripsStarted||0)+1;
+  else s.counts.resourceVisitsStarted=(s.counts.resourceVisitsStarted||0)+1;
   return true;
 }
 function gather(s,p,trip){
+  if(trip.purpose==='mission'){p.lastPreachHour=s.hour;return;}
   const t=s.tiles[trip.path[trip.path.length-1]];
+  if(t.resourceNode==='stone'||t.resourceNode==='gold'){
+    trip.resourceKind=t.resourceNode;
+    trip.cargo={kind:t.resourceNode,amount:t.resourceNode==='stone'?1.5:.6};
+    p.lastWorkHour=s.hour;
+    s.counts.rareResourceGathered=(s.counts.rareResourceGathered||0)+1;
+    return; // perpetual quarry/vein, without inventing a new deposit on each visit
+  }
   const opts=[{kind:'food',key:'forage',w:p.occupation==='food_producer'?2:1},
     {kind:'wood',key:'wood',w:p.occupation==='gatherer'?1.5:1},
     {kind:'stone',key:'stone',w:p.occupation==='gatherer'?1.4:1},
@@ -124,15 +242,29 @@ function step(s,p,distribute){
     delete p.mobilityTrip;p.mobilityTrace=[{x:p.x,y:p.y}];return true;
   }
   if(trip.phase==='site'){
-    p.activity='visit';p.activityReason='在資源熱點停留，可能與附近居民交流';
-    if(s.tick%3===2&&p.stage==='adult'&&p.devotion>=20){
+    const mission=trip.purpose==='mission';
+    p.activity=mission?'preach':'visit';
+    p.activityReason=mission?'祭司在外村進行實際傳教':
+      trip.resourceKind?'在珍稀資源區野營並工作':'在資源熱點停留';
+    if(mission){
+      p.lastPreachHour=s.hour;
+      const faith=[s.religion,s.opponentReligion].find(f=>f?.id===p.religionId);
+      const oracle=faith?.oracles.find(o=>o.id===trip.spreadOracleId&&o.status==='active');
+      if(oracle){
+        oracle.influenceSermonCount=(oracle.influenceSermonCount||0)+1;
+        s.counts.missionOracleSermons=(s.counts.missionOracleSermons||0)+1;
+      }
+    }else if(trip.resourceKind&&trip.siteTicks===1)campRisk(s,p,trip);
+    if(!mission&&s.tick%3===2&&p.stage==='adult'&&p.devotion>=20){
       const faith=[s.religion,s.opponentReligion].find(f=>f&&f.id===p.religionId);
       if(faith&&(faith.priests.includes(p.id)||hash(s.seed+'|visit-preach|'+p.id+'|'+s.hour)%4===0)){
         p.activity='preach';p.lastPreachHour=s.hour;
       }
     }
     trip.siteTicks++;
-    if(trip.siteTicks>=m.onsiteTicks)trip.phase='back';
+    const duration=mission?m.missionStayTicks:
+      trip.resourceKind?m.specialOnsiteTicks:m.onsiteTicks;
+    if(trip.siteTicks>=duration)trip.phase='back';
     p.mobilityTrace=trace;return true;
   }
   const direction=trip.phase==='out'?1:-1;
@@ -149,7 +281,8 @@ function step(s,p,distribute){
     p.x=h.x;p.y=h.y;
     if(trip.cargo)distribute(s,h,trip.cargo.kind,trip.cargo.amount);
     delete p.mobilityTrip;
-    s.counts.resourceVisitsCompleted=(s.counts.resourceVisitsCompleted||0)+1;
+    const metric=trip.purpose==='mission'?'missionTripsCompleted':'resourceVisitsCompleted';
+    s.counts[metric]=(s.counts[metric]||0)+1;
     p.activity='rest';p.activityReason='短期出訪後返回家戶';
   }else{
     p.activity='travel';p.activityReason=trip.phase==='out'?
@@ -171,6 +304,7 @@ function workLocation(s,p,h,place){
 function record(s){
   const m=s.mobility;if(!m?.enabled)return;
   s.contactLog=(s.contactLog||[]).filter(e=>e.hour>=s.hour-m.contactWindowDays*24);
+  for(const p of s.people)if(p.alive)recoverWound(s,p);
   const recent=new Set(s.contactLog.filter(e=>e.hour>s.hour-24).map(e=>e.a+'|'+e.b));
   const size=m.contactRadius,key=(x,y)=>x+','+y;
   const people=s.people.filter(p=>p.alive);
@@ -246,5 +380,5 @@ function townContact(s,faith,fromId,toId){
     return false;
   });
 }
-return {BASE,normalize,begin,step,workLocation,record,recentContact,townContact};
+return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact,townContact,recoverWound};
 });

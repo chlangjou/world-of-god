@@ -1,67 +1,53 @@
-# Mobility & Physical Contact v0.1 — Web PoC v2
+# Physical Contact, Scarce Resources & Missionary Oracle — PoC v0.2
 
-**Status:** experimental, branch `feature/opponent-difficulty-profiles-v0.3`; `main` is not modified.
+**Status:** experimental. Target branch: `feature/opponent-difficulty-profiles-v0.3`; no changes to `main`.
 
-## Scope
+## Contact and resource travel
 
-Physical mobility is a shared simulation substrate, not a religion-only transport
-mechanic. Resident affiliation and household ownership remain stable during
-temporary trips; actual `p.x/y` moves on the map.
+- Physical encounter radius **5 map cells** (formerly 3). Contacts are recorded only when actual walkers overlap in space at the **same sampled tick moment**. Full evidence includes two people, faith snapshots, original settlement IDs, hour, coordinate, and separation. One pair is recorded no more than once per simulated day.
+- Movement is still bounded cardinal-step walking (including mapped fords), not remote sermon teleportation. Residence stays at the original household. The generic contact log is shared by social, religious and future trade mechanisms.
+- New mobility worlds place **six infinite stone quarries and two infinite gold deposits** at deterministic, sparse map locations. Common scattered stone in traversable terrain is disabled for these new worlds. The quarry may supply construction stone; gold is stored with the household/settlement but has **no trade or currency mechanic yet**.
+- Resource visits consume real time, actual transport and deposit only on return; ordinary food production retains its previous balance. Special deposits require a longer stay (`specialOnsiteTicks=6`) and make camping meaningful.
+- `config/mobility-contact-v0.1.json` holds the tunable encounter radius, trip rates, node counts, campsite durations, missionary rates and injury risk.
 
-- Each adult may elect a bounded autonomous resource visit in their work phase
-  according to a stable per-person/day hash and a configurable cooldown.
-  A bounded BFS on **existing** resource tiles identifies an obtainable hotspot
-  9–27 cardinal steps away. A ford is passable only at marked periodic river
-  rows; water itself is not a resource destination.
-- A trip advances by at most seven adjacent cells in each 8-hour tick. At the
-  real site it gathers material from the real tile inventory, then walks home
-  and deposits the actual cargo. It consumes work time; no bonus food or forced
-  missionary movement is created. Nearby ordinary work uses a reachable
-  physical field/forage/material location where feasible.
-- Physical contact requires the two living individuals to be within **three
-  grid cells at the same sampled moment** in the tick (walking traces included).
-  Each pair is recorded once per day. Records include person IDs, snapshot faith,
-  home settlements, encounter coordinates, distance, and hour; records expire
-  after seven days (and have a maximum length).
-- Face-to-face conversations may make a Priest or ordinary believing adult
-  a recent preacher. Only actual contact is eligible for social, Priest,
-  abstract exchange replacement, and evidence-backed Oracle strategy contact
-  in physical mode. Ordinary speech never bypasses the 40+ Devotion protection.
-  Evidence-backed attraction/conversion retains its separate real-outcome,
-  repetition, self-choice, and timing restrictions.
+## Camping accident & Heal
 
-The existing oracle relay still requires local coreligionist listeners as well
-as real cross-settlement contact. This v0.1 intentionally does **not** replace
-all trade, profession, or migration decisions with pathfinding.
+A long rare-resource visit checks one independently hashed roll **once per trip** (nominal chance 12%, configurable), with **45 days injury cooldown** and no repeat hit before recovery. Health loss is 10–18 points with a 60-point health floor: the accident itself is nonfatal. Baseline daily hunger/health still works as previously; critical starvation remains a separate concern.
 
-## Controls and compatibility
+`campInjury` records its time, damage and location. At health 95 or more the injury is marked recovered; an ordinary Heal can restore health and clear the visual warning. The map displays a **red cross** above injured residents independently of faith/priest colors; the resident inspector displays the injury, current health, and Heal hint.
 
-`config/mobility-contact-v0.1.json` is loaded by the Web UI for **new worlds**;
-all fields are tunable. `mobilityProfile.enabled=false` reproduces the historical
-abstract contact model; `W.restore` of pre-mobility saves defaults to disabled
-rather than silently changing an existing player's world.
+## Priest long-distance missions & Oracle identity
 
-The movement module is separately packaged in `src/mobility.js`. The modular
-browser build and tracked standalone HTML both load it **before** `src/sim.js`.
+Priests may voluntarily visit actual populated foreign/neutral settlements, respecting their home's residence and path availability.
 
-## Evidence / acceptance criteria
+| Priest condition | Chance to depart on a work-day, when eligible |
+|---|---:|
+| Without Spread Oracle | 10% |
+| With locally received active `religion.spread` Oracle | 65% |
 
-Use `node --test tests/mobility-contact.test.cjs` (included in `npm test`).
+A missionary remains at the destination for nine 8-hour ticks. A real encounter can be followed up by local preaching; the Spread Oracle adds a configurable **1.4×** Priest recruitment factor only for low-devotion or unaffiliated people who actually met the preacher. Issuing an Oracle without outcomes never changes faith. A 40+ committed rival is never directly shaken by regular speech: a Spread-based *core challenge* requires physical contact, a Priest, at least three recorded sermons, and **at least one previously verified voluntary recruit** attributable to that Oracle.
 
-Check (1) true completed visits and non-river destinations, (2) every recorded
-contact within three cells and no same-household contacts, (3) nonzero physical
-cross-town meetings in an ordinary 30-person two-faith fixture, (4) none from a
-disabled-travel, separated two-town control, (5) JSON save/restore determinism,
-(6) no free Devotion or unearned 40+ rival conversion. These are tests of
-*contact capability*, not a claim that religion reversal balance is solved.
+## Defense matrix
 
-The baseline 40 threshold, Miracle attack Presence restrictions, agriculture
-fertility, and no-teleport household migration policy are unchanged.
+Defensive multiplier = row (receiving faith doctrine) versus column (credible challenger). No passive Devotion changes.
 
-## Limitations
+| Defender \ challenger | Default | Food | Nurture | Explore | Spread |
+|---|---:|---:|---:|---:|---:|
+| Default | 1 | 0.8 | 0.8 | 0.8 | 0.8 |
+| Food | 1.2 | 1 | 0.4 | 1.6 | 0.6 |
+| Nurture | 1.2 | 1.6 | 1 | 0.4 | 0.6 |
+| Explore | 1.2 | 0.4 | 1.6 | 1 | 0.6 |
+| Spread | 1.2 | 1.4 | 1.4 | 1.4 | 1 |
 
-Pathfinder uses simple cardinal BFS with explicit fords, not full geographic
-trade routes; per-tick travel and short-lived contact logs are deliberately
-bounded. Crossing paths only qualifies when people are spatially close at the
-same sampled moment. Religion competition may need longer observations and
-further balance work once more actual witnesses reach the opposing core.
+Only new `oracle-specialization-v0.1.json` with `spreadMatrixEnabled=true` applies Spread as a fifth doctrine. Existing saves without the flag keep their historical Spread-as-Default interpretation, as well as prior belief and resources.
+
+## Test strategy (GitHub CI budget)
+
+- Push: `.github/workflows/mobility-fast.yml`, targeted syntax + `npm run test:fast` + standalone bundle equality check. The fixed controls include 5-cell contact, perpetual deposits, camping injury one-shot/repeat guards, Heal, matrix ratios, missionary trips, save replay and legacy-save behavior.
+- Manual only: historical eight-minute `oracle-specialization.yml` full suite and multi-seed 60–130 day evaluations. Do not run full long simulation for every trivial code change.
+- Local targeted run: `cd poc/v2 && npm run test:fast`.
+- Success means the moving people can actually meet, travel and be healed; **not** that core conversion rates, trading or final balance are solved.
+
+## Compatibility
+
+Existing saves with no mobility record remain on the previous disabled model. Worlds already saved under the earlier movement prototype retain their old resource map when restored; fixed quarries and gold spawn in **new** mobility worlds only. No role or religion is forcibly assigned during migration.

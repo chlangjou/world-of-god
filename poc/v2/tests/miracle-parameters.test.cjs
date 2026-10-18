@@ -45,7 +45,9 @@ async function boot(){
     get(object,key){return key in object?object[key]:()=>{};}
   });
   canvas.getContext=()=>ctx;
-  const doc={getElementById:get,querySelectorAll:()=>[],addEventListener(){},
+  const documentListeners={};
+  const doc={getElementById:get,querySelectorAll:()=>[],
+    addEventListener(name,handler){documentListeners[name]=handler;},
     activeElement:{tagName:'BODY'}};
   // Existing UI interaction regressions exercise the original open-ended
   // native mode, not the opt-in 30-person scripted duel. Supply the real new
@@ -72,6 +74,20 @@ async function boot(){
     el:get,canvas,world:()=>win.__getWorld(),
     choose:id=>{get('divinePowerSelect').value=id;get('divinePowerSelect').onchange();},
     set:(id,value)=>{get(id).value=String(value);get(id).listeners.input();},
+    key:(key,options={})=>{
+      let prevented=false;
+      doc.activeElement={tagName:options.focus||'BODY',
+        isContentEditable:!!options.isContentEditable};
+      documentListeners.keydown({key,code:key===' '?'Space':'Digit'+key,
+        ctrlKey:false,altKey:false,metaKey:false,repeat:false,
+        ...options,preventDefault(){prevented=true;}});
+      doc.activeElement={tagName:'BODY'};
+      return prevented;
+    },
+    clickMap:(x,y)=>{
+      const size=768/win.__getWorld().width;
+      canvas.listeners.click({clientX:(x+.25)*size,clientY:(y+.25)*size});
+    },
     values:()=>({radius:+get('radius').value,intensity:+get('intensity').value,
       duration:+get('duration').value})
   };
@@ -102,9 +118,10 @@ test('Miracle radius, intensity and duration return to the values entered for ea
 
   // Actually cast after returning, verifying simulator receives retained inputs.
   world.god.dp=world.god.cap;
-  ui.el('rainBtn').onclick();
-  const camp=world.camp,unit=768/world.width;
-  ui.canvas.listeners.click({clientX:(camp.x+.25)*unit,clientY:(camp.y+.25)*unit});
+  assert.ok(ui.el('rainBtn').textContent.includes('取消'),
+    'selecting Rain should already have armed its map target');
+  const camp=world.camp;
+  ui.clickMap(camp.x,camp.y);
   const cast=world.effects.find(e=>(e.type||'rain')==='rain');
   assert.ok(cast,'the chosen Miracle is actually cast');
   assert.equal(cast.radius,11);
@@ -217,4 +234,74 @@ test('live AI difficulty selector preserves the current world and saved setting'
   ui.el('loadBtn').onclick();
   assert.equal(ui.world().opponent.difficulty,'relaxed','saved AI mode survives load');
   assert.equal(ui.el('aiDifficulty').value,'relaxed','UI follows loaded world state');
+});
+
+
+test('selecting a Miracle immediately arms the map and only a map click spends DP',async()=>{
+  const ui=await boot(),world=ui.world();
+  const initialDp=world.god.dp;
+  assert.equal(ui.el('mapTip').hidden,true,'new world should not accidentally start aiming');
+  ui.choose('ripening');
+  assert.equal(ui.el('mapTip').hidden,false,'power change must arm the map');
+  assert.ok(ui.el('rainBtn').textContent.includes('取消'),'cancel is now the primary action while aiming');
+  assert.equal(world.god.dp,initialDp,'selecting never spends Divine Power');
+  ui.choose('rain');
+  assert.equal(ui.el('mapTip').hidden,false,'switching spells must remain armed');
+  assert.equal(world.god.dp,initialDp,'switching still never casts');
+  const before=world.god.dp;
+  ui.clickMap(world.camp.x,world.camp.y);
+  assert.ok(world.god.dp<before,'map click should cast without an extra button press');
+  assert.equal(ui.el('mapTip').hidden,true,'successful cast exits targeting to avoid accidental recasts');
+});
+
+test('Esc and cancel button prevent casts, even after changing sliders to unaffordable settings',async()=>{
+  const ui=await boot(),world=ui.world();
+  ui.choose('rain');
+  assert.equal(ui.el('mapTip').hidden,false);
+  ui.key('Escape');
+  assert.equal(ui.el('mapTip').hidden,true);
+  const before=world.god.dp;
+  ui.clickMap(world.camp.x,world.camp.y);
+  assert.equal(world.god.dp,before,'after Esc the map should inspect, never cast');
+  ui.choose('rain');
+  assert.equal(ui.el('mapTip').hidden,false);
+  world.god.dp=0;
+  ui.set('intensity',120);
+  assert.equal(ui.el('rainBtn').disabled,false,'cancel must not be disabled by insufficient DP');
+  ui.el('rainBtn').onclick();
+  assert.equal(ui.el('mapTip').hidden,true,'cancel button should leave aim mode');
+  ui.clickMap(world.camp.x,world.camp.y);
+  assert.equal(world.god.dp,0,'cancelled low-DP target must not cast');
+  ui.choose('rain');
+  assert.equal(ui.el('mapTip').hidden,true,'unaffordable new selection must not leave a blocked target armed');
+});
+
+test('number hotkeys 1–9 select and arm Miracles, Esc cancels and focused controls are ignored',async()=>{
+  const ui=await boot(),world=ui.world();
+  assert.ok(ui.el('divinePowerSelect').innerHTML.includes('<option value="heal">4. 治療 Heal</option>'),'hotkey numbers are visible in the Miracle dropdown');
+  assert.equal(ui.key('4'),true);
+  assert.equal(ui.el('divinePowerSelect').value,'heal');
+  assert.equal(ui.el('mapTip').hidden,false);
+  assert.equal(ui.key('9'),true);
+  assert.equal(ui.el('divinePowerSelect').value,'blindness');
+  const noChange=ui.el('divinePowerSelect').value;
+  assert.equal(ui.key('2',{focus:'INPUT'}),false);
+  assert.equal(ui.key('2',{focus:'SELECT'}),false);
+  assert.equal(ui.key('2',{focus:'BUTTON'}),false);
+  assert.equal(ui.key('2',{ctrlKey:true}),false);
+  assert.equal(ui.key('2',{altKey:true}),false);
+  assert.equal(ui.key('2',{repeat:true}),false);
+  assert.equal(ui.el('divinePowerSelect').value,noChange);
+  ui.key('Escape');
+  assert.equal(ui.el('mapTip').hidden,true);
+  ui.key('1');
+  assert.equal(ui.el('divinePowerSelect').value,'rain');
+  assert.equal(ui.el('mapTip').hidden,false,'hotkey must rearm even after cancel');
+  ui.el('oracleTab').onclick();
+  assert.equal(ui.el('mapTip').hidden,true);
+  assert.equal(ui.key('2'),true,'hotkey works from Oracle tab');
+  assert.equal(ui.el('divinePowerSelect').value,'ripening');
+  assert.equal(ui.el('miraclePanel').hidden,false);
+  assert.equal(ui.el('mapTip').hidden,false);
+  assert.equal(world.god.dp,W.DEFAULT_RULES.initialDp,'hotkey never casts automatically');
 });

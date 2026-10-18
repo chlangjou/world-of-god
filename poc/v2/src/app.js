@@ -143,7 +143,7 @@
     const entries=kind==='oracle'&&!state.oracleStrategy?
       availablePowers.oracle.filter(p=>['food.produce','religion.spread'].includes(p.id)):
       availablePowers[kind];
-    picker.innerHTML=entries.map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+    picker.innerHTML=entries.map((p,i)=>`<option value="${p.id}">${kind==='miracle'?(i+1)+'. ':''}${p.label}</option>`).join('');
     picker.value=entries.some(p=>p.id===rememberedPower[kind])?
       rememberedPower[kind]:availablePowers[kind][0].id;
     rememberedPower[kind]=picker.value;
@@ -160,20 +160,40 @@
     document.querySelectorAll('[data-inspect-panel]').forEach(el=>el.hidden=el.dataset.inspectPanel!==tab);
     render();
   }
+  function armMiracleTarget(){
+    if(profileLoading||divineKind!=='miracle')return false;
+    const id=selectedPower(),target=cursor||state.camp;
+    const result=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
+    // Choosing a Miracle arms the map but does not cast. Target-specific
+    // limitations (such as needing an injured recipient) remain checked at
+    // the actual clicked point, not only at the preview position.
+    if(state.god.dp+1e-8<(result.cost??Infinity)){
+      armedMiracle=null;render();
+      say(result.reason||'目前 Divine Power 不足');
+      return false;
+    }
+    armedMiracle=id;render();
+    say((result.overcast?'冷卻中強制施放（'+result.costMultiplier+'× DP）：':'選擇了 ')+
+      (powerMeta('miracle',id)?.label||id)+'；點擊地圖施放，Esc 取消。');
+    return true;
+  }
   function toggleMiracleTarget(){
     if(profileLoading)return;
     if(divineKind!=='miracle')showDivineKind('miracle');
     if(armedMiracle){armedMiracle=null;render();return;}
-    const id=selectedPower(),target=cursor||state.camp;
-    const result=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
-    if(state.god.dp+1e-8<result.cost){
-      say(result.reason||'目前 Divine Power 不足');updateCost();return;
+    armMiracleTarget();
+  }
+  function selectMiracleByHotkey(id){
+    if(profileLoading)return;
+    if(divineKind==='miracle')rememberMiracleSettings();
+    else{
+      rememberedPower.miracle=id;
+      showDivineKind('miracle');
     }
-    // The cursor may currently be over an empty/no-presence area. Do not prevent
-    // aiming elsewhere; every clicked map center is independently validated.
-    armedMiracle=id;render();
-    say((result.overcast?'冷卻中強制施放（'+result.costMultiplier+'× DP）：':'請點擊地圖施展 ')+
-      powerMeta('miracle',id).label+'。Esc 可取消。');
+    $('divinePowerSelect').value=id;
+    rememberedPower.miracle=id;
+    configureMiracle(id);
+    armMiracleTarget();
   }
   function say(text) { const box=$('toast');box.textContent=text;box.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>box.classList.remove('visible'),3000); }
   function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,durationDays:+$('duration').value}; }
@@ -342,9 +362,13 @@
     $('rainCooldown').textContent=left?
       `冷卻中 · 剩餘 ${format(left/24,1)} 日 · 強制施放 ${preview.costMultiplier}× · ${forecast}`:
       preview.reason||`已就緒 · ${forecast}`;
-    $('rainBtn').textContent=armedMiracle?'取消選擇位置':
+    $('rainBtn').textContent=armedMiracle?'取消選點 (Esc)':
       preview.overcast?`強制施放 ${preview.costMultiplier}×`:'選擇施展位置';
-    $('rainBtn').disabled=profileLoading||state.god.dp+1e-8<(preview.cost??Infinity);
+    // A player must always be able to cancel aiming, even if the sliders now
+    // describe a cast they cannot afford.
+    $('rainBtn').disabled=profileLoading||(!armedMiracle&&
+      state.god.dp+1e-8<(preview.cost??Infinity));
+    $('rainBtn').setAttribute('aria-pressed',String(!!armedMiracle));
     $('rainBtn').title=preview.reason||
       `點圖施放將依當下神力、連發倍率與目標重新驗證；${forecast}`;
     $('rainBtn').classList.toggle('secondary',!!armedMiracle);
@@ -846,7 +870,7 @@
   $('settlementSelect').onchange=e=>{selectedTownId=e.target.value;housePage=0;render();};
   $('housePrev').onclick=()=>{housePage=Math.max(0,housePage-1);render();};
   $('houseNext').onclick=()=>{housePage++;render();};
-  $('miracleTab').onclick=()=>showDivineKind('miracle');
+  $('miracleTab').onclick=()=>{showDivineKind('miracle');armMiracleTarget();};
   $('oracleTab').onclick=()=>showDivineKind('oracle');
   $('divinePowerSelect').onchange=()=>{
     armedMiracle=null;
@@ -854,11 +878,31 @@
       rememberMiracleSettings();
       rememberedPower.miracle=selectedPower();
       configureMiracle(selectedPower());
-    }else rememberedPower.oracle=selectedPower();
-    render();
+      armMiracleTarget(); // Selecting a Miracle is the first step of casting.
+    }else{
+      rememberedPower.oracle=selectedPower();
+      render();
+    }
   };
   document.querySelectorAll('[data-inspect-tab]').forEach(button=>button.onclick=()=>{if(button.dataset.inspectTab==='needs'){activePriestId=null;priestPetitionIndex=0;needPage=0;}showInspector(button.dataset.inspectTab);});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedMiracle){armedMiracle=null;render();}else if(e.key==='Escape'&&selectedNeedId){selectedNeedId=null;render();}else if(e.key==='Escape'&&attentionFocus){attentionFocus=null;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)){toggleMiracleTarget();}});
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&armedMiracle){
+      armedMiracle=null;render();
+    }else if(e.key==='Escape'&&selectedNeedId){
+      selectedNeedId=null;render();
+    }else if(e.key==='Escape'&&attentionFocus){
+      attentionFocus=null;render();
+    }else if(e.ctrlKey||e.altKey||e.metaKey||e.isComposing)return;
+    else if(!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)&&
+      !document.activeElement?.isContentEditable){
+      if(e.code==='Space'){
+        e.preventDefault();paused=!paused;render();
+      }else if(!e.repeat&&/^[1-9]$/.test(e.key)){
+        e.preventDefault();
+        selectMiracleByHotkey(availablePowers.miracle[Number(e.key)-1].id);
+      }
+    }
+  });
   $('saveBtn').onclick=save;
   $('loadBtn').onclick=()=>{let raw=null;try{raw=localStorage.getItem(storageKey()) || localStorage.getItem('wog-mvp0-web-save');}catch(_){}if(raw)restore(raw);else say('目前沒有本機存檔；可以匯入 JSON。');};
   $('exportBtn').onclick=exportSave;

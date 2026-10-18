@@ -18,7 +18,7 @@
     "evaluate:oracle:cadence": "node --max-old-space-size=512 tools/oracle-core30-cadence-loss-sweep.cjs",
     "evaluate:oracle:attraction": "node --max-old-space-size=512 tools/oracle-attraction-evidence-study.cjs",
     "build:playable": "node tools/build-single.cjs",
-    "test:fast": "node --test tests/mobility-contact-fast.test.cjs"
+    "test:fast": "node --test tests/mobility-contact-fast.test.cjs tests/miracle-parameters.test.cjs"
   },
   "engines": {
     "node": ">=18"

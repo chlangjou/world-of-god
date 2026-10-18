@@ -293,7 +293,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
         <div class="map-wrap">
           <canvas id="world" width="768" height="768" aria-label="世界地圖，可點選居民或施展神蹟" tabindex="0"></canvas>
           <div class="legend" aria-label="地圖圖例"><span><i class="sw river"></i>河流</span><span><i class="sw forest"></i>森林</span><span><i class="sw field"></i>農田</span><span><i class="sw homes"></i>住所</span><span><i class="sw granary"></i>糧倉</span><span><i class="sw human"></i>居民</span><span title="可直接接收神諭的聆聽者"><i class="sw saint"></i>Saint</span><span title="傳道並彙整信徒祈禱的祭司"><i class="sw priest"></i>Priest</span><span title="目前沒有加入任何神明宗教的居民；部分原住民後來也可能選擇信仰"><i class="sw native"></i>未入教</span><span title="暮影信仰：珊瑚紅居民及祭司屬於 AI 對手"><i class="sw rival"></i>對手</span></div>
-          <div id="mapTip" class="map-tip">已進入神蹟選點模式：點擊地圖施展，Esc 取消</div>
+          <div id="mapTip" class="map-tip">已進入神蹟選點模式：點地圖施放 · Esc 取消 · 1–9 快選</div>
         </div>
         <div class="map-footer"><span id="simHint">世界準備中</span><span id="simRate">1×</span></div>
       </section>
@@ -305,7 +305,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
               <button id="miracleTab" type="button" role="tab" aria-controls="miraclePanel" aria-selected="true" class="active">Miracle</button>
               <button id="oracleTab" type="button" role="tab" aria-controls="oraclePanel" aria-selected="false">Oracle</button>
             </div>
-            <label class="power-picker"><span class="sr-only">選擇能力</span><select id="divinePowerSelect" aria-label="選擇神蹟或神諭"><option value="rain">喚雨</option></select></label>
+            <label class="power-picker" title="Miracle 可用鍵盤 1–9 直接選擇並進入選點"><span class="sr-only">選擇能力</span><select id="divinePowerSelect" aria-label="選擇神蹟或神諭"><option value="rain">喚雨</option></select></label>
           </div>
           <div id="miraclePanel" class="command-body" role="tabpanel" aria-labelledby="miracleTab">
             <div class="command-current"><strong id="miracleName">喚雨 Rain</strong><small id="miracleHint" title="直接效果進入世界模擬，不自動保證最後結果">影響土壤，不直接生成食物</small></div>
@@ -366,9 +366,9 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
       <p><strong>快速開始 — 30人宗教對決：</strong>預設兩個宗教各有15名 Devotion 60 的信徒；兩邊都有既有住屋及已自然出現的 Saint／Priest。AI 已對聆聽者傳下「存糧」神諭，暫不自行改變方針。請切換 Oracle，選「育兒」，按「傳下神諭」，再按「開始／16×」。100個模擬日內目標是從對方原15名信徒中取得至少3人淨改宗。右上角可切換「自然河谷」玩正常拓荒與AI互動。</p>
       <p><strong>信仰爭奪：</strong>核心信徒的門檻仍是 Devotion 40。普通傳教不能直接改宗40+；但多次見證可歸因的真實神諭成果，加上仍有實際傳教接觸，居民可能自主轉向另一宗教，即使原 Devotion 尚未跌到20。這套數值是測試版：100天後可能發生過快的連鎖轉宗，不代表最終平衡。可在「居民」檢視異教信任和改宗依據，在「歷史」看轉宗事件。對決開場是刻意設計的受控場景，不是自然生成的勝率證據。</p>
       <p><strong>兩層神意操作：</strong>先選 Miracle／Oracle 類別，再從下拉清單選能力。Miracle 可以指定地圖目標；Oracle 由 Saint 傳達。</p>
-      <p><strong>神蹟：</strong>從選單選擇降雨、促熟、豐收、治療、效率祝福、乾旱、雷擊、混亂或致盲。依能力調整範圍、強度與時間；按施展再點地圖。沒有目標、神力不足或當地臨在不足時不消耗 DP。每項神蹟獨立熟練度和冷卻，並各自保留上次的範圍、強度與持續天數；冷卻中若神力足夠仍可強制施放，DP 依同技能本輪次數計為 2×、3×、4×…，完全冷卻後恢復 1×，不影響其他 Miracle；切回神蹟時不必重新設定。持續型神蹟的冷卻也取決於施展時間：同條件下 5 天降雨比 30 天降雨更快恢復，預計冷卻時間會隨滑桿即時更新。</p><p><strong>神諭策略（實驗）：</strong>存糧／育兒／探索各自偏重有限行動時間，也留下其他需求的弱點；同一 Saint 一次只能有一個持續方針。Reset「神很滿意你們的行為，放下心中的執著去追尋自己的需求」解除特化、不消耗額度，不清空既有成果。對手須有真實成果與跨聚落接觸才可能動搖既有核心。傳教不直接改宗。</p>
+      <p><strong>神蹟：</strong>從選單選擇降雨、促熟、豐收、治療、效率祝福、乾旱、雷擊、混亂或致盲。依能力調整範圍、強度與時間；選完神蹟即自動進入選點，直接點地圖施放，不需要再按「選擇位置」。Esc 或「取消選點」可退出；數字鍵 1–9 可直接選取九種 Miracle（輸入框內不觸發）。沒有目標、神力不足或當地臨在不足時不消耗 DP。每項神蹟獨立熟練度和冷卻，並各自保留上次的範圍、強度與持續天數；冷卻中若神力足夠仍可強制施放，DP 依同技能本輪次數計為 2×、3×、4×…，完全冷卻後恢復 1×，不影響其他 Miracle；切回神蹟時不必重新設定。持續型神蹟的冷卻也取決於施展時間：同條件下 5 天降雨比 30 天降雨更快恢復，預計冷卻時間會隨滑桿即時更新。</p><p><strong>神諭策略（實驗）：</strong>存糧／育兒／探索各自偏重有限行動時間，也留下其他需求的弱點；同一 Saint 一次只能有一個持續方針。Reset「神很滿意你們的行為，放下心中的執著去追尋自己的需求」解除特化、不消耗額度，不清空既有成果。對手須有真實成果與跨聚落接觸才可能動搖既有核心。傳教不直接改宗。</p>
       <p><strong>需求定位：</strong>在「需求」分頁點選任一祈求，即可在地圖標出來源中心與座標。缺雨祈求還會顯示當時農田的需求評估範圍；這是定位參考，不代表施展神蹟時會自動覆蓋全部農田。多筆祈求可翻頁，Priest 祈求泡泡也可以定位。定位不消耗 Divine Power。</p>
-       <p><strong>資訊：</strong>右側以需求、聚落、居民、歷史分頁觀察；上下頁切換，不需要捲動整頁。空白鍵暫停，1 鍵選當前神蹟，Esc 取消。</p>
+       <p><strong>資訊：</strong>右側以需求、聚落、居民、歷史分頁觀察；上下頁切換，不需要捲動整頁。空白鍵暫停，1–9 鍵直接選擇神蹟並進入選點，Esc 取消。</p>
       <p><strong>原住民：</strong>新世界原本就有三個原生村落與未入教居民，不屬於任何神明。居民擁有自己的家戶、住所和農田，可逐步接受不同宗教；他們即使入教，原生身分仍保留。地圖聚落虛線圈代表生活範圍，不是神明領地。</p>
        <p><strong>對手：</strong>玩家與 AI 各自在地圖不同區域建立信仰核心，不能在創世時直接瓜分原住民。兩位神明有各自的 Saint、Priest、神力、神諭與神蹟冷卻。40+ 信徒不受一般傳教動搖，低於 20 才能改宗。切換對手模式會重新創世；載入舊存檔不會搬動居民。</p>
       <p><strong>AI 難度：</strong>輕鬆約每 24 天決策、標準約每 18 天決策；「原版 AI」保留過去完整的每 12 天決策，沒有額外強化。低難度補償人類需要查看地圖、祈禱及切換介面的時間，不會送玩家免費神力或改宗。難度可隨時切換，現有世界與存檔保持不變；沒有難度欄位的舊存檔保留原版 AI。</p>
@@ -4531,7 +4531,7 @@ if(root)root.WOG_PLAYTEST=API;
     const entries=kind==='oracle'&&!state.oracleStrategy?
       availablePowers.oracle.filter(p=>['food.produce','religion.spread'].includes(p.id)):
       availablePowers[kind];
-    picker.innerHTML=entries.map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+    picker.innerHTML=entries.map((p,i)=>`<option value="${p.id}">${kind==='miracle'?(i+1)+'. ':''}${p.label}</option>`).join('');
     picker.value=entries.some(p=>p.id===rememberedPower[kind])?
       rememberedPower[kind]:availablePowers[kind][0].id;
     rememberedPower[kind]=picker.value;
@@ -4548,20 +4548,40 @@ if(root)root.WOG_PLAYTEST=API;
     document.querySelectorAll('[data-inspect-panel]').forEach(el=>el.hidden=el.dataset.inspectPanel!==tab);
     render();
   }
+  function armMiracleTarget(){
+    if(profileLoading||divineKind!=='miracle')return false;
+    const id=selectedPower(),target=cursor||state.camp;
+    const result=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
+    // Choosing a Miracle arms the map but does not cast. Target-specific
+    // limitations (such as needing an injured recipient) remain checked at
+    // the actual clicked point, not only at the preview position.
+    if(state.god.dp+1e-8<(result.cost??Infinity)){
+      armedMiracle=null;render();
+      say(result.reason||'目前 Divine Power 不足');
+      return false;
+    }
+    armedMiracle=id;render();
+    say((result.overcast?'冷卻中強制施放（'+result.costMultiplier+'× DP）：':'選擇了 ')+
+      (powerMeta('miracle',id)?.label||id)+'；點擊地圖施放，Esc 取消。');
+    return true;
+  }
   function toggleMiracleTarget(){
     if(profileLoading)return;
     if(divineKind!=='miracle')showDivineKind('miracle');
     if(armedMiracle){armedMiracle=null;render();return;}
-    const id=selectedPower(),target=cursor||state.camp;
-    const result=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
-    if(state.god.dp+1e-8<result.cost){
-      say(result.reason||'目前 Divine Power 不足');updateCost();return;
+    armMiracleTarget();
+  }
+  function selectMiracleByHotkey(id){
+    if(profileLoading)return;
+    if(divineKind==='miracle')rememberMiracleSettings();
+    else{
+      rememberedPower.miracle=id;
+      showDivineKind('miracle');
     }
-    // The cursor may currently be over an empty/no-presence area. Do not prevent
-    // aiming elsewhere; every clicked map center is independently validated.
-    armedMiracle=id;render();
-    say((result.overcast?'冷卻中強制施放（'+result.costMultiplier+'× DP）：':'請點擊地圖施展 ')+
-      powerMeta('miracle',id).label+'。Esc 可取消。');
+    $('divinePowerSelect').value=id;
+    rememberedPower.miracle=id;
+    configureMiracle(id);
+    armMiracleTarget();
   }
   function say(text) { const box=$('toast');box.textContent=text;box.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>box.classList.remove('visible'),3000); }
   function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,durationDays:+$('duration').value}; }
@@ -4730,9 +4750,13 @@ if(root)root.WOG_PLAYTEST=API;
     $('rainCooldown').textContent=left?
       `冷卻中 · 剩餘 ${format(left/24,1)} 日 · 強制施放 ${preview.costMultiplier}× · ${forecast}`:
       preview.reason||`已就緒 · ${forecast}`;
-    $('rainBtn').textContent=armedMiracle?'取消選擇位置':
+    $('rainBtn').textContent=armedMiracle?'取消選點 (Esc)':
       preview.overcast?`強制施放 ${preview.costMultiplier}×`:'選擇施展位置';
-    $('rainBtn').disabled=profileLoading||state.god.dp+1e-8<(preview.cost??Infinity);
+    // A player must always be able to cancel aiming, even if the sliders now
+    // describe a cast they cannot afford.
+    $('rainBtn').disabled=profileLoading||(!armedMiracle&&
+      state.god.dp+1e-8<(preview.cost??Infinity));
+    $('rainBtn').setAttribute('aria-pressed',String(!!armedMiracle));
     $('rainBtn').title=preview.reason||
       `點圖施放將依當下神力、連發倍率與目標重新驗證；${forecast}`;
     $('rainBtn').classList.toggle('secondary',!!armedMiracle);
@@ -5234,7 +5258,7 @@ if(root)root.WOG_PLAYTEST=API;
   $('settlementSelect').onchange=e=>{selectedTownId=e.target.value;housePage=0;render();};
   $('housePrev').onclick=()=>{housePage=Math.max(0,housePage-1);render();};
   $('houseNext').onclick=()=>{housePage++;render();};
-  $('miracleTab').onclick=()=>showDivineKind('miracle');
+  $('miracleTab').onclick=()=>{showDivineKind('miracle');armMiracleTarget();};
   $('oracleTab').onclick=()=>showDivineKind('oracle');
   $('divinePowerSelect').onchange=()=>{
     armedMiracle=null;
@@ -5242,11 +5266,31 @@ if(root)root.WOG_PLAYTEST=API;
       rememberMiracleSettings();
       rememberedPower.miracle=selectedPower();
       configureMiracle(selectedPower());
-    }else rememberedPower.oracle=selectedPower();
-    render();
+      armMiracleTarget(); // Selecting a Miracle is the first step of casting.
+    }else{
+      rememberedPower.oracle=selectedPower();
+      render();
+    }
   };
   document.querySelectorAll('[data-inspect-tab]').forEach(button=>button.onclick=()=>{if(button.dataset.inspectTab==='needs'){activePriestId=null;priestPetitionIndex=0;needPage=0;}showInspector(button.dataset.inspectTab);});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&armedMiracle){armedMiracle=null;render();}else if(e.key==='Escape'&&selectedNeedId){selectedNeedId=null;render();}else if(e.key==='Escape'&&attentionFocus){attentionFocus=null;render();}else if(e.code==='Space'&&!['INPUT','BUTTON','TEXTAREA'].includes(document.activeElement?.tagName)){e.preventDefault();paused=!paused;render();}else if(e.key==='1'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)){toggleMiracleTarget();}});
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&armedMiracle){
+      armedMiracle=null;render();
+    }else if(e.key==='Escape'&&selectedNeedId){
+      selectedNeedId=null;render();
+    }else if(e.key==='Escape'&&attentionFocus){
+      attentionFocus=null;render();
+    }else if(e.ctrlKey||e.altKey||e.metaKey||e.isComposing)return;
+    else if(!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)&&
+      !document.activeElement?.isContentEditable){
+      if(e.code==='Space'){
+        e.preventDefault();paused=!paused;render();
+      }else if(!e.repeat&&/^[1-9]$/.test(e.key)){
+        e.preventDefault();
+        selectMiracleByHotkey(availablePowers.miracle[Number(e.key)-1].id);
+      }
+    }
+  });
   $('saveBtn').onclick=save;
   $('loadBtn').onclick=()=>{let raw=null;try{raw=localStorage.getItem(storageKey()) || localStorage.getItem('wog-mvp0-web-save');}catch(_){}if(raw)restore(raw);else say('目前沒有本機存檔；可以匯入 JSON。');};
   $('exportBtn').onclick=exportSave;

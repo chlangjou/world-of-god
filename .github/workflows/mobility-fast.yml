@@ -2,6 +2,7 @@ name: World of God fast regression
 on:
   push:
     branches:
+      - main
       - feature/opponent-difficulty-profiles-v0.3
     paths:
       - 'poc/v2/**'

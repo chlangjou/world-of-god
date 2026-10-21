@@ -24,12 +24,12 @@ function fixture(){
    mobility:{enabled:true,fordSpacing:16,stepsPerTick:7},
    religiousSites:[],shrineTemple:T.normalize({...T.BASE,enabled:true,
      attendanceInformal:.8,attendanceShrine:.8,attendanceTemple:.8,
-     shrineVisits:6,templeVisits:18,shrineWork:1,templeWork:2})};
+     shrineVisits:6,templeVisits:18,templeMinDistinct:2,shrineWork:1,templeWork:2})};
  return s;
 }
 test('site emerges from actual local prayer, then attendance creates an affordable Shrine',()=>{
  const s=fixture(),logs=[];
- T.daily(s,(s,kind,text)=>logs.push({kind,text}));
+ T.daily(s,(state,kind,text)=>logs.push({kind,text}));
  assert.equal(s.religiousSites.length,1);
  const site=s.religiousSites[0];
  assert.equal(site.stage,'gathering');

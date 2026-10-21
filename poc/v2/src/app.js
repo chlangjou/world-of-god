@@ -3,7 +3,7 @@
   const S = window.WoG2, Playtest = window.WOG_PLAYTEST;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
@@ -12,7 +12,7 @@
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
   const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
-  const taskName = {rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',travel:'短期出訪中',visit:'資源熱點停留',dead:'已離世'};
+  const taskName = {worship:'共同祈禱',build_ritual:'宗教設施施工',rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',travel:'短期出訪中',visit:'資源熱點停留',dead:'已離世'};
   const stageName = {adult:'成年人',child:'兒童',elder:'長者'};
   const occupationName = {food_producer:'糧食生產者',gatherer:'採集者',dependent:'受扶養者'};
   // First layer: action category; second layer: available power within that category.
@@ -235,6 +235,12 @@
     if(!response.ok)throw new Error('Mobility Contact Profile 無法載入');
     return response.json();
   }
+  async function loadShrine(){
+    if(window.WOG_SHRINE_PROFILE)return window.WOG_SHRINE_PROFILE;
+    const response=await fetch('config/shrine-temple-v0.1.json');
+    if(!response.ok)throw new Error('Shrine / Temple Profile 無法載入');
+    return response.json();
+  }
   async function loadOpponent(){
     if(window.WOG_OPPONENT_PROFILE)return window.WOG_OPPONENT_PROFILE;
     const response=await fetch('config/opponent-v0.2.json');
@@ -263,7 +269,7 @@
       opponentProfile:activeOpponentProfile||S.OPPONENT_DEFAULTS,
       balanceProfile:activeProfile,religionProfile:activeReligionProfile,
        mobilityProfile:activeMobilityProfile,
-      divineProfile:activeDivineProfile,
+      divineProfile:activeDivineProfile,shrineProfile:activeShrineProfile,
       opponentMode:$('opponentMode').value,
       difficulty:$('aiDifficulty').value||'standard'
     });
@@ -331,6 +337,7 @@
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
   function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;activeDivineProfile=state.divinePowers;
       activeMobilityProfile=state.mobility||activeMobilityProfile;
+       activeShrineProfile=state.shrineTemple||activeShrineProfile;
     $('playtestScenario').value=scenarioId();
     activeOracleStrategyProfile=state.oracleStrategy||activeOracleStrategyProfile;
     if(state.opponent?.enabled&&state.opponent.profileId!=='opponent-v0.1')
@@ -929,7 +936,7 @@
   $('aiDifficulty').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
-  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest])=>{
+  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest(),loadShrine()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine])=>{
     activeProfile=agriculture.status==='fulfilled'?agriculture.value:null;
     activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
     activeMobilityProfile=mobility.status==='fulfilled'?mobility.value:null;
@@ -937,14 +944,15 @@
     activeOpponentProfile=opponent.status==='fulfilled'?opponent.value:S.OPPONENT_DEFAULTS;
     activeOracleStrategyProfile=oracleStrategy.status==='fulfilled'?oracleStrategy.value:null;
     activePlaytestProfile=playtest.status==='fulfilled'?playtest.value:null;
-    if(!activeOracleStrategyProfile||!activePlaytestProfile||!Playtest)
+    activeShrineProfile=shrine.status==='fulfilled'?shrine.value:null;
+    if(!activeOracleStrategyProfile||!activePlaytestProfile||!activeShrineProfile||!Playtest)
       throw Error('可玩版必需的神諭策略或場景模組無法載入');
     $('playtestScenario').value=activePlaytestProfile.defaultScenario||'duel';
     // The initial unconfigured render displays the single-God placeholder.
     // Explicitly opt new browser worlds into the AI mode after profiles load.
     $('opponentMode').value='ai';
     newWorld();
-    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     say(failures.length?'Profile 載入失敗：'+failures.join('；'):
       '宗教對決已就緒。AI 選存糧；選育兒 Oracle → 傳下神諭 → 開始。');
   }).catch(err=>{

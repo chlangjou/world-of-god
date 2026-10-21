@@ -1,0 +1,33 @@
+{
+  "profileId": "shrine-temple-v0.1",
+  "status": "experimental-runtime-profile",
+  "enabled": true,
+  "description": "Informal worship gatherings lead to autonomous Shrine and Temple construction; physical attendance and real Priest/Oracle contact without any building faith/DP/Presence buff.",
+  "walkReach": 7,
+  "contactRadius": 5,
+  "attendanceInformal": 0.17,
+  "attendanceShrine": 0.27,
+  "attendanceTemple": 0.38,
+  "priestExtraAttendance": 0.1,
+  "recentDays": 30,
+  "shrineVisits": 12,
+  "templeVisits": 35,
+  "shrineMinDistinct": 2,
+  "templeMinDistinct": 4,
+  "shrineWood": 1,
+  "shrineStone": 0,
+  "shrineWork": 2,
+  "templeWood": 4,
+  "templeStone": 1,
+  "templeWork": 6,
+  "buildPriority": 7.6,
+  "minimumFoodDays": 3,
+  "declineAfterDays": 70,
+  "designNotes": [
+    "Buildings require actual resident demand, resources and labor; player cannot place them.",
+    "Attendance uses walkable seven-cell paths and enters shared five-cell physical contact tracking.",
+    "Core footprints do not overlap; religious influence may overlap.",
+    "No direct Devotion, Divine Power, or Divine Presence bonuses for structures.",
+    "Temple construction gate intentionally disabled for v1; hostile miracles and social risk are future playtests."
+  ]
+}

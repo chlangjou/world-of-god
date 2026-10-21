@@ -19,7 +19,12 @@ const BASE=Object.freeze({
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function hash(x){let h=2166136261;for(const c of String(x)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
-function draw(s,...parts){return hash([s.seed,...parts].join('|'))/4294967296;}
+function draw(s,...parts){
+ let x=hash([s.seed,...parts].join('|'));
+ x^=x>>>16;x=Math.imul(x,0x7feb352d);x^=x>>>15;
+ x=Math.imul(x,0x846ca68b);x^=x>>>16;
+ return (x>>>0)/4294967296;
+}
 function normalize(profile){
  const p={...BASE};
  if(profile?.profileId!==BASE.profileId)return p;
@@ -201,7 +206,7 @@ function attend(s,p){
      s.hour-old.hour<=75*24;
    const interest=p.miracleInterest?.[faith.godId];
    const witnessed=interest&&interest.expiresAtHour>s.hour&&interest.score>=10;
-   return (proven||witnessed)&&t.townId===p.settlementId;
+   return !!(proven||witnessed); // Nearby cross-settlement visitors still have to walk there.
  }).sort((a,b)=>d(a,home)-d(b,home));
  const day=Math.floor(s.hour/24),r=s.shrineTemple;
  for(const site of sites){

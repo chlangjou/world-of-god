@@ -56,7 +56,8 @@ async function boot(){
     WOG_RELIGION_PROFILE:religion,WOG_DIVINE_PROFILE:divine,
     WOG_OPPONENT_PROFILE:opponent,WOG_ORACLE_STRATEGY_PROFILE:strategy,
     WOG_PLAYTEST:playtest,
-    WOG_PLAYTEST_PROFILE:{...playtestConfig,defaultScenario:'native'}};
+    WOG_PLAYTEST_PROFILE:{...playtestConfig,defaultScenario:'native'},
+    WOG_SHRINE_PROFILE:require('../config/shrine-temple-v0.1.json')};
   const memory=new Map(),storage={
     setItem(key,value){memory.set(key,value);},
     getItem(key){return memory.get(key)||null;}

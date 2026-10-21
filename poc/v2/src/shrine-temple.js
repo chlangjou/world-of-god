@@ -187,28 +187,41 @@ function build(s,p,h,town,site,efficiency,emit){
 }
 function attend(s,p){
  if(!active(s)||!s.mobility?.enabled||p.mobilityTrip||p.stage!=='adult'||
-    p.health<30||p.hunger>.7||p.devotion<20)return false;
+    p.health<30||p.hunger>.7)return false;
  const home=s.households.find(h=>h.id===p.householdId);
  if(!home)return false;
- const faith=[s.religion,s.opponentReligion].find(f=>f&&f.id===p.religionId);
- if(!faith)return false;
- const sites=(s.religiousSites||[]).filter(t=>t.religionId===p.religionId&&
-   t.townId===p.settlementId).sort((a,b)=>d(a,home)-d(b,home));
+ const faiths=[s.religion,s.opponentReligion].filter(Boolean);
+ const sites=(s.religiousSites||[]).filter(t=>{
+   const faith=faiths.find(f=>f.id===t.religionId);
+   if(!faith)return false;
+   if(t.townId===p.settlementId&&t.religionId===p.religionId&&p.devotion>=20)return true;
+   // Outsiders require already-earned credible evidence, not a territorial buff.
+   const old=p.lastStrategyEncounter;
+   const proven=old?.challengerReligionId===t.religionId&&
+     s.hour-old.hour<=75*24;
+   const interest=p.miracleInterest?.[faith.godId];
+   const witnessed=interest&&interest.expiresAtHour>s.hour&&interest.score>=10;
+   return (proven||witnessed)&&t.townId===p.settlementId;
+ }).sort((a,b)=>d(a,home)-d(b,home));
  const day=Math.floor(s.hour/24),r=s.shrineTemple;
  for(const site of sites){
    const trace=route(s,home,site,r.walkReach);if(!trace)continue;
    const base=site.stage==='temple'?r.attendanceTemple:
      site.stage==='shrine'?r.attendanceShrine:r.attendanceInformal;
-   const priest=faith.priests.includes(p.id);
-   const chance=clamp(base+ (priest?r.priestExtraAttendance:0),0,.85)*
-     clamp(.5+p.devotion/100,.5,1.5);
+   const own=p.religionId===site.religionId;
+   const faith=faiths.find(f=>f.id===site.religionId);
+   const priest=own&&faith.priests.includes(p.id);
+   const chance=own?clamp(base+(priest?r.priestExtraAttendance:0),0,.85)*
+     clamp(.5+p.devotion/100,.5,1.5):
+     Math.min(.14,base*.32)*(p.devotion>=40?.7:1);
    if(draw(s,'attendance',p.id,site.id,day)>=chance)continue;
    p.x=site.x;p.y=site.y;
    // Every sampled position lies on walkable land; physical encounters are
    // recorded by the shared mobility layer, never created by temple influence.
    p.mobilityTrace=trace;
    p.activity='worship';
-   p.activityReason='自主步行到 '+(site.stage==='temple'?'Temple':site.stage==='shrine'?'Shrine':'集會點')+' 共同祈禱';
+   p.activityReason='自主步行到 '+(site.stage==='temple'?'Temple':site.stage==='shrine'?'Shrine':'集會點')+
+     (own?' 共同祈禱':' 探詢先前聽過的可信神諭或神蹟');
    p.religiousVisit={siteId:site.id,hour:s.hour};
    site.visits.push({hour:s.hour,personId:p.id});
    site.totalVisits++;site.lastVisitHour=s.hour;

@@ -1113,7 +1113,8 @@
     const def=s.divinePowers.powers[type];
     if(!def)return {ok:false,reason:'未登錄的神蹟'};
     const x=num(input.x,NaN),y=num(input.y,NaN);
-    const radius=num(input.radius,def.defaultRadius);
+    const radius=type==='lightning'&&s.shrineTemple?.precisionLightningEnabled?
+      1:num(input.radius,def.defaultRadius);
     const intensity=num(input.intensity,def.defaultIntensity);
     const durationDays=def.instant?0:num(input.durationDays,def.defaultDurationDays);
     const center={x,y},skill=skillState(s,type,god);
@@ -1188,8 +1189,10 @@
         }
       }
     }else if(type==='lightning'){
+      const precise=!!s.shrineTemple?.precisionLightningEnabled;
       for(const p of people){
-        const amount=(16+29*intensity)*Math.max(.3,1-dist(p,center)/Math.max(1,radius)*.7);
+        const amount=precise?(100+40*intensity)*Math.max(.55,1-dist(p,center)*.45):
+          (16+29*intensity)*Math.max(.3,1-dist(p,center)/Math.max(1,radius)*.7);
         p.health=Math.max(0,p.health-amount);
         actual+=amount;applied++;
         if(p.health<=0)die(s,p.id,'遭雷擊受傷致死');
@@ -1199,6 +1202,7 @@
         if(s.agriculture)t.cropStock=Math.max(0,t.cropStock*(1-fraction));
         else t.crop=Math.max(.02,t.crop*(1-fraction));
       }
+      applied+=TEMPLE.strike(s,center,intensity,log);
     }else if(['efficiency','confusion','blindness'].includes(type)){
       for(const p of people){
         if(type==='efficiency'&&(p.religionId!==faith.id||p.devotion<s.rules.faithThreshold))continue;

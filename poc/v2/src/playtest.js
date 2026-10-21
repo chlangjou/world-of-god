@@ -72,7 +72,7 @@ function establishDuel(s,S,profile){
 }
 function createWorld(S,options){
   const {mode,seed,playtestProfile,oracleStrategyProfile,opponentProfile,
-    balanceProfile,religionProfile,mobilityProfile,divineProfile,difficulty,opponentMode}=options;
+    balanceProfile,religionProfile,mobilityProfile,divineProfile,shrineProfile,difficulty,opponentMode}=options;
   if(!['duel','native'].includes(mode))throw Error('未知試玩情境');
   const oracleStrategy=buildStrategy(oracleStrategyProfile,playtestProfile,mode);
   const chosenSeed=mode==='duel'?playtestProfile.duel.seed:
@@ -85,7 +85,7 @@ function createWorld(S,options){
   };
   const s=S.create({seed:chosenSeed,
     ...(balanceProfile?{balanceProfile}:{}),
-    religionProfile,mobilityProfile,divineProfile,oracleStrategyProfile:oracleStrategy,
+    religionProfile,mobilityProfile,divineProfile,shrineProfile,oracleStrategyProfile:oracleStrategy,
     worldGenesisMode:'native',opponentProfile:opponent});
   if(mode==='duel')return establishDuel(s,S,playtestProfile);
   s.playtest={profileId:playtestProfile.profileId,mode:'native',

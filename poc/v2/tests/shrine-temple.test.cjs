@@ -53,7 +53,7 @@ test('site emerges from actual local prayer, then attendance creates an affordab
  assert.equal(s.settlements[0].storage.wood,woodBefore-s.shrineTemple.shrineWood);
  assert.equal(s.god.dp,35);
  assert.deepEqual(s.people.map(p=>p.devotion),[80,80]);
- assert.ok(logs.some(x=>x.text.includes('集會')));
+ assert.ok(logs.some(x=>x.text.includes('祈禱')));
 });
 test('Temple upgrade requires sustained attendance and real paid labor; no free power',()=>{
  const s=fixture();T.daily(s,()=>{});

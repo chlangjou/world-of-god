@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - feature/opponent-difficulty-profiles-v0.3
+      - feature/shrine-temple-web-poc-v0.1
     paths:
       - 'poc/v2/**'
       - '.github/workflows/mobility-fast.yml'
@@ -25,6 +26,7 @@ jobs:
         working-directory: poc/v2
         run: |
           node --check src/mobility.js
+          node --check src/shrine-temple.js
           node --check src/sim.js
           node --check src/app.js
           node --check src/playtest.js

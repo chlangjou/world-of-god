@@ -10,6 +10,9 @@
   const MOBILITY=(typeof module==='object'&&module.exports)?
     require('./mobility.js'):globalThis.WoGMobility;
   if(!MOBILITY)throw Error('WoGMobility module must load before sim.js');
+  const TEMPLE=(typeof module==='object'&&module.exports)?
+    require('./shrine-temple.js'):globalThis.WoGTemple;
+  if(!TEMPLE)throw Error('WoGTemple module must load before sim.js');
   const VERSION = 'mvp0-web-2';
   const DEFAULT_RULES = Object.freeze({
     width: 64, height: 64, initialHouseholds: 8, tickHours: 8, daysPerMonth: 30,
@@ -775,6 +778,7 @@
       history: { settlementFoundedHour: null, firstSaintHour: null },
       metrics: { workChoices: 0, oracleInfluencedChoices: 0,
         foodProductionByTown:{} } };
+    TEMPLE.init(s,config.shrineProfile);
     generate(s, initialMoisture);
     if(opponent?.originMode==='separated-native')generateSeparatedOrigins(s,opponent);
     else if(!opponent&&nativeWorld)generateSoloNativeWorld(s);
@@ -850,7 +854,10 @@
       strategyContacts:s.counts.strategyContacts||0,
       strategyCoreDoubts:s.counts.strategyCoreDoubts||0,
       strategyConceptions:s.counts.strategyConceptions||0,
-      strategyConversions:s.counts.strategyConversions||0 };
+      strategyConversions:s.counts.strategyConversions||0,
+      shrineCount:(s.religiousSites||[]).filter(t=>t.stage==='shrine').length,
+      templeCount:(s.religiousSites||[]).filter(t=>t.stage==='temple').length,
+      ritualAttendances:s.counts.ritualAttendances||0 };
   }
   function rayCells(s, center, radius) {
     const out = [];
@@ -2124,6 +2131,10 @@
     if (stone && (publicStone||granaryStoneNeeded)) candidates.push({ name: 'stone', score: (granaryStoneNeeded?G.materialWorkPriority:6.0) + p.proficiency.gather, valid: true });
     if (fiber && !h.home) candidates.push({ name: 'fiber', score: h.inventory.fiber < s.rules.hutFiber ? 7.5 + shelterMaterialBonus + p.proficiency.gather : 1, valid: true });
     if (!h.home && canBuild) candidates.push({ name: 'build', score: 9.3 + p.proficiency.build, valid: true });
+    const religiousWorkSite=TEMPLE.candidates(s,p,town,security.days);
+    if(religiousWorkSite&&h.home)
+      candidates.push({name:'build_ritual',score:s.shrineTemple.buildPriority+
+        (p.devotion>=80?.7:0),valid:true});
     if(canBuildGranary)candidates.push({name:'build_granary',score:G.constructionPriority+p.proficiency.build,valid:true});
     // Not every work period should be production. When accessible reserves are
     // strong, adults can spend the work block supporting dependents and the home.
@@ -2164,6 +2175,7 @@
       stone: `附近可採石，公共建材需求尚未滿足`,
       build: `家戶已備齊 ${s.rules.hutWood} 木材與 ${s.rules.hutFiber} 纖維，正在投入建屋勞力`,
       build_granary: `${town?.name||'聚落'}具備建材及存糧，正在投入公共糧倉建設`,
+      build_ritual: '居民因實際集會需求，自主投入材料與工作時間興建宗教設施',
       care: `可及糧食可供約 ${foodDays} 天，選擇維持家戶生活與照顧依賴成員`
     };
     const modifiers = [];
@@ -2226,6 +2238,9 @@
       const amt = Math.min(fiber.fiber,(1.4 + p.proficiency.gather * .7)*
         (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));
       fiber.fiber -= amt; distribute(s, h, 'fiber', amt);
+    } else if(choice.name==='build_ritual'&&religiousWorkSite&&town) {
+      TEMPLE.build(s,p,h,town,religiousWorkSite,
+        1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency'),log);
     } else if(choice.name==='build_granary'&&town&&granary&&!granary.built) {
       if(!granary.materialsPaid) {
         if(town.storage.wood+1e-9<G.woodRequired||town.storage.stone+1e-9<G.stoneRequired)
@@ -2265,7 +2280,8 @@
         if(child.health<98)child.health=Math.min(98,child.health+.35);
     }
     const workPlace=choice.name==='farm'?field:choice.name==='forage'?forage:
-      choice.name==='wood'?wood:choice.name==='stone'?stone:choice.name==='fiber'?fiber:null;
+      choice.name==='wood'?wood:choice.name==='stone'?stone:choice.name==='fiber'?fiber:
+      choice.name==='build_ritual'?religiousWorkSite:null;
     if(!MOBILITY.workLocation(s,p,h,workPlace)){
       p.x=h.x+(choice.name==='farm'&&field?clamp(field.x-h.x,-2,2)*.28:0);
       p.y=h.y+(choice.name==='farm'&&field?clamp(field.y-h.y,-2,2)*.28:0);
@@ -2296,6 +2312,7 @@
         if(s.mobility?.enabled){const h=householdOf(s,p);if(h){p.x=h.x;p.y=h.y;}}
         p.activity = 'rest'; p.activityReason = '每日固定的休息與恢復時段'; }
       else if (phase === 2) {
+         if(TEMPLE.attend(s,p))continue;
         const faith=faithOf(s,p.religionId);
         const priest=!!faith?.priests.includes(p.id);
         const believer=!!faith&&p.devotion>=20;
@@ -2325,6 +2342,7 @@
       else { p.activity = 'family'; p.activityReason = '目前生命階段或健康狀況不適合一般工作'; }
     }
     MOBILITY.record(s);
+    TEMPLE.afterContacts(s,p=>strategyCalling(s,p).oracle);
   }
   function updateWorld(s) {
     const day = days(s);
@@ -3065,6 +3083,7 @@
       s.opponentGod.dp+faithDpRate(s,s.opponentReligion));
     for(const faith of allFaiths(s)){reconcileFaithOffices(s,faith);ensureSaint(s,faith);ensurePriest(s,faith);}
     collectPrayers(s);
+    TEMPLE.daily(s,log);
     if(days(s)>0&&days(s)%s.religionPropagation.pulseDays===0){
       const faiths=allFaiths(s);
       if(s.opponent?.enabled&&Math.floor(days(s)/s.religionPropagation.pulseDays)%2===1)
@@ -3343,6 +3362,7 @@
     if(!Number.isSafeInteger(s.hour)||s.hour<0 || !Number.isSafeInteger(s.tick)) errors.push('時間不正確');
     if(!Array.isArray(s.tiles)||s.tiles.length!==s.width*s.height) errors.push('地圖資料不完整');
     if(!Array.isArray(s.people)||!Array.isArray(s.households)||!Array.isArray(s.settlements)) errors.push('人口資料不完整');
+    errors.push(...TEMPLE.validate(s));
     if(!s.god || !Number.isFinite(s.god.dp)||s.god.dp<0||s.god.dp>s.rules.maxDp+.001) errors.push('神力不正確');
     if(s.opponent?.enabled){
       if(!s.opponentGod||!s.opponentReligion||s.opponentReligion.id===s.religion.id||
@@ -3429,6 +3449,8 @@
       formerReligion.priestJoinChance=RELIGION_DEFAULTS.priestJoinChance;
     candidate.religionPropagation=religionRules(formerReligion);
     candidate.mobility=MOBILITY.normalize(candidate.mobility);
+    candidate.shrineTemple=TEMPLE.normalize(candidate.shrineTemple);
+    candidate.religiousSites ||= [];
     candidate.contactLog=Array.isArray(candidate.contactLog)?candidate.contactLog:[];
     if(candidate.oracleStrategy)candidate.oracleStrategy=oracleStrategyRules(candidate.oracleStrategy);
     candidate.divinePowers=divinePowerRules(candidate.divinePowers);

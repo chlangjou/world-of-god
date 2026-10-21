@@ -399,6 +399,7 @@
       ' 趟；跨聚落實際接觸 '+(state.counts.crossTownMeetings||0)+
       ' 次；必須在 '+state.mobility.contactRadius+' 格內遇見':
       '此舊世界仍使用既有的抽象接觸模型';
+    $('townMetric').title+=' · Shrine '+(st.shrineCount||0)+' / Temple '+(st.templeCount||0)+' · 集會 '+(st.ritualAttendances||0)+' 次';
     $('houseMetric').textContent=`${st.houses}/${st.households} 有住所 · 新成家 ${st.newFamilies||0}`;
     const dailyNeed=state.people.filter(p=>p.alive).reduce((a,p)=>a+(p.stage==='child'?state.rules.foodNeedChild:state.rules.foodNeedAdult),0);
     $('foodMetric').textContent=format(st.food);
@@ -534,6 +535,18 @@
       granary?.materialsPaid?'建造中':granary?'籌備建材':'尚無計畫';
     $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b>${town.native?' · 原生聚落':''} · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><p title="信眾為 Devotion 20+；信徒為 40+。Saint 與 Priest 是獨立角色。">宗教：信眾 ${localReligion.believers}/${localReligion.population} · 未入教 ${localReligion.unaffiliated} · 信徒 ${localReligion.followers} · Saint ${localReligion.saints} / Priest ${localReligion.priests} · 神諭 ${localReligion.activeOracles}</p>${rivalTown}<p title="未完成糧倉時，公共糧食以臨時共同儲備方式保管並保持可及；真正的糧倉需使用本聚落材料及居民建造。">公共糧倉：${granaryStatus} · 本地公糧 ${format(town.storage.food)} · 石材 ${format(town.storage.stone,1)}${reserveHint}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
       `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
+    if(town){
+      const venues=(state.religiousSites||[]).filter(site=>site.townId===town.id);
+      const names={gathering:'自然集會點',shrine:'Shrine',temple:'Temple',ruin:'遺址'};
+      $('townPanel').innerHTML+='<p title="宗教設施不會直接增加 Divine Power、Local Presence 或 Devotion；活動須居民實際到場">宗教設施：'+
+        (venues.length?venues.map(v=>{
+          const owner=v.religionId===state.religion.id?state.religion.name:
+            state.opponentReligion?.name||'其他宗教';
+          return html(owner)+' '+(names[v.stage]||v.stage)+
+            (v.proposed?'（籌建 '+html(v.proposed)+'）':'')+
+            ' · 近30日 '+(v.visits||[]).length+' 次集會';
+        }).join(' / '):'尚未形成')+'</p>';
+    }
     const filteredHomes=town?state.households.filter(h=>town.householdIds.includes(h.id)):state.households;
     const housePageSize=2;
     const housePages=Math.max(1,Math.ceil(filteredHomes.length/housePageSize));
@@ -671,6 +684,31 @@
       }
       c.restore();
     }
+    // Buildings and informal gathering places; neither is a Divine Presence source.
+    for(const site of state.religiousSites||[]){
+      const px=(site.x+.5)*size,py=(site.y+.5)*size;
+      const own=site.religionId===state.religion.id;
+      c.save();c.strokeStyle=own?'#95def4':'#ffaf93';
+      c.fillStyle=own?'#447b8b':'#a35c50';c.lineWidth=1.8;
+      if(site.stage==='temple'){
+        c.fillRect(px-size*.85,py-size*.35,size*1.7,size*1.15);
+        c.strokeRect(px-size*.85,py-size*.35,size*1.7,size*1.15);
+        c.beginPath();c.moveTo(px-size*1.1,py-size*.4);
+        c.lineTo(px,py-size*1.45);c.lineTo(px+size*1.1,py-size*.4);
+        c.closePath();c.fill();c.stroke();
+      }else if(site.stage==='shrine'){
+        c.beginPath();c.moveTo(px,py-size*1.0);c.lineTo(px+size*.78,py);
+        c.lineTo(px,py+size*.8);c.lineTo(px-size*.78,py);
+        c.closePath();c.fill();c.stroke();
+      }else{
+        c.setLineDash([2,2]);c.beginPath();c.arc(px,py,size*.7,0,Math.PI*2);c.stroke();
+        c.setLineDash([]);c.fillStyle=site.stage==='ruin'?'#a4aaa0':'#f2e6c3';
+        c.beginPath();c.arc(px,py,size*.25,0,Math.PI*2);c.fill();
+      }
+      if(site.proposed){c.strokeStyle='#f2d99e';c.setLineDash([2,2]);
+        c.strokeRect(px-size*1.25,py-size*1.25,size*2.5,size*2.5);}
+      c.restore();
+    }
     for(const t of state.settlements){c.save();c.strokeStyle=t.id===selectedTownId?'#f4d69f':t.native?'#98cbb7':'#bed9b4';c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();}
     // Starting positions are historical camps, not fixed divine property lines.
     if(state.opponent?.originMode==='separated-native'&&state.opponentCamp){
@@ -806,6 +844,13 @@
     const marker=currentNeed();
     if(marker?.location&&Math.hypot(x-marker.location.center.x,y-marker.location.center.y)<=1.6){
       showInspector('needs');return;
+    }
+    const site=(state.religiousSites||[]).find(v=>Math.hypot(v.x-x,v.y-y)<=1.5);
+    if(site){
+      selectedTownId=site.townId;showInspector('town');
+      say('宗教集會點：'+(site.stage==='temple'?'Temple':site.stage==='shrine'?'Shrine':'自然聚會／遺址')+
+        '；查看所在聚落的活動與建造進度。');
+      return;
     }
     let selected=null,dd=Infinity;for(const p of state.people){if(!p.alive)continue;const d=Math.hypot(p.x-x,p.y-y);if(d<dd){selected=p;dd=d;}}
     if(selected && dd<3.2){chosen=selected.id;showInspector('person');say(`正在觀察 ${selected.name} 的生活與工作選擇`);}else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);

@@ -2138,6 +2138,7 @@
     const religiousWorkSite=TEMPLE.candidates(s,p,town,security.days);
     if(religiousWorkSite&&h.home)
       candidates.push({name:'build_ritual',score:s.shrineTemple.buildPriority+
+        Math.min(9,.12*religiousWorkSite.visits.length)+
         (p.devotion>=80?.7:0),valid:true});
     if(canBuildGranary)candidates.push({name:'build_granary',score:G.constructionPriority+p.proficiency.build,valid:true});
     // Not every work period should be production. When accessible reserves are

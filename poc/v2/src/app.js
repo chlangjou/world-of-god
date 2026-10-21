@@ -25,7 +25,7 @@
       {id:'heal',label:'治療 Heal',hint:'治癒範圍內受傷的在世居民'},
       {id:'efficiency',label:'效率祝福 Efficiency',hint:'暫時提升範圍內己方信徒的實際工作效率'},
       {id:'drought',label:'乾旱 Drought',hint:'局部減弱水分補充；需足夠當地神性臨在'},
-      {id:'lightning',label:'雷擊 Lightning',hint:'立即傷害範圍內居民及作物，不區分信仰'},
+      {id:'lightning',label:'雷擊 Lightning',hint:'精確命中 1 格內居民或宗教建築；仍須當地 Presence 優勢'},
       {id:'confusion',label:'混亂 Confusion',hint:'暫時干擾自主判斷、傳教協調；不直接改宗'},
       {id:'blindness',label:'致盲 Blindness',hint:'暫時縮短居民尋找資源和農田的範圍'}
     ],
@@ -65,8 +65,12 @@
     if(!rule)return;
     const prior=miracleSettings[id];
     const radius=$('radius'),intensity=$('intensity'),duration=$('duration');
+    const precise=id==='lightning'&&state.shrineTemple?.precisionLightningEnabled;
+    radius.min=precise?'1':'2';
+    radius.max=precise?'1':'14';
+    radius.disabled=precise;
     const maxIntensity=Math.round(rule.maxIntensity*100),maxDays=Math.max(1,rule.maxDays);
-    radius.value=String(bounded(prior?.radius,rule.defaultRadius,Number(radius.min)||2,14));
+    radius.value=String(bounded(prior?.radius,rule.defaultRadius,Number(radius.min)||2,Number(radius.max)||14));
     intensity.max=String(maxIntensity);
     intensity.value=String(bounded(
       prior?.intensityPercent,Math.round(rule.defaultIntensity*100),

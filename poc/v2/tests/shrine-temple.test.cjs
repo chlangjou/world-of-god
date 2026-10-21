@@ -118,6 +118,25 @@ test('precision Lightning destroys a Temple at the struck core without an abstra
  assert.equal(s.god.dp,priorDp,'World module never bypasses Miracle DP cost');
  assert.deepEqual(T.validate(s),[]);
 });
+test('actual W.castMiracle applies one-cell lightning, pays DP and respects Presence',()=>{
+ const s=W.create({seed:'temple-precision-integration',
+   shrineProfile:{...T.BASE,enabled:true,precisionLightningEnabled:true}});
+ const p=s.people.find(p=>p.religionId===s.religion.id);
+ const site={id:'rs-test',townId:'s1',religionId:s.religion.id,x:Math.round(p.x),
+   y:Math.round(p.y),stage:'temple',condition:100,visits:[],proposed:null};
+ s.religiousSites.push(site);s.god.dp=s.god.cap;
+ const pos={x:site.x,y:site.y,intensity:1,radius:12};
+ const check=W.evaluateMiracle(s,'lightning',pos);
+ assert.equal(check.radius,1,'new world locks direct strike radius even if caller requests 12');
+ assert.equal(check.ok,true,check.reason);
+ const initial=s.god.dp;
+ const result=W.castMiracle(s,'lightning',pos);
+ assert.equal(result.ok,true);
+ assert.equal(site.stage,'ruin');
+ assert.ok(s.god.dp<initial,'a real miracle must spend power');
+ const unsupported=W.evaluateMiracle(s,'lightning',{x:0,y:0,intensity:1,radius:1});
+ assert.equal(unsupported.ok,false,'high dominance alone without density is insufficient');
+});
 test('opt-in is isolated, saves keep lifecycle and old saves stay disabled',()=>{
  const world=W.create({seed:'shrine-integration',shrineProfile:{...T.BASE,enabled:true}});
  assert.equal(world.shrineTemple.enabled,true);

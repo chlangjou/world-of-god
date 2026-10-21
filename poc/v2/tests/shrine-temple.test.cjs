@@ -102,6 +102,22 @@ test('Temple cores cannot overlap, but distinct religious activities can coexist
  s.religiousSites[1].stage='shrine';
  assert.ok(!T.validate(s).includes('Temple Core 重疊'));
 });
+test('precision Lightning destroys a Temple at the struck core without an abstract faith penalty',()=>{
+ const s=fixture();T.daily(s,()=>{});
+ const site=s.religiousSites[0];
+ site.stage='temple';
+ s.shrineTemple.precisionLightningEnabled=true;
+ const priorDevotion=s.people.map(p=>p.devotion);
+ const priorDp=s.god.dp;
+ assert.equal(T.strike(s,{x:site.x+3,y:site.y},1,()=>{}),0);
+ assert.equal(site.stage,'temple');
+ assert.equal(T.strike(s,{x:site.x,y:site.y},1,()=>{}),1);
+ assert.equal(site.stage,'ruin');
+ assert.equal(site.condition,0);
+ assert.deepEqual(s.people.map(p=>p.devotion),priorDevotion);
+ assert.equal(s.god.dp,priorDp,'World module never bypasses Miracle DP cost');
+ assert.deepEqual(T.validate(s),[]);
+});
 test('opt-in is isolated, saves keep lifecycle and old saves stay disabled',()=>{
  const world=W.create({seed:'shrine-integration',shrineProfile:{...T.BASE,enabled:true}});
  assert.equal(world.shrineTemple.enabled,true);

@@ -7,7 +7,7 @@ if(root)root.WoGTemple=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const BASE=Object.freeze({
-  profileId:'shrine-temple-v0.1',enabled:false,
+  profileId:'shrine-temple-v0.1',enabled:false,precisionLightningEnabled:false,
   walkReach:7,contactRadius:5,attendanceInformal:.17,attendanceShrine:.27,
   attendanceTemple:.38,priestExtraAttendance:.10,
   recentDays:30,shrineVisits:12,templeVisits:35,
@@ -29,6 +29,7 @@ function normalize(profile){
  const p={...BASE};
  if(profile?.profileId!==BASE.profileId)return p;
  p.enabled=profile.enabled===true;
+ p.precisionLightningEnabled=profile.precisionLightningEnabled===true;
  for(const [k,v] of Object.entries(BASE))
    if(typeof v==='number'&&Number.isFinite(profile[k]))p[k]=profile[k];
  for(const k of ['attendanceInformal','attendanceShrine','attendanceTemple','priestExtraAttendance'])
@@ -211,8 +212,9 @@ function attend(s,p){
  const day=Math.floor(s.hour/24),r=s.shrineTemple;
  for(const site of sites){
    const trace=route(s,home,site,r.walkReach);if(!trace)continue;
-   const base=site.stage==='temple'?r.attendanceTemple:
-     site.stage==='shrine'?r.attendanceShrine:r.attendanceInformal;
+   const base=(site.stage==='temple'?r.attendanceTemple:
+     site.stage==='shrine'?r.attendanceShrine:r.attendanceInformal)*
+     clamp(site.condition/100,.2,1);
    const own=p.religionId===site.religionId;
    const faith=faiths.find(f=>f.id===site.religionId);
    const priest=own&&faith.priests.includes(p.id);
@@ -257,6 +259,23 @@ function afterContacts(s,oracleFor){
    }
  }
 }
+function strike(s,center,intensity,emit){
+ if(!active(s)||!s.shrineTemple.precisionLightningEnabled)return 0;
+ let hit=0;
+ for(const site of s.religiousSites||[]){
+   if(!['shrine','temple'].includes(site.stage)||d(site,center)>.85)continue;
+   site.condition=Math.max(0,site.condition-(65+65*intensity));
+   hit++;
+   if(site.condition===0){
+     site.stage='ruin';site.proposed=null;site.buildProgress=0;
+     emit(s,'religion','宗教設施遭精確雷擊摧毀，居民留下廢墟。',
+       ['建築損毀不會直接讓任何居民改宗或失去 Devotion',
+        '未來若仍有實際宗教需求，居民可自行決定是否重建']);
+   }else emit(s,'religion','一處宗教設施受到精確雷擊，活動能力下降。',
+     ['修復與維護取決於實際資源和居民後續活動']);
+ }
+ return hit;
+}
 function validate(s){
  if(!active(s))return [];
  const errors=[],seen=new Set();
@@ -273,5 +292,5 @@ function validate(s){
  }
  return errors;
 }
-return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,validate};
+return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,validate};
 });

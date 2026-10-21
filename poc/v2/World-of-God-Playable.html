@@ -292,7 +292,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
         </div>
         <div class="map-wrap">
           <canvas id="world" width="768" height="768" aria-label="世界地圖，可點選居民或施展神蹟" tabindex="0"></canvas>
-          <div class="legend" aria-label="地圖圖例"><span><i class="sw river"></i>河流</span><span><i class="sw forest"></i>森林</span><span><i class="sw field"></i>農田</span><span><i class="sw homes"></i>住所</span><span><i class="sw granary"></i>糧倉</span><span><i class="sw human"></i>居民</span><span title="可直接接收神諭的聆聽者"><i class="sw saint"></i>Saint</span><span title="傳道並彙整信徒祈禱的祭司"><i class="sw priest"></i>Priest</span><span title="目前沒有加入任何神明宗教的居民；部分原住民後來也可能選擇信仰"><i class="sw native"></i>未入教</span><span title="暮影信仰：珊瑚紅居民及祭司屬於 AI 對手"><i class="sw rival"></i>對手</span></div>
+          <div class="legend" aria-label="地圖圖例"><span><i class="sw river"></i>河流</span><span><i class="sw forest"></i>森林</span><span><i class="sw field"></i>農田</span><span><i class="sw homes"></i>住所</span><span><i class="sw granary"></i>糧倉</span><span><i class="sw shrine" style="background:#91c9ef"></i>Shrine</span><span><i class="sw temple" style="background:#e6b86f"></i>Temple</span><span><i class="sw human"></i>居民</span><span title="可直接接收神諭的聆聽者"><i class="sw saint"></i>Saint</span><span title="傳道並彙整信徒祈禱的祭司"><i class="sw priest"></i>Priest</span><span title="目前沒有加入任何神明宗教的居民；部分原住民後來也可能選擇信仰"><i class="sw native"></i>未入教</span><span title="暮影信仰：珊瑚紅居民及祭司屬於 AI 對手"><i class="sw rival"></i>對手</span></div>
           <div id="mapTip" class="map-tip">已進入神蹟選點模式：點地圖施放 · Esc 取消 · 1–9 快選</div>
         </div>
         <div class="map-footer"><span id="simHint">世界準備中</span><span id="simRate">1×</span></div>
@@ -369,6 +369,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
       <p><strong>神蹟：</strong>從選單選擇降雨、促熟、豐收、治療、效率祝福、乾旱、雷擊、混亂或致盲。依能力調整範圍、強度與時間；選完神蹟即自動進入選點，直接點地圖施放，不需要再按「選擇位置」。Esc 或「取消選點」可退出；數字鍵 1–9 可直接選取九種 Miracle（輸入框內不觸發）。沒有目標、神力不足或當地臨在不足時不消耗 DP。每項神蹟獨立熟練度和冷卻，並各自保留上次的範圍、強度與持續天數；冷卻中若神力足夠仍可強制施放，DP 依同技能本輪次數計為 2×、3×、4×…，完全冷卻後恢復 1×，不影響其他 Miracle；切回神蹟時不必重新設定。持續型神蹟的冷卻也取決於施展時間：同條件下 5 天降雨比 30 天降雨更快恢復，預計冷卻時間會隨滑桿即時更新。</p><p><strong>神諭策略（實驗）：</strong>存糧／育兒／探索各自偏重有限行動時間，也留下其他需求的弱點；同一 Saint 一次只能有一個持續方針。Reset「神很滿意你們的行為，放下心中的執著去追尋自己的需求」解除特化、不消耗額度，不清空既有成果。對手須有真實成果與跨聚落接觸才可能動搖既有核心。傳教不直接改宗。</p>
       <p><strong>需求定位：</strong>在「需求」分頁點選任一祈求，即可在地圖標出來源中心與座標。缺雨祈求還會顯示當時農田的需求評估範圍；這是定位參考，不代表施展神蹟時會自動覆蓋全部農田。多筆祈求可翻頁，Priest 祈求泡泡也可以定位。定位不消耗 Divine Power。</p>
        <p><strong>資訊：</strong>右側以需求、聚落、居民、歷史分頁觀察；上下頁切換，不需要捲動整頁。空白鍵暫停，1–9 鍵直接選擇神蹟並進入選點，Esc 取消。</p>
+      <p><strong>宗教設施 v0.1：</strong>居民先在實際地點集會；反覆參與後，自行使用工作時間及聚落建材興建 Shrine／Temple。可在地圖觀察標記，點設施跳至所在聚落。不同宗教影響可重疊，但 Temple 實體核心不重疊。到場的人與 Priest 必須真正在 5 格內接觸，才會產生既有傳教／Oracle 的機會。建築本身不加信仰、神力或 Presence；本版沒有自動寺廟攻擊／完整戰爭。</p>
       <p><strong>原住民：</strong>新世界原本就有三個原生村落與未入教居民，不屬於任何神明。居民擁有自己的家戶、住所和農田，可逐步接受不同宗教；他們即使入教，原生身分仍保留。地圖聚落虛線圈代表生活範圍，不是神明領地。</p>
        <p><strong>對手：</strong>玩家與 AI 各自在地圖不同區域建立信仰核心，不能在創世時直接瓜分原住民。兩位神明有各自的 Saint、Priest、神力、神諭與神蹟冷卻。40+ 信徒不受一般傳教動搖，低於 20 才能改宗。切換對手模式會重新創世；載入舊存檔不會搬動居民。</p>
       <p><strong>AI 難度：</strong>輕鬆約每 24 天決策、標準約每 18 天決策；「原版 AI」保留過去完整的每 12 天決策，沒有額外強化。低難度補償人類需要查看地圖、祈禱及切換介面的時間，不會送玩家免費神力或改宗。難度可隨時切換，現有世界與存檔保持不變；沒有難度欄位的舊存檔保留原版 AI。</p>
@@ -377,7 +378,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <input id="importFile" type="file" accept="application/json,.json" hidden>
-  <script>window.WOG_RELIGION_PROFILE={"profileId":"religion-propagation-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"description":"Both Gods share attributable Miracle→Devotion rules: substantial actual Heal and productive Efficiency help recipients, smaller witnessed effects, local Rain prayer fulfillment, and modest tangible crop blessings. 40+ ordinary preaching remains protected.","pulseDays":7,"minimumChildAge":4,"contactRadius":11,"interSettlementReach":30,"householdJoinChance":0.13,"socialJoinChance":0.055,"priestJoinChance":0.24,"settlementVisitChance":0.012,"weakLearningChance":0.26,"childStrongLearningChance":0.32,"childOrdinaryLearningChance":0.14,"regionalSaintChancePerMonth":0.12,"oracleRelayChance":0.55,"semantics":{"childUpbringing":"Repeated household contact creates own religious affiliation. Two 80+ parents can gradually nurture children up to Devotion 55, but never inherit Zealot/Devout bands outright.","preaching":"Priesthood is an independent, measurable social multiplier. Recent local Priest preaching adds a separate 24% weekly baseline recruitment opportunity (scaled by receptivity), over ordinary family/social exposure, and an additional 1.8× consolidation rate. Disabled Priest ablations retain direct prayer and ordinary social spread. Physical five-cell contacts and a Spread Oracle raise recruitment through true Priest visits; these cannot directly displace a 40+ believer.","devotion":"Priest interactions alone cannot displace an established 40+ rival believer. Low-devotion foreign followers gradually doubt their old affiliation in bounded steps under real local Priest preaching, and may freely choose the new religion once below 20; no forced blanket conversion and no competing AI God simulation yet.","migration":"Faith follows actual people and households; exchange is abstract nearby social contact, not teleportation or divine broadcast.","reproducibility":"Seven-day low-rate pulses use a separate seeded religion PRNG, preserving economic PRNG inputs.","competition":"The first-pass low-devotion foreign affiliation path models a rival's personal state only; complete rival God power/Temple/AI and reciprocal missionary pressure remain deferred.","miracleEvidence":"Direct Heal requires real health restored >=7, gain ~17–25 Devotion with credible attribution; Efficiency credits after beneficial actual work, +14 direct. Witnesses gain only +2/+3. Opposing 40+ commitment may be weakened by credible divine evidence but not ordinary sermons. Unaffiliated/weakly aligned residents retain short-lived God-specific impressions, then make their own weekly adoption decisions.","rainEvidence":"Only a geographically matched own-God Rain responding to a real active prayer with improved local field moisture and actual local food work can credit Devotion; the AI has equivalent prayers.","cropEvidence":"Harvest credits small witness effect when it measurably improves existing standing crop. Ripening credits small witness effect only after additional physical crop growth exceeds the configured minimum.","spreadOracle":"In addition to making willing adult believers preach more often, real heard local sermons receive a distinct bounded recruit chance; both Gods see the complete sermon interval before counters reset.","compatibility":"Profile ID remains v0.1 to avoid disrupting old saves; new optional values normalize with safe defaults. UI treats faith responses as actual person state changes, not direct player commands."},"ordinaryConsolidationCap":60,"priesthoodEnabled":true,"priestTeachingMultiplier":1.8,"priestRivalDoubtChance":0.58,"priestRivalConversionChance":0.3,"priestRivalDoubtStep":3,"miracleWitnessRadius":7,"miracleAttributionRadius":11,"miracleEvidenceRepeatDays":28,"miracleInterestDays":90,"miracleInterestThreshold":10,"miracleInterestJoinChance":0.27,"miracleRivalDoubtFactor":0.65,"miracleWitnessRepeatFactor":0.25,"healMinRecovery":7,"healDirectDevotion":19,"healWitnessDevotion":3,"efficiencyDirectDevotion":14,"efficiencyWitnessDevotion":2,"harvestWitnessDevotion":2,"ripeningWitnessDevotion":2,"ripeningEvidenceMinimumCrop":2.5,"rainWitnessDevotion":3,"spreadOracleJoinBonus":0.11,"spreadPriestJoinMultiplier":1.4};</script><script>window.WOG_AGRICULTURE_PROFILE={"profileId":"agriculture-balance-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"units":{"distance":"map cells from the riverbank","time":"simulated days and actual full 8-hour food workdays","food":"existing abstract Food units"},"description":"High-growth experimental Agriculture v0.1: 4× land yield and expandable cultivated area. No imposed farming quotas or conjured Food; all numeric tuning remains in this profile.","river":{"distanceOrigin":"river bank (map centerline distance minus half-width of 1.6 cells, clamped to zero)","fullEffectThroughCells":5,"zeroEffectAtCells":15,"nearBankInfluence":0.95,"falloff":"linear","meaning":"seasonal moisture contribution potential, not fixed soil moisture","riverHalfWidthCells":1.6},"seasons":{"rain":{"backgroundMoisture":0.76,"riverWaterAvailability":1,"diagnosticFoodLaborShare":0.08},"mild":{"backgroundMoisture":0.46,"riverWaterAvailability":0.54,"diagnosticFoodLaborShare":0.15},"dry":{"backgroundMoisture":0.12,"riverWaterAvailability":0.4,"diagnosticFoodLaborShare":0.5},"cycleDays":160,"dryWindows":[[14,29]],"rainWindows":[[0,5],[32,39],[68,74]]},"land":{"foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture":0.8,"referenceMoisture":0.9,"moistureExponent":0.8,"harvestMechanic":"actual yield is limited by accumulated unharvested crop stock and worker capacity; do not create food by formula alone","cropStockCapacityDays":2,"normalSeasonLandCapacityTargetRatio":1.6,"autonomousExpansionEnabled":true,"minimumCultivationFertility":0.45,"workReachCells":9,"expansionNotes":"Autonomous agricultural work may cultivate one suitable reachable meadow when mild-season field potential is under population need × target ratio; this consumes the work shift and yields no Food until crops regrow.","pioneerCultivationBonus":4.5},"worker":{"foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment":9.5,"skillOutputIntercept":0.6,"skillOutputSlope":0.8,"environmentMoistureExponent":3,"startingSkillReference":0.45,"startingSkillRange":[0.4,0.5],"learningTimeConstantActualFoodWorkdays":550,"learningRule":"S(n) = 1 - (1 - S0) * exp(-n / tau); n counts food workdays, not calendar days"},"soilDynamics":{"referenceResponseTimeDays":3,"status":"scenario-dependent exploratory choice; not yet accepted as a season timing rule","shortRainCaveat":"6-8 day rainy spells can have lower realized harvest than steady-state rain potential"},"calibration":{"referenceSeed":"calm-river","population":40,"workCapableAdults":16,"dependents":24,"adultFoodNeedPerDay":0.38,"dependentFoodNeedPerDay":0.25,"totalFoodNeedPerDay":12.08,"landSupplyRatioTargets":{"rain":1.5,"mild":1.15,"dryMin":0.6,"dryMax":0.8},"laborShareTargetsOfWorkCapablePopulation":{"rainMin":0.06,"rainMax":0.08,"mildMin":0.1,"mildMax":0.2,"dryStressMin":0.4,"dryStressMax":0.5},"targetInterpretation":"reference scenario diagnostics, not jobs quotas, hard gameplay gates, or guarantees for random world seeds"},"reproducibility":{"report":"docs/AGRICULTURE_BALANCE.md","calculator":"tools/agriculture-balance-check.mjs","sampleMapAccess":"farm tile within +/-9 cells X/Y of at least one initial household; excludes later migrations and dynamically farmed land","sourceSimulatorGitBlob":"52b73c277b1a6111fa787374aeb5d300747d2e9f"},"workDemand":{"reserveTargetDays":18,"reserveRelaxDays":18,"reserveComfortDays":26,"explanation":"Comfort/relaxation scores influence autonomous work decisions based on physically accessible household and settlement reserves; not job quotas.","comfortableCareBonus":8,"unhousedMaterialPriorityBonus":2},"familyExpansion":{"enabled":true,"minPairAge":18,"maxPairAge":48,"minHealth":40,"maxAgeGap":18,"pairRange":22,"pairChancePerMonth":0.45,"maxCouplesPerMonth":2,"requiredFoodDays":9,"startupFoodDays":9,"communalSafetyDays":6,"homeSpacing":3,"homeRadius":12,"pioneerAfterHouseholds":12,"pioneerChance":0.55,"pioneerMinRadius":17,"pioneerMaxRadius":24,"outpostNeighborRadius":8,"outpostMinHouseholds":3,"outpostMinHuts":3,"outpostClusterRadius":9},"granary":{"woodRequired":6,"stoneRequired":4,"workRequired":6,"materialWorkPriority":13,"constructionPriority":14,"minimumFoodDays":4,"explanation":"Public granary is autonomously built from locally owned public Wood/Stone and actual adult work. Existing shared food remains usable as temporary communal stock while unbuilt. No free inventories or automatic building."},"nativeResilience":{"enabled":true,"explanation":"Pre-existing native villages hold plausible pre-game stores. Farther from river-bank influence autonomously stockpile more food; no free food is created during simulation and no forced worker quotas are assigned.","dryRiskStartsAtRiverBankCells":3,"dryRiskFullAtRiverBankCells":16,"initialReserveDaysNearRiver":15,"initialReserveExtraDaysFarRiver":19,"activeReserveExtraDaysFarRiver":20,"relaxReserveExtraDaysFarRiver":18,"comfortableReserveExtraDaysFarRiver":20,"units":"Food days of actual local living population; river distance in map cells"}};</script><script>window.WOG_MOBILITY_PROFILE={"profileId":"mobility-contact-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"description":"Resource hotspots, 5-cell simultaneous physical contact, rare perpetual quarries/gold deposits, guarded camping injuries and actual long-distance Priest missions.","enabled":true,"contactRadius":5,"contactWindowDays":7,"tripChancePerDay":0.35,"tripCooldownDays":6,"minTripCells":9,"maxTripCells":27,"stepsPerTick":7,"onsiteTicks":2,"workSiteReach":7,"fordSpacing":16,"maxContacts":6000,"semantics":{"travel":"Adults may walk to actual fixed scarce resource nodes or nearby gathering sites. Each trip uses real path steps, scarce resources have infinite deposits and long on-site camping, missionary Priests travel to populated foreign settlements.","contact":"Simultaneous sampled positions within 5 tiles, with real participant IDs, beliefs and encounter coordinates. Same pair counted at most once per day; observations persist for 7 days.","camping":"On special-resource camps roll once per trip, with at least 45 days between injuries and no additional wound before recovery. Damage is nonlethal, Heal repairs normal health, UI highlights wounded citizens.","preaching":"Priests may travel without divine orders, but active spread Oracle greatly increases departures and actual local recruiting opportunities. No direct 40+ conversion from ordinary speech.","persistence":"Existing saves without mobility stay disabled; already saved v0.1 maps are not silently reseeded with rare resources. New worlds use resource hotspots."},"specialOnsiteTicks":6,"quarryCount":6,"goldCount":2,"resourceSpacingCells":10,"campInjuryChance":0.12,"campInjuryCooldownDays":45,"campInjuryMinHealth":60,"missionBaseChancePerDay":0.1,"missionSpreadChancePerDay":0.65,"missionStayTicks":9,"missionMaxTripCells":96};</script><script>window.WOG_DIVINE_PROFILE={"profileId":"divine-powers-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"description":"Data tuning for first-batch Miracle/Oracle effects; no forced production quotas, no direct conversion, separate Mastery/cooldown.","destructiveMinWeighted":4,"eligibilityNote":"Current single-God PoC only approximates destructive local strength by weighted own-faith Presence. Full rival-Dominance assessment is deferred to multi-God.","ripeningGrowthPerIntensity":2.3,"harvestExtraPerIntensity":0.9,"harvestMaxExtraCapRatio":1.5,"efficiencyWorkBonus":0.55,"confusionScoreNoise":5,"blindnessReachReduction":0.7,"spreadSermonBonus":0.24,"powers":{"ripening":{"baseCost":8,"cooldownDays":12,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":12,"maxDays":30,"maxIntensity":2.5},"harvest":{"baseCost":10,"cooldownDays":13,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":0,"maxDays":0,"maxIntensity":2},"heal":{"baseCost":7,"cooldownDays":9,"defaultRadius":6,"defaultIntensity":1,"defaultDurationDays":0,"maxDays":0,"maxIntensity":2},"efficiency":{"baseCost":10,"cooldownDays":16,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":14,"maxDays":30,"maxIntensity":2},"drought":{"baseCost":16,"cooldownDays":30,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":12,"maxDays":30,"maxIntensity":2},"lightning":{"baseCost":14,"cooldownDays":18,"defaultRadius":3,"defaultIntensity":1,"defaultDurationDays":0,"maxDays":0,"maxIntensity":2},"confusion":{"baseCost":11,"cooldownDays":19,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":12,"maxDays":30,"maxIntensity":2},"blindness":{"baseCost":11,"cooldownDays":19,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":12,"maxDays":30,"maxIntensity":2}},"cooldownDurationFloorFraction":0.18,"cooldownPolicy":"Cooldown is a per-Miracle DP escalation, not a hard casting lock. Cast #1 costs normal base DP; while that same skill is cooling, cast #2 costs 2x its current base DP, #3 3x, and so on. The next cast starts or extends (never shortens) that skill's existing cooldown deadline. When cooldown fully expires its chain resets to 1x. Other skills and the other God have independent cooldown chains. DP insufficiency still prevents casting; all actual targets/capability/cooldown-duration checks remain.","cooldownDPPolicy":"Fixed incremental 1x base DP for each additional cast within the same active cooldown. This first playable prototype intentionally has no second overcharge currency, no arbitrary maximum number of casts, and no global shared cooldown penalty."};</script><script>window.WOG_OPPONENT_PROFILE={"profileId":"opponent-v0.2","status":"experimental-runtime-profile","loadedByRuntime":true,"description":"World-first Genesis: two distant god origins among three pre-existing, unaffiliated native villages; neither deity initially owns the entire land.","enabled":true,"name":"暮影信仰","originMode":"separated-native","initialHouseholdIndexes":[4,5,6,7],"nativeVillages":3,"nativeHouseholdsPerVillage":3,"minimumOriginDistance":29,"championDevotion":53,"familyDevotion":29,"initialDp":42,"startDay":14,"decisionIntervalDays":12,"spreadOracleDurationDays":150,"offensiveEveryTurns":4,"semantics":{"genesis":"Player and AI start on separate sides of the map as real existing families (four each, no extra god-owned population); three pre-existing neutral villages hold nine native families total (27 unaffiliated residents).","nativeCommunities":"Native homes and existing cultivated fields are pre-game world resources, not divine powers, and their residents have religionId=null, devotion=10. They autonomously work, build, pray only after adopting a faith, and can become new believers naturally.","settlements":"Native villages exist from day 0 with independent membership, food reserves and construction rules. Each God's families can establish their own town through real house completion, not forced incorporation into nearby natives.","competition":"Neither side begins in the other's household or town. Expansion into native communities happens through in-world sermons, exchange, Oracle propagation and later demographic movements; no instant mass conversions.","ai":"Tiered decision quality, not only frequency: relaxed God attends one locally heard petition or a recurring personal ritual, uses coarsely sampled farmland and evaluates at most one Miracle. Standard God chooses from up to two plausible locally ranked choices based on nearby welfare, crops, petitions and seasonal agendas; does not scan every available spell. Original AI mode preserves the exact historical hard-coded local priority sequence. None has a global optimal map planner. All share the same real World rules, DP, cooldown and religious conversion.","legacy":"Existing opponent-v0.1 saves retain their historical mixed-family positions. A no-opponent new browser world still has native populations; legacy saves remain unchanged."},"difficulty":"standard","difficultyProfiles":{"relaxed":{"intervalMultiplier":2,"startDelayDays":14,"oracleDelayDays":54,"offensiveEveryTurns":0,"maxForcedMultiplier":1,"decisionStyle":"petition-first","observationRadius":6,"fieldSampleStep":4,"choiceBudget":1},"standard":{"intervalMultiplier":1.5,"startDelayDays":8,"oracleDelayDays":18,"offensiveEveryTurns":-1,"maxForcedMultiplier":2,"decisionStyle":"situational","observationRadius":8,"fieldSampleStep":2,"choiceBudget":2},"challenging":{"intervalMultiplier":1,"startDelayDays":0,"oracleDelayDays":0,"offensiveEveryTurns":-1,"maxForcedMultiplier":100,"decisionStyle":"historical","observationRadius":12,"fieldSampleStep":1,"choiceBudget":9}},"difficultyNotes":{"relaxed":"休閒沙盒對手：以附近真實祈禱或自己的例行儀式作為決策主題；只檢查一個可能的神蹟，不會逐一嘗試所有合法神蹟；僅觀察周圍少數農田樣本。約每 24 天行動，沒有免費神力及作弊知識。","standard":"具備有限地區判斷：觀察周圍較多農田及信徒需求，依大致優先度和季節偏好只檢查兩項可行方案；神諭也會在民生與傳教目標間選擇。約每 18 天行動，不保證最優，但有其合理策略。","challenging":"原版 AI：維持舊有確定的候選順序和當地真實資訊檢查，沒有新增最佳化或更強的搜尋能力。最高難度只保留原本 AI 而不額外強化。","live":"難度切換會保留人口、農地、信仰、物資、存檔及現有 Miracle 冷卻；舊存檔沒有 difficulty 欄位者會回復到原版 AI，不會悄悄變弱。"}};</script><script>window.WOG_ORACLE_STRATEGY_PROFILE={"profileId":"oracle-specialization-v0.1","status":"experimental-opt-in","description":"One persistent Saint calling. Reset returns believers to autonomous needs. Oracle differences reallocate feasible actions; cross-settlement core doubt requires real local deficit, demonstrated rival outcome, and live preaching contact.","reserveBias":3.2,"nurtureBias":5.2,"exploreBias":4.5,"offFocusPenalty":2.2,"nurtureConceptionMultiplier":1.8,"nurturePioneerMultiplier":0.25,"explorePioneerMultiplier":2.2,"aiFocusDays":90,"counterContactChance":0.45,"counterRepeatDays":10,"counterDoubtStep":8,"counterReachCells":30,"counterReserveAdvantageDays":4,"counterReserveTargetMaxDays":8,"counterCareGapDays":13,"counterEvidenceWorkMin":3,"counterHouseEvidenceDays":90,"semantics":{"food":"food.produce increases real field/forage labor and reduces discretionary nonfood work. No free food.","nurture":"family.nurture trades away some other labor and frontier chances for care work, bounded child recovery and greater conception chance only with real family care.","explore":"settlement.explore improves feasible building/supply choices and pioneer opportunity, without creating homes or settlers.","counters":"food loses to demonstrated rival nurture when child care was missed; nurture loses to proven rival housing when its home pressure remains; explore loses to rival reserves when it has genuinely short food coverage. Cross-town live sermon encounter is sampled; no forced conversion. After credible doubt brings faith below the existing 40 threshold, time-bounded follow-up requires an actual current preacher from that source town. Existing below-20 conversion rules apply, no artificial followers.","reset":"life.balance ends active Saint specializations immediately, free of quota/DP, with zero rollback or direct Devotion changes; new specialization still consumes issue quota.","scope":"opt-in only. Does not rewrite existing saves or former P2 fingerprints. Local Divine Presence still controls aggressive miracles.","faithDefense":"Defense matrix rows=defender, columns=challenger. Spread vs other specialization: resistance 1.4 vs 0.6, only when the active spread Oracle has a real personally met Priest plus verifiable autonomous recruits. Food/Nurture/Explore vs default: 1.2 vs 0.8; no automatic faith damage."},"counterBridgeDays":75,"counterBridgeDoubtChance":0.36,"counterBridgeConversionChance":0.22,"faithDefenseEnabled":true,"faithDefenseChanceCeiling":0.9,"faithDefenseMatrix":{"default":{"default":1,"food.produce":0.8,"family.nurture":0.8,"settlement.explore":0.8,"religion.spread":0.8},"food.produce":{"default":1.2,"food.produce":1,"family.nurture":0.4,"settlement.explore":1.6,"religion.spread":0.6},"family.nurture":{"default":1.2,"food.produce":1.6,"family.nurture":1,"settlement.explore":0.4,"religion.spread":0.6},"settlement.explore":{"default":1.2,"food.produce":0.4,"family.nurture":1.6,"settlement.explore":1,"religion.spread":0.6},"religion.spread":{"default":1.2,"food.produce":1.4,"family.nurture":1.4,"settlement.explore":1.4,"religion.spread":1}},"spreadMatrixEnabled":true,"counterSpreadRecruitMin":1};</script><script>window.WOG_PLAYTEST_PROFILE={"profileId":"playable-evidence-v0.1","status":"feature-branch-playtest-only","description":"Playable Web PoC of Oracle specialization, genuine cross-settlement evidence, voluntary earned faith conversion, and ability to inspect both. No edits to main or legacy saves.","defaultScenario":"duel","duel":{"label":"30 人宗教對決","seed":"dry-stress","initialDevotion":60,"originalPeoplePerGod":15,"originalHouseholdsPerGod":5,"startDay":10,"opponentStrategy":"food.produce","suggestedPlayerOracle":"family.nurture","startAIDecisionsOnDay":360,"challengeDays":100,"goalNetOriginalConversions":3,"note":"Designed, symmetrical scenario with prebuilt homes and initial equal affiliation. Not a natural game world or proof of organic contact."},"native":{"label":"自然河谷","seed":"valley-spring-01","difficulty":"standard","note":"Original separated origins, neutral villages, development and normal opponent AI. Credible cross-town faith conversions may be rare until genuine connections form."},"faith":{"shared":{"faithDefenseEnabled":true,"faithDefenseModel":"odds-scaled","counterFractionalLoss":true,"counterDoubtStep":2.5,"counterRepeatDays":7,"counterRepeatIncludesFollowup":true,"counterAttractionEnabled":true,"counterAttractionMinEvidence":5,"counterAttractionMargin":0,"counterAttractionConversionChance":0.3,"counterAttractionMaxChance":0.55,"counterAttractionRecencyDays":21,"faithDefenseChanceCeiling":0.9},"duel":{"counterPairedRandom":true,"counterAttractionGain":8,"comment":"Paired experimental RNG, original controlled experiment intended for reproducible mechanism demonstration; can trigger a post-day-100 conversion cascade."},"native":{"counterPairedRandom":false,"counterAttractionGain":6,"comment":"Normal world religion RNG. Conservative evidence gain, but not yet balanced or verified against natural map contact gaps."}},"warnings":["The accepted voluntary conversion principle is design authority; this particular attraction gain/probability is experimental.","A correct counter may not defeat the rival in an unconnected natural map.","Old saved worlds retain their old mode and no forced upgrade."]};</script><script>
+  <script>window.WOG_RELIGION_PROFILE={"profileId":"religion-propagation-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"description":"Both Gods share attributable Miracle→Devotion rules: substantial actual Heal and productive Efficiency help recipients, smaller witnessed effects, local Rain prayer fulfillment, and modest tangible crop blessings. 40+ ordinary preaching remains protected.","pulseDays":7,"minimumChildAge":4,"contactRadius":11,"interSettlementReach":30,"householdJoinChance":0.13,"socialJoinChance":0.055,"priestJoinChance":0.24,"settlementVisitChance":0.012,"weakLearningChance":0.26,"childStrongLearningChance":0.32,"childOrdinaryLearningChance":0.14,"regionalSaintChancePerMonth":0.12,"oracleRelayChance":0.55,"semantics":{"childUpbringing":"Repeated household contact creates own religious affiliation. Two 80+ parents can gradually nurture children up to Devotion 55, but never inherit Zealot/Devout bands outright.","preaching":"Priesthood is an independent, measurable social multiplier. Recent local Priest preaching adds a separate 24% weekly baseline recruitment opportunity (scaled by receptivity), over ordinary family/social exposure, and an additional 1.8× consolidation rate. Disabled Priest ablations retain direct prayer and ordinary social spread. Physical five-cell contacts and a Spread Oracle raise recruitment through true Priest visits; these cannot directly displace a 40+ believer.","devotion":"Priest interactions alone cannot displace an established 40+ rival believer. Low-devotion foreign followers gradually doubt their old affiliation in bounded steps under real local Priest preaching, and may freely choose the new religion once below 20; no forced blanket conversion and no competing AI God simulation yet.","migration":"Faith follows actual people and households; exchange is abstract nearby social contact, not teleportation or divine broadcast.","reproducibility":"Seven-day low-rate pulses use a separate seeded religion PRNG, preserving economic PRNG inputs.","competition":"The first-pass low-devotion foreign affiliation path models a rival's personal state only; complete rival God power/Temple/AI and reciprocal missionary pressure remain deferred.","miracleEvidence":"Direct Heal requires real health restored >=7, gain ~17–25 Devotion with credible attribution; Efficiency credits after beneficial actual work, +14 direct. Witnesses gain only +2/+3. Opposing 40+ commitment may be weakened by credible divine evidence but not ordinary sermons. Unaffiliated/weakly aligned residents retain short-lived God-specific impressions, then make their own weekly adoption decisions.","rainEvidence":"Only a geographically matched own-God Rain responding to a real active prayer with improved local field moisture and actual local food work can credit Devotion; the AI has equivalent prayers.","cropEvidence":"Harvest credits small witness effect when it measurably improves existing standing crop. Ripening credits small witness effect only after additional physical crop growth exceeds the configured minimum.","spreadOracle":"In addition to making willing adult believers preach more often, real heard local sermons receive a distinct bounded recruit chance; both Gods see the complete sermon interval before counters reset.","compatibility":"Profile ID remains v0.1 to avoid disrupting old saves; new optional values normalize with safe defaults. UI treats faith responses as actual person state changes, not direct player commands."},"ordinaryConsolidationCap":60,"priesthoodEnabled":true,"priestTeachingMultiplier":1.8,"priestRivalDoubtChance":0.58,"priestRivalConversionChance":0.3,"priestRivalDoubtStep":3,"miracleWitnessRadius":7,"miracleAttributionRadius":11,"miracleEvidenceRepeatDays":28,"miracleInterestDays":90,"miracleInterestThreshold":10,"miracleInterestJoinChance":0.27,"miracleRivalDoubtFactor":0.65,"miracleWitnessRepeatFactor":0.25,"healMinRecovery":7,"healDirectDevotion":19,"healWitnessDevotion":3,"efficiencyDirectDevotion":14,"efficiencyWitnessDevotion":2,"harvestWitnessDevotion":2,"ripeningWitnessDevotion":2,"ripeningEvidenceMinimumCrop":2.5,"rainWitnessDevotion":3,"spreadOracleJoinBonus":0.11,"spreadPriestJoinMultiplier":1.4};</script><script>window.WOG_AGRICULTURE_PROFILE={"profileId":"agriculture-balance-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"units":{"distance":"map cells from the riverbank","time":"simulated days and actual full 8-hour food workdays","food":"existing abstract Food units"},"description":"High-growth experimental Agriculture v0.1: 4× land yield and expandable cultivated area. No imposed farming quotas or conjured Food; all numeric tuning remains in this profile.","river":{"distanceOrigin":"river bank (map centerline distance minus half-width of 1.6 cells, clamped to zero)","fullEffectThroughCells":5,"zeroEffectAtCells":15,"nearBankInfluence":0.95,"falloff":"linear","meaning":"seasonal moisture contribution potential, not fixed soil moisture","riverHalfWidthCells":1.6},"seasons":{"rain":{"backgroundMoisture":0.76,"riverWaterAvailability":1,"diagnosticFoodLaborShare":0.08},"mild":{"backgroundMoisture":0.46,"riverWaterAvailability":0.54,"diagnosticFoodLaborShare":0.15},"dry":{"backgroundMoisture":0.12,"riverWaterAvailability":0.4,"diagnosticFoodLaborShare":0.5},"cycleDays":160,"dryWindows":[[14,29]],"rainWindows":[[0,5],[32,39],[68,74]]},"land":{"foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture":0.8,"referenceMoisture":0.9,"moistureExponent":0.8,"harvestMechanic":"actual yield is limited by accumulated unharvested crop stock and worker capacity; do not create food by formula alone","cropStockCapacityDays":2,"normalSeasonLandCapacityTargetRatio":1.6,"autonomousExpansionEnabled":true,"minimumCultivationFertility":0.45,"workReachCells":9,"expansionNotes":"Autonomous agricultural work may cultivate one suitable reachable meadow when mild-season field potential is under population need × target ratio; this consumes the work shift and yields no Food until crops regrow.","pioneerCultivationBonus":4.5},"worker":{"foodUnitsPerFullWorkdayAt50PctSkillAndNeutralEnvironment":9.5,"skillOutputIntercept":0.6,"skillOutputSlope":0.8,"environmentMoistureExponent":3,"startingSkillReference":0.45,"startingSkillRange":[0.4,0.5],"learningTimeConstantActualFoodWorkdays":550,"learningRule":"S(n) = 1 - (1 - S0) * exp(-n / tau); n counts food workdays, not calendar days"},"soilDynamics":{"referenceResponseTimeDays":3,"status":"scenario-dependent exploratory choice; not yet accepted as a season timing rule","shortRainCaveat":"6-8 day rainy spells can have lower realized harvest than steady-state rain potential"},"calibration":{"referenceSeed":"calm-river","population":40,"workCapableAdults":16,"dependents":24,"adultFoodNeedPerDay":0.38,"dependentFoodNeedPerDay":0.25,"totalFoodNeedPerDay":12.08,"landSupplyRatioTargets":{"rain":1.5,"mild":1.15,"dryMin":0.6,"dryMax":0.8},"laborShareTargetsOfWorkCapablePopulation":{"rainMin":0.06,"rainMax":0.08,"mildMin":0.1,"mildMax":0.2,"dryStressMin":0.4,"dryStressMax":0.5},"targetInterpretation":"reference scenario diagnostics, not jobs quotas, hard gameplay gates, or guarantees for random world seeds"},"reproducibility":{"report":"docs/AGRICULTURE_BALANCE.md","calculator":"tools/agriculture-balance-check.mjs","sampleMapAccess":"farm tile within +/-9 cells X/Y of at least one initial household; excludes later migrations and dynamically farmed land","sourceSimulatorGitBlob":"52b73c277b1a6111fa787374aeb5d300747d2e9f"},"workDemand":{"reserveTargetDays":18,"reserveRelaxDays":18,"reserveComfortDays":26,"explanation":"Comfort/relaxation scores influence autonomous work decisions based on physically accessible household and settlement reserves; not job quotas.","comfortableCareBonus":8,"unhousedMaterialPriorityBonus":2},"familyExpansion":{"enabled":true,"minPairAge":18,"maxPairAge":48,"minHealth":40,"maxAgeGap":18,"pairRange":22,"pairChancePerMonth":0.45,"maxCouplesPerMonth":2,"requiredFoodDays":9,"startupFoodDays":9,"communalSafetyDays":6,"homeSpacing":3,"homeRadius":12,"pioneerAfterHouseholds":12,"pioneerChance":0.55,"pioneerMinRadius":17,"pioneerMaxRadius":24,"outpostNeighborRadius":8,"outpostMinHouseholds":3,"outpostMinHuts":3,"outpostClusterRadius":9},"granary":{"woodRequired":6,"stoneRequired":4,"workRequired":6,"materialWorkPriority":13,"constructionPriority":14,"minimumFoodDays":4,"explanation":"Public granary is autonomously built from locally owned public Wood/Stone and actual adult work. Existing shared food remains usable as temporary communal stock while unbuilt. No free inventories or automatic building."},"nativeResilience":{"enabled":true,"explanation":"Pre-existing native villages hold plausible pre-game stores. Farther from river-bank influence autonomously stockpile more food; no free food is created during simulation and no forced worker quotas are assigned.","dryRiskStartsAtRiverBankCells":3,"dryRiskFullAtRiverBankCells":16,"initialReserveDaysNearRiver":15,"initialReserveExtraDaysFarRiver":19,"activeReserveExtraDaysFarRiver":20,"relaxReserveExtraDaysFarRiver":18,"comfortableReserveExtraDaysFarRiver":20,"units":"Food days of actual local living population; river distance in map cells"}};</script><script>window.WOG_MOBILITY_PROFILE={"profileId":"mobility-contact-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"description":"Resource hotspots, 5-cell simultaneous physical contact, rare perpetual quarries/gold deposits, guarded camping injuries and actual long-distance Priest missions.","enabled":true,"contactRadius":5,"contactWindowDays":7,"tripChancePerDay":0.35,"tripCooldownDays":6,"minTripCells":9,"maxTripCells":27,"stepsPerTick":7,"onsiteTicks":2,"workSiteReach":7,"fordSpacing":16,"maxContacts":6000,"semantics":{"travel":"Adults may walk to actual fixed scarce resource nodes or nearby gathering sites. Each trip uses real path steps, scarce resources have infinite deposits and long on-site camping, missionary Priests travel to populated foreign settlements.","contact":"Simultaneous sampled positions within 5 tiles, with real participant IDs, beliefs and encounter coordinates. Same pair counted at most once per day; observations persist for 7 days.","camping":"On special-resource camps roll once per trip, with at least 45 days between injuries and no additional wound before recovery. Damage is nonlethal, Heal repairs normal health, UI highlights wounded citizens.","preaching":"Priests may travel without divine orders, but active spread Oracle greatly increases departures and actual local recruiting opportunities. No direct 40+ conversion from ordinary speech.","persistence":"Existing saves without mobility stay disabled; already saved v0.1 maps are not silently reseeded with rare resources. New worlds use resource hotspots."},"specialOnsiteTicks":6,"quarryCount":6,"goldCount":2,"resourceSpacingCells":10,"campInjuryChance":0.12,"campInjuryCooldownDays":45,"campInjuryMinHealth":60,"missionBaseChancePerDay":0.1,"missionSpreadChancePerDay":0.65,"missionStayTicks":9,"missionMaxTripCells":96};</script><script>window.WOG_DIVINE_PROFILE={"profileId":"divine-powers-v0.1","status":"experimental-runtime-profile","loadedByRuntime":true,"description":"Data tuning for first-batch Miracle/Oracle effects; no forced production quotas, no direct conversion, separate Mastery/cooldown.","destructiveMinWeighted":4,"eligibilityNote":"Current single-God PoC only approximates destructive local strength by weighted own-faith Presence. Full rival-Dominance assessment is deferred to multi-God.","ripeningGrowthPerIntensity":2.3,"harvestExtraPerIntensity":0.9,"harvestMaxExtraCapRatio":1.5,"efficiencyWorkBonus":0.55,"confusionScoreNoise":5,"blindnessReachReduction":0.7,"spreadSermonBonus":0.24,"powers":{"ripening":{"baseCost":8,"cooldownDays":12,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":12,"maxDays":30,"maxIntensity":2.5},"harvest":{"baseCost":10,"cooldownDays":13,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":0,"maxDays":0,"maxIntensity":2},"heal":{"baseCost":7,"cooldownDays":9,"defaultRadius":6,"defaultIntensity":1,"defaultDurationDays":0,"maxDays":0,"maxIntensity":2},"efficiency":{"baseCost":10,"cooldownDays":16,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":14,"maxDays":30,"maxIntensity":2},"drought":{"baseCost":16,"cooldownDays":30,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":12,"maxDays":30,"maxIntensity":2},"lightning":{"baseCost":14,"cooldownDays":18,"defaultRadius":3,"defaultIntensity":1,"defaultDurationDays":0,"maxDays":0,"maxIntensity":2},"confusion":{"baseCost":11,"cooldownDays":19,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":12,"maxDays":30,"maxIntensity":2},"blindness":{"baseCost":11,"cooldownDays":19,"defaultRadius":7,"defaultIntensity":1,"defaultDurationDays":12,"maxDays":30,"maxIntensity":2}},"cooldownDurationFloorFraction":0.18,"cooldownPolicy":"Cooldown is a per-Miracle DP escalation, not a hard casting lock. Cast #1 costs normal base DP; while that same skill is cooling, cast #2 costs 2x its current base DP, #3 3x, and so on. The next cast starts or extends (never shortens) that skill's existing cooldown deadline. When cooldown fully expires its chain resets to 1x. Other skills and the other God have independent cooldown chains. DP insufficiency still prevents casting; all actual targets/capability/cooldown-duration checks remain.","cooldownDPPolicy":"Fixed incremental 1x base DP for each additional cast within the same active cooldown. This first playable prototype intentionally has no second overcharge currency, no arbitrary maximum number of casts, and no global shared cooldown penalty."};</script><script>window.WOG_OPPONENT_PROFILE={"profileId":"opponent-v0.2","status":"experimental-runtime-profile","loadedByRuntime":true,"description":"World-first Genesis: two distant god origins among three pre-existing, unaffiliated native villages; neither deity initially owns the entire land.","enabled":true,"name":"暮影信仰","originMode":"separated-native","initialHouseholdIndexes":[4,5,6,7],"nativeVillages":3,"nativeHouseholdsPerVillage":3,"minimumOriginDistance":29,"championDevotion":53,"familyDevotion":29,"initialDp":42,"startDay":14,"decisionIntervalDays":12,"spreadOracleDurationDays":150,"offensiveEveryTurns":4,"semantics":{"genesis":"Player and AI start on separate sides of the map as real existing families (four each, no extra god-owned population); three pre-existing neutral villages hold nine native families total (27 unaffiliated residents).","nativeCommunities":"Native homes and existing cultivated fields are pre-game world resources, not divine powers, and their residents have religionId=null, devotion=10. They autonomously work, build, pray only after adopting a faith, and can become new believers naturally.","settlements":"Native villages exist from day 0 with independent membership, food reserves and construction rules. Each God's families can establish their own town through real house completion, not forced incorporation into nearby natives.","competition":"Neither side begins in the other's household or town. Expansion into native communities happens through in-world sermons, exchange, Oracle propagation and later demographic movements; no instant mass conversions.","ai":"Tiered decision quality, not only frequency: relaxed God attends one locally heard petition or a recurring personal ritual, uses coarsely sampled farmland and evaluates at most one Miracle. Standard God chooses from up to two plausible locally ranked choices based on nearby welfare, crops, petitions and seasonal agendas; does not scan every available spell. Original AI mode preserves the exact historical hard-coded local priority sequence. None has a global optimal map planner. All share the same real World rules, DP, cooldown and religious conversion.","legacy":"Existing opponent-v0.1 saves retain their historical mixed-family positions. A no-opponent new browser world still has native populations; legacy saves remain unchanged."},"difficulty":"standard","difficultyProfiles":{"relaxed":{"intervalMultiplier":2,"startDelayDays":14,"oracleDelayDays":54,"offensiveEveryTurns":0,"maxForcedMultiplier":1,"decisionStyle":"petition-first","observationRadius":6,"fieldSampleStep":4,"choiceBudget":1},"standard":{"intervalMultiplier":1.5,"startDelayDays":8,"oracleDelayDays":18,"offensiveEveryTurns":-1,"maxForcedMultiplier":2,"decisionStyle":"situational","observationRadius":8,"fieldSampleStep":2,"choiceBudget":2},"challenging":{"intervalMultiplier":1,"startDelayDays":0,"oracleDelayDays":0,"offensiveEveryTurns":-1,"maxForcedMultiplier":100,"decisionStyle":"historical","observationRadius":12,"fieldSampleStep":1,"choiceBudget":9}},"difficultyNotes":{"relaxed":"休閒沙盒對手：以附近真實祈禱或自己的例行儀式作為決策主題；只檢查一個可能的神蹟，不會逐一嘗試所有合法神蹟；僅觀察周圍少數農田樣本。約每 24 天行動，沒有免費神力及作弊知識。","standard":"具備有限地區判斷：觀察周圍較多農田及信徒需求，依大致優先度和季節偏好只檢查兩項可行方案；神諭也會在民生與傳教目標間選擇。約每 18 天行動，不保證最優，但有其合理策略。","challenging":"原版 AI：維持舊有確定的候選順序和當地真實資訊檢查，沒有新增最佳化或更強的搜尋能力。最高難度只保留原本 AI 而不額外強化。","live":"難度切換會保留人口、農地、信仰、物資、存檔及現有 Miracle 冷卻；舊存檔沒有 difficulty 欄位者會回復到原版 AI，不會悄悄變弱。"}};</script><script>window.WOG_ORACLE_STRATEGY_PROFILE={"profileId":"oracle-specialization-v0.1","status":"experimental-opt-in","description":"One persistent Saint calling. Reset returns believers to autonomous needs. Oracle differences reallocate feasible actions; cross-settlement core doubt requires real local deficit, demonstrated rival outcome, and live preaching contact.","reserveBias":3.2,"nurtureBias":5.2,"exploreBias":4.5,"offFocusPenalty":2.2,"nurtureConceptionMultiplier":1.8,"nurturePioneerMultiplier":0.25,"explorePioneerMultiplier":2.2,"aiFocusDays":90,"counterContactChance":0.45,"counterRepeatDays":10,"counterDoubtStep":8,"counterReachCells":30,"counterReserveAdvantageDays":4,"counterReserveTargetMaxDays":8,"counterCareGapDays":13,"counterEvidenceWorkMin":3,"counterHouseEvidenceDays":90,"semantics":{"food":"food.produce increases real field/forage labor and reduces discretionary nonfood work. No free food.","nurture":"family.nurture trades away some other labor and frontier chances for care work, bounded child recovery and greater conception chance only with real family care.","explore":"settlement.explore improves feasible building/supply choices and pioneer opportunity, without creating homes or settlers.","counters":"food loses to demonstrated rival nurture when child care was missed; nurture loses to proven rival housing when its home pressure remains; explore loses to rival reserves when it has genuinely short food coverage. Cross-town live sermon encounter is sampled; no forced conversion. After credible doubt brings faith below the existing 40 threshold, time-bounded follow-up requires an actual current preacher from that source town. Existing below-20 conversion rules apply, no artificial followers.","reset":"life.balance ends active Saint specializations immediately, free of quota/DP, with zero rollback or direct Devotion changes; new specialization still consumes issue quota.","scope":"opt-in only. Does not rewrite existing saves or former P2 fingerprints. Local Divine Presence still controls aggressive miracles.","faithDefense":"Defense matrix rows=defender, columns=challenger. Spread vs other specialization: resistance 1.4 vs 0.6, only when the active spread Oracle has a real personally met Priest plus verifiable autonomous recruits. Food/Nurture/Explore vs default: 1.2 vs 0.8; no automatic faith damage."},"counterBridgeDays":75,"counterBridgeDoubtChance":0.36,"counterBridgeConversionChance":0.22,"faithDefenseEnabled":true,"faithDefenseChanceCeiling":0.9,"faithDefenseMatrix":{"default":{"default":1,"food.produce":0.8,"family.nurture":0.8,"settlement.explore":0.8,"religion.spread":0.8},"food.produce":{"default":1.2,"food.produce":1,"family.nurture":0.4,"settlement.explore":1.6,"religion.spread":0.6},"family.nurture":{"default":1.2,"food.produce":1.6,"family.nurture":1,"settlement.explore":0.4,"religion.spread":0.6},"settlement.explore":{"default":1.2,"food.produce":0.4,"family.nurture":1.6,"settlement.explore":1,"religion.spread":0.6},"religion.spread":{"default":1.2,"food.produce":1.4,"family.nurture":1.4,"settlement.explore":1.4,"religion.spread":1}},"spreadMatrixEnabled":true,"counterSpreadRecruitMin":1};</script><script>window.WOG_PLAYTEST_PROFILE={"profileId":"playable-evidence-v0.1","status":"feature-branch-playtest-only","description":"Playable Web PoC of Oracle specialization, genuine cross-settlement evidence, voluntary earned faith conversion, and ability to inspect both. No edits to main or legacy saves.","defaultScenario":"duel","duel":{"label":"30 人宗教對決","seed":"dry-stress","initialDevotion":60,"originalPeoplePerGod":15,"originalHouseholdsPerGod":5,"startDay":10,"opponentStrategy":"food.produce","suggestedPlayerOracle":"family.nurture","startAIDecisionsOnDay":360,"challengeDays":100,"goalNetOriginalConversions":3,"note":"Designed, symmetrical scenario with prebuilt homes and initial equal affiliation. Not a natural game world or proof of organic contact."},"native":{"label":"自然河谷","seed":"valley-spring-01","difficulty":"standard","note":"Original separated origins, neutral villages, development and normal opponent AI. Credible cross-town faith conversions may be rare until genuine connections form."},"faith":{"shared":{"faithDefenseEnabled":true,"faithDefenseModel":"odds-scaled","counterFractionalLoss":true,"counterDoubtStep":2.5,"counterRepeatDays":7,"counterRepeatIncludesFollowup":true,"counterAttractionEnabled":true,"counterAttractionMinEvidence":5,"counterAttractionMargin":0,"counterAttractionConversionChance":0.3,"counterAttractionMaxChance":0.55,"counterAttractionRecencyDays":21,"faithDefenseChanceCeiling":0.9},"duel":{"counterPairedRandom":true,"counterAttractionGain":8,"comment":"Paired experimental RNG, original controlled experiment intended for reproducible mechanism demonstration; can trigger a post-day-100 conversion cascade."},"native":{"counterPairedRandom":false,"counterAttractionGain":6,"comment":"Normal world religion RNG. Conservative evidence gain, but not yet balanced or verified against natural map contact gaps."}},"warnings":["The accepted voluntary conversion principle is design authority; this particular attraction gain/probability is experimental.","A correct counter may not defeat the rival in an unconnected natural map.","Old saved worlds retain their old mode and no forced upgrade."]};</script><script>window.WOG_SHRINE_PROFILE={"profileId":"shrine-temple-v0.1","status":"experimental-runtime-profile","enabled":true,"description":"Informal worship gatherings lead to autonomous Shrine and Temple construction; physical attendance and real Priest/Oracle contact without any building faith/DP/Presence buff.","walkReach":7,"contactRadius":5,"attendanceInformal":0.17,"attendanceShrine":0.27,"attendanceTemple":0.38,"priestExtraAttendance":0.1,"recentDays":30,"shrineVisits":12,"templeVisits":35,"shrineMinDistinct":2,"templeMinDistinct":4,"shrineWood":1,"shrineStone":0,"shrineWork":2,"templeWood":4,"templeStone":1,"templeWork":6,"buildPriority":7.6,"minimumFoodDays":3,"declineAfterDays":70,"designNotes":["Buildings require actual resident demand, resources and labor; player cannot place them.","Attendance uses walkable seven-cell paths and enters shared five-cell physical contact tracking.","Core footprints do not overlap; religious influence may overlap.","No direct Devotion, Divine Power, or Divine Presence bonuses for structures.","Temple construction gate intentionally disabled for v1; hostile miracles and social risk are future playtests."]};</script><script>
 /* Shared physical movement/contact layer for World of God PoC v2.
  * Self-contained UMD module so both Node simulations and offline browser use it.
  * No religious conversion occurs here: other systems consume actual encounters.
@@ -763,6 +764,279 @@ function townContact(s,faith,fromId,toId){
 return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact,townContact,recoverWound};
 });
 </script><script>
+/* Shrine / Temple v0.1. Religious facilities coordinate real people, never create faith or Presence. */
+(function(root,factory){
+'use strict';
+const api=factory();
+if(typeof module==='object'&&module.exports)module.exports=api;
+if(root)root.WoGTemple=api;
+})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const BASE=Object.freeze({
+  profileId:'shrine-temple-v0.1',enabled:false,
+  walkReach:7,contactRadius:5,attendanceInformal:.17,attendanceShrine:.27,
+  attendanceTemple:.38,priestExtraAttendance:.10,
+  recentDays:30,shrineVisits:12,templeVisits:35,
+  shrineMinDistinct:2,templeMinDistinct:4,
+  shrineWood:1,shrineStone:0,shrineWork:2,
+  templeWood:4,templeStone:1,templeWork:6,
+  buildPriority:7.6,minimumFoodDays:3,declineAfterDays:70
+});
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function hash(x){let h=2166136261;for(const c of String(x)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
+function draw(s,...parts){return hash([s.seed,...parts].join('|'))/4294967296;}
+function normalize(profile){
+ const p={...BASE};
+ if(profile?.profileId!==BASE.profileId)return p;
+ p.enabled=profile.enabled===true;
+ for(const [k,v] of Object.entries(BASE))
+   if(typeof v==='number'&&Number.isFinite(profile[k]))p[k]=profile[k];
+ for(const k of ['attendanceInformal','attendanceShrine','attendanceTemple','priestExtraAttendance'])
+   p[k]=clamp(p[k],0,.8);
+ for(const k of ['shrineVisits','templeVisits','shrineMinDistinct','templeMinDistinct','recentDays','declineAfterDays'])
+   p[k]=Math.round(clamp(p[k],1,365));
+ p.walkReach=clamp(p.walkReach,1,12);
+ p.contactRadius=clamp(p.contactRadius,1,8);
+ for(const k of ['shrineWood','shrineStone','shrineWork','templeWood','templeStone','templeWork'])
+   p[k]=clamp(p[k],0,50);
+ p.buildPriority=clamp(p.buildPriority,0,15);
+ p.minimumFoodDays=clamp(p.minimumFoodDays,0,30);
+ return p;
+}
+function init(s,profile){s.shrineTemple=normalize(profile);s.religiousSites=[];}
+function active(s){return !!s.shrineTemple?.enabled;}
+function members(s,town,faithId){const homes=new Set(town.householdIds);
+ return s.people.filter(p=>p.alive&&homes.has(p.householdId)&&p.religionId===faithId&&p.devotion>=20);
+}
+function walkable(s,x,y){
+ if(x<0||y<0||x>=s.width||y>=s.height)return false;
+ const terrain=s.tiles[y*s.width+x]?.terrain;
+ return terrain!=='river'||(s.mobility?.enabled&&y%s.mobility.fordSpacing===0);
+}
+function route(s,start,site,limit){
+ if(d(start,site)>limit)return null;
+ const steps=Math.max(Math.abs(Math.round(site.x-start.x)),Math.abs(Math.round(site.y-start.y)),1);
+ if(steps>limit)return null;
+ const trace=[];
+ for(let i=0;i<=steps;i++){
+   const x=Math.round(start.x+(site.x-start.x)*i/steps),
+     y=Math.round(start.y+(site.y-start.y)*i/steps);
+   if(!walkable(s,x,y))return null;
+   trace.push({x,y});
+ }
+ return trace;
+}
+function location(s,town,faithId){
+ const residents=members(s,town,faithId);
+ if(!residents.length)return null;
+ const homes=residents.map(p=>s.households.find(h=>h.id===p.householdId)).filter(Boolean);
+ const midpoint={x:homes.reduce((z,h)=>z+h.x,0)/homes.length,
+   y:homes.reduce((z,h)=>z+h.y,0)/homes.length};
+ let best=null,bestScore=Infinity;
+ for(let y=Math.max(1,Math.floor(midpoint.y-6));y<Math.min(s.height-1,Math.ceil(midpoint.y+7));y++)
+   for(let x=Math.max(1,Math.floor(midpoint.x-6));x<Math.min(s.width-1,Math.ceil(midpoint.x+7));x++){
+     const cell=s.tiles[y*s.width+x];
+     if(!cell||cell.terrain==='river'||cell.terrain==='field')continue;
+     if(s.households.some(h=>h.home&&d(h,{x,y})<1.25))continue;
+     if(s.settlements.some(t=>t.granary&&d(t.granary,{x,y})<1.7))continue;
+     if((s.religiousSites||[]).some(t=>d(t,{x,y})<3.5))continue;
+     const reachable=homes.filter(h=>route(s,h,{x,y},s.shrineTemple.walkReach)).length;
+     if(!reachable)continue;
+     const score=d(midpoint,{x,y})+5*(1-reachable/homes.length)+
+       draw(s,'site',town.id,faithId,x,y)*.2;
+     if(score<bestScore){best={x,y};bestScore=score;}
+   }
+ return best;
+}
+function observe(s,emit){
+ if(!active(s))return;
+ s.religiousSites ||= [];
+ for(const town of s.settlements){
+   for(const faith of [s.religion,s.opponentReligion].filter(Boolean)){
+     if(s.religiousSites.some(site=>site.townId===town.id&&site.religionId===faith.id))continue;
+     // Informal meeting places require a real believer with a lived social/prayer reason.
+     const followers=members(s,town,faith.id);
+     if(!followers.some(p=>p.activity==='pray'||p.activity==='preach'||faith.priests.includes(p.id)))
+       continue;
+     const pos=location(s,town,faith.id);if(!pos)continue;
+     const site={id:'rs'+(s.religiousSites.length+1),townId:town.id,religionId:faith.id,
+       controller:'religious-community',x:pos.x,y:pos.y,stage:'gathering',
+       condition:100,activity:0,visits:[],totalVisits:0,lastVisitHour:-1,
+       proposed:null,buildProgress:0,materialsPaid:false,createdAtHour:s.hour};
+     s.religiousSites.push(site);
+     emit(s,'religion',faith.name+'的居民在 '+town.name+' 約定一處共同祈禱地點。',
+       ['居民自然形成集會場所，尚未建造 Shrine','場所本身不提供 Divine Power 或 Presence']);
+   }
+ }
+}
+function recent(s,site){
+ const cutoff=s.hour-s.shrineTemple.recentDays*24;
+ site.visits=(site.visits||[]).filter(v=>v.hour>=cutoff);
+ site.activity=site.visits.length/s.shrineTemple.recentDays;
+ return {total:site.visits.length,distinct:new Set(site.visits.map(v=>v.personId)).size};
+}
+function templeCoreFree(s,site){
+ return !(s.religiousSites||[]).some(other=>other!==site&&
+   other.stage==='temple'&&d(other,site)<4);
+}
+function daily(s,emit){
+ if(!active(s))return;
+ observe(s,emit);
+ const rule=s.shrineTemple,day=Math.floor(s.hour/24);
+ for(const site of s.religiousSites){
+   const use=recent(s,site);
+   if(site.stage==='temple'&&day%30===0){
+     const town=s.settlements.find(t=>t.id===site.townId);
+     if(use.total&&town?.storage.wood>=.5){
+       town.storage.wood-=.5;site.condition=Math.min(100,site.condition+3);
+     }else site.condition=Math.max(0,site.condition-4);
+   }
+   if(site.stage!=='gathering'&&
+     s.hour-site.lastVisitHour>rule.declineAfterDays*24)
+       site.condition=Math.max(0,site.condition-1);
+   if(site.condition===0&&site.stage!=='ruin'){
+     site.stage='ruin';site.proposed=null;site.buildProgress=0;
+     emit(s,'religion','一處宗教設施因長期荒廢成為遺址。',
+       ['建築衰敗不刪除任何人的信仰，居民仍可自行恢復祈禱']);
+   }
+   if(site.proposed)continue;
+   const proposed=(site.stage==='gathering'||site.stage==='ruin')&&
+     use.total>=rule.shrineVisits&&use.distinct>=rule.shrineMinDistinct?'shrine':
+     site.stage==='shrine'&&use.total>=rule.templeVisits&&
+     use.distinct>=rule.templeMinDistinct&&templeCoreFree(s,site)?'temple':null;
+   if(proposed){
+     site.proposed=proposed;site.buildProgress=0;site.materialsPaid=false;
+     emit(s,'religion','居民因反覆實際集會，開始籌建 '+(proposed==='temple'?'Temple':'Shrine')+'。',
+       ['須由願意的居民投入建材與工作時間，神明不能直接放置']);
+   }
+ }
+}
+function candidates(s,p,town,foodDays){
+ if(!active(s)||!town||p.devotion<20||p.health<35||p.hunger>.55||
+   foodDays<s.shrineTemple.minimumFoodDays)return null;
+ const h=s.households.find(v=>v.id===p.householdId);
+ if(!h)return null;
+ const site=(s.religiousSites||[]).find(t=>t.townId===town.id&&
+   t.religionId===p.religionId&&t.proposed&&
+   route(s,h,t,s.shrineTemple.walkReach)&&
+   (t.proposed!=='temple'||templeCoreFree(s,t))&&
+   (t.materialsPaid||(town.storage.wood+(h.inventory.wood||0)>=
+     s.shrineTemple[t.proposed+'Wood']&&
+     town.storage.stone+(h.inventory.stone||0)>=s.shrineTemple[t.proposed+'Stone'])));
+ return site||null;
+}
+function spend(town,h,kind,amount){
+ const common=Math.min(town.storage[kind]||0,amount);
+ town.storage[kind]-=common;
+ h.inventory[kind]=Math.max(0,(h.inventory[kind]||0)-(amount-common));
+}
+function build(s,p,h,town,site,efficiency,emit){
+ if(!active(s)||!site?.proposed||p.religionId!==site.religionId)return false;
+ if(!site.materialsPaid){
+   const type=site.proposed,rule=s.shrineTemple;
+   if(town.storage.wood+(h.inventory.wood||0)+1e-9<rule[type+'Wood']||
+     town.storage.stone+(h.inventory.stone||0)+1e-9<rule[type+'Stone'])return false;
+   spend(town,h,'wood',rule[type+'Wood']);
+   spend(town,h,'stone',rule[type+'Stone']);
+   site.materialsPaid=true;
+ }
+ site.buildProgress+=(1+p.proficiency.build*.55)*efficiency;
+ if(site.buildProgress>=s.shrineTemple[site.proposed+'Work']){
+   const built=site.proposed;
+   site.stage=built;site.condition=100;site.proposed=null;site.buildProgress=0;
+   emit(s,'religion',town.name+' 的居民自主建成 '+(built==='temple'?'Temple':'Shrine')+'。',
+     ['耗用實際工作與建材，並非由神明建造',
+      '建築不直接增加信仰、Divine Power 或 Local Presence']);
+ }
+ return true;
+}
+function attend(s,p){
+ if(!active(s)||!s.mobility?.enabled||p.mobilityTrip||p.stage!=='adult'||
+    p.health<30||p.hunger>.7)return false;
+ const home=s.households.find(h=>h.id===p.householdId);
+ if(!home)return false;
+ const faiths=[s.religion,s.opponentReligion].filter(Boolean);
+ const sites=(s.religiousSites||[]).filter(t=>{
+   const faith=faiths.find(f=>f.id===t.religionId);
+   if(!faith)return false;
+   if(t.townId===p.settlementId&&t.religionId===p.religionId&&p.devotion>=20)return true;
+   // Outsiders require already-earned credible evidence, not a territorial buff.
+   const old=p.lastStrategyEncounter;
+   const proven=old?.challengerReligionId===t.religionId&&
+     s.hour-old.hour<=75*24;
+   const interest=p.miracleInterest?.[faith.godId];
+   const witnessed=interest&&interest.expiresAtHour>s.hour&&interest.score>=10;
+   return (proven||witnessed)&&t.townId===p.settlementId;
+ }).sort((a,b)=>d(a,home)-d(b,home));
+ const day=Math.floor(s.hour/24),r=s.shrineTemple;
+ for(const site of sites){
+   const trace=route(s,home,site,r.walkReach);if(!trace)continue;
+   const base=site.stage==='temple'?r.attendanceTemple:
+     site.stage==='shrine'?r.attendanceShrine:r.attendanceInformal;
+   const own=p.religionId===site.religionId;
+   const faith=faiths.find(f=>f.id===site.religionId);
+   const priest=own&&faith.priests.includes(p.id);
+   const chance=own?clamp(base+(priest?r.priestExtraAttendance:0),0,.85)*
+     clamp(.5+p.devotion/100,.5,1.5):
+     Math.min(.14,base*.32)*(p.devotion>=40?.7:1);
+   if(draw(s,'attendance',p.id,site.id,day)>=chance)continue;
+   p.x=site.x;p.y=site.y;
+   // Every sampled position lies on walkable land; physical encounters are
+   // recorded by the shared mobility layer, never created by temple influence.
+   p.mobilityTrace=trace;
+   p.activity='worship';
+   p.activityReason='自主步行到 '+(site.stage==='temple'?'Temple':site.stage==='shrine'?'Shrine':'集會點')+
+     (own?' 共同祈禱':' 探詢先前聽過的可信神諭或神蹟');
+   p.religiousVisit={siteId:site.id,hour:s.hour};
+   site.visits.push({hour:s.hour,personId:p.id});
+   site.totalVisits++;site.lastVisitHour=s.hour;
+   s.counts.ritualAttendances=(s.counts.ritualAttendances||0)+1;
+   return true;
+ }
+ return false;
+}
+function afterContacts(s,oracleFor){
+ if(!active(s)||!s.mobility?.enabled)return;
+ for(const site of s.religiousSites||[]){
+   const participants=s.people.filter(p=>p.alive&&
+     p.religiousVisit?.siteId===site.id&&p.religiousVisit.hour===s.hour&&d(p,site)<=1);
+   if(participants.length<2)continue;
+   const faith=[s.religion,s.opponentReligion].find(f=>f?.id===site.religionId);
+   if(!faith)continue;
+   for(const priest of participants.filter(p=>faith.priests.includes(p.id))){
+     const hasRealContact=participants.some(other=>other!==priest&&
+       (s.contactLog||[]).some(e=>e.hour===s.hour&&
+         ((e.a===priest.id&&e.b===other.id)||(e.a===other.id&&e.b===priest.id))));
+     if(!hasRealContact)continue;
+     priest.lastPreachHour=s.hour;
+     const oracle=oracleFor(priest);
+     if(oracle?.status==='active'&&oracle.propagatedAtHour!==null){
+       oracle.influenceSermonCount=(oracle.influenceSermonCount||0)+1;
+       s.counts.ritualOracleSermons=(s.counts.ritualOracleSermons||0)+1;
+     }
+   }
+ }
+}
+function validate(s){
+ if(!active(s))return [];
+ const errors=[],seen=new Set();
+ for(const site of s.religiousSites||[]){
+   if(seen.has(site.id))errors.push('宗教設施 ID 重複');
+   seen.add(site.id);
+   if(!s.settlements.some(t=>t.id===site.townId)||
+      ![s.religion,s.opponentReligion].some(f=>f?.id===site.religionId))
+       errors.push('宗教設施歸屬無效');
+   if(!Number.isFinite(site.condition)||site.condition<0||site.condition>100||
+      !Number.isFinite(site.x)||!Number.isFinite(site.y)||!walkable(s,site.x,site.y))
+       errors.push('宗教設施位置／狀況無效');
+   if(site.stage==='temple'&&!templeCoreFree(s,site))errors.push('Temple Core 重疊');
+ }
+ return errors;
+}
+return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,validate};
+});
+</script><script>
 /* World of God — Web-first MVP-0. Standalone deterministic simulation, no DOM or wall clock. */
 (function (root, factory) {
   'use strict';
@@ -775,6 +1049,9 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
   const MOBILITY=(typeof module==='object'&&module.exports)?
     require('./mobility.js'):globalThis.WoGMobility;
   if(!MOBILITY)throw Error('WoGMobility module must load before sim.js');
+  const TEMPLE=(typeof module==='object'&&module.exports)?
+    require('./shrine-temple.js'):globalThis.WoGTemple;
+  if(!TEMPLE)throw Error('WoGTemple module must load before sim.js');
   const VERSION = 'mvp0-web-2';
   const DEFAULT_RULES = Object.freeze({
     width: 64, height: 64, initialHouseholds: 8, tickHours: 8, daysPerMonth: 30,
@@ -1540,6 +1817,7 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
       history: { settlementFoundedHour: null, firstSaintHour: null },
       metrics: { workChoices: 0, oracleInfluencedChoices: 0,
         foodProductionByTown:{} } };
+    TEMPLE.init(s,config.shrineProfile);
     generate(s, initialMoisture);
     if(opponent?.originMode==='separated-native')generateSeparatedOrigins(s,opponent);
     else if(!opponent&&nativeWorld)generateSoloNativeWorld(s);
@@ -1615,7 +1893,10 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
       strategyContacts:s.counts.strategyContacts||0,
       strategyCoreDoubts:s.counts.strategyCoreDoubts||0,
       strategyConceptions:s.counts.strategyConceptions||0,
-      strategyConversions:s.counts.strategyConversions||0 };
+      strategyConversions:s.counts.strategyConversions||0,
+      shrineCount:(s.religiousSites||[]).filter(t=>t.stage==='shrine').length,
+      templeCount:(s.religiousSites||[]).filter(t=>t.stage==='temple').length,
+      ritualAttendances:s.counts.ritualAttendances||0 };
   }
   function rayCells(s, center, radius) {
     const out = [];
@@ -2889,6 +3170,10 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
     if (stone && (publicStone||granaryStoneNeeded)) candidates.push({ name: 'stone', score: (granaryStoneNeeded?G.materialWorkPriority:6.0) + p.proficiency.gather, valid: true });
     if (fiber && !h.home) candidates.push({ name: 'fiber', score: h.inventory.fiber < s.rules.hutFiber ? 7.5 + shelterMaterialBonus + p.proficiency.gather : 1, valid: true });
     if (!h.home && canBuild) candidates.push({ name: 'build', score: 9.3 + p.proficiency.build, valid: true });
+    const religiousWorkSite=TEMPLE.candidates(s,p,town,security.days);
+    if(religiousWorkSite&&h.home)
+      candidates.push({name:'build_ritual',score:s.shrineTemple.buildPriority+
+        (p.devotion>=80?.7:0),valid:true});
     if(canBuildGranary)candidates.push({name:'build_granary',score:G.constructionPriority+p.proficiency.build,valid:true});
     // Not every work period should be production. When accessible reserves are
     // strong, adults can spend the work block supporting dependents and the home.
@@ -2929,6 +3214,7 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
       stone: `附近可採石，公共建材需求尚未滿足`,
       build: `家戶已備齊 ${s.rules.hutWood} 木材與 ${s.rules.hutFiber} 纖維，正在投入建屋勞力`,
       build_granary: `${town?.name||'聚落'}具備建材及存糧，正在投入公共糧倉建設`,
+      build_ritual: '居民因實際集會需求，自主投入材料與工作時間興建宗教設施',
       care: `可及糧食可供約 ${foodDays} 天，選擇維持家戶生活與照顧依賴成員`
     };
     const modifiers = [];
@@ -2991,6 +3277,9 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
       const amt = Math.min(fiber.fiber,(1.4 + p.proficiency.gather * .7)*
         (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));
       fiber.fiber -= amt; distribute(s, h, 'fiber', amt);
+    } else if(choice.name==='build_ritual'&&religiousWorkSite&&town) {
+      TEMPLE.build(s,p,h,town,religiousWorkSite,
+        1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency'),log);
     } else if(choice.name==='build_granary'&&town&&granary&&!granary.built) {
       if(!granary.materialsPaid) {
         if(town.storage.wood+1e-9<G.woodRequired||town.storage.stone+1e-9<G.stoneRequired)
@@ -3030,7 +3319,8 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
         if(child.health<98)child.health=Math.min(98,child.health+.35);
     }
     const workPlace=choice.name==='farm'?field:choice.name==='forage'?forage:
-      choice.name==='wood'?wood:choice.name==='stone'?stone:choice.name==='fiber'?fiber:null;
+      choice.name==='wood'?wood:choice.name==='stone'?stone:choice.name==='fiber'?fiber:
+      choice.name==='build_ritual'?religiousWorkSite:null;
     if(!MOBILITY.workLocation(s,p,h,workPlace)){
       p.x=h.x+(choice.name==='farm'&&field?clamp(field.x-h.x,-2,2)*.28:0);
       p.y=h.y+(choice.name==='farm'&&field?clamp(field.y-h.y,-2,2)*.28:0);
@@ -3061,6 +3351,7 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
         if(s.mobility?.enabled){const h=householdOf(s,p);if(h){p.x=h.x;p.y=h.y;}}
         p.activity = 'rest'; p.activityReason = '每日固定的休息與恢復時段'; }
       else if (phase === 2) {
+         if(TEMPLE.attend(s,p))continue;
         const faith=faithOf(s,p.religionId);
         const priest=!!faith?.priests.includes(p.id);
         const believer=!!faith&&p.devotion>=20;
@@ -3090,6 +3381,7 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
       else { p.activity = 'family'; p.activityReason = '目前生命階段或健康狀況不適合一般工作'; }
     }
     MOBILITY.record(s);
+    TEMPLE.afterContacts(s,p=>strategyCalling(s,p).oracle);
   }
   function updateWorld(s) {
     const day = days(s);
@@ -3830,6 +4122,7 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
       s.opponentGod.dp+faithDpRate(s,s.opponentReligion));
     for(const faith of allFaiths(s)){reconcileFaithOffices(s,faith);ensureSaint(s,faith);ensurePriest(s,faith);}
     collectPrayers(s);
+    TEMPLE.daily(s,log);
     if(days(s)>0&&days(s)%s.religionPropagation.pulseDays===0){
       const faiths=allFaiths(s);
       if(s.opponent?.enabled&&Math.floor(days(s)/s.religionPropagation.pulseDays)%2===1)
@@ -4108,6 +4401,7 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
     if(!Number.isSafeInteger(s.hour)||s.hour<0 || !Number.isSafeInteger(s.tick)) errors.push('時間不正確');
     if(!Array.isArray(s.tiles)||s.tiles.length!==s.width*s.height) errors.push('地圖資料不完整');
     if(!Array.isArray(s.people)||!Array.isArray(s.households)||!Array.isArray(s.settlements)) errors.push('人口資料不完整');
+    errors.push(...TEMPLE.validate(s));
     if(!s.god || !Number.isFinite(s.god.dp)||s.god.dp<0||s.god.dp>s.rules.maxDp+.001) errors.push('神力不正確');
     if(s.opponent?.enabled){
       if(!s.opponentGod||!s.opponentReligion||s.opponentReligion.id===s.religion.id||
@@ -4194,6 +4488,8 @@ return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact
       formerReligion.priestJoinChance=RELIGION_DEFAULTS.priestJoinChance;
     candidate.religionPropagation=religionRules(formerReligion);
     candidate.mobility=MOBILITY.normalize(candidate.mobility);
+    candidate.shrineTemple=TEMPLE.normalize(candidate.shrineTemple);
+    candidate.religiousSites ||= [];
     candidate.contactLog=Array.isArray(candidate.contactLog)?candidate.contactLog:[];
     if(candidate.oracleStrategy)candidate.oracleStrategy=oracleStrategyRules(candidate.oracleStrategy);
     candidate.divinePowers=divinePowerRules(candidate.divinePowers);
@@ -4340,7 +4636,7 @@ function establishDuel(s,S,profile){
 }
 function createWorld(S,options){
   const {mode,seed,playtestProfile,oracleStrategyProfile,opponentProfile,
-    balanceProfile,religionProfile,mobilityProfile,divineProfile,difficulty,opponentMode}=options;
+    balanceProfile,religionProfile,mobilityProfile,divineProfile,shrineProfile,difficulty,opponentMode}=options;
   if(!['duel','native'].includes(mode))throw Error('未知試玩情境');
   const oracleStrategy=buildStrategy(oracleStrategyProfile,playtestProfile,mode);
   const chosenSeed=mode==='duel'?playtestProfile.duel.seed:
@@ -4353,7 +4649,7 @@ function createWorld(S,options){
   };
   const s=S.create({seed:chosenSeed,
     ...(balanceProfile?{balanceProfile}:{}),
-    religionProfile,mobilityProfile,divineProfile,oracleStrategyProfile:oracleStrategy,
+    religionProfile,mobilityProfile,divineProfile,shrineProfile,oracleStrategyProfile:oracleStrategy,
     worldGenesisMode:'native',opponentProfile:opponent});
   if(mode==='duel')return establishDuel(s,S,playtestProfile);
   s.playtest={profileId:playtestProfile.profileId,mode:'native',
@@ -4391,7 +4687,7 @@ if(root)root.WOG_PLAYTEST=API;
   const S = window.WoG2, Playtest = window.WOG_PLAYTEST;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
@@ -4400,7 +4696,7 @@ if(root)root.WOG_PLAYTEST=API;
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
   const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
-  const taskName = {rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',travel:'短期出訪中',visit:'資源熱點停留',dead:'已離世'};
+  const taskName = {worship:'共同祈禱',build_ritual:'宗教設施施工',rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',travel:'短期出訪中',visit:'資源熱點停留',dead:'已離世'};
   const stageName = {adult:'成年人',child:'兒童',elder:'長者'};
   const occupationName = {food_producer:'糧食生產者',gatherer:'採集者',dependent:'受扶養者'};
   // First layer: action category; second layer: available power within that category.
@@ -4623,6 +4919,12 @@ if(root)root.WOG_PLAYTEST=API;
     if(!response.ok)throw new Error('Mobility Contact Profile 無法載入');
     return response.json();
   }
+  async function loadShrine(){
+    if(window.WOG_SHRINE_PROFILE)return window.WOG_SHRINE_PROFILE;
+    const response=await fetch('config/shrine-temple-v0.1.json');
+    if(!response.ok)throw new Error('Shrine / Temple Profile 無法載入');
+    return response.json();
+  }
   async function loadOpponent(){
     if(window.WOG_OPPONENT_PROFILE)return window.WOG_OPPONENT_PROFILE;
     const response=await fetch('config/opponent-v0.2.json');
@@ -4651,7 +4953,7 @@ if(root)root.WOG_PLAYTEST=API;
       opponentProfile:activeOpponentProfile||S.OPPONENT_DEFAULTS,
       balanceProfile:activeProfile,religionProfile:activeReligionProfile,
        mobilityProfile:activeMobilityProfile,
-      divineProfile:activeDivineProfile,
+      divineProfile:activeDivineProfile,shrineProfile:activeShrineProfile,
       opponentMode:$('opponentMode').value,
       difficulty:$('aiDifficulty').value||'standard'
     });
@@ -4719,6 +5021,7 @@ if(root)root.WOG_PLAYTEST=API;
   function save() { try {localStorage.setItem(storageKey(),JSON.stringify(state));say('已儲存目前的世界。');}catch(e){say('瀏覽器儲存失敗：請改用「匯出」。');} }
   function restore(raw) {try{const converted=JSON.parse(raw).version!==S.VERSION;state=S.restore(raw);activeProfile=state.agriculture||null;activeDivineProfile=state.divinePowers;
       activeMobilityProfile=state.mobility||activeMobilityProfile;
+       activeShrineProfile=state.shrineTemple||activeShrineProfile;
     $('playtestScenario').value=scenarioId();
     activeOracleStrategyProfile=state.oracleStrategy||activeOracleStrategyProfile;
     if(state.opponent?.enabled&&state.opponent.profileId!=='opponent-v0.1')
@@ -4780,6 +5083,7 @@ if(root)root.WOG_PLAYTEST=API;
       ' 趟；跨聚落實際接觸 '+(state.counts.crossTownMeetings||0)+
       ' 次；必須在 '+state.mobility.contactRadius+' 格內遇見':
       '此舊世界仍使用既有的抽象接觸模型';
+    $('townMetric').title+=' · Shrine '+(st.shrineCount||0)+' / Temple '+(st.templeCount||0)+' · 集會 '+(st.ritualAttendances||0)+' 次';
     $('houseMetric').textContent=`${st.houses}/${st.households} 有住所 · 新成家 ${st.newFamilies||0}`;
     const dailyNeed=state.people.filter(p=>p.alive).reduce((a,p)=>a+(p.stage==='child'?state.rules.foodNeedChild:state.rules.foodNeedAdult),0);
     $('foodMetric').textContent=format(st.food);
@@ -4915,6 +5219,18 @@ if(root)root.WOG_PLAYTEST=API;
       granary?.materialsPaid?'建造中':granary?'籌備建材':'尚無計畫';
     $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b>${town.native?' · 原生聚落':''} · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><p title="信眾為 Devotion 20+；信徒為 40+。Saint 與 Priest 是獨立角色。">宗教：信眾 ${localReligion.believers}/${localReligion.population} · 未入教 ${localReligion.unaffiliated} · 信徒 ${localReligion.followers} · Saint ${localReligion.saints} / Priest ${localReligion.priests} · 神諭 ${localReligion.activeOracles}</p>${rivalTown}<p title="未完成糧倉時，公共糧食以臨時共同儲備方式保管並保持可及；真正的糧倉需使用本聚落材料及居民建造。">公共糧倉：${granaryStatus} · 本地公糧 ${format(town.storage.food)} · 石材 ${format(town.storage.stone,1)}${reserveHint}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
       `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
+    if(town){
+      const venues=(state.religiousSites||[]).filter(site=>site.townId===town.id);
+      const names={gathering:'自然集會點',shrine:'Shrine',temple:'Temple',ruin:'遺址'};
+      $('townPanel').innerHTML+='<p title="宗教設施不會直接增加 Divine Power、Local Presence 或 Devotion；活動須居民實際到場">宗教設施：'+
+        (venues.length?venues.map(v=>{
+          const owner=v.religionId===state.religion.id?state.religion.name:
+            state.opponentReligion?.name||'其他宗教';
+          return html(owner)+' '+(names[v.stage]||v.stage)+
+            (v.proposed?'（籌建 '+html(v.proposed)+'）':'')+
+            ' · 近30日 '+(v.visits||[]).length+' 次集會';
+        }).join(' / '):'尚未形成')+'</p>';
+    }
     const filteredHomes=town?state.households.filter(h=>town.householdIds.includes(h.id)):state.households;
     const housePageSize=2;
     const housePages=Math.max(1,Math.ceil(filteredHomes.length/housePageSize));
@@ -5050,6 +5366,31 @@ if(root)root.WOG_PLAYTEST=API;
         c.lineWidth=1.5;c.setLineDash(g.materialsPaid?[2,2]:[3,4]);
         c.strokeRect(px-size*.6,py-size*.6,size*1.2,size*1.2);
       }
+      c.restore();
+    }
+    // Buildings and informal gathering places; neither is a Divine Presence source.
+    for(const site of state.religiousSites||[]){
+      const px=(site.x+.5)*size,py=(site.y+.5)*size;
+      const own=site.religionId===state.religion.id;
+      c.save();c.strokeStyle=own?'#95def4':'#ffaf93';
+      c.fillStyle=own?'#447b8b':'#a35c50';c.lineWidth=1.8;
+      if(site.stage==='temple'){
+        c.fillRect(px-size*.85,py-size*.35,size*1.7,size*1.15);
+        c.strokeRect(px-size*.85,py-size*.35,size*1.7,size*1.15);
+        c.beginPath();c.moveTo(px-size*1.1,py-size*.4);
+        c.lineTo(px,py-size*1.45);c.lineTo(px+size*1.1,py-size*.4);
+        c.closePath();c.fill();c.stroke();
+      }else if(site.stage==='shrine'){
+        c.beginPath();c.moveTo(px,py-size*1.0);c.lineTo(px+size*.78,py);
+        c.lineTo(px,py+size*.8);c.lineTo(px-size*.78,py);
+        c.closePath();c.fill();c.stroke();
+      }else{
+        c.setLineDash([2,2]);c.beginPath();c.arc(px,py,size*.7,0,Math.PI*2);c.stroke();
+        c.setLineDash([]);c.fillStyle=site.stage==='ruin'?'#a4aaa0':'#f2e6c3';
+        c.beginPath();c.arc(px,py,size*.25,0,Math.PI*2);c.fill();
+      }
+      if(site.proposed){c.strokeStyle='#f2d99e';c.setLineDash([2,2]);
+        c.strokeRect(px-size*1.25,py-size*1.25,size*2.5,size*2.5);}
       c.restore();
     }
     for(const t of state.settlements){c.save();c.strokeStyle=t.id===selectedTownId?'#f4d69f':t.native?'#98cbb7':'#bed9b4';c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();}
@@ -5188,6 +5529,13 @@ if(root)root.WOG_PLAYTEST=API;
     if(marker?.location&&Math.hypot(x-marker.location.center.x,y-marker.location.center.y)<=1.6){
       showInspector('needs');return;
     }
+    const site=(state.religiousSites||[]).find(v=>Math.hypot(v.x-x,v.y-y)<=1.5);
+    if(site){
+      selectedTownId=site.townId;showInspector('town');
+      say('宗教集會點：'+(site.stage==='temple'?'Temple':site.stage==='shrine'?'Shrine':'自然聚會／遺址')+
+        '；查看所在聚落的活動與建造進度。');
+      return;
+    }
     let selected=null,dd=Infinity;for(const p of state.people){if(!p.alive)continue;const d=Math.hypot(p.x-x,p.y-y);if(d<dd){selected=p;dd=d;}}
     if(selected && dd<3.2){chosen=selected.id;showInspector('person');say(`正在觀察 ${selected.name} 的生活與工作選擇`);}else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
   }
@@ -5317,7 +5665,7 @@ if(root)root.WOG_PLAYTEST=API;
   $('aiDifficulty').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
-  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest])=>{
+  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest(),loadShrine()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine])=>{
     activeProfile=agriculture.status==='fulfilled'?agriculture.value:null;
     activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
     activeMobilityProfile=mobility.status==='fulfilled'?mobility.value:null;
@@ -5325,14 +5673,15 @@ if(root)root.WOG_PLAYTEST=API;
     activeOpponentProfile=opponent.status==='fulfilled'?opponent.value:S.OPPONENT_DEFAULTS;
     activeOracleStrategyProfile=oracleStrategy.status==='fulfilled'?oracleStrategy.value:null;
     activePlaytestProfile=playtest.status==='fulfilled'?playtest.value:null;
-    if(!activeOracleStrategyProfile||!activePlaytestProfile||!Playtest)
+    activeShrineProfile=shrine.status==='fulfilled'?shrine.value:null;
+    if(!activeOracleStrategyProfile||!activePlaytestProfile||!activeShrineProfile||!Playtest)
       throw Error('可玩版必需的神諭策略或場景模組無法載入');
     $('playtestScenario').value=activePlaytestProfile.defaultScenario||'duel';
     // The initial unconfigured render displays the single-God placeholder.
     // Explicitly opt new browser worlds into the AI mode after profiles load.
     $('opponentMode').value='ai';
     newWorld();
-    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     say(failures.length?'Profile 載入失敗：'+failures.join('；'):
       '宗教對決已就緒。AI 選存糧；選育兒 Oracle → 傳下神諭 → 開始。');
   }).catch(err=>{

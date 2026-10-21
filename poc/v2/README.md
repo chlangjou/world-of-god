@@ -3,6 +3,30 @@
 這是從 `web-mvp-0` 移入 `main/poc/v2/` 的**獨立模組化 Web 試玩版**。
 不改動 `main/docs/` 正式 God–World 規則，也不取代 Godot PoC。
 
+## Shrine / Temple 實體化試玩（功能分支，2026-10-22）
+
+分支：`feature/shrine-temple-web-poc-v0.1`。請先下載本分支的
+[**World-of-God-Playable.html**](World-of-God-Playable.html)，在 GitHub 按
+**Download raw file**，雙擊下載的單檔 HTML 即可離線試玩；不要直接雙擊模組版
+`index.html`。亦可 `cd poc/v2 && npm start` 後開啟 `http://localhost:8000`。
+
+新世界會啟用 `config/shrine-temple-v0.1.json`（舊存檔不會突然憑空生成建築）。
+居民因祈禱/祭司的實際活動建立自然集會點，出席累積後自願使用工作時間與公共或
+家戶建材建成 Shrine、Temple。聚落檢視顯示狀態與最近集會次數，地圖標記可點選。
+Temple 集會提高近距離見面機會，Priest 只有在現場真實接觸後才促進既有的 Oracle
+傳播；已持有可靠跨宗教證據的居民也可能自願跨界參訪，不會直接改宗。
+集會本身不增加 Devotion、Divine Power、Divine Presence；Temple Core 互不重疊。
+
+為與前輪設計一致，本試玩版啟用精準 Lightning：命中範圍固定 1 格，可摧毀
+物理 Shrine/Temple；仍須通過既有施展中心的 Presence 密度、優勢與神力／冷卻檢查。
+這輪**沒有**加入神罰自動信仰加成、敵方主動針對建築的特殊 AI 或完整宗教戰爭。
+建築可衰退、維護、重建，是否升級受資源、勞動與集會需求制約。
+
+快速驗證：Node.js **22**，`npm run test:fast`（包含 `tests/shrine-temple.test.cjs`），
+以及 `npm run build:standalone`。CI 上限為三分鐘，長期平衡測試不放進 CI。
+
+---
+
 ## 宗教爭奪試玩版 v0.1（2026-10-15）
 
 **直接離線試玩：**在 GitHub 找到 [World-of-God-Playable.html](World-of-God-Playable.html)，按 **Download raw file** 後，雙擊下載的 HTML 檔。單檔已內嵌 CSS、遊戲程式及全部 Profile，**不需 Node.js、不需網路，也不要直接雙擊原始 `index.html`**。

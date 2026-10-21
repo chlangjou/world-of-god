@@ -29,5 +29,6 @@
     "Core footprints do not overlap; religious influence may overlap.",
     "No direct Devotion, Divine Power, or Divine Presence bonuses for structures.",
     "Temple construction gate intentionally disabled for v1; hostile miracles and social risk are future playtests."
-  ]
+  ],
+  "precisionLightningEnabled": true
 }

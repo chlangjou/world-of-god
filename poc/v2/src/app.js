@@ -6,6 +6,7 @@
   let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
+  let lastMiraclePreview=null, lastCastVisual=null;
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
   let selectedNeedId=null, needPage=0, lastNeedsMarkup=null;
   let lastAttentionSeq=0,attentionFocus=null;
@@ -69,16 +70,23 @@
     radius.min=precise?'1':'2';
     radius.max=precise?'1':'14';
     radius.disabled=precise;
-    const maxIntensity=Math.round(rule.maxIntensity*100),maxDays=Math.max(1,rule.maxDays);
+    const maxIntensity=Math.round(rule.maxIntensity*100),instant=!!rule.instant;
     radius.value=String(bounded(prior?.radius,rule.defaultRadius,Number(radius.min)||2,Number(radius.max)||14));
     intensity.max=String(maxIntensity);
     intensity.value=String(bounded(
       prior?.intensityPercent,Math.round(rule.defaultIntensity*100),
       Number(intensity.min)||30,maxIntensity));
-    duration.max=String(maxDays);
-    duration.value=String(bounded(
-      prior?.durationDays,rule.defaultDurationDays||1,Number(duration.min)||1,maxDays));
-    $('durationLabel').hidden=!!rule.instant;
+    // Show the same third parameter for every Miracle. Instant effects have
+    // a truthful, non-adjustable zero duration rather than a fictitious slider.
+    duration.min=instant?'0':'1';
+    duration.max=instant?'0':String(Math.max(1,rule.maxDays));
+    duration.disabled=instant;
+    duration.value=instant?'0':String(bounded(
+      prior?.durationDays,rule.defaultDurationDays||1,1,Math.max(1,rule.maxDays)));
+    $('durationLabel').hidden=false;
+    $('durationLabel').title=instant?
+      '瞬間型 Miracle 在命中後立即結束；冷卻時間另外計算':
+      '這個 Miracle 的效果持續時間，可自行調整';
     configuredMiracleId=id;
     $('miracleName').textContent=powerMeta('miracle',id)?.label||rule.label;
     $('miracleHint').textContent=powerMeta('miracle',id)?.hint||'神蹟改變現實，後續由世界決定';
@@ -200,7 +208,8 @@
     armMiracleTarget();
   }
   function say(text) { const box=$('toast');box.textContent=text;box.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>box.classList.remove('visible'),3000); }
-  function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,durationDays:+$('duration').value}; }
+  function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,
+    durationDays:$('duration').disabled?0:+$('duration').value}; }
   function storageKey() {return 'wog-poc-v2-save';}
   const scenarioId=()=>state.playtest?.mode==='duel'?'duel':'native';
   const competitionScore=()=>Playtest?.score(state)||null;
@@ -289,7 +298,7 @@
     $('opponentMode').disabled=selected==='duel';
     $('aiDifficulty').disabled=selected==='duel';
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
-    paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
+    lastCastVisual=null;paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -351,16 +360,21 @@
     $('opponentMode').disabled=scenarioId()==='duel';
     $('aiDifficulty').value=state.opponent?.difficulty||'standard';
     $('aiDifficulty').disabled=scenarioId()==='duel';
-    armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+    lastCastVisual=null;armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
     const id=selectedPower();
-    $('radiusValue').textContent=$('radius').value+' 格';
-    $('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';
-    $('durationValue').textContent=$('durationLabel').hidden?'即時':$('duration').value+' 日';
     const target=cursor||currentNeed()?.location?.center||state.camp,
       preview=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
+    lastMiraclePreview=preview;
+    const actualRadius=Number.isFinite(preview.radius)?preview.radius:+$('radius').value;
+    const durationText=preview.instant?'瞬間（0 日）':format(preview.durationDays,0)+' 日';
+    $('radiusValue').textContent=actualRadius+' 格';
+    $('intensityValue').textContent=format(+$('intensity').value/100,2)+'×';
+    $('durationValue').textContent=preview.instant?'瞬間':durationText;
+    $('effectSummary').textContent='有效範圍：半徑 '+actualRadius+' 格 · 作用時間：'+durationText;
+    $('effectSummary').title='預覽依目前地圖中心計算；時間是效果持續時間，與下方冷卻時間分開';
     const left=Math.max(0,(state.god.skills[id]?.readyAtHour||0)-state.hour);
     if(armedMiracle&&armedMiracle!==id)armedMiracle=null;
     $('rainCost').textContent=`Lv${state.god.skills[id]?.level||1} · 預估 ${preview.cost??'—'} DP`+
@@ -438,6 +452,13 @@
       state.agriculture?(state.nativeWorld?'原住民已在此生活 · Agriculture v0.1':'Agriculture v0.1 · 河流、季節與實際農作物'):
         'Original · 原始平衡對照';
     $('mapTip').hidden=!armedMiracle;
+    if(armedMiracle&&lastMiraclePreview){
+      const effectTime=lastMiraclePreview.instant?'瞬間（0 日）':
+        format(lastMiraclePreview.durationDays,0)+' 日';
+      $('mapTip').textContent=(powerMeta('miracle',armedMiracle)?.label||armedMiracle)+
+        ' · 半徑 '+lastMiraclePreview.radius+' 格 · '+effectTime+
+        ' · 點地圖施放 / Esc 取消';
+    }
     $('simHint').textContent=armedMiracle?('已選擇'+(powerMeta('miracle',armedMiracle)?.label||'神蹟')+'：點擊地圖施展（Esc 取消）'):
       (playtestHint()?playtestHint():
       attentionFocus?.level==='pause'?('已暫停：'+attentionFocus.text+' · Esc 清除定位'):
@@ -811,10 +832,34 @@
       c.beginPath();c.arc(x,y,Math.max(10,size*1.3),0,Math.PI*2);c.stroke();
       c.beginPath();c.moveTo(x-14,y);c.lineTo(x+14,y);c.moveTo(x,y-14);c.lineTo(x,y+14);c.stroke();c.restore();
     }
+    // Recently completed instant Miracles leave a short *visual-only*
+    // footprint; this is not an ongoing effect, additional damage, or Presence.
+    if(lastCastVisual&&performance.now()<lastCastVisual.untilMs){
+      const v=lastCastVisual;
+      const px=v.x*size,py=v.y*size;
+      c.save();c.strokeStyle='#ffeab0';c.lineWidth=2;c.setLineDash([2,5]);
+      c.beginPath();c.arc(px,py,v.radius*size,0,Math.PI*2);c.stroke();
+      c.setLineDash([]);c.fillStyle='#ffe6b2';c.font='bold 11px system-ui';
+      c.fillText('瞬間施放 · 已結束',Math.max(5,Math.min(canvas.width-155,px+12)),
+        Math.max(16,Math.min(canvas.height-9,py-10)));
+      c.restore();
+    }
     if(armedMiracle) {
       const target=cursor||source?.location?.center||state.camp;
+      const preview=lastMiraclePreview;
+      const radius=Number.isFinite(preview?.radius)?preview.radius:+$('radius').value;
+      const effectTime=preview?.instant?'瞬間（0 日）':
+        format(preview?.durationDays??+$('duration').value,0)+' 日';
+      const px=target.x*size,py=target.y*size;
       c.save();c.strokeStyle='#ffdda7';c.lineWidth=3;c.setLineDash([7,4]);
-      c.beginPath();c.arc(target.x*size,target.y*size,+$('radius').value*size,0,Math.PI*2);c.stroke();c.restore();
+      c.beginPath();c.arc(px,py,radius*size,0,Math.PI*2);c.stroke();
+      c.setLineDash([]);c.font='bold 11px system-ui';
+      const label='半徑 '+radius+' 格 · '+effectTime;
+      const lx=Math.max(5,Math.min(canvas.width-170,px+size*1.5));
+      const ly=Math.max(22,Math.min(canvas.height-5,py-size));
+      c.fillStyle='#173032e9';c.fillRect(lx-4,ly-16,170,21);
+      c.fillStyle='#ffe9bd';c.fillText(label,lx,ly-2);
+      c.restore();
     }
   }
   function onMap(e) {
@@ -822,9 +867,14 @@
     if(x<0||y<0||x>=state.width||y>=state.height)return;
     if(armedMiracle){
       const id=armedMiracle,r=S.castMiracle(state,id,{x,y,...opts()});
+      const effectTime=r.instant?'瞬間（0 日）':format(r.durationDays,0)+' 日';
       say(r.ok?(powerMeta('miracle',id)?.label||id)+
-        ` 已${r.overcast?'強制':''}施展（${r.costMultiplier}×），消耗 ${r.cost} DP；世界繼續自主運作。`:r.reason);
-      if(r.ok)armedMiracle=null;
+        ` 已${r.overcast?'強制':''}施展（${r.costMultiplier}×），消耗 ${r.cost} DP；`+
+        `半徑 ${r.radius} 格，作用時間 ${effectTime}。`:r.reason);
+      if(r.ok){
+        lastCastVisual=r.instant?{x,y,radius:r.radius,untilMs:performance.now()+2400}:null;
+        armedMiracle=null;
+      }
       render();return;
     }
     const mx=(e.clientX-rect.left)*canvas.width/rect.width;

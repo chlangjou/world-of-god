@@ -386,7 +386,7 @@
       `本次預計冷卻 ${format(preview.cooldownDays,1)} 模擬日`:'無法估算冷卻';
     $('rainCooldown').textContent=left?
       `冷卻中 · 剩餘 ${format(left/24,1)} 日 · 強制施放 ${preview.costMultiplier}× · ${forecast}`:
-      preview.reason||`已就緒 · ${forecast}`;
+      (preview.reason?`${preview.reason} · ${forecast}`:`已就緒 · ${forecast}`);
     $('rainBtn').textContent=armedMiracle?'取消選點 (Esc)':
       preview.overcast?`強制施放 ${preview.costMultiplier}×`:'選擇施展位置';
     // A player must always be able to cancel aiming, even if the sliders now
@@ -452,13 +452,6 @@
       state.agriculture?(state.nativeWorld?'原住民已在此生活 · Agriculture v0.1':'Agriculture v0.1 · 河流、季節與實際農作物'):
         'Original · 原始平衡對照';
     $('mapTip').hidden=!armedMiracle;
-    if(armedMiracle&&lastMiraclePreview){
-      const effectTime=lastMiraclePreview.instant?'瞬間（0 日）':
-        format(lastMiraclePreview.durationDays,0)+' 日';
-      $('mapTip').textContent=(powerMeta('miracle',armedMiracle)?.label||armedMiracle)+
-        ' · 半徑 '+lastMiraclePreview.radius+' 格 · '+effectTime+
-        ' · 點地圖施放 / Esc 取消';
-    }
     $('simHint').textContent=armedMiracle?('已選擇'+(powerMeta('miracle',armedMiracle)?.label||'神蹟')+'：點擊地圖施展（Esc 取消）'):
       (playtestHint()?playtestHint():
       attentionFocus?.level==='pause'?('已暫停：'+attentionFocus.text+' · Esc 清除定位'):
@@ -466,6 +459,13 @@
       st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。');
     $('simRate').textContent=`${speed}× · 約 ${format(2/speed,2)} 秒 / 模擬日`;
     updateCost();
+    if(armedMiracle&&lastMiraclePreview){
+      const effectTime=lastMiraclePreview.instant?'瞬間（0 日）':
+        format(lastMiraclePreview.durationDays,0)+' 日';
+      $('mapTip').textContent=(powerMeta('miracle',armedMiracle)?.label||armedMiracle)+
+        ' · 半徑 '+lastMiraclePreview.radius+' 格 · '+effectTime+
+        ' · 點地圖施放 / Esc 取消';
+    }
     const saints=state.religion.saints.map(id=>state.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
     const saintRoster=saints.map(p=>p.id+':'+p.name).join('|');
     if(saintRoster!==lastSaintRoster){

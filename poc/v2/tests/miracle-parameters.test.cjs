@@ -104,15 +104,20 @@ test('Miracle radius, intensity and duration return to the values entered for ea
     'an untouched Miracle initially uses its own defaults');
   ui.set('radius',5);ui.set('intensity',165);ui.set('duration',23);
   ui.choose('harvest');
-  assert.equal(ui.el('durationLabel').hidden,true,'instant Miracle hides duration');
+  assert.equal(ui.el('durationLabel').hidden,false,'instant Miracle keeps a visible time field');
+  assert.equal(ui.el('duration').disabled,true,'instant duration is read-only');
+  assert.equal(ui.el('duration').value,'0');
+  assert.equal(ui.el('durationValue').textContent,'瞬間');
   ui.set('radius',9);ui.set('intensity',150);
   ui.choose('ripening');
   assert.deepEqual(ui.values(),{radius:5,intensity:165,duration:23});
   assert.equal(ui.el('durationLabel').hidden,false);
+  assert.equal(ui.el('duration').disabled,false);
   ui.choose('harvest');
   assert.equal(ui.el('radius').value,'9');
   assert.equal(ui.el('intensity').value,'150');
-  assert.equal(ui.el('durationLabel').hidden,true);
+  assert.equal(ui.el('durationLabel').hidden,false);
+  assert.equal(ui.el('duration').disabled,true);
   ui.choose('rain');
   assert.deepEqual(ui.values(),{radius:11,intensity:110,duration:18});
   assert.equal(world.god.dp,initialDp,'switching powers never charges Divine Power');
@@ -130,6 +135,47 @@ test('Miracle radius, intensity and duration return to the values entered for ea
   assert.equal((cast.endsAtHour-cast.startsAtHour)/24,18);
 });
 
+test('instant Lightning keeps truthful area/time preview without a fake duration',async()=>{
+  const ui=await boot(),s=ui.world();
+  ui.choose('ripening');
+  assert.equal(ui.el('duration').disabled,false);
+  assert.ok(ui.el('effectSummary').textContent.includes('半徑 7 格'));
+  assert.ok(ui.el('effectSummary').textContent.includes('12 日'));
+  ui.set('radius',9);ui.set('duration',21);
+  ui.choose('lightning');
+  assert.equal(ui.el('durationLabel').hidden,false);
+  assert.equal(ui.el('duration').disabled,true);
+  assert.equal(ui.el('duration').value,'0');
+  assert.equal(ui.el('durationValue').textContent,'瞬間');
+  assert.equal(ui.el('radius').disabled,true);
+  assert.equal(ui.el('radius').value,'1');
+  assert.equal(ui.el('radiusValue').textContent,'1 格');
+  assert.equal(ui.el('effectSummary').textContent,
+    '有效範圍：半徑 1 格 · 作用時間：瞬間（0 日）');
+  assert.ok(ui.el('mapTip').textContent.includes('半徑 1 格'));
+  assert.ok(ui.el('mapTip').textContent.includes('瞬間（0 日）'));
+  assert.ok(ui.el('rainCooldown').textContent.includes('本次預計冷卻'),
+    'effect duration and recovery cooldown must stay separate');
+  for(const type of ['heal','harvest']){
+    ui.choose(type);
+    assert.equal(ui.el('durationLabel').hidden,false);
+    assert.equal(ui.el('duration').value,'0');
+    assert.equal(ui.el('duration').disabled,true);
+    assert.ok(ui.el('effectSummary').textContent.includes('瞬間（0 日）'));
+  }
+  ui.choose('ripening');
+  assert.equal(ui.el('duration').disabled,false);
+  assert.equal(ui.el('duration').value,'21');
+  assert.equal(ui.el('radius').value,'9');
+  ui.choose('lightning');
+  s.god.dp=s.god.cap;
+  const at=s.camp;
+  const can=W.evaluateMiracle(s,'lightning',{x:at.x,y:at.y,radius:1,intensity:1,durationDays:0});
+  assert.equal(can.ok,true,can.reason);
+  ui.clickMap(at.x,at.y);
+  assert.ok(ui.el('toast').textContent.includes('半徑 1 格，作用時間 瞬間（0 日）'));
+  assert.equal(ui.el('mapTip').hidden,true);
+});
 test('Miracle and Oracle tabs remember selected powers and sliders across world reset and load',async()=>{
   const ui=await boot();
   ui.choose('efficiency');

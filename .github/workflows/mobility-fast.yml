@@ -10,6 +10,11 @@ on:
       - '.github/workflows/mobility-fast.yml'
   workflow_dispatch:
 
+# A rapid series of commits should not run multiple obsolete regressions.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -18,10 +23,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
+          package-manager-cache: false
       - name: Syntax
         working-directory: poc/v2
         run: |
@@ -33,10 +41,22 @@ jobs:
       - name: Fast physical contact, injury, Heal and Oracle matrix tests
         working-directory: poc/v2
         run: npm run test:fast
-      - name: Build and verify offline standalone
+      - name: Build offline standalone
         working-directory: poc/v2
         run: |
           npm run build:standalone
-          cmp dist/World-of-God-PoC-v2.html World-of-God-Playable.html
-          grep -q 'window.WOG_MOBILITY_PROFILE' World-of-God-Playable.html
-          grep -q 'WoGMobility' World-of-God-Playable.html
+          grep -q 'window.WOG_MOBILITY_PROFILE' dist/World-of-God-PoC-v2.html
+          grep -q 'window.WOG_SHRINE_PROFILE' dist/World-of-God-PoC-v2.html
+          grep -q 'WoGMobility' dist/World-of-God-PoC-v2.html
+          grep -q 'WoGTemple' dist/World-of-God-PoC-v2.html
+      # Source files are often committed before the downloadable HTML during
+      # feature development. Verify the checked-in release bundle on main or
+      # explicitly with workflow_dispatch, not on every intermediate push.
+      - name: Verify committed playable bundle (release gate)
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        working-directory: poc/v2
+        run: |
+          if ! cmp -s dist/World-of-God-PoC-v2.html World-of-God-Playable.html; then
+            echo "::error file=poc/v2/World-of-God-Playable.html::Offline playable HTML is stale. Run npm run build:standalone and copy dist/World-of-God-PoC-v2.html to World-of-God-Playable.html in the same release commit."
+            exit 1
+          fi

@@ -3,6 +3,15 @@
 這是從 `web-mvp-0` 移入 `main/poc/v2/` 的**獨立模組化 Web 試玩版**。
 不改動 `main/docs/` 正式 God–World 規則，也不取代 Godot PoC。
 
+## 宗教觀察、歷史來源與 Heal 瞄準（2026-10-23）
+
+- 上方神意介入區永遠顯示「己方／對手」**有效 Oracle**，不必翻歷史。右側原「聚落」改為「宗教」，比較雙方當前 Oracle、核心信徒（Devotion ≥40）、Priest、Saint、Shrine、Temple 與當地 Presence；仍可選擇聚落查看當地宗教分布。
+- 歷史保留事件類型（Miracle／Oracle／Faith／Birth），另由真實記錄的 `godId` 判定陣營：青藍是己方，珊瑚紅是對手，中立／沒有可靠歸因的舊事件維持中性色；舊存檔不會被人工改寫來源。地圖持續型 Miracle 的效果顏色仍代表種類，外圈表示施放者。
+- Heal 指向畫面中的受傷居民時，UI 記住居民 ID；即使 16× 模擬期間居民換位置，也會在點擊時採其**當前座標**施放。未選中傷者則仍按所點座標進行範圍治療。命中與神力扣除只使用原有 `castMiracle` 驗證路徑。
+- 不變更 8 小時邏輯 tick、傷害／Faith／DP／冷卻參數；較平滑的角色移動渲染可再獨立處理。快速回歸仍受 3 分鐘 CI 上限與 Node.js 22 約束。
+
+---
+
 ## Shrine / Temple 實體化試玩（功能分支，2026-10-22）
 
 分支：`feature/shrine-temple-web-poc-v0.1`。請先下載本分支的

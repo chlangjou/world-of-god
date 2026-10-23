@@ -72,7 +72,7 @@ function establishDuel(s,S,profile){
 }
 function createWorld(S,options){
   const {mode,seed,playtestProfile,oracleStrategyProfile,opponentProfile,
-    balanceProfile,religionProfile,mobilityProfile,divineProfile,shrineProfile,difficulty,opponentMode}=options;
+    balanceProfile,religionProfile,mobilityProfile,divineProfile,shrineProfile,difficulty,opponentMode,victoryProfile}=options;
   if(!['duel','native'].includes(mode))throw Error('未知試玩情境');
   const oracleStrategy=buildStrategy(oracleStrategyProfile,playtestProfile,mode);
   const chosenSeed=mode==='duel'?playtestProfile.duel.seed:
@@ -86,10 +86,15 @@ function createWorld(S,options){
   const s=S.create({seed:chosenSeed,
     ...(balanceProfile?{balanceProfile}:{}),
     religionProfile,mobilityProfile,divineProfile,shrineProfile,oracleStrategyProfile:oracleStrategy,
-    worldGenesisMode:'native',opponentProfile:opponent});
-  if(mode==='duel')return establishDuel(s,S,playtestProfile);
+    worldGenesisMode:'native',opponentProfile:opponent,victoryProfile});
+  if(mode==='duel'){
+    const ready=establishDuel(s,S,playtestProfile);
+    S.resetVictory(ready,victoryProfile); // The playable opening starts at Day 10, not Genesis.
+    return ready;
+  }
   s.playtest={profileId:playtestProfile.profileId,mode:'native',
     startedAtHour:s.hour};
+  S.resetVictory(s,victoryProfile);
   return s;
 }
 function score(s){

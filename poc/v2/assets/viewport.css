@@ -267,3 +267,29 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
  line-height:1.35}
 #townPanel .frontier-local b{color:#efcf91}
 #townPanel .frontier-local>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+
+/* Live enemy Oracle locators and four-faith status in the fixed inspector. */
+.faith-overview.multi-deity{gap:4px;margin-bottom:4px}
+.faith-overview.multi-deity .faith-card{padding:4px 5px}
+.faith-overview.multi-deity .faith-card strong{font-size:10px}
+.faith-overview.multi-deity .faith-card .faith-active{font-size:10px;margin:2px 0}
+.faith-overview.multi-deity .faith-card small{font-size:9px;line-height:1.25}
+.faith-card.side-third{border-left-color:#bca1f4}
+.faith-card.side-fourth{border-left-color:#e4c27e}
+.faith-card.side-third strong{color:#ccbaff}
+.faith-card.side-fourth strong{color:#f4d895}
+.oracle-duel-status .side-third{color:#bca1f4;font-weight:700}
+.oracle-duel-status .side-fourth{color:#e4c27e;font-weight:700}
+.faith-card .oracle-locate{display:inline-block;text-align:left;max-width:100%;
+ margin-top:3px;padding:2px 4px;border-radius:4px;border:1px solid #68817c;
+ background:#2b4341;color:#f2e2ae;font-size:10px;white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.faith-card .oracle-locate:hover{border-color:#e2c28e;background:#35524d}
+.faith-overview.multi-deity .oracle-locate{font-size:9px;margin-top:2px}
+#events .event.side-third{border-left-color:#bca1f4}
+#events .event.side-fourth{border-left-color:#e4c27e}
+#events .event.side-third:before{background:#bca1f4}
+#events .event.side-fourth:before{background:#e4c27e}
+#events .event.side-third .event-source{color:#bca1f4}
+#events .event.side-fourth .event-source{color:#e4c27e}

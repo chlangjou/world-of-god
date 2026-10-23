@@ -16,6 +16,7 @@ const opponent=JSON.stringify(JSON.parse(read('config/opponent-v0.2.json'))).rep
 const oracleStrategy=JSON.stringify(JSON.parse(read('config/oracle-specialization-v0.1.json'))).replace(/</g,'\\u003c');
 const playtest=JSON.stringify(JSON.parse(read('config/playable-evidence-v0.1.json'))).replace(/</g,'\\u003c');
 const shrine=JSON.stringify(JSON.parse(read('config/shrine-temple-v0.1.json'))).replace(/</g,'\\u003c');
+const victory=JSON.stringify(JSON.parse(read('config/victory-dominance-v0.1.json'))).replace(/</g,'\\u003c');
 const scripts='<script>window.WOG_RELIGION_PROFILE='+religion+';</'+'script>'+ 
   '<script>window.WOG_AGRICULTURE_PROFILE='+profile+';</'+'script>'+
   '<script>window.WOG_MOBILITY_PROFILE='+mobility+';</'+'script>'+
@@ -24,12 +25,14 @@ const scripts='<script>window.WOG_RELIGION_PROFILE='+religion+';</'+'script>'+
   '<script>window.WOG_ORACLE_STRATEGY_PROFILE='+oracleStrategy+';</'+'script>'+
   '<script>window.WOG_PLAYTEST_PROFILE='+playtest+';</'+'script>'+ 
   '<script>window.WOG_SHRINE_PROFILE='+shrine+';</'+'script>'+ 
+  '<script>window.WOG_VICTORY_PROFILE='+victory+';</'+'script'>+ 
   '<script>\n'+read('src/mobility.js')+'\n</'+'script>'+ 
   '<script>\n'+read('src/shrine-temple.js')+'\n</'+'script>'+ 
+  '<script>\n'+read('src/victory.js')+'\n</'+'script'>+ 
   '<script>\n'+read('src/sim.js')+'\n</'+'script>'+
   '<script>\n'+read('src/playtest.js')+'\n</'+'script>'+
   '<script>\n'+read('src/app.js')+'\n</'+'script>';
-const marker='<script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/app.js"></script>';
+const marker='<script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/victory.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/app.js"></script>';
 if(!html.includes(marker))throw Error('Missing JS entrypoints');
 html=html.replace(marker,scripts);
 const folder=path.join(root,'dist');

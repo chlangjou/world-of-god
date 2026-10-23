@@ -1204,7 +1204,7 @@
         if(s.agriculture)t.cropStock=Math.max(0,t.cropStock*(1-fraction));
         else t.crop=Math.max(.02,t.crop*(1-fraction));
       }
-      applied+=TEMPLE.strike(s,center,intensity,log);
+      applied+=TEMPLE.strike(s,center,intensity,log,god.id);
     }else if(['efficiency','confusion','blindness'].includes(type)){
       for(const p of people){
         if(type==='efficiency'&&(p.religionId!==faith.id||p.devotion<s.rules.faithThreshold))continue;

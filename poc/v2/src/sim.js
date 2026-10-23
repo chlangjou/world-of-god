@@ -2940,8 +2940,7 @@
   // legal one appears. They use partial local observations and independent
   // priorities, resembling a deity with limited attention, not a bad dice roll.
   // World physics and actual cast validation remain identical on every tier.
-  function opponentLimitedTurn(s,faith,adherents,saint,policy,day){
-    const ai=s.opponent;
+  function opponentLimitedTurn(s,faith,adherents,saint,policy,day,ai=s.opponent,god=s.opponentGod){
     const priests=faith.priests.map(id=>adherents.find(p=>p.id===id)).filter(Boolean);
     const source=priests[0]||saint||adherents.slice().sort((a,b)=>
       b.devotion-a.devotion||a.id.localeCompare(b.id))[0];
@@ -2974,9 +2973,9 @@
       const quota=faith.saintQuota?.[saint.id]?.quota??0;
       if(active&&active.intentType!==wanted&&quota>0&&
         day*24-active.issuedAtHour>=s.oracleStrategy.aiFocusDays*24)
-        issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,intentType:'life.balance'});
+        issueOracle(s,{godId:god.id,saintId:saint.id,intentType:'life.balance'});
       if(!faith.oracles.some(o=>o.status==='active'&&o.saintId===saint.id))
-        issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,intentType:wanted});
+        issueOracle(s,{godId:god.id,saintId:saint.id,intentType:wanted});
     }else if(saint&&day>=policy.oracleStartDay&&
       !faith.oracles.some(o=>o.status==='active')){
       let calling='religion.spread';
@@ -2996,7 +2995,7 @@
           (nearbyUnaffiliated>0||agenda===2)?'religion.spread':
             'food.produce';
       }
-      issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
+      issueOracle(s,{godId:god.id,saintId:saint.id,
         intentType:calling,durationDays:ai.spreadOracleDurationDays});
     }
     const blessed={...center,radius:Math.max(3,Math.min(7,r)),intensity:.85,durationDays:10};
@@ -3036,7 +3035,7 @@
       if(nearbyFields&&crop>.3)
         add('harvest',{...center,radius:6,intensity:.9},4.4);
       if(policy.offensiveEveryTurns>0&&ai.turns%policy.offensiveEveryTurns===0){
-        const nearbyEnemy=s.religion.priests.map(id=>living(s).find(p=>p.id===id))
+        const nearbyEnemy=allFaiths(s).filter(f=>f.id!==faith.id).flatMap(f=>f.priests).map(id=>living(s).find(p=>p.id===id))
           .filter(p=>p&&dist(p,center)<=r);
         const target=nearbyEnemy.sort((a,b)=>dist(a,center)-dist(b,center))[0];
         if(target)add('confusion',{x:target.x,y:target.y,radius:5,
@@ -3046,42 +3045,41 @@
       // expansion. It ranks only its few local alternatives and may overlook a
       // lower-ranked viable cast. This is not injecting arbitrary failed casts.
       const agenda=['heal','rain','ripening','efficiency','harvest','confusion'][
-        hash(s.seed+'|opponent-agenda|'+Math.floor(day/60))%6];
+        hash(s.seed+'|opponent-agenda|'+Math.floor(day/60)+(god.id==='g2'?'':'|'+god.id))%6];
       const score=v=>v.priority+(v.type===agenda?2.8:0);
       options.sort((a,b)=>score(b)-score(a)||a.type.localeCompare(b.type));
       for(const option of options.slice(0,policy.choiceBudget))
         action.push([option.type,option.args]);
     }
     for(const [type,args] of action){
-      const input={...args,godId:s.opponentGod.id};
+      const input={...args,godId:god.id};
       const check=evaluateMiracle(s,type,input);
       if(!check.ok||check.costMultiplier>policy.maxForcedMultiplier)continue;
       const result=castMiracle(s,type,input);
       if(result.ok){ai.casts++;break;}
     }
   }
-  function opponentTurn(s){
-    const ai=s.opponent;
+  function opponentTurn(s,ai=s.opponent,faith=s.opponentReligion,god=s.opponentGod){
     if(!ai?.enabled)return;
-    const day=days(s),policy=opponentBehavior(s);
+    const day=days(s),policy=opponentBehavior(s,ai);
     if(day<policy.startDay||day%policy.actionIntervalDays!==0||
       ai.lastActionDay===day)return;
     ai.lastActionDay=day;ai.turns++;
-    const faith=s.opponentReligion,adherents=living(s).filter(p=>
+    const adherents=living(s).filter(p=>
       p.religionId===faith.id&&p.devotion>=20);
     if(!adherents.length)return;
     const saint=faith.saints.map(id=>adherents.find(p=>p.id===id)).find(Boolean);
     if(policy.decisionStyle!=='historical'){
-      opponentLimitedTurn(s,faith,adherents,saint,policy,day);
+      opponentLimitedTurn(s,faith,adherents,saint,policy,day,ai,god);
       return;
     }
     if(saint&&day>=policy.oracleStartDay){
       if(s.oracleStrategy){
         if(!faith.oracles.some(o=>o.status==='active'&&o.saintId===saint.id))
-          issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
+          issueOracle(s,{godId:god.id,saintId:saint.id,
             intentType:['food.produce','family.nurture','settlement.explore'][Math.floor(day/90)%3]});
       }else if(!faith.oracles.some(o=>o.status==='active'&&o.intentType==='religion.spread'))
-        issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
+        issueOracle(s,{godId:god.id,saintId:saint.id,
           intentType:'religion.spread',durationDays:ai.spreadOracleDurationDays});
     }
     // Real followers, physical farmland and local faith determine every target.
@@ -3093,7 +3091,7 @@
     const weak=adherents.filter(p=>dist(p,center)<=6&&p.health<85);
     const choices=[];
     if(policy.offensiveEveryTurns>0&&ai.turns%policy.offensiveEveryTurns===0){
-      const enemyPriest=s.religion.priests.map(id=>living(s).find(p=>p.id===id))
+      const enemyPriest=allFaiths(s).filter(f=>f.id!==faith.id).flatMap(f=>f.priests).map(id=>living(s).find(p=>p.id===id))
         .filter(Boolean).sort((a,b)=>dist(a,center)-dist(b,center))[0];
       if(enemyPriest&&dist(enemyPriest,center)<12)
         choices.push(['confusion',{x:enemyPriest.x,y:enemyPriest.y,radius:5,
@@ -3111,7 +3109,7 @@
     if(productiveCore)
       choices.push(['efficiency',{...center,radius:7,intensity:.85,durationDays:10}]);
     for(const [type,args] of choices){
-      const input={...args,godId:s.opponentGod.id};
+      const input={...args,godId:god.id};
       const evaluated=evaluateMiracle(s,type,input);
       if(!evaluated.ok||evaluated.costMultiplier>policy.maxForcedMultiplier)continue;
       const cast=castMiracle(s,type,input);

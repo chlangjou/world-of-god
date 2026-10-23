@@ -25,6 +25,7 @@ function seedYoungAdults(s){
   const rival=original.filter(h=>opponentHomes.has(h.id));
   if(local.length)grouped.push(local);
   if(rival.length)grouped.push(rival);
+  const createYoungAdults=s.playtest?.mode!=='duel'; // preserve 30-person Nurture evidence lesson
   let youngAdults=0;
   for(const [groupIndex,homes] of grouped.entries()){
     const sorted=[...homes].sort((a,b)=>Number(a.id.slice(1))-Number(b.id.slice(1)));
@@ -32,7 +33,7 @@ function seedYoungAdults(s){
       const child=s.people.find(p=>p.alive&&p.householdId===h.id&&p.stage==='child');
       if(!child)continue;
       child.genderRole=(i<2?i:i+groupIndex)%2===0?'gestate':'fertilize';
-      if(i>=Math.min(sorted.length,Math.max(0,F.starterYouthsPerCommunity||0)))continue;
+      if(!createYoungAdults||i>=Math.min(sorted.length,Math.max(0,F.starterYouthsPerCommunity||0)))continue;
       child.stage='adult';
       const min=Math.max(18,F.starterYoungAdultMinAge||19);
       const max=Math.max(min,F.starterYoungAdultMaxAge||22);

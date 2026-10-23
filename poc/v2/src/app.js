@@ -1070,6 +1070,22 @@
       c.restore();
     }
     for(const t of state.settlements){c.save();c.strokeStyle=t.id===selectedTownId?'#f4d69f':t.native?'#98cbb7':'#bed9b4';c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();}
+    // Human-built towers use a different silhouette from religious temples.
+    for(const polity of state.politics?.polities||[]){
+      const town=state.settlements.find(t=>t.id===polity.townId);
+      if(!town||polity.watchtower.status==='unbuilt')continue;
+      const px=(town.x+2.3)*size,py=(town.y-1)*size;
+      c.save();c.fillStyle='#35494b';c.strokeStyle=polityColor(polity);c.lineWidth=2;
+      if(polity.watchtower.status==='built'){
+        c.fillRect(px-size*.4,py-size*.5,size*.8,size*1.2);
+        c.strokeRect(px-size*.4,py-size*.5,size*.8,size*1.2);
+        c.fillStyle='#e8c995';c.fillRect(px-size*.56,py-size*.65,size*1.12,size*.26);
+        c.fillStyle=polityColor(polity);c.beginPath();
+        c.moveTo(px,py-size*.65);c.lineTo(px,py-size*1.35);
+        c.lineTo(px+size*.75,py-size*1.12);c.lineTo(px,py-size*.94);c.fill();
+      }else{c.setLineDash([3,3]);c.strokeRect(px-size*.5,py-size*.5,size,size);c.setLineDash([]);}
+      c.restore();
+    }
     // Outpost construction is derived from real independent households, not a divine zone.
     for(const camp of S.frontierStatus(state).camps){
       const px=(camp.x+.5)*size,py=(camp.y+.5)*size;
@@ -1115,9 +1131,32 @@
       }
       c.restore();
     }
+    // Military group banners are POLITICAL, not religious. Real citizens
+    // wear their own faith colors below; avoid a God-to-army one-to-one mapping.
+    for(const polity of state.politics?.polities||[]){
+      const m=polity.militia;
+      if(!m.memberIds.length)continue;
+      const px=(m.x+.5)*size,py=(m.y+.5)*size;
+      c.save();c.strokeStyle=polityColor(polity);c.fillStyle='#102b2adf';c.lineWidth=1.8;
+      c.beginPath();c.arc(px,py,Math.max(9,size*.85),0,Math.PI*2);c.fill();c.stroke();
+      c.fillStyle=polityColor(polity);c.font='bold 11px system-ui';c.textAlign='center';c.textBaseline='middle';
+      c.fillText(String(m.memberIds.length),px,py-size*.8);
+      if(m.stance==='march'||m.stance==='return'){
+        const last=m.path?.[m.path.length-1];
+        if(last){c.setLineDash([4,4]);c.beginPath();c.moveTo(px,py);
+          c.lineTo((last.x+.5)*size,(last.y+.5)*size);c.stroke();c.setLineDash([]);}
+      }
+      c.restore();
+    }
     visibleInjured=state.people.filter(p=>p.alive&&p.health<95).map(p=>({id:p.id,x:p.x,y:p.y}));
     const allFaithForMap=allDisplayedFaiths();
-    for(const p of state.people){if(!p.alive)continue;const px=(p.x+.5)*size,py=(p.y+.5)*size;
+    for(const p of state.people){if(!p.alive)continue;
+      const soldierOf=(state.politics?.polities||[]).find(polity=>
+        polity.militia.memberIds.includes(p.id));
+      const ranks=soldierOf?.militia.memberIds||[];
+      const visualOffset=soldierOf?(ranks.indexOf(p.id)-(ranks.length-1)/2)*size*.88:0;
+      const px=(p.x+.5)*size+visualOffset,py=(p.y+.5)*size;
+      const isLeader=(state.politics?.polities||[]).some(polity=>polity.leaderId===p.id);
       const faction=allFaithForMap.find(f=>f.id===p.religionId);
       const saint=!!faction?.saints.includes(p.id),priest=!!faction?.priests.includes(p.id);
       const rivalSaint=saint&&faction.id!==state.religion.id;
@@ -1128,6 +1167,35 @@
         saint?'#80e4eb':priest?'#c4a2fa':
         faction?factionColor(faction.id):p.devotion>=20?'#e1e6c2':'#bcd9d2';
       c.fill();c.strokeStyle='#21342fcc';c.lineWidth=1.4;c.stroke();
+      // Readable human pictogram at 12px/map-cell. Head remains existing
+      // religion/Priest/Saint color; arms, body, legs add human identity.
+      const coat=c.fillStyle,step=['march','retreat','travel','fight'].includes(p.activity)?
+        Math.sin(time*9+(p.x+p.y))*.12*size:0;
+      c.strokeStyle='#1b312f';c.lineWidth=Math.max(1,size*.16);
+      c.beginPath();
+      c.moveTo(px-size*.18,py+size*.66);c.lineTo(px-size*.24-step,py+size*.9);
+      c.moveTo(px+size*.18,py+size*.66);c.lineTo(px+size*.24+step,py+size*.9);c.stroke();
+      c.fillStyle=coat;c.fillRect(px-size*.24,py+size*.26,size*.48,size*.41);
+      c.strokeStyle='#18332fcc';c.lineWidth=Math.max(.8,size*.08);
+      c.strokeRect(px-size*.24,py+size*.26,size*.48,size*.41);
+      c.beginPath();c.moveTo(px-size*.25,py+size*.34);c.lineTo(px-size*.43,py+size*.55);
+      c.moveTo(px+size*.25,py+size*.34);c.lineTo(px+size*.43,py+size*.55);c.stroke();
+      if(soldierOf){
+        const tint=polityColor(soldierOf);
+        c.save();c.fillStyle=tint;c.strokeStyle='#10292c';c.lineWidth=1;
+        c.beginPath();c.moveTo(px+size*.35,py+size*.13);
+        c.lineTo(px+size*.78,py+size*.17);c.lineTo(px+size*.76,py+size*.6);
+        c.lineTo(px+size*.55,py+size*.8);c.lineTo(px+size*.34,py+size*.6);
+        c.closePath();c.fill();c.stroke();c.restore();
+      }
+      if(isLeader){
+        c.save();c.fillStyle='#f5d17d';c.strokeStyle='#6b4c2e';c.lineWidth=1;
+        c.beginPath();c.moveTo(px-size*.45,py-size*.6);
+        c.lineTo(px-size*.4,py-size*1.1);c.lineTo(px-size*.14,py-size*.9);
+        c.lineTo(px,py-size*1.25);c.lineTo(px+size*.2,py-size*.9);
+        c.lineTo(px+size*.44,py-size*1.1);c.lineTo(px+size*.4,py-size*.6);
+        c.closePath();c.fill();c.stroke();c.restore();
+      }
       if(p.mobilityTrip){
         c.strokeStyle='#f4e2ae';c.lineWidth=1.2;c.setLineDash([2,2]);
         c.beginPath();c.arc(px,py,size*.56,0,Math.PI*2);c.stroke();c.setLineDash([]);
@@ -1183,6 +1251,43 @@
         c.strokeStyle='#acd7e680';
         for(let i=0;i<30;i++){const aa=i*2.39996,rr=(i%10)/10*e.radius*size;const x=e.x*size+Math.cos(aa)*rr,y=e.y*size+Math.sin(aa)*rr;const fall=(time*19+i*13)%24;c.beginPath();c.moveTo(x,y+fall-12);c.lineTo(x-3,y+fall);c.stroke();}
       }
+      c.restore();
+    }
+    // Persistent geographic conflict markers: line of approach and a
+    // multi-day clash, instead of letting a one-tick decision vanish in logs.
+    for(const conflict of state.politics?.disputes||[]){
+      if(!['marching','clashing'].includes(conflict.status)&&
+         !(conflict.resolvedAtHour!==null&&state.hour-conflict.resolvedAtHour<8*24))continue;
+      const selected=conflict.id===visibleConflict()?.id;
+      const x=(conflict.site.x+.5)*size,y=(conflict.site.y+.5)*size;
+      const clash=conflict.status==='clashing',active=clash||conflict.status==='marching';
+      const radius=size*(clash?2.1:1.45);
+      c.save();c.lineWidth=selected?3:1.6;
+      c.strokeStyle=clash?'#fa8d78':active?'#ffd57d':'#e0d1a8';
+      c.fillStyle=clash?'#5f24244d':'#24383a8a';
+      c.beginPath();c.arc(x,y,radius+(clash?Math.sin(time*8)*size*.15:0),0,Math.PI*2);
+      c.fill();c.stroke();
+      const a=state.politics.polities.find(v=>v.id===conflict.aId);
+      const b=state.politics.polities.find(v=>v.id===conflict.bId);
+      if(clash&&a&&b){
+        c.setLineDash([4,4]);c.lineWidth=2;
+        c.strokeStyle=polityColor(a);c.beginPath();
+        c.moveTo((a.militia.x+.5)*size,(a.militia.y+.5)*size);c.lineTo(x,y);c.stroke();
+        c.strokeStyle=polityColor(b);c.beginPath();
+        c.moveTo((b.militia.x+.5)*size,(b.militia.y+.5)*size);c.lineTo(x,y);c.stroke();
+        c.setLineDash([]);
+        c.strokeStyle='#ffdb9d';c.lineWidth=2;
+        const k=Math.sin(time*12)*size*.15;
+        c.beginPath();c.moveTo(x-size*.7+k,y-size*.7);c.lineTo(x+size*.65,y+size*.7);
+        c.moveTo(x+size*.7,y-size*.7-k);c.lineTo(x-size*.65,y+size*.7);c.stroke();
+      }
+      c.textAlign='center';c.textBaseline='middle';
+      c.font='bold 11px system-ui';c.fillStyle='#ffeac3';
+      c.fillText(clash?'⚔':active?'!':'✓',x,y);
+      const banner=clash?'交戰 '+(conflict.roundsCompleted||0)+'/'+(state.politics.battleRounds||3):
+        active?'軍隊接近中':'衝突結束';
+      c.fillStyle='#0e2425e6';c.fillRect(x-47,y-radius-22,94,17);
+      c.fillStyle=clash?'#ffe2b9':'#f2efdc';c.fillText(banner,x,y-radius-14);
       c.restore();
     }
     const source=currentNeed();

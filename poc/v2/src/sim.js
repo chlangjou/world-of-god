@@ -1332,12 +1332,13 @@
     const active=faith.oracles.filter(o=>o.saintId===saintId&&o.status==='active');
     if(intentType==='life.balance')
       return active.length?{ok:true,saint,active}:{ok:false,reason:'這位 Saint 目前沒有需要解除的特化'};
-    if(s.oracleStrategy&&active.length)
-      return {ok:false,reason:'請先發佈 Reset Oracle，結束目前特化'};
-    if (!record || record.quota < 1) return { ok: false, reason: 'Saint 的神諭接收額度不足' };
+    if(s.oracleStrategy&&active.some(o=>o.intentType===intentType))
+      return {ok:false,reason:'這位 Saint 已經持有相同類型的有效神諭'};
+    // Atomic switch: do not release an old calling until the replacement can be issued.
+    if (!record || record.quota < 1) return { ok: false, reason: 'Saint 的神諭接收額度不足；原神諭保持生效' };
     if (faith.oracles.some(o => o.saintId === saintId && o.intentType === intentType && o.status === 'active'))
       return { ok: false, reason: '這位 Saint 已經持有相同類型的有效神諭' };
-    return { ok: true, saint };
+    return { ok: true, saint, replace:s.oracleStrategy?active:[] };
   }
   function issueOracle(s, input = {}) {
     const {faith,god,enemy}=actorFor(s,input.godId);
@@ -1355,8 +1356,17 @@
     }
     const durationDays=s.oracleStrategy?null:
       clamp(num(input.durationDays, s.rules.oracleDurationDays), 1, 720);
+    // Replacement charges only the new Oracle issue quota; Reset stays a separate
+    // free choice for ending a calling without issuing another one.
+    const prior=(test.replace||[]).map(o=>({id:o.id,type:o.intentType}));
+    const id='o'+s.nextId++;
+    for(const active of test.replace||[]){
+      active.status='replaced';
+      active.releasedAtHour=s.hour;
+      active.replacedByOracleId=id;
+    }
     faith.saintQuota[saintId].quota--;
-    const o = { id: 'o' + s.nextId++, godId: god.id, saintId,
+    const o = { id, godId: god.id, saintId,
       intentType, audience: 'local-community', issuedAtHour: s.hour,
       expiresAtHour: durationDays===null?null:s.hour+durationDays*24,
       status: 'active', propagatedAtHour: null,
@@ -1367,8 +1377,10 @@
     faith.oracles.push(o);
     if(enemy)s.opponent.oracleIssues++;
     log(s, 'oracle', `${enemy?faith.name+'的神諭':'神諭'}交給 ${test.saint.name}：${s.oracleStrategy?STRATEGY_LABELS[intentType]:(intentType==='religion.spread'?'鼓勵信眾更積極地傳播信仰':'請讓族人重視糧食生產')}。`,
-      ['Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定'],[],god.id);
-    return { ok: true, oracleId: o.id, saintId, quotaLeft: faith.saintQuota[saintId].quota };
+      [prior.length?'已直接替換這位 Saint 先前的 '+prior.map(x=>STRATEGY_LABELS[x.type]||x.type).join('／')+' 神諭；只扣新神諭接收額度':'首次向這位 Saint 發佈此神諭',
+       'Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定'],[],god.id);
+    return { ok: true, oracleId: o.id, saintId, replaced:prior,
+      quotaLeft: faith.saintQuota[saintId].quota };
   }
   function concludeOracle(s, oracleId) {
     const faith=s.religion;

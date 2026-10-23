@@ -507,7 +507,7 @@
   function render() {
     if(selectedNeedId&&!currentNeed()?.location)selectedNeedId=null;
     const located=currentNeed();
-    const st=S.stats(state), current=state.people.find(p=>p.id===chosen);
+    const st=S.stats(state), frontier=S.frontierStatus(state), current=state.people.find(p=>p.id===chosen);
     $('day').textContent=`第 ${st.day} 日`;
     $('weather').textContent=st.phase==='dry'?'乾旱期':st.phase==='rainy'?'雨季':'和暖時節';
     $('peopleMetric').textContent=st.people;
@@ -524,7 +524,14 @@
       ' 次；必須在 '+state.mobility.contactRadius+' 格內遇見':
       '此舊世界仍使用既有的抽象接觸模型';
     $('townMetric').title+=' · Shrine '+(st.shrineCount||0)+' / Temple '+(st.templeCount||0)+' · 集會 '+(st.ritualAttendances||0)+' 次';
-    $('houseMetric').textContent=`${st.houses}/${st.households} 有住所 · 新成家 ${st.newFamilies||0}`;
+    const foremost=[...frontier.camps].sort((a,b)=>
+      b.builtHomes-a.builtHomes||b.households-a.households)[0];
+    $('houseMetric').textContent=foremost?
+      `${st.houses}/${st.households} 有住所 · 拓荒 ${foremost.households}/${frontier.neededHouseholds} 戶（屋 ${foremost.builtHomes}/${frontier.neededHomes}）`:
+      `${st.houses}/${st.households} 有住所 · 新成家 ${st.newFamilies||0}`;
+    $('houseMetric').title=frontier.enabled?
+      `新形成聚落 ${frontier.formed} · 自主遷出 ${frontier.departures} 戶 · 尚在外地 ${frontier.waiting} 戶。於宗教分頁查看當地拓荒進展。`:
+      '此世界尚未啟用擴張型家戶模型';
     const dailyNeed=state.people.filter(p=>p.alive).reduce((a,p)=>a+(p.stage==='child'?state.rules.foodNeedChild:state.rules.foodNeedAdult),0);
     $('foodMetric').textContent=format(st.food);
     $('stockMetric').textContent=`約 ${format(st.food/Math.max(dailyNeed,.01),1)} 日 · 公共 ${format(st.commonFood)}`;
@@ -711,6 +718,27 @@
       '（須同時看有效密度）</div>'+
       '<div>設施：'+html(venue)+'</div></div>':
       '<div class="religion-local">尚未形成聚落。宗教仍可由個別信徒自主發展。</div>';
+    const townFrontier=frontier.camps.filter(p=>p.originTownId===town?.id);
+    const ownedHomes=town?.householdIds.filter(id=>state.households.some(h=>
+      h.id===id&&h.members.some(personId=>state.people.some(p=>
+        p.id===personId&&p.alive)))).length||0;
+    const readiness=ownedHomes<frontier.originMinHouseholds?
+      '社群再增加 '+(frontier.originMinHouseholds-ownedHomes)+' 戶可提高向外拓荒機會':
+      '居民可在物資允許時自主尋找外地定居點';
+    const frontierSummary=frontier.enabled?
+      '<div class="frontier-local"><b>自主拓荒</b> · 已新建 '+frontier.formed+
+      ' 村 · 全圖在外地 '+frontier.waiting+' 戶'+
+      '<div>'+html(town?town.name+'（'+ownedHomes+' 戶）':'全世界')+'：'+html(readiness)+'</div>'+
+      (townFrontier.length?
+        townFrontier.slice(0,2).map(p=>
+          '<div>候選地 ('+p.x+','+p.y+') · 家戶 '+p.households+'/'+
+          frontier.neededHouseholds+' · 完成住屋 '+p.builtHomes+'/'+
+          frontier.neededHomes+(p.missingHouseholds||p.missingHomes?
+            '（仍需'+(p.missingHouseholds?' +'+p.missingHouseholds+' 戶':'')+
+            (p.missingHomes?' +'+p.missingHomes+' 屋':'')+'）':'（待居民正式聚集）')+
+          '</div>').join(''):'<div>目前沒有從此地遷出的待建村家戶。</div>')+
+      '</div>':'';
+    $('townPanel').innerHTML+=frontierSummary;
     const filteredHomes=town?state.households.filter(h=>town.householdIds.includes(h.id)):state.households;
     const housePageSize=2;
     const housePages=Math.max(1,Math.ceil(filteredHomes.length/housePageSize));
@@ -878,6 +906,18 @@
       c.restore();
     }
     for(const t of state.settlements){c.save();c.strokeStyle=t.id===selectedTownId?'#f4d69f':t.native?'#98cbb7':'#bed9b4';c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();}
+    // Outpost construction is derived from real independent households, not a divine zone.
+    for(const camp of S.frontierStatus(state).camps){
+      const px=(camp.x+.5)*size,py=(camp.y+.5)*size;
+      c.save();c.strokeStyle='#e7cc87';c.lineWidth=1.5;c.setLineDash([3,4]);
+      c.beginPath();c.arc(px,py,size*2.5,0,Math.PI*2);c.stroke();
+      c.setLineDash([]);c.font='bold 10px system-ui';c.fillStyle='#ffdf97';
+      c.textAlign='left';c.fillText(
+        '拓荒 '+camp.households+'/'+(state.agriculture?.familyExpansion?.outpostMinHouseholds||2)+
+        ' 戶 · 屋 '+camp.builtHomes+'/'+(state.agriculture?.familyExpansion?.outpostMinHuts||2),
+        Math.min(canvas.width-158,px+size*2.5),Math.max(12,py-size*2.5));
+      c.restore();
+    }
     // Starting positions are historical camps, not fixed divine property lines.
     if(state.opponent?.originMode==='separated-native'&&state.opponentCamp){
       for(const origin of [{at:state.camp,name:'初光起點',stroke:'#f4d69f'},

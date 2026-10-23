@@ -10,6 +10,7 @@
   let visibleInjured=[],healLock=null; // UI-only snapshots, never stored in the world
   let focusedOracleId=null, selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
   let selectedNeedId=null, needPage=0, lastNeedsMarkup=null;
+  let selectedDisputeId=null, lastBattleMarkup=null;
   let lastAttentionSeq=0,attentionFocus=null;
   let presentedVictoryHour = null;
   const ticksPerRealSecond = 12 / 8;
@@ -82,7 +83,7 @@
     }
     return true;
   }
-  const taskName = {worship:'共同祈禱',build_ritual:'宗教設施施工',rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',travel:'短期出訪中',visit:'資源熱點停留',dead:'已離世'};
+  const taskName = {guard:'守備',march:'軍隊行軍',fight:'交戰',retreat:'撤退',build_watchtower:'修築瞭望塔',worship:'共同祈禱',build_ritual:'宗教設施施工',rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',travel:'短期出訪中',visit:'資源熱點停留',dead:'已離世'};
   const stageName = {adult:'成年人',child:'兒童',elder:'長者'};
   const occupationName = {food_producer:'糧食生產者',gatherer:'採集者',dependent:'受扶養者'};
   // First layer: action category; second layer: available power within that category.
@@ -474,7 +475,7 @@
     $('opponentMode').disabled=scenario!=='native';
     $('aiDifficulty').disabled=scenario==='duel';
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
-    focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;healLock=null;visibleInjured=[];paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
+    focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;healLock=null;visibleInjured=[];paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;selectedDisputeId=null;lastBattleMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -536,7 +537,7 @@
     $('opponentMode').disabled=scenarioId()!=='native';
     $('aiDifficulty').value=state.opponent?.difficulty||'standard';
     $('aiDifficulty').disabled=scenarioId()==='duel';
-    focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();announceVictoryIfNeeded();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+    focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;selectedDisputeId=null;lastBattleMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();announceVictoryIfNeeded();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
@@ -574,10 +575,49 @@
       `點圖施放將依當下神力、連發倍率與目標重新驗證；${forecast}`;
     $('rainBtn').classList.toggle('secondary',!!armedMiracle);
   }
+  const polityColors=['#75b7e0','#f1b46f','#a4ce90','#d9a1e8','#e78c80','#d7cc76'];
+  function polityColor(polity){
+    const i=(state.politics?.polities||[]).indexOf(polity);
+    return polityColors[Math.max(0,i)%polityColors.length];
+  }
+  function visibleConflict(){
+    const conflicts=state.politics?.disputes||[];
+    const active=conflicts.filter(c=>['marching','clashing'].includes(c.status));
+    return active.find(c=>c.id===selectedDisputeId)||active[0]||
+      conflicts.slice().reverse().find(c=>
+        c.resolvedAtHour!==null&&state.hour-c.resolvedAtHour<=12*24)||null;
+  }
+  function conflictSummary(c){
+    const a=state.politics?.polities.find(p=>p.id===c.aId),
+      b=state.politics?.polities.find(p=>p.id===c.bId);
+    const townName=p=>state.settlements.find(t=>t.id===p?.townId)?.name||'未知聚落';
+    const side=p=>p?townName(p)+' '+p.militia.memberIds.length+' 人':'未知部隊';
+    const title=c.status==='marching'?'正在向石礦進軍':
+      c.status==='clashing'?'石礦交戰中':'石礦衝突已結束';
+    const status=c.status==='clashing'?
+      '第 '+(c.roundsCompleted||0)+' / '+(state.politics.battleRounds||3)+' 回合 · 可施放 Heal 介入':
+      c.status==='marching'?'雙方民兵正沿地圖行軍；接觸時將自動降至 1×':
+      (c.winnerId?'勝方：'+townName(state.politics.polities.find(p=>p.id===c.winnerId)):'雙方撤退');
+    return {title,status,a,b,sideA:side(a),sideB:side(b)};
+  }
+  function renderBattleStatus(){
+    const element=$('battleFocusBtn'),c=visibleConflict();
+    element.hidden=!c;
+    if(!c){lastBattleMarkup=null;return;}
+    const info=conflictSummary(c),badge=c.status==='clashing'?'⚔':c.status==='marching'?'➤':'✓';
+    const markup='<span class="battle-focus-title">'+badge+' '+html(info.title)+'</span>'+
+      '<span class="battle-focus-armies"><i style="background:'+polityColor(info.a)+'"></i>'+
+      html(info.sideA)+'　vs　<i style="background:'+polityColor(info.b)+'"></i>'+html(info.sideB)+'</span>'+
+      '<span class="battle-focus-detail">'+html(info.status)+'</span>';
+    if(lastBattleMarkup!==markup){element.innerHTML=markup;lastBattleMarkup=markup;}
+    element.setAttribute('aria-label','定位戰場：'+info.title+'，'+info.sideA+' 對 '+info.sideB+'，'+info.status);
+  }
   function render() {
     if(selectedNeedId&&!currentNeed()?.location)selectedNeedId=null;
     const located=currentNeed();
     const st=S.stats(state), frontier=S.frontierStatus(state), current=state.people.find(p=>p.id===chosen);
+    const battle=visibleConflict();
+    renderBattleStatus();
     $('day').textContent=`第 ${st.day} 日`;
     $('weather').textContent=st.phase==='dry'?'乾旱期':st.phase==='rainy'?'雨季':'和暖時節';
     $('peopleMetric').textContent=st.people;
@@ -638,7 +678,8 @@
     $('applyAgricultureBtn').disabled=profileLoading||!state.agriculture;
     const focused=focusedOracleId&&S.oracleMap(state).find(m=>
       m.id===focusedOracleId&&m.religionId!==state.religion.id);
-    $('mapStatus').textContent=profileLoading?'載入平衡設定中…':focused?
+    $('mapStatus').textContent=profileLoading?'載入平衡設定中…':
+      battle?.status==='clashing'?'民兵正在石礦交戰：可在戰鬥結束前施放 Miracle':focused?
       '對手神諭定位：'+focused.religionName+' · '+
       (availablePowers.oracle.find(o=>o.id===focused.intentType)?.label||focused.intentType)+
       '（地圖有 Oracle 接收與傳達標記，實際受眾由個人傳播決定）':located?.location?
@@ -649,6 +690,7 @@
     $('simHint').textContent=armedMiracle?('已選擇'+(powerMeta('miracle',armedMiracle)?.label||'神蹟')+'：點擊地圖施展（Esc 取消）'):
       (playtestHint()?playtestHint():
       attentionFocus?.level==='pause'?('已暫停：'+attentionFocus.text+' · Esc 清除定位'):
+      battle?.status==='clashing'?'真實民兵持續交戰中 · 地圖上兩側部隊可分開瞄準 Heal':
       located?.location?'需求中心已標示於地圖；缺雨虛線圈是農田評估範圍，不會自動施展神蹟。':
       st.settlements?'居民繼續自治。觀察天候、糧倉與神諭的實際後果。':'正在尋找建材、建造住屋；聚落不由神明直接放置。');
     $('simRate').textContent=`${speed}× · 約 ${format(2/speed,2)} 秒 / 模擬日`;
@@ -1246,6 +1288,16 @@
     if(marker?.location&&Math.hypot(x-marker.location.center.x,y-marker.location.center.y)<=1.6){
       showInspector('needs');return;
     }
+    const dispute=(state.politics?.disputes||[]).slice().reverse().find(c=>
+      Math.hypot(c.site.x-x,c.site.y-y)<=2.3&&
+      (['marching','clashing'].includes(c.status)||
+       (c.resolvedAtHour!==null&&state.hour-c.resolvedAtHour<8*24)));
+    if(dispute){
+      selectedDisputeId=dispute.id;render();
+      const summary=conflictSummary(dispute);
+      say('已定位石礦爭端：'+summary.sideA+' 對 '+summary.sideB+'。'+summary.status);
+      return;
+    }
     const site=(state.religiousSites||[]).find(v=>Math.hypot(v.x-x,v.y-y)<=1.5);
     if(site){
       selectedTownId=site.townId;showInspector('town');
@@ -1263,6 +1315,12 @@
     document.querySelectorAll('[data-speed]').forEach(b=>
       b.classList.toggle('active',Number(b.dataset.speed)===1));
     attentionFocus=note;
+    if(note.type==='battle'){
+      selectedDisputeId=note.disputeId;
+      paused=false;
+      say('石礦交戰開始：自動降為 1×；地圖兩側有各自的民兵，可使用 Heal 等合法神蹟介入。');
+      render();return true;
+    }
     if(note.level==='pause'){
       paused=true;
       if(state.people.some(p=>p.id===note.personId&&p.alive))chosen=note.personId;
@@ -1311,6 +1369,16 @@
     if(t-lastDraw>145){lastDraw=t;render();}
     requestAnimationFrame(animate);
   }
+  $('battleFocusBtn').onclick=()=>{
+    const battle=visibleConflict();
+    if(!battle)return;
+    selectedDisputeId=battle.id;
+    const info=conflictSummary(battle);
+    attentionFocus={level:'battle',center:battle.site};
+    say('戰場座標 ('+battle.site.x+', '+battle.site.y+')：'+info.sideA+
+      ' 對 '+info.sideB+'；'+info.status);
+    render();
+  };
   $('pauseBtn').onclick=()=>{if(paused&&state.victory?.winner&&!state.victory.continued){showVictoryDialog();return;}paused=!paused;render();};
   document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>{speed=+btn.dataset.speed;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',b===btn));render();});
   ['radius','intensity','duration'].forEach(id=>$(id).addEventListener('input',()=>{

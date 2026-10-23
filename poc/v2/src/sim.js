@@ -224,6 +224,16 @@
     else if(Object.hasOwn(profile,'faithDefenseModel'))r.faithDefenseModel='linear-clamped';
     if(profile.counterDiagnosticsEnabled===true)r.counterDiagnosticsEnabled=true;
     if(profile.spreadMatrixEnabled===true)r.spreadMatrixEnabled=true;
+    // Optional evidence-response pairing, absent from legacy save rules.
+    if(profile.oracleMiracleCounterEnabled===true){
+      r.oracleMiracleCounterEnabled=true;
+      r.oracleMiracleCounterMultiplier=clamp(num(
+        profile.oracleMiracleCounterMultiplier,2),1,4);
+      r.oracleMiracleCounterBaseChance=clamp(num(
+        profile.oracleMiracleCounterBaseChance,.27),0,.5);
+      r.oracleMiracleCounterBonusFraction=clamp(num(
+        profile.oracleMiracleCounterBonusFraction,.4),.1,1);
+    }
     // Optional timing experiment: historically counterRepeatDays gated only 40+
     // challenges. Opt in to covering below-40 evidence follow-up as well.
     if(profile.counterRepeatIncludesFollowup===true)
@@ -970,6 +980,14 @@
       score:clamp(old+value,0,60),
       expiresAtHour:s.hour+s.religionPropagation.miracleInterestDays*24};
   }
+  function oracleMiracleResponseChance(s,p,type){
+    if(!s.oracleStrategy?.oracleMiracleCounterEnabled)return null;
+    const original=s.oracleStrategy.oracleMiracleCounterBaseChance;
+    const match=oracleMiracleMatch(s,p,type);
+    return {chance:clamp(original*(match?
+      s.oracleStrategy.oracleMiracleCounterMultiplier:1),0,1),
+      match,baseline:original};
+  }
   function applyMiracleFaith(s,faith,p,amount,type,role){
     if(!p.alive||amount<=0)return false;
     const credible=faithContext(s,faith,p);
@@ -985,10 +1003,18 @@
     const magnitude=Math.max(0,Math.round(amount*credible*factor));
     if(!magnitude)return false;
     p.lastMiracleFaith[key]=s.hour;
+    const response=oracleMiracleResponseChance(s,p,type);
+    // The base outcome remains real and unchanged. A separate, modest
+    // evidence-response opportunity becomes twice as likely when the
+    // beneficiary's actually-heard Oracle matches this Miracle.
+    const extra=!!response&&religionRand(s,faith)<response.chance?
+      Math.max(1,Math.round(magnitude*s.oracleStrategy.oracleMiracleCounterBonusFraction)):0;
     if(p.religionId===faith.id){
-      const delta=Math.min(magnitude,100-p.devotion);
+      const delta=Math.min(magnitude+extra,100-p.devotion);
       p.devotion+=delta;
-      if(delta)p.lastFaithEvidence={hour:s.hour,cause:type+' 可信神蹟證據',change:delta,godId:faith.godId};
+      if(delta)p.lastFaithEvidence={hour:s.hour,cause:type+' 可信神蹟證據',
+        change:delta,godId:faith.godId,
+        ...(extra&&response?.match?{counterOracleId:response.match.oracleId}: {})};
       return delta>0;
     }
     if(p.religionId===null){
@@ -1000,12 +1026,13 @@
     // Credible opposing miracles may challenge even 40+ commitment. Ordinary
     // preaching still cannot. Actual conversion requires personal later choice.
     const doubt=Math.max(1,Math.round(magnitude*s.religionPropagation.miracleRivalDoubtFactor));
-    const delta=Math.min(doubt,Math.max(0,p.devotion-1));
+    const delta=Math.min(doubt+extra,Math.max(0,p.devotion-1));
     p.devotion-=delta;
     recordDivineInterest(s,p,faith,magnitude);
     if(delta){
       p.lastFaithEvidence={hour:s.hour,cause:type+' 異教神蹟證據',
-        change:-delta,godId:faith.godId};
+        change:-delta,godId:faith.godId,
+        ...(extra&&response?.match?{counterOracleId:response.match.oracleId}: {})};
       if(faith===s.opponentReligion&&p.religionId===s.religion.id){
         const last=s.attention?.lastPreachingHour??-Infinity;
         if(role==='direct'||s.hour-last>=14*24){
@@ -3799,7 +3826,7 @@
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
     settlementReligionStats,priestPetitions,prayerLocation,OPPONENT_DEFAULTS,
     setOpponentDifficulty,MOBILITY_DEFAULTS:MOBILITY.BASE,
-    frontierStatus,oracleMap,ORACLE_MIRACLE_COUNTERS,
+    frontierStatus,oracleMap,oracleMiracleResponseChance,ORACLE_MIRACLE_COUNTERS,
     victoryOverview:s=>VICTORY.overview(s,faithfulWeight),
     resetVictory:(s,profile)=>VICTORY.reset(s,faithfulWeight,profile),
     continueVictory:VICTORY.continueAfterVictory};

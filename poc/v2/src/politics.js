@@ -268,6 +268,24 @@ function startDispute(s,emit){
     }
   }
 }
+function combatStations(s,site,a,b){
+  // Keep two formations on separate *reachable* tiles beside the same physical
+  // quarry. This makes Heal targeting meaningful without faking an RTS order.
+  const slots=[];
+  for(const [dx,dy] of [[-2,0],[2,0],[0,-2],[0,2],[-3,0],[3,0],[0,-3],[0,3]]){
+    const at={x:site.x+dx,y:site.y+dy};
+    if(walkable(s,at.x,at.y)&&route(s,site,at)?.length<=5)slots.push(at);
+  }
+  let best=null,rank=-Infinity;
+  const ta=townOf(s,a),tb=townOf(s,b);
+  for(const first of slots)for(const second of slots){
+    const separation=distance(first,second);
+    if(separation<3)continue;
+    const score=separation*2-distance(first,ta)*.25-distance(second,tb)*.25;
+    if(score>rank){rank=score;best=[first,second];}
+  }
+  return best||[site,site];
+}
 function resolveDisputes(s,emit,die,notify){
   const cfg=s.politics;
   for(const c of cfg.disputes.filter(c=>['marching','clashing'].includes(c.status))){
@@ -286,6 +304,8 @@ function resolveDisputes(s,emit,die,notify){
       // Encounter is now an actual playable interval, not a same-tick combat roll.
       c.status='clashing';c.clashStartedAtHour=s.hour;c.roundsCompleted=0;
       ua.stance='clash';ub.stance='clash';
+      const [placeA,placeB]=combatStations(s,c.site,a,b);
+      ua.x=placeA.x;ua.y=placeA.y;ub.x=placeB.x;ub.y=placeB.y;
       const townA=townOf(s,a),townB=townOf(s,b);
       emit(s,'conflict',townA.name+' 與 '+townB.name+' 的民兵在石礦開始交戰。',
         ['雙方實際抵達礦區；交戰預計 '+cfg.battleRounds+' 日',
@@ -297,7 +317,7 @@ function resolveDisputes(s,emit,die,notify){
     }
     // Each day resolves only one round. Heal during the interval can change
     // real participants' health and therefore the next engagement's outcome.
-    if(s.hour<=c.clashStartedAtHour)return;
+    if(s.hour<=c.clashStartedAtHour)continue;
     const powerA=defense(s,a,c.site),powerB=defense(s,b,c.site);
     const jitter=(hash(s.seed+'|round|'+c.id+'|'+c.roundsCompleted)/4294967296-.5)*.24;
     const advantaged=powerA.total+jitter>=powerB.total?a:b;

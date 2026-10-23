@@ -259,3 +259,11 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
 .victory-actions{display:flex;justify-content:flex-end}
 .victory-resolution small{color:#bdc6b8;font-size:11px;line-height:1.5}
 @media(max-width:650px){.victory-tier{grid-template-columns:1fr 76px 55px;font-size:11px}}
+
+
+/* Frontier: slim status rows coexist with religion info in the fixed-height inspector. */
+#townPanel .frontier-local{margin-top:5px;padding:5px 7px;background:#28332f;
+ border:1px dashed #aa976e;border-radius:6px;color:#d8d3bf;font-size:10px;
+ line-height:1.35}
+#townPanel .frontier-local b{color:#efcf91}
+#townPanel .frontier-local>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

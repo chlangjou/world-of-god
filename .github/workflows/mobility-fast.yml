@@ -7,6 +7,7 @@ on:
       - feature/shrine-temple-web-poc-v0.1
       - feature/victory-dominance-playable-v0.1
       - feature/autonomous-frontier-playable-v0.2
+      - feature/oracle-direct-switch-multigod-foundation-v0.1
     paths:
       - 'poc/v2/**'
       - '.github/workflows/mobility-fast.yml'
@@ -41,6 +42,8 @@ jobs:
           node --check src/sim.js
           node --check src/app.js
           node --check src/playtest.js
+          node --check tests/oracle-miracle-pairing.test.cjs
+          node --check tests/multigod.test.cjs
       - name: Fast physical contact, injury, Heal and Oracle matrix tests
         working-directory: poc/v2
         run: npm run test:fast
@@ -58,7 +61,7 @@ jobs:
       # feature development. Verify the checked-in release bundle on main or
       # explicitly with workflow_dispatch, not on every intermediate push.
       - name: Verify committed playable bundle (release gate)
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/victory-dominance-playable-v0.1' || github.ref == 'refs/heads/feature/autonomous-frontier-playable-v0.2' || github.event_name == 'workflow_dispatch'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/victory-dominance-playable-v0.1' || github.ref == 'refs/heads/feature/autonomous-frontier-playable-v0.2' || github.ref == 'refs/heads/feature/oracle-direct-switch-multigod-foundation-v0.1' || github.event_name == 'workflow_dispatch'
         working-directory: poc/v2
         run: |
           if ! cmp -s dist/World-of-God-PoC-v2.html World-of-God-Playable.html; then

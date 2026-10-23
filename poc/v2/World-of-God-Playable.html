@@ -1632,7 +1632,7 @@ function resolveDisputes(s,emit,die,notify){
         ['雙方實際抵達礦區；交戰預計 '+cfg.battleRounds+' 日',
          '玩家可在交戰期間使用合法 Miracle；不需指揮士兵']);
       if(typeof notify==='function')
-        notify(s,'slow','battle','石礦交戰：'+townA.name+' vs '+townB.name,
+        notify(s,'pause','battle','石礦交戰：'+townA.name+' vs '+townB.name,
           c.site,{disputeId:c.id});
       continue;
     }
@@ -1654,6 +1654,12 @@ function resolveDisputes(s,emit,die,notify){
     c.roundsCompleted++;
     c.lastRoundAtHour=s.hour;
     if(c.status!=='clashing')continue; // a participant death could break command
+    if(c.roundsCompleted===1&&c.roundsCompleted<cfg.battleRounds&&typeof notify==='function'){
+      const wa=ua.memberIds.filter(id=>s.people.some(p=>p.id===id&&p.alive&&p.health<100)).length;
+      const wb=ub.memberIds.filter(id=>s.people.some(p=>p.id===id&&p.alive&&p.health<100)).length;
+      if(wa+wb>0)notify(s,'pause','battle-wounded','石礦首輪交戰出現傷兵',c.site,
+        {disputeId:c.id,woundedCount:wa+wb});
+    }
     if(c.roundsCompleted<cfg.battleRounds)continue;
     const strengthA=defense(s,a,c.site).total,strengthB=defense(s,b,c.site).total;
     const tie=(hash(s.seed+'|battle|'+c.id)/4294967296-.5)*.3;
@@ -6388,7 +6394,8 @@ if(root)root.WOG_PLAYTEST=API;
     const title=c.status==='marching'?'正在向石礦進軍':
       c.status==='clashing'?'石礦交戰中':'石礦衝突已結束';
     const status=c.status==='clashing'?
-      '第 '+(c.roundsCompleted||0)+' / '+(state.politics.battleRounds||3)+' 回合 · 可施放 Heal 介入':
+      '第 '+(c.roundsCompleted||0)+' / '+(state.politics.battleRounds||3)+' 回合 · '+
+      (paused?'模擬已暫停，可選擇神蹟後按繼續':'交戰中，可施放 Heal 介入'):
       c.status==='marching'?'雙方民兵正沿地圖行軍；接觸時將自動降至 1×':
       (c.winnerId?'勝方：'+townName(state.politics.polities.find(p=>p.id===c.winnerId)):'雙方撤退');
     return {title,status,a,b,sideA:side(a),sideB:side(b)};
@@ -6941,7 +6948,10 @@ if(root)root.WOG_PLAYTEST=API;
       }
       c.restore();
     }
-    visibleInjured=state.people.filter(p=>p.alive&&p.health<95).map(p=>({id:p.id,x:p.x,y:p.y}));
+    const militiaIds=new Set((state.politics?.polities||[]).flatMap(v=>v.militia.memberIds));
+    visibleInjured=state.people.filter(p=>p.alive&&
+      (p.health<95||(militiaIds.has(p.id)&&p.health<100)))
+      .map(p=>({id:p.id,x:p.x,y:p.y}));
     const allFaithForMap=allDisplayedFaiths();
     for(const p of state.people){if(!p.alive)continue;
       const soldierOf=(state.politics?.polities||[]).find(polity=>
@@ -6993,7 +7003,8 @@ if(root)root.WOG_PLAYTEST=API;
         c.strokeStyle='#f4e2ae';c.lineWidth=1.2;c.setLineDash([2,2]);
         c.beginPath();c.arc(px,py,size*.56,0,Math.PI*2);c.stroke();c.setLineDash([]);
       }
-      if(p.campInjury&&!p.campInjury.recoveredAtHour&&p.health<95){
+      if((p.campInjury&&!p.campInjury.recoveredAtHour&&p.health<95)||
+        (soldierOf&&p.health<100)){
         c.save();c.strokeStyle='#e53f48';c.lineWidth=Math.max(2,size*.25);
         c.beginPath();c.moveTo(px-size*.35,py-size*.72);
         c.lineTo(px+size*.35,py-size*.72);
@@ -7143,6 +7154,61 @@ if(root)root.WOG_PLAYTEST=API;
       }
       c.restore();
     }
+    // A local 4× battle close-up solves the 64×64-map readability limit.
+    // This is presentation only: every health bar belongs to a real citizen;
+    // battle resolution remains in the deterministic human polity kernel.
+    const battle=visibleConflict();
+    if(battle?.status==='clashing'&&!armedMiracle){
+      const a=state.politics.polities.find(p=>p.id===battle.aId),
+        b=state.politics.polities.find(p=>p.id===battle.bId);
+      if(a&&b){
+        const left=canvas.width-287,top=canvas.height-158,w=277,h=147;
+        c.save();
+        c.fillStyle='#0b292dec';c.strokeStyle='#e4ac70';c.lineWidth=2;
+        c.fillRect(left,top,w,h);c.strokeRect(left,top,w,h);
+        c.fillStyle='#f8e3c4';c.font='bold 13px system-ui';c.textAlign='center';
+        c.fillText('交戰近景 · 第 '+(battle.roundsCompleted+1)+' / '+
+          (state.politics.battleRounds||3)+' 日',left+w/2,top+20);
+        c.font='bold 10px system-ui';
+        const factions=[a,b];
+        for(let side=0;side<2;side++){
+          const polity=factions[side],unit=polity.militia;
+          const town=state.settlements.find(t=>t.id===polity.townId);
+          const centerX=left+(side===0?74:203),tint=polityColor(polity);
+          c.fillStyle=tint;
+          c.fillText((town?.name||'部隊').slice(0,8),centerX,top+39);
+          const participants=unit.memberIds.map(id=>state.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
+          const avg=participants.length?participants.reduce((n,p)=>n+p.health,0)/participants.length:0;
+          c.fillStyle='#263b3e';c.fillRect(centerX-44,top+45,88,6);
+          c.fillStyle=avg<45?'#eb8e7f':'#9ccf9b';c.fillRect(centerX-44,top+45,88*avg/100,6);
+          c.fillStyle='#e7dfc8';c.font='10px system-ui';
+          c.fillText('健康 '+Math.round(avg)+' / 100',centerX,top+61);
+          participants.forEach((p,i)=>{
+            const x=centerX+(i-(participants.length-1)/2)*31;
+            const y=top+106+Math.sin(time*7+i+side)*2.4;
+            const facing=side===0?1:-1;
+            c.strokeStyle='#1f3435';c.lineWidth=2.2;
+            c.beginPath();c.moveTo(x-5,y+10);c.lineTo(x-7,y+20);
+            c.moveTo(x+5,y+10);c.lineTo(x+7,y+20);c.stroke();
+            c.fillStyle=tint;c.fillRect(x-7,y-2,14,15);
+            c.fillStyle='#e6ccb0';c.beginPath();c.arc(x,y-10,6,0,2*Math.PI);c.fill();
+            c.strokeStyle='#1f3435';c.lineWidth=1.5;c.stroke();
+            c.strokeStyle='#dbdde0';c.lineWidth=2.4;
+            c.beginPath();c.moveTo(x+facing*8,y+2);
+            c.lineTo(x+facing*19,y-10+Math.sin(time*10+side+i)*4);c.stroke();
+            c.fillStyle=tint;c.beginPath();
+            c.moveTo(x-facing*7,y);c.lineTo(x-facing*17,y-3);
+            c.lineTo(x-facing*16,y+12);c.lineTo(x-facing*10,y+16);
+            c.closePath();c.fill();
+          });
+        }
+        c.fillStyle='#f8d58e';c.font='bold 20px system-ui';c.textAlign='center';
+        c.fillText('⚔',left+w/2,top+111);
+        c.fillStyle='#b9c9c5';c.font='10px system-ui';
+        c.fillText('示意放大 · 選擇 Miracle 時還原完整地圖',left+w/2,top+138);
+        c.restore();
+      }
+    }
   }
   function onMap(e) {
     const rect=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-rect.left)*state.width/rect.width), y=Math.floor((e.clientY-rect.top)*state.height/rect.height);
@@ -7207,16 +7273,23 @@ if(root)root.WOG_PLAYTEST=API;
     if(selected && dd<3.2){chosen=selected.id;showInspector('person');say(`正在觀察 ${selected.name} 的生活與工作選擇`);}else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
   }
   function receiveFastForwardNotice(notes){
-    const note=notes.find(v=>v.level==='pause')||notes.find(v=>v.level==='slow');
+    const note=notes.find(v=>v.type==='battle'||v.type==='battle-wounded')||
+      notes.find(v=>v.level==='pause')||notes.find(v=>v.level==='slow');
     if(!note)return false;
     speed=1;acc=0;
     document.querySelectorAll('[data-speed]').forEach(b=>
       b.classList.toggle('active',Number(b.dataset.speed)===1));
     attentionFocus=note;
-    if(note.type==='battle'){
+    if(note.type==='battle'||note.type==='battle-wounded'){
       selectedDisputeId=note.disputeId;
-      paused=false;
-      say('石礦交戰開始：自動降為 1×；地圖兩側有各自的民兵，可使用 Heal 等合法神蹟介入。');
+      // UI gate: the simulation has not applied any combat damage at first
+      // contact, and waits for the human God to press Continue. No real-time
+      // reaction deadline, even when the prior speed was 16×.
+      paused=true;
+      attentionFocus={...note,level:'pause'};
+      say(note.type==='battle'?
+        '民兵接戰，模擬已自動暫停（尚未造成戰鬥傷害）。可先觀察雙方並選擇神蹟，按繼續才會交戰。':
+        '首輪交戰出現傷兵，模擬已自動暫停。可使用 Heal 或其他合法 Miracle；按繼續才進入下一回合。');
       render();return true;
     }
     if(note.level==='pause'){
@@ -7246,8 +7319,14 @@ if(root)root.WOG_PLAYTEST=API;
         if(speed<=1){
           for(let i=0;i<count;i++){
             S.advanceTicks(state,1);
-            lastAttentionSeq=state.attention?.seq||lastAttentionSeq;
             if(announceVictoryIfNeeded())break;
+            const items=(state.attention?.items||[]).filter(n=>n.seq>lastAttentionSeq);
+            lastAttentionSeq=state.attention?.seq||lastAttentionSeq;
+            // Ordinary prayer slowdown stays a fast-forward feature.
+            // Actual combat, however, must pause even at 1×.
+            if(items.some(n=>n.type==='battle'||n.type==='battle-wounded')&&
+              receiveFastForwardNotice(items.filter(n=>
+                n.type==='battle'||n.type==='battle-wounded')))break;
           }
         }else{
           // Check each simulation tick, not the end of a fast-forward batch:

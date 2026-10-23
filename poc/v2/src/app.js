@@ -120,8 +120,8 @@
   function eventFaction(event){
     if(event.godId===state.god.id)return 'player';
     if(state.opponentGod&&event.godId===state.opponentGod.id)return 'opponent';
-    if(event.godId===state.additionalGods?.[0]?.id)return 'third';
-    if(event.godId===state.additionalGods?.[1]?.id)return 'fourth';
+    if(event.godId&&event.godId===state.additionalGods?.[0]?.id)return 'third';
+    if(event.godId&&event.godId===state.additionalGods?.[1]?.id)return 'fourth';
     if(event.godId)return 'neutral';
     // Only unambiguous old saved event text can be interpreted. Otherwise do
     // not invent an affiliation for a historical event without provenance.
@@ -611,7 +611,7 @@
       name:f.name,oracle:activeOracleNames(f)
     }));
     $('oracleDuelStatus').innerHTML=oracleSummary.map((f,i)=>
-      '<span class="side-'+f.side+'">'+html(i===0?'己':'神'+(i+1))+'：'+
+      '<span class="side-'+f.side+'">'+html(i===0?'己':i===1?'敵':'神'+(i+1))+'：'+
       html(f.oracle)+'</span>').join('　');
     $('oracleDuelStatus').title='目前有效 Oracle（非歷史記錄）｜'+
       oracleSummary.map(f=>f.name+'：'+f.oracle).join('｜');

@@ -1350,6 +1350,61 @@
       }
       c.restore();
     }
+    // A local 4× battle close-up solves the 64×64-map readability limit.
+    // This is presentation only: every health bar belongs to a real citizen;
+    // battle resolution remains in the deterministic human polity kernel.
+    const battle=visibleConflict();
+    if(battle?.status==='clashing'&&!armedMiracle){
+      const a=state.politics.polities.find(p=>p.id===battle.aId),
+        b=state.politics.polities.find(p=>p.id===battle.bId);
+      if(a&&b){
+        const left=canvas.width-287,top=canvas.height-158,w=277,h=147;
+        c.save();
+        c.fillStyle='#0b292dec';c.strokeStyle='#e4ac70';c.lineWidth=2;
+        c.fillRect(left,top,w,h);c.strokeRect(left,top,w,h);
+        c.fillStyle='#f8e3c4';c.font='bold 13px system-ui';c.textAlign='center';
+        c.fillText('交戰近景 · 第 '+(battle.roundsCompleted+1)+' / '+
+          (state.politics.battleRounds||3)+' 日',left+w/2,top+20);
+        c.font='bold 10px system-ui';
+        const factions=[a,b];
+        for(let side=0;side<2;side++){
+          const polity=factions[side],unit=polity.militia;
+          const town=state.settlements.find(t=>t.id===polity.townId);
+          const centerX=left+(side===0?74:203),tint=polityColor(polity);
+          c.fillStyle=tint;
+          c.fillText((town?.name||'部隊').slice(0,8),centerX,top+39);
+          const participants=unit.memberIds.map(id=>state.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
+          const avg=participants.length?participants.reduce((n,p)=>n+p.health,0)/participants.length:0;
+          c.fillStyle='#263b3e';c.fillRect(centerX-44,top+45,88,6);
+          c.fillStyle=avg<45?'#eb8e7f':'#9ccf9b';c.fillRect(centerX-44,top+45,88*avg/100,6);
+          c.fillStyle='#e7dfc8';c.font='10px system-ui';
+          c.fillText('健康 '+Math.round(avg)+' / 100',centerX,top+61);
+          participants.forEach((p,i)=>{
+            const x=centerX+(i-(participants.length-1)/2)*31;
+            const y=top+106+Math.sin(time*7+i+side)*2.4;
+            const facing=side===0?1:-1;
+            c.strokeStyle='#1f3435';c.lineWidth=2.2;
+            c.beginPath();c.moveTo(x-5,y+10);c.lineTo(x-7,y+20);
+            c.moveTo(x+5,y+10);c.lineTo(x+7,y+20);c.stroke();
+            c.fillStyle=tint;c.fillRect(x-7,y-2,14,15);
+            c.fillStyle='#e6ccb0';c.beginPath();c.arc(x,y-10,6,0,2*Math.PI);c.fill();
+            c.strokeStyle='#1f3435';c.lineWidth=1.5;c.stroke();
+            c.strokeStyle='#dbdde0';c.lineWidth=2.4;
+            c.beginPath();c.moveTo(x+facing*8,y+2);
+            c.lineTo(x+facing*19,y-10+Math.sin(time*10+side+i)*4);c.stroke();
+            c.fillStyle=tint;c.beginPath();
+            c.moveTo(x-facing*7,y);c.lineTo(x-facing*17,y-3);
+            c.lineTo(x-facing*16,y+12);c.lineTo(x-facing*10,y+16);
+            c.closePath();c.fill();
+          });
+        }
+        c.fillStyle='#f8d58e';c.font='bold 20px system-ui';c.textAlign='center';
+        c.fillText('⚔',left+w/2,top+111);
+        c.fillStyle='#b9c9c5';c.font='10px system-ui';
+        c.fillText('示意放大 · 選擇 Miracle 時還原完整地圖',left+w/2,top+138);
+        c.restore();
+      }
+    }
   }
   function onMap(e) {
     const rect=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-rect.left)*state.width/rect.width), y=Math.floor((e.clientY-rect.top)*state.height/rect.height);

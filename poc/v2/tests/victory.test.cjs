@@ -129,3 +129,54 @@ test('playable UI, separate stylesheet, builder and 22+ runtime are wired',()=>{
   assert.ok(read('tools/build-single.cjs').includes("read('src/victory.js')"));
   assert.ok(Number(process.versions.node.split('.')[0])>=22);
 });
+
+test('four-God 50% requires a ten-point lead for a continuous year, with independent reset and exact deadline',()=>{
+  const s=world([{count:50,devotion:50},{count:40,devotion:50},
+    {count:5,devotion:50},{count:5,devotion:50}]);
+  V.reset(s,weight,profile);
+  assert.deepEqual(V.overview(s,weight).teams[0].tiers.map(t=>t.threshold),[.35,.4,.5,.65]);
+  assert.equal(s.victory.starts.r1[2],0);
+  s.hour=100*24;V.update(s,weight);
+  // 50/41/4/5: still 50%, but the lead is too narrow.
+  s.people.find(p=>p.religionId==='r3').religionId='r2';
+  s.hour=101*24;V.update(s,weight);
+  assert.deepEqual(s.victory.starts.r1,[0,0,null,null]);
+  s.people.find(p=>p.religionId==='r2').religionId='r3';
+  s.hour=102*24;V.update(s,weight);
+  s.hour=(102+360)*24-8;assert.equal(V.update(s,weight),null);
+  s.hour=(102+360)*24;const won=V.update(s,weight);
+  assert.equal(won.tier,2);assert.equal(won.threshold,.5);
+  assert.equal(won.requiredDays,360);
+  assert.ok(V.continueAfterVictory(s));
+  assert.equal(V.update(s,weight),null);
+});
+
+test('four-God near tie, dropped share and legacy saved victory rules do not receive new progress',()=>{
+  const s=world([{count:50,devotion:50},{count:48,devotion:50},
+    {count:1,devotion:50},{count:1,devotion:50}]);
+  V.reset(s,weight,profile);
+  assert.ok(s.victory.starts.r1.every(x=>x===null));
+  const legacy={profileId:profile.profileId,tiers:profile.tiers};
+  V.reset(s,weight,legacy);
+  const saved=JSON.parse(JSON.stringify(s.victory));
+  s.hour=24;V.ensure(s,weight);
+  assert.deepEqual(s.victory,saved);
+  assert.ok(Math.abs(V.overview(s,weight).teams[0].tiers[2].threshold-.55)<1e-12);
+  V.reset(s,weight,profile);
+  // 50/30/19/1, then 49/30/20/1 must restart the 50% clock.
+  for(const p of s.people.filter(p=>p.religionId==='r2').slice(0,18))p.religionId='r3';
+  V.update(s,weight);assert.equal(s.victory.starts.r1[2],24);
+  s.people.find(p=>p.religionId==='r1').religionId='r3';
+  s.hour=48;V.update(s,weight);assert.equal(s.victory.starts.r1[2],null);
+});
+
+test('four-God 65% closes in one month and equal leaders never qualify',()=>{
+  const s=world([{count:65,devotion:50},{count:15,devotion:50},
+    {count:10,devotion:50},{count:10,devotion:50}]);
+  V.reset(s,weight,profile);
+  s.hour=30*24-8;assert.equal(V.update(s,weight),null);
+  s.hour=30*24;assert.equal(V.update(s,weight).tier,3);
+  const tied=world(Array.from({length:4},()=>({count:5,devotion:50})));
+  V.reset(tied,weight,profile);tied.hour=3600*24;
+  assert.equal(V.update(tied,weight),null);
+});

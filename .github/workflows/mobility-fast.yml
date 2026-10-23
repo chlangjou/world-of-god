@@ -8,6 +8,7 @@ on:
       - feature/victory-dominance-playable-v0.1
       - feature/autonomous-frontier-playable-v0.2
       - feature/oracle-direct-switch-multigod-foundation-v0.1
+      - codex/oracle-playable-ci
     paths:
       - 'poc/v2/**'
       - '.github/workflows/mobility-fast.yml'
@@ -61,10 +62,6 @@ jobs:
       # feature development. Verify the checked-in release bundle on main or
       # explicitly with workflow_dispatch, not on every intermediate push.
       - name: Verify committed playable bundle (release gate)
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/victory-dominance-playable-v0.1' || github.ref == 'refs/heads/feature/autonomous-frontier-playable-v0.2' || github.ref == 'refs/heads/feature/oracle-direct-switch-multigod-foundation-v0.1' || github.event_name == 'workflow_dispatch'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/victory-dominance-playable-v0.1' || github.ref == 'refs/heads/feature/autonomous-frontier-playable-v0.2' || github.ref == 'refs/heads/feature/oracle-direct-switch-multigod-foundation-v0.1' || github.ref == 'refs/heads/codex/oracle-playable-ci' || github.event_name == 'workflow_dispatch'
         working-directory: poc/v2
-        run: |
-          if ! cmp -s dist/World-of-God-PoC-v2.html World-of-God-Playable.html; then
-            echo "::error file=poc/v2/World-of-God-Playable.html::Offline playable HTML is stale. Run npm run build:standalone and copy dist/World-of-God-PoC-v2.html to World-of-God-Playable.html in the same release commit."
-            exit 1
-          fi
+        run: npm run check:playable

@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-23",
+  "node": "v24.12.0",
+  "full": {
+    "tests": 213,
+    "pass": 213,
+    "fail": 0,
+    "durationMs": 47183.9286
+  },
+  "fast": {
+    "tests": 60,
+    "pass": 60,
+    "fail": 0,
+    "durationMs": 6494.4432
+  },
+  "resolvedPriorFailures": 8,
+  "contracts": [
+    "5-cell physical contact with exact boundary tests; custom legacy radii retained",
+    "2-household/2-completed-home outposts",
+    "Standard AI first scheduled decision day 36; real legal casting within 90 days",
+    "Resource and missionary travel separately controlled",
+    "Actual rendered granary progress, role distinction, typed Miracle/Oracle actions"
+  ],
+  "runtimeFixes": [
+    "Restore public granary progress in religion inspector",
+    "Restore distinguishable own-side Saint and Priest colors",
+    "Remove unused non-finite field-capacity cache; safely discard obsolete legacy cache"
+  ],
+  "determinism": "Exact full-world replay after clergy relay/cultivation and legacy-cache migration passed",
+  "otherChecks": {
+    "smoke": "Original and Agriculture passed",
+    "agriculture": "balance and climate passed",
+    "syntax": "app.js, sim.js, shared browser harness passed",
+    "playable": "build:playable and check:playable passed",
+    "browser": "Offline game booted; religion inspector displays public granary completion"
+  },
+  "ci": "Manual workflow now requires current npm test to pass; no historic failure allowlist. Fast workflow includes seven behavioral/layout tests.",
+  "limitations": [
+    "Tests executed locally on Node 24; changes not pushed or run on GitHub yet.",
+    "Historical reports describe earlier revisions; this report supersedes their unresolved-failure status."
+  ]
+}

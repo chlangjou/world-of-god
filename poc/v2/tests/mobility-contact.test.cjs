@@ -15,11 +15,11 @@ const create=(profile=config)=>W.create({
   seed:'dry-stress',balanceProfile:agriculture,religionProfile:religion,
   mobilityProfile:profile
 });
-const duel=(rate)=>P.createWorld(W,{
+const duel=(rate,extraMobility={})=>P.createWorld(W,{
   mode:'duel',playtestProfile:playable,oracleStrategyProfile:oracle,
   opponentProfile:opponent,religionProfile:religion,balanceProfile:agriculture,
   difficulty:'standard',opponentMode:'ai',
-  mobilityProfile:{...config,tripChancePerDay:rate}
+  mobilityProfile:{...config,tripChancePerDay:rate,...extraMobility}
 });
 
 test('the v0.1 movement profile is opt-in; old saves stay on historical contacts',()=>{
@@ -36,7 +36,7 @@ test('the v0.1 movement profile is opt-in; old saves stay on historical contacts
   assert.deepEqual(loaded.people,previous.people);
   assert.equal(W.validate(loaded).ok,true);
   assert.equal(Mobility.normalize(config).enabled,true);
-  assert.equal(Mobility.BASE.contactRadius,3);
+  assert.equal(Mobility.BASE.contactRadius,5);
 });
 
 test('real, reachable resource visits and same-time <=5-cell encounters occur',()=>{
@@ -74,6 +74,19 @@ test('real, reachable resource visits and same-time <=5-cell encounters occur',(
   }
 });
 
+test('current five-cell contact includes the boundary, excludes farther people and retains customized legacy radii',()=>{
+  const s=create(),a=s.people[0],b=s.people.find(p=>p.householdId!==a.householdId);
+  s.people=[a,b];a.x=20;a.y=20;b.x=25;b.y=20;
+  Mobility.record(s);
+  assert.equal(s.contactLog.length,1);assert.equal(s.contactLog[0].distance,5);
+  s.contactLog=[];s.hour+=24;b.x=25.001;Mobility.record(s);
+  assert.equal(s.contactLog.length,0);
+  s.mobility.contactRadius=3;b.x=24;Mobility.record(s);
+  assert.equal(s.contactLog.length,0,'explicit custom radius is respected');
+  const custom=W.create({mobilityProfile:{...config,contactRadius:3}});
+  assert.equal(W.restore(JSON.stringify(custom)).mobility.contactRadius,3);
+});
+
 test('physical visits, resource transactions and encounters replay after JSON save/restore',()=>{
   const first=create();
   W.advanceTicks(first,3*20);
@@ -85,8 +98,9 @@ test('physical visits, resource transactions and encounters replay after JSON sa
   assert.equal(W.validate(restored).ok,true);
 });
 
-test('same 15:15 world: no trip gives zero cross-faith meetings, trips create attributable doubts but not forced conversion',()=>{
-  const inactive=duel(0),active=duel(config.tripChancePerDay);
+test('same 15:15 world: disabling resource and mission trips isolates contacts; active trips require earned conversion',()=>{
+  const inactive=duel(0,{missionBaseChancePerDay:0,missionSpreadChancePerDay:0}),
+    active=duel(config.tripChancePerDay);
   for(const s of [inactive,active]){
     const r=W.issueOracle(s,{saintId:s.religion.saints[0],
       intentType:'family.nurture'});
@@ -96,8 +110,15 @@ test('same 15:15 world: no trip gives zero cross-faith meetings, trips create at
     assert.equal(W.validate(s).ok,true);
   }
   assert.equal(inactive.counts.resourceVisitsStarted||0,0);
+  assert.equal(inactive.counts.missionTripsStarted||0,0);
   assert.equal(inactive.counts.crossFaithMeetings||0,0);
   assert.equal(inactive.counts.strategyCoreDoubts||0,0);
+  const missionOnly=duel(0);
+  W.issueOracle(missionOnly,{saintId:missionOnly.religion.saints[0],intentType:'family.nurture'});
+  W.advanceTicks(missionOnly,3*100);
+  assert.equal(missionOnly.counts.resourceVisitsStarted||0,0);
+  assert.ok(missionOnly.counts.missionTripsStarted>0,'missionaries still travel when resource trips are disabled');
+  assert.ok(missionOnly.counts.crossFaithMeetings>0,'missionaries can create real encounters independently');
   assert.ok(active.counts.resourceVisitsCompleted>0);
   assert.ok(active.counts.crossTownMeetings>0);
   assert.ok(active.counts.crossFaithMeetings>0);

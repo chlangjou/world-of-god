@@ -80,7 +80,11 @@ test('separated origin settlements form autonomously and never share household m
   assert.ok(s.settlements.filter(t=>t.native).length===3);
   const joined=s.settlements.flatMap(t=>t.householdIds);
   assert.equal(new Set(joined).size,joined.length);
-  assert.ok(s.opponent.casts>0,'AI should function in the separated world');
+  assert.equal(s.opponent.turns,0,'standard AI starts at day 22, with 18-day decision cadence: first turn is day 36');
+  W.advanceTicks(s,3);
+  assert.equal(s.opponent.turns,1,'standard AI must decide on day 36');
+  W.advanceTicks(s,3*54);
+  assert.ok(s.opponent.casts>0,'AI must cast a real legal Miracle within the bounded 90-day scenario');
   good(s);
 });
 

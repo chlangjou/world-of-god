@@ -14,14 +14,18 @@
     {margin:.40,days:720,label:'70% / 2 年（雙神基準）'},
     {margin:.80,days:30,label:'90% / 1 個月（雙神基準）'}
   ]);
-  function normalize(profile){
-    const requested=profile?.profileId===PROFILE_ID?profile.tiers:null;
+  function normalize(profile,godCount=2){
+    const valid=profile?.profileId===PROFILE_ID;
+    const requested=valid?(profile.tiersByGodCount?.[godCount]||profile.tiers):null;
     return {profileId:PROFILE_ID,tiers:DEFAULT_TIERS.map((d,i)=>{
       const r=Array.isArray(requested)?requested[i]:null;
       const margin=Number.isFinite(r?.margin)?r.margin:d.margin;
       const days=Number.isFinite(r?.days)?r.days:d.days;
       return {margin:Math.max(0,Math.min(.999,margin)),
-        days:Math.max(1,Math.round(days)),label:d.label};
+        days:Math.max(1,Math.round(days)),label:d.label,
+        ...(Number.isFinite(r?.share)?{share:Math.max(0,Math.min(1,r.share))}:{}),
+        ...(Number.isFinite(r?.minimumLeadShare)?{
+          minimumLeadShare:Math.max(0,Math.min(1,r.minimumLeadShare))}:{})};
     })};
   }
   function registered(s){
@@ -35,7 +39,7 @@
   }
   function reset(s,weight,profile){
     const contestants=registered(s);
-    s.victory={version:1,profile:normalize(profile),
+    s.victory={version:1,profile:normalize(profile,contestants.length),
       contestants,starts:Object.fromEntries(contestants.map(f=>
         [f.id,DEFAULT_TIERS.map(()=>null)])),
       winner:null,continued:false};
@@ -70,6 +74,15 @@
   function threshold(n,margin){
     return n>1?1/n+(1-1/n)*margin:Infinity;
   }
+  function qualification(computed,faith,t){
+    const share=computed.teams.find(f=>f.id===faith.id)?.share||0;
+    const runnerUpShare=Math.max(0,...computed.teams.filter(f=>f.id!==faith.id).map(f=>f.share));
+    const minimum=Number.isFinite(t.share)?t.share:threshold(computed.contestants,t.margin);
+    const minimumLeadShare=t.minimumLeadShare||0;
+    return {minimum,minimumLeadShare,leadShare:share-runnerUpShare,
+      eligible:computed.leader?.id===faith.id&&share+1e-12>=minimum&&
+        share-runnerUpShare+1e-12>=minimumLeadShare};
+  }
   function update(s,weight){
     const v=ensure(s,weight);
     if(v.winner||v.contestants.length<2)return null;
@@ -81,15 +94,14 @@
         v.starts[faith.id]:(v.starts[faith.id]=tiers.map(()=>null));
       const share=computed.teams.find(t=>t.id===faith.id)?.share||0;
       for(let i=0;i<tiers.length;i++){
-        const t=tiers[i],min=threshold(v.contestants.length,t.margin);
-        const qualified=computed.leader?.id===faith.id&&
-          share+1e-12>=min;
+        const t=tiers[i],q=qualification(computed,faith,t),min=q.minimum;
+        const qualified=q.eligible;
         if(!qualified){row[i]=null;continue;}
         if(!Number.isSafeInteger(row[i])||row[i]>hour||row[i]<0)row[i]=hour;
         if(hour-row[i]>=t.days*24){
           v.winner={religionId:faith.id,godId:faith.godId,name:faith.name,
             tier:i,share,hour,threshold:min,requiredDays:t.days,
-            totalWeight:computed.total};
+            totalWeight:computed.total,minimumLeadShare:q.minimumLeadShare};
           return v.winner;
         }
       }
@@ -101,12 +113,13 @@
     const rows=computed.teams.map(f=>({
       ...f,leading:computed.leader?.id===f.id,
       tiers:v.profile.tiers.map((t,i)=>{
-        const minimum=threshold(v.contestants.length,t.margin);
+        const q=qualification(computed,f,t),minimum=q.minimum;
         const since=v.starts[f.id]?.[i];
-        const eligible=computed.leader?.id===f.id&&f.share+1e-12>=minimum;
+        const eligible=q.eligible;
         const elapsed=eligible&&Number.isSafeInteger(since)?
           Math.max(0,(s.hour-since)/24):0;
         return {threshold:minimum,requiredDays:t.days,
+          minimumLeadShare:q.minimumLeadShare,leadShare:q.leadShare,
           elapsedDays:elapsed,remainingDays:Math.max(0,t.days-elapsed),
           qualified:eligible,sinceHour:eligible?since:null,label:t.label};
       })

@@ -58,7 +58,9 @@
       f.weight+' / '+view.totalWeight+'（全球在世信徒）</small></div>'+
       f.tiers.map(t=>'<div class="victory-tier'+(t.qualified?' active':'')+
         '"><span>≥'+(t.threshold*100).toFixed(1)+'% / '+
-        victoryDays(t.requiredDays)+'</span><small>'+
+        victoryDays(t.requiredDays)+
+        (t.minimumLeadShare?' · 領先第二名 ≥'+(t.minimumLeadShare*100).toFixed(0)+' 個百分點':'')+
+        '</span><small>'+
         (t.qualified?'已維持 '+Math.floor(t.elapsedDays)+' 日':'未連續達標')+
         '</small><strong>'+(t.qualified?'餘 '+Math.ceil(t.remainingDays)+' 日':'—')+
         '</strong></div>').join('')
@@ -804,6 +806,12 @@
         believers:residents.filter(p=>p.devotion>=20).length,
         presence:presence?.share||0};
     });
+    const granary=town?.granary,granaryRules=state.agriculture?.granary;
+    const granarySummary=!granary?'尚未動工':granary.built?'已完工':
+      '建造 '+format(granary.progress,1)+' / '+format(granaryRules?.workRequired??6)+
+      ' · '+(granary.materialsPaid?'建材已投入':
+        '木材 '+format(town.storage.wood)+' / '+format(granaryRules?.woodRequired??6)+
+        ' · 石材 '+format(town.storage.stone)+' / '+format(granaryRules?.stoneRequired??4));
     $('townPanel').innerHTML=town?'<div class="religion-local">'+
       '<b>'+html(town.name)+'</b> · '+(town.native?'原生聚落':'居民聚落')+
       '<div>己方：核心 '+localReligion.followers+'／信眾 '+localReligion.believers+
@@ -818,7 +826,7 @@
       (extraLocals.map(v=>
         '<div>'+html(v.faith.name)+'：核心 '+v.core+'／信眾 '+v.believers+
         ' · Presence '+format(v.presence*100)+'%</div>').join(''))+
-      '<div>設施：'+html(venue)+'</div></div>':
+      '<div>設施：'+html(venue)+'</div><div>公共糧倉：'+html(granarySummary)+'</div></div>':
       '<div class="religion-local">尚未形成聚落。宗教仍可由個別信徒自主發展。</div>';
     const townFrontier=frontier.camps.filter(p=>p.originTownId===town?.id);
     const ownedHomes=town?.householdIds.filter(id=>state.households.some(h=>
@@ -1063,6 +1071,7 @@
       const rival=faction&&faction.id!==state.religion.id;
       c.beginPath();c.arc(px,py,p.stage==='child'?size*.23:size*.32,0,Math.PI*2);
       c.fillStyle=rivalSaint?'#ff8ca7':rivalPriest?'#ffd69e':
+        saint?'#80e4eb':priest?'#c4a2fa':
         faction?factionColor(faction.id):p.devotion>=20?'#e1e6c2':'#bcd9d2';
       c.fill();c.strokeStyle='#21342fcc';c.lineWidth=1.4;c.stroke();
       if(p.mobilityTrip){

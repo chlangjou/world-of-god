@@ -1,5 +1,13 @@
 {
   "profileId": "victory-dominance-v0.1",
+  "tiersByGodCount": {
+    "4": [
+      {"share": 0.35, "minimumLeadShare": 0.05, "days": 3600},
+      {"share": 0.40, "minimumLeadShare": 0.05, "days": 1800},
+      {"share": 0.50, "minimumLeadShare": 0.10, "days": 360},
+      {"share": 0.65, "minimumLeadShare": 0.10, "days": 30}
+    ]
+  },
   "tiers": [
     {
       "margin": 0.1,

@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-23",
+  "branch": "codex/oracle-playable-ci",
+  "baseline": "58de1471c9ac551a5fab306a06347d33a01b6c01",
+  "localNode": "v24.12.0",
+  "ciNode": "22",
+  "remoteCI": {
+    "url": "https://github.com/chlangjou/world-of-god/actions/runs/39927454775",
+    "fastTests": { "passed": 48, "failed": 0, "durationMs": 10292 },
+    "failedStep": "Verify committed playable bundle (release gate)",
+    "cause": "Committed offline HTML differs from rebuilt sources; not a timeout."
+  },
+  "local": {
+    "fastTests": { "passed": 48, "failed": 0, "durationMs": 6304 },
+    "fullTests": { "passed": 198, "failed": 8, "durationMs": 47120 },
+    "unmodifiedBaselineAffectedFiles": { "passed": 52, "failed": 8, "durationMs": 36280 },
+    "smoke": "Original and Agriculture passed",
+    "agriculture": "Both balance and climate checks passed",
+    "releaseCheck": "Failed on original stale bundle; passed after build:playable",
+    "syntax": "build-single.cjs passed",
+    "diffCheck": "Passed"
+  },
+  "preExistingFailuresReproducedOnBaseline": [
+    "real housing forms additional settlements with local crop access",
+    "granary construction is visible in the existing fixed viewport without new scrolling",
+    "Priest and Saint are distinct map roles; only collected petitions display clickable bubbles",
+    "the selected Divine Power is routed through typed Miracle and Oracle actions",
+    "the v0.1 movement profile is opt-in; old saves stay on historical contacts",
+    "same 15:15 world: no trip gives zero cross-faith meetings, trips create attributable doubts but not forced conversion",
+    "separated origin settlements form autonomously and never share household membership",
+    "new settled community forms own Priest; Oracle arrives through a social/clerical relay"
+  ],
+  "browserChecks": [
+    "Offline HTML boots without external script/style dependencies.",
+    "Same Saint switches Nurture to Explore directly; quota changes 3/4 to 2/4.",
+    "Four-God native world starts with 51 people and 17 households.",
+    "After autonomous simulation, all three rival Gods have active Oracles and independent DP.",
+    "God 3 Oracle location selects Ripening, highlights actual audience and arms targeting; player DP stays 100.",
+    "Map and four religion cards remain visible together in the browser."
+  ],
+  "limitations": [
+    "Full historical suite still has the eight reproduced baseline failures.",
+    "No long multi-seed balance evaluation or win-rate claim.",
+    "Local changes have not been pushed; GitHub has not run this local revision."
+  ]
+}

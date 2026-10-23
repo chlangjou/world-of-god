@@ -18,6 +18,10 @@
     "note": "Designed, symmetrical scenario with prebuilt homes and initial equal affiliation. Not a natural game world or proof of organic contact."
   },
   "native": {
+    "fourGodGenesis": {
+      "householdDevotion": [[70, 30, 25], [50, 30, 25], [50, 30, 25]],
+      "neutralDevotion": 10
+    },
     "label": "自然河谷",
     "seed": "valley-spring-01",
     "difficulty": "standard",

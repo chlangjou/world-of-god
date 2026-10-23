@@ -123,7 +123,8 @@ function createWorld(S,options){
     ...(balanceProfile?{balanceProfile}:{}),
     religionProfile,mobilityProfile,divineProfile,shrineProfile,oracleStrategyProfile:oracleStrategy,
     worldGenesisMode:'native',opponentProfile:opponent,victoryProfile,
-    additionalAiGods:deityCount>2?deityCount-2:0});
+    additionalAiGods:deityCount>2?deityCount-2:0,
+    fourGodGenesis:deityCount===4?playtestProfile.native.fourGodGenesis:null});
   if(mode==='duel'){
     const ready=establishDuel(s,S,playtestProfile);
     ready.playtest.starterPopulation=seedYoungAdults(ready);

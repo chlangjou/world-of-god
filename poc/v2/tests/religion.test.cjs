@@ -103,6 +103,22 @@ test('new settled community forms own Priest; Oracle arrives through a social/cl
   valid(s);
 });
 
+test('old non-finite capacity cache is discarded without changing real land, food or inhabitants',()=>{
+  const s=fresh();after(s,45);
+  const snapshot=JSON.parse(JSON.stringify(s));
+  snapshot.environment.landCapacityMild=null;
+  snapshot.environment.landCapacityEvalDay=45;
+  const restored=W.restore(snapshot);
+  assert.equal(Object.hasOwn(restored.environment,'landCapacityMild'),false);
+  assert.equal(Object.hasOwn(restored.environment,'landCapacityEvalDay'),false);
+  assert.deepEqual(restored.tiles,s.tiles);
+  assert.deepEqual(restored.people,s.people);
+  assert.deepEqual(restored.households,s.households);
+  after(restored,28);after(s,28);
+  assert.deepEqual(restored,s);
+  valid(restored);
+});
+
 test('Oracle cannot relay to a disconnected settlement, nor remain active after conclusion',()=>{
   const noReach=copy(religion);noReach.interSettlementReach=0;noReach.regionalSaintChancePerMonth=0;
   const s=fresh({religionProfile:noReach});

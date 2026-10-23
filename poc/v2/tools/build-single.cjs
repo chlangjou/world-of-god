@@ -1,7 +1,10 @@
 'use strict';
 // Optional standalone export. Do not edit or commit generated dist/ artifacts.
 const fs=require('node:fs'),path=require('node:path'),root=path.resolve(__dirname,'..');
-const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const mode=process.argv.slice(2);
+if(mode.some(arg=>!['--release','--check'].includes(arg))||mode.length>1)
+ throw Error('Usage: node tools/build-single.cjs [--release|--check]');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8').replace(/\r\n/g,'\n');
 let html=read('index.html');
 for(const p of ['assets/style-base.css','assets/viewport.css','assets/file-menu.css']){
  const marker='<link rel="stylesheet" href="'+p+'">';
@@ -35,6 +38,19 @@ const scripts='<script>window.WOG_RELIGION_PROFILE='+religion+';</'+'script>'+
 const marker='<script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/victory.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/app.js"></script>';
 if(!html.includes(marker))throw Error('Missing JS entrypoints');
 html=html.replace(marker,scripts);
+const release=path.join(root,'World-of-God-Playable.html');
+if(mode.includes('--check')){
+ if(!fs.existsSync(release)||read('World-of-God-Playable.html')!==html){
+  console.error('Offline playable HTML is stale. Run npm run build:playable and include World-of-God-Playable.html with the source changes.');
+  process.exitCode=1;
+ }else console.log('Offline playable matches current sources and profiles.');
+ return;
+}
+if(mode.includes('--release')){
+ fs.writeFileSync(release,html,'utf8');
+ console.log('Offline playable released: '+release);
+ return;
+}
 const folder=path.join(root,'dist');
 fs.mkdirSync(folder,{recursive:true});
 const output=path.join(folder,'World-of-God-PoC-v2.html');

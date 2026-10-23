@@ -808,6 +808,32 @@
          '不會在遊戲進行中無條件改宗，也不會憑空增加建築'],[],godId);
     }
   }
+  function balanceFourGodGenesis(s,profile){
+    if(!profile||allFaiths(s).length!==4)return;
+    const pattern=profile.householdDevotion;
+    if(!Array.isArray(pattern)||pattern.length!==3||
+      pattern.some(row=>!Array.isArray(row)||row.length!==3||
+        row.some(v=>!Number.isFinite(v)||v<20||v>100)))
+      throw Error('四神開局需要有效的三戶信仰分布');
+    const neutral=clamp(num(profile.neutralDevotion,10),0,19);
+    for(const faith of allFaiths(s)){
+      const homes=s.households.filter(h=>h.members.some(id=>
+        s.people.some(p=>p.id===id&&p.religionId===faith.id)));
+      if(homes.length<3)throw Error('四神開局缺少既有家戶');
+      for(const [i,h] of homes.entries()){
+        const members=h.members.map(id=>s.people.find(p=>p.id===id&&p.alive));
+        if(members.length!==3||members.some(p=>!p))
+          throw Error('四神開局家戶人口不符');
+        for(const [j,p] of members.entries()){
+          p.religionId=i<3?faith.id:null;
+          p.devotion=i<3?pattern[i][j]:neutral;
+        }
+      }
+    }
+    log(s,'religion','四神以相同信仰分布進入河谷。',
+      ['每神三戶、九名信眾、相同 Devotion 分布；其餘居民未入教',
+       '僅設定新世界初始信仰，不增加或搬遷人口、資源與建築']);
+  }
   function create(config = {}) {
     const rules = rulesFrom(config);
     const agriculture = config.balanceProfile?.profileId === 'agriculture-balance-v0.1'
@@ -871,6 +897,7 @@
       const count=Math.round(clamp(config.additionalAiGods,0,2));
       if(count)seedAdditionalGods(s,count,config.opponentProfile);
     }
+    balanceFourGodGenesis(s,config.fourGodGenesis);
     MOBILITY.seedHotspots(s);
     if (agriculture) {s.counts.newFields=0;s.counts.newFamilies=0;s.counts.newSettlements=0;}
     if (agriculture) for (const t of s.tiles) if (t.terrain === 'field') {
@@ -2160,20 +2187,6 @@
     return L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
       Math.pow(moisture/L.referenceMoisture,L.moistureExponent);
   }
-  function agricultureMildCapacity(s) {
-    if(s.environment.landCapacityEvalDay!==days(s)) {
-      const reach=s.agriculture.land.workReachCells;
-      const alive=new Set(living(s).map(p=>p.id));
-      const homes=s.households.filter(h=>h.members.some(id=>alive.has(id)));
-      let capacity=0;
-      for(const t of s.tiles)if(t.terrain==='field'&&
-        homes.some(h=>Math.abs(t.x-h.x)<=reach&&Math.abs(t.y-h.y)<=reach))
-          capacity+=agricultureMildFieldYield(s,t);
-      s.environment.landCapacityMild=capacity;
-      s.environment.landCapacityEvalDay=days(s);
-    }
-    return s.environment.landCapacityMild;
-  }
   function agricultureCultivate(s,p,h) {
     const L=s.agriculture.land;
     if(!L.autonomousExpansionEnabled)return false;
@@ -2196,7 +2209,6 @@
     if(!chosen)return false; // No reachable suitable land: a genuine local limit.
     // This real work shift opens a plot with zero crops and yields no Food.
     chosen.terrain='field';chosen.cropStock=0;chosen.crop=0;
-    s.environment.landCapacityMild+=agricultureMildFieldYield(s,chosen);
     s.counts.newFields=(s.counts.newFields||0)+1;
     p.proficiency.food=1-(1-p.proficiency.food)*
       Math.exp(-1/s.agriculture.worker.learningTimeConstantActualFoodWorkdays);
@@ -3725,11 +3737,16 @@
     if(profile?.profileId!=='agriculture-balance-v0.1')return {ok:false,reason:'無效的 Agriculture Profile'};
     s.agriculture=JSON.parse(JSON.stringify(profile));
     s.balanceProfileId=profile.profileId;
-    s.environment.landCapacityEvalDay=-1;
     return {ok:true};
   }
   function restore(json) {
     const candidate=typeof json==='string'?JSON.parse(json):JSON.parse(JSON.stringify(json));
+    // Retired, unused capacity cache could be NaN (serialized as null).
+    // Local cultivation already computes capacity from actual fields.
+    if(candidate.environment){
+      delete candidate.environment.landCapacityMild;
+      delete candidate.environment.landCapacityEvalDay;
+    }
     if(candidate?.version==='mvp0-web-1') {
       // Narrow, explicit upgrade path for users who already played the first MVP.
       // Keep all real people/deaths/history; never resurrect or overwrite outcomes.

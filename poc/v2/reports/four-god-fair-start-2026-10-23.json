@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-23",
+  "node": "v24.12.0",
+  "scenario": "native4",
+  "genesis": {
+    "people": 51,
+    "households": 17,
+    "believersPerGod": 9,
+    "corePerGod": 3,
+    "weightPerGod": 12,
+    "sharePerGod": 0.25,
+    "neutralPeople": 15,
+    "devotionPerGod": [
+      25,
+      25,
+      25,
+      30,
+      30,
+      30,
+      50,
+      50,
+      70
+    ]
+  },
+  "victory": [
+    {
+      "share": 0.35,
+      "minimumLeadShare": 0.05,
+      "days": 3600
+    },
+    {
+      "share": 0.4,
+      "minimumLeadShare": 0.05,
+      "days": 1800
+    },
+    {
+      "share": 0.5,
+      "minimumLeadShare": 0.1,
+      "days": 360
+    },
+    {
+      "share": 0.65,
+      "minimumLeadShare": 0.1,
+      "days": 30
+    }
+  ],
+  "verification": {
+    "fast": {
+      "pass": 53,
+      "fail": 0
+    },
+    "fullRun": {
+      "tests": 210,
+      "pass": 202,
+      "fail": 8
+    },
+    "additionalLegacySaveTest": "passed after full run; included in final 53-test fast run",
+    "baselineFailureNamesUnchanged": true,
+    "smoke": "passed for Original and Agriculture",
+    "agriculture": "balance and climate passed",
+    "threeSeeds": "equal distribution, physical state preservation, save/restore replay passed",
+    "browser": "3/3/3/3 and 25% opening; all four victory tiers and lead requirements visible",
+    "playable": "rebuilt and check:playable passed"
+  },
+  "knownFailures": [
+    "Priest and Saint are distinct map roles; only collected petitions display clickable bubbles",
+    "granary construction is visible in the existing fixed viewport without new scrolling",
+    "new settled community forms own Priest; Oracle arrives through a social/clerical relay",
+    "real housing forms additional settlements with local crop access",
+    "same 15:15 world: no trip gives zero cross-faith meetings, trips create attributable doubts but not forced conversion",
+    "separated origin settlements form autonomously and never share household membership",
+    "the selected Divine Power is routed through typed Miracle and Oracle actions",
+    "the v0.1 movement profile is opt-in; old saves stay on historical contacts"
+  ],
+  "notes": [
+    "New four-God worlds only; existing saves retain faith, rules and timers.",
+    "Two/three-God openings and victory thresholds unchanged.",
+    "Religious starting conditions are equal; terrain, housing and geographic balance are not guaranteed.",
+    "No multi-seed win-rate balance claim; not pushed to GitHub."
+  ]
+}

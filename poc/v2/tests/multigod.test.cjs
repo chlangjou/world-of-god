@@ -13,9 +13,9 @@ const Mobility=require('../config/mobility-contact-v0.1.json');
 const Shrine=require('../config/shrine-temple-v0.1.json');
 const Victory=require('../config/victory-dominance-v0.1.json');
 
-function world(n=3){
+function world(n=3,playtest=Playable){
   return P.createWorld(W,{mode:'native',godCount:n,
-    seed:Playable.native.seed,playtestProfile:Playable,
+    seed:playtest.native.seed,playtestProfile:playtest,
     oracleStrategyProfile:Strategy,opponentProfile:O,
     balanceProfile:A,religionProfile:R,divineProfile:D,
     mobilityProfile:Mobility,shrineProfile:Shrine,
@@ -62,9 +62,48 @@ test('all AI Gods actually receive Oracle, spend DP, cast Miracles and persist t
   assert.deepEqual(W.validate(copy).errors,[]);
 });
 test('multigod Victory thresholds do not use two-god constants',()=>{
-  for(const [n,limit] of [[2,.55],[3,.4],[4,.325]]){
+  for(const [n,limit] of [[2,.55],[3,.4],[4,.35]]){
     const v=W.victoryOverview(world(n));
     assert.equal(v.contestants,n);
     assert.ok(Math.abs(v.teams[0].tiers[0].threshold-limit)<1e-12);
   }
+});
+
+test('four Gods begin with identical 3/9 core, Devotion distributions and 25% weight without changing physical resources',()=>{
+  const legacy=JSON.parse(JSON.stringify(Playable));
+  delete legacy.native.fourGodGenesis;
+  for(const seed of [Playable.native.seed,'dry-stress','opponent-competition-replay']){
+    const scenario={...Playable,native:{...Playable.native,seed}};
+    const before=world(4,{...legacy,native:{...legacy.native,seed}}),s=world(4,scenario);
+    const rows=s.victory.contestants.map(f=>s.people.filter(p=>p.religionId===f.id));
+    for(const people of rows){
+      assert.equal(people.length,9);
+      assert.equal(people.filter(p=>p.devotion>=40).length,3);
+      assert.deepEqual(people.map(p=>p.devotion).sort((a,b)=>a-b),[25,25,25,30,30,30,50,50,70]);
+    }
+    assert.ok(W.victoryOverview(s).teams.every(t=>t.share===.25));
+    assert.equal(s.people.filter(p=>p.religionId===null).length,15);
+    assert.deepEqual(s.households,before.households);
+    assert.deepEqual(s.tiles,before.tiles);
+    assert.deepEqual(s.settlements,before.settlements);
+    assert.deepEqual(s.people.map(({religionId,devotion,...p})=>p),
+      before.people.map(({religionId,devotion,...p})=>p));
+    const restored=W.restore(JSON.stringify(s));
+    W.advanceTicks(s,12);W.advanceTicks(restored,12);
+    assert.equal(JSON.stringify(restored),JSON.stringify(s));
+  }
+  for(const n of [2,3])assert.equal(JSON.stringify(world(n)),JSON.stringify(world(n,legacy)));
+});
+
+test('loading an old four-God save retains its uneven founding faith and old victory profile',()=>{
+  const oldPlayable=JSON.parse(JSON.stringify(Playable));
+  delete oldPlayable.native.fourGodGenesis;
+  const s=world(4,oldPlayable);
+  W.resetVictory(s,{profileId:Victory.profileId,tiers:Victory.tiers});
+  const restored=W.restore(JSON.stringify(s));
+  assert.deepEqual(restored.people.map(p=>[p.id,p.religionId,p.devotion]),
+    s.people.map(p=>[p.id,p.religionId,p.devotion]));
+  assert.deepEqual(restored.victory,s.victory);
+  assert.ok(Math.abs(W.victoryOverview(restored).teams[0].tiers[2].threshold-.55)<1e-12);
+  assert.deepEqual(W.validate(restored).errors,[]);
 });

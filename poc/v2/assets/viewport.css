@@ -43,6 +43,36 @@ body{display:flex;flex-direction:column;min-height:0}
 .intervention{margin:0;flex:0 0 234px;min-height:234px;display:flex;flex-direction:column;overflow:hidden}
 .command-heading{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:8px 11px 4px}
 .command-heading h2{font-size:14px}.command-heading small{font-size:10px;color:var(--muted);white-space:nowrap}
+.command-heading .oracle-duel-status{display:block!important;min-width:0;max-width:285px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:10px}
+.oracle-duel-status .side-player{color:#8ddcef;font-weight:700}
+.oracle-duel-status .side-opponent{color:#f2a29f;font-weight:700}
+.faith-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:2px 0 7px}
+.faith-card{min-width:0;padding:7px;border-radius:7px;background:#203332;border:1px solid #45605b;
+  border-left:3px solid #839992}
+.faith-card.side-player{border-left-color:#66c6e5}
+.faith-card.side-opponent{border-left-color:#ed8f87}
+.faith-card strong{display:block;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.faith-card .faith-active{display:block;font-weight:700;font-size:12px;margin:3px 0;
+  color:#ebd8b1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.faith-card small{display:block;font-size:10px;line-height:1.5;color:#b2c6c0;overflow:hidden;
+  white-space:nowrap;text-overflow:ellipsis}
+.faith-card.side-player strong{color:#8ddcef}
+.faith-card.side-opponent strong{color:#f2a29f}
+#townPanel .religion-local{background:#203332;border:1px solid #3b5550;border-radius:7px;
+  padding:7px 8px;font-size:11px;line-height:1.5}
+#townPanel .religion-local b{color:#e6d4a9}
+#events .event.side-player{border-left-color:#66c6e5}
+#events .event.side-opponent{border-left-color:#ed8f87}
+#events .event.side-neutral{border-left-color:#819c90}
+#events .event.side-player:before{background:#66c6e5}
+#events .event.side-opponent:before{background:#ed8f87}
+#events .event.side-neutral:before{background:#819c90}
+#events .event .event-source{font-weight:700;margin-right:5px}
+#events .event.side-player .event-source{color:#8ddcef}
+#events .event.side-opponent .event-source{color:#f2a29f}
+#events .event.side-neutral .event-source{color:#b5c5bf}
+
 .command-toolbar{display:grid;grid-template-columns:1.2fr 1fr;align-items:center;gap:7px;padding:4px 10px}
 .command-tabs{display:grid;grid-template-columns:1fr 1fr;gap:3px}
 .command-tabs button,.inspector-tabs button{font:inherit;font-size:11px;color:#bbcfc4;border:1px solid #3d554f;border-radius:7px;background:#213331;padding:7px 4px;cursor:pointer}

@@ -16,7 +16,7 @@ const BASE=Object.freeze({
   watchtowerWood:3,watchtowerStone:1,watchtowerWork:5,watchtowerDefense:2,
   commandDefense:2,resourceNeedStone:10,
   disputeEveryDays:14,disputeCooldownDays:120,maxClaimDistance:25,
-  maxMarchDays:18,marchCellsPerDay:4,claimStoneUnits:1.5
+  maxMarchDays:18,marchCellsPerDay:4,claimStoneUnits:1.5,battleRounds:3
 });
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -41,6 +41,7 @@ function normalize(profile){
   out.maxClaimDistance=clamp(out.maxClaimDistance,2,100);
   out.maxMarchDays=Math.round(clamp(out.maxMarchDays,1,60));
   out.marchCellsPerDay=Math.round(clamp(out.marchCellsPerDay,1,12));
+  out.battleRounds=Math.round(clamp(out.battleRounds,2,7));
   return out;
 }
 function init(s,profile){
@@ -157,13 +158,13 @@ function onDeath(s,p,emit){
     if(polity.leaderId!==p.id)continue;
     const duration=vacancyDays(s,polity,p.id);
     polity.leaderId=null;polity.vacantUntilHour=s.hour+duration*24;
-    if(polity.militia.stance==='march')beginReturn(s,polity);
+    if(['march','clash'].includes(polity.militia.stance))beginReturn(s,polity);
     const town=townOf(s,polity);
     emit(s,'politics',(town?.name||polity.id)+' 的領袖 '+p.name+' 離世，進入指揮真空。',
       ['空窗 '+duration+' 日；禁止新攻勢，已有攻勢轉為撤退',
        '指揮型防禦加成乘 '+s.politics.vacantCommandFactor+
         '；城牆等實體防禦不會憑空損毀']);
-    for(const conflict of s.politics.disputes.filter(c=>c.status==='marching'&&
+    for(const conflict of s.politics.disputes.filter(c=>['marching','clashing'].includes(c.status)&&
       (c.aId===polity.id||c.bId===polity.id))){
       const other=s.politics.polities.find(v=>v.id===(conflict.aId===polity.id?conflict.bId:conflict.aId));
       conflict.status='withdrawn';conflict.winnerId=other?.id||null;
@@ -179,8 +180,9 @@ function personDuty(s,p){
   const polity=s.politics.polities.find(v=>v.militia.memberIds.includes(p.id));
   if(!polity)return false;
   const unit=polity.militia;p.x=unit.x;p.y=unit.y;
-  p.activity=unit.stance==='march'?'march':unit.stance==='return'?'retreat':'guard';
+  p.activity=unit.stance==='march'?'march':unit.stance==='clash'?'fight':unit.stance==='return'?'retreat':'guard';
   p.activityReason=unit.stance==='march'?'受人類領袖指揮前往爭議資源區':
+    unit.stance==='clash'?'於爭議礦區交戰，可接受真實治療與神蹟影響':
     unit.stance==='return'?'結束軍事行動，返回原聚落':'當地民兵守備，無法同時從事日常生產';
   return true;
 }
@@ -266,9 +268,9 @@ function startDispute(s,emit){
     }
   }
 }
-function resolveDisputes(s,emit,die){
+function resolveDisputes(s,emit,die,notify){
   const cfg=s.politics;
-  for(const c of cfg.disputes.filter(c=>c.status==='marching')){
+  for(const c of cfg.disputes.filter(c=>['marching','clashing'].includes(c.status))){
     const a=cfg.polities.find(p=>p.id===c.aId),b=cfg.polities.find(p=>p.id===c.bId);
     if(!a||!b)continue;
     const ua=a.militia,ub=b.militia;
@@ -277,36 +279,58 @@ function resolveDisputes(s,emit,die){
       c.resolvedAtHour=s.hour;beginReturn(s,a);beginReturn(s,b);
       continue;
     }
-    if(ua.stance!=='march'||ub.stance!=='march')continue;
-    if(ua.pathIndex!==ua.path.length-1||ub.pathIndex!==ub.path.length-1)continue;
-    if(distance(ua,ub)>1.5)continue;
-    const aa=defense(s,a,c.site),bb=defense(s,b,c.site);
-    const jitter=(hash(s.seed+'|battle|'+c.id)/4294967296-.5)*.3;
-    const winner=aa.total+jitter>=bb.total?a:b,loser=winner===a?b:a;
-    for(const polity of [a,b]){
-      const loss=polity===winner?5:14;
-      for(const id of polity.militia.memberIds.slice()){
+    if(c.status==='marching'){
+      if(ua.stance!=='march'||ub.stance!=='march')continue;
+      if(ua.pathIndex!==ua.path.length-1||ub.pathIndex!==ub.path.length-1)continue;
+      if(distance(ua,ub)>1.5)continue;
+      // Encounter is now an actual playable interval, not a same-tick combat roll.
+      c.status='clashing';c.clashStartedAtHour=s.hour;c.roundsCompleted=0;
+      ua.stance='clash';ub.stance='clash';
+      const townA=townOf(s,a),townB=townOf(s,b);
+      emit(s,'conflict',townA.name+' 與 '+townB.name+' 的民兵在石礦開始交戰。',
+        ['雙方實際抵達礦區；交戰預計 '+cfg.battleRounds+' 日',
+         '玩家可在交戰期間使用合法 Miracle；不需指揮士兵']);
+      if(typeof notify==='function')
+        notify(s,'slow','battle','石礦交戰：'+townA.name+' vs '+townB.name,
+          c.site,{disputeId:c.id});
+      continue;
+    }
+    // Each day resolves only one round. Heal during the interval can change
+    // real participants' health and therefore the next engagement's outcome.
+    if(s.hour<=c.clashStartedAtHour)return;
+    const powerA=defense(s,a,c.site),powerB=defense(s,b,c.site);
+    const jitter=(hash(s.seed+'|round|'+c.id+'|'+c.roundsCompleted)/4294967296-.5)*.24;
+    const advantaged=powerA.total+jitter>=powerB.total?a:b;
+    for(const force of [a,b]){
+      const damage=force===advantaged?2:5;
+      for(const id of force.militia.memberIds.slice()){
         const person=s.people.find(p=>p.id===id&&p.alive);
         if(!person)continue;
-        person.health=Math.max(0,person.health-loss);
+        person.health=Math.max(0,person.health-damage);
         if(person.health===0)die(s,person.id,'礦區衝突受傷致死');
       }
-      beginReturn(s,polity);
     }
+    c.roundsCompleted++;
+    c.lastRoundAtHour=s.hour;
+    if(c.status!=='clashing')continue; // a participant death could break command
+    if(c.roundsCompleted<cfg.battleRounds)continue;
+    const strengthA=defense(s,a,c.site).total,strengthB=defense(s,b,c.site).total;
+    const tie=(hash(s.seed+'|battle|'+c.id)/4294967296-.5)*.3;
+    const winner=strengthA+tie>=strengthB?a:b;
+    for(const force of [a,b])beginReturn(s,force);
     c.status='resolved';c.winnerId=winner.id;c.resolvedAtHour=s.hour;
-    // The winning people reached a real, mapped resource node.
     const node=s.tiles[c.site.y*s.width+c.site.x];
     const amount=Math.min(cfg.claimStoneUnits,Math.max(0,node?.stone||0));
     const home=townOf(s,winner);
     if(amount>0&&home){node.stone-=amount;home.storage.stone+=amount;}
     cfg.claims.push({site:c.site,polityId:winner.id,hour:s.hour,stoneGathered:amount});
     emit(s,'conflict',townOf(s,winner).name+' 在石礦衝突中取得優勢，雙方部隊撤回。',
-      ['實際行軍至石礦，雙方參戰者承受非必死的傷害',
-       '結果依民兵健康與本地守備能力計算，戰鬥後自動撤退',
+      ['實際交戰 '+c.roundsCompleted+' 日，連續傷害與 Healing 會影響最終戰力',
+       '雙方由既有居民參戰，結果按健康、民兵人數與陣地支援計算',
        '獲取石材 '+amount+'，從地圖現有石材庫存扣除，非憑空生成']);
   }
 }
-function daily(s,emit,die){
+function daily(s,emit,die,notify){
   if(!active(s))return;
   ensurePolities(s,emit);
   const cfg=s.politics;
@@ -335,7 +359,7 @@ function daily(s,emit,die){
     }
     advanceUnit(s,polity.militia);
   }
-  resolveDisputes(s,emit,die);
+  resolveDisputes(s,emit,die,notify);
   if(day(s)>0&&day(s)%cfg.disputeEveryDays===0)startDispute(s,emit);
 }
 function overview(s,townId){

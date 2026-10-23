@@ -3274,7 +3274,7 @@
     for(const faith of allFaiths(s)){reconcileFaithOffices(s,faith);ensureSaint(s,faith);ensurePriest(s,faith);}
     collectPrayers(s);
     TEMPLE.daily(s,log);
-    POLITICS.daily(s,log,die);
+    POLITICS.daily(s,log,die,alertPlayer);
     if(days(s)>0&&days(s)%s.religionPropagation.pulseDays===0){
       const faiths=allFaiths(s);
       if(s.opponent?.enabled&&Math.floor(days(s)/s.religionPropagation.pulseDays)%2===1)

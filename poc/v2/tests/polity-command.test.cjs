@@ -222,6 +222,8 @@ test('the opt-in browser shows actual battle on map instead of history-only even
   const drawn=ui.draw();
   assert.ok(drawn.some(x=>x.kind==='fillText'&&String(x.args[0]).includes('交戰')),
     'the map must paint a fighting marker, not only a text alert');
+  assert.ok(drawn.some(x=>x.kind==='fillText'&&String(x.args[0]).includes('交戰近景')),
+    'map needs a magnified fighting scene, not only tiny markers');
   const first=drawn.filter(x=>x.kind==='fillText'&&x.args[0]==='⚔');
   assert.ok(first.length,'the battlefield needs an immediately recognizable crossed-swords indicator');
   banner.onclick();

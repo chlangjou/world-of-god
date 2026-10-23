@@ -2491,8 +2491,12 @@
       ensureGranary(s,town);
       s.settlements.push(town);
       for(const h of group)for(const person of householdMembers(s,h))person.settlementId=id;
-      s.counts.newSettlements=(s.counts.newSettlements||0)+1;
-      log(s,'settlement',town.name+'由 '+finished.length+' 戶已建屋的居民形成。',
+       s.counts.newSettlements=(s.counts.newSettlements||0)+1;
+      if(group.some(h=>h.frontierOriginTownId)){
+        town.frontierFounded=true;
+        s.counts.frontierSettlements=(s.counts.frontierSettlements||0)+1;
+      }
+      log(s,'settlement',town.name+' 由 '+finished.length+' 戶已建屋的居民形成。',
         ['家戶自願向外定居','附近至少 '+F.outpostMinHuts+' 戶完成真實住屋',
          '獨立共享儲備從零開始；糧倉須由居民另外實際建造']);
       return;
@@ -3372,7 +3376,7 @@
         missingHomes:Math.max(0,F.outpostMinHuts-built),
         names:group.map(h=>h.name)});
     }
-    return {enabled:true,formed:s.counts.newSettlements||0,
+    return {enabled:true,formed:s.counts.frontierSettlements||0,
       departures:s.counts.frontierDepartures||0,
       waiting:unclaimed.length,camps,
       neededHouseholds:F.outpostMinHouseholds,neededHomes:F.outpostMinHuts,

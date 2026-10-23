@@ -3273,6 +3273,7 @@
         s.settlements.filter(t=>dist(t,h)<=s.rules.settlementClusterDistance)
         .sort((x,y)=>dist(x,h)-dist(y,h)||x.id.localeCompare(y.id))[0]||null;
       if(town)town.householdIds.push(h.id);
+      else if(sourceTown)h.frontierOriginTownId=sourceTown.id;
       for(const p of [a,partner]){
         p.householdId=h.id;p.settlementId=town?.id||null;p.x=site.x;p.y=site.y;
         if(p.occupation==='dependent')p.occupation=p.proficiency.food>=p.proficiency.gather?'food_producer':'gatherer';
@@ -3323,6 +3324,7 @@
       }
     }
     formNewHouseholds(s);
+    frontierMigration(s);
     // Household movement requires actual pressure AND a promising destination;
     // moving all hungry people to the same exhausted tile is not a survival strategy.
     const migrationTowns=s.agriculture?.familyExpansion?.enabled?s.settlements:s.settlements.slice(0,1);

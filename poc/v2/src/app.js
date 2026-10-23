@@ -311,7 +311,9 @@
   function opts() { return {radius:+$('radius').value,intensity:+$('intensity').value/100,
     durationDays:$('duration').disabled?0:+$('duration').value}; }
   function storageKey() {return 'wog-poc-v2-save';}
-  const scenarioId=()=>state.playtest?.mode==='duel'?'duel':'native';
+  const scenarioId=()=>state.playtest?.mode==='duel'?'duel':
+    (state.playtest?.godCount||(state.additionalReligions?.length||0)+2)===4?'native4':
+    (state.playtest?.godCount||(state.additionalReligions?.length||0)+2)===3?'native3':'native';
   const competitionScore=()=>Playtest?.score(state)||null;
   function playtestHint(){
     const score=competitionScore();
@@ -379,8 +381,10 @@
     return response.json();
   }
   function newWorld() {
-    const selected=$('playtestScenario').value==='duel'?'duel':'native';
-    if(selected==='duel')$('opponentMode').value='ai';
+    const scenario=$('playtestScenario').value;
+    const selected=scenario==='duel'?'duel':'native';
+    if(selected==='duel'||scenario==='native3'||scenario==='native4')
+      $('opponentMode').value='ai';
     state=Playtest.createWorld(S,{
       mode:selected,seed:state.seed,
       playtestProfile:activePlaytestProfile,
@@ -390,9 +394,10 @@
        mobilityProfile:activeMobilityProfile,
       divineProfile:activeDivineProfile,shrineProfile:activeShrineProfile,victoryProfile:activeVictoryProfile,
       opponentMode:$('opponentMode').value,
+      godCount:scenario==='native4'?4:scenario==='native3'?3:2,
       difficulty:$('aiDifficulty').value||'standard'
     });
-    $('playtestScenario').value=selected;
+    $('playtestScenario').value=scenario;
     if(selected==='duel'){
       rememberedPower.oracle='family.nurture';
       showDivineKind('oracle');
@@ -401,8 +406,8 @@
     else showDivineKind('oracle');
     $('balanceProfile').value=state.balanceProfileId==='agriculture-balance-v0.1'?'agriculture':'original';
     $('opponentMode').value=state.opponent?.enabled?'ai':'off';
-    $('opponentMode').disabled=selected==='duel';
-    $('aiDifficulty').disabled=selected==='duel';
+    $('opponentMode').disabled=scenario!=='native';
+    $('aiDifficulty').disabled=scenario==='duel';
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
     presentedVictoryHour=null;lastCastVisual=null;healLock=null;visibleInjured=[];paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
@@ -415,7 +420,7 @@
     if(!confirm('切換試玩情境會重新創世，未儲存進度將消失。請先匯出存檔。')){
       e.target.value=current;return;
     }
-    if(requested==='duel')$('opponentMode').value='ai';
+    if(requested!=='native')$('opponentMode').value='ai';
     try{newWorld();say(requested==='duel'?
       '對決已就緒：AI 已選存糧。請選育兒 Oracle，傳達後按開始。':
       '自然河谷已建立：居民和 AI 自主發展，宗教競爭需實際接觸。');}
@@ -463,7 +468,7 @@
       activeOpponentProfile=state.opponent;
     $('balanceProfile').value=activeProfile?'agriculture':'original';
     $('opponentMode').value=state.opponent?.enabled?'ai':'off';
-    $('opponentMode').disabled=scenarioId()==='duel';
+    $('opponentMode').disabled=scenarioId()!=='native';
     $('aiDifficulty').value=state.opponent?.difficulty||'standard';
     $('aiDifficulty').disabled=scenarioId()==='duel';
     presentedVictoryHour=null;lastCastVisual=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();announceVictoryIfNeeded();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
@@ -556,7 +561,7 @@
     $('opponentMode').value=state.opponent?.enabled?'ai':'off';
     $('playtestScenario').disabled=profileLoading;
     $('playtestScenario').value=scenarioId();
-    $('opponentMode').disabled=profileLoading||scenarioId()==='duel';
+    $('opponentMode').disabled=profileLoading||scenarioId()!=='native';
     $('aiDifficulty').disabled=profileLoading||!state.opponent?.enabled||scenarioId()==='duel';
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
     $('applyAgricultureBtn').disabled=profileLoading||!state.agriculture;
@@ -1297,7 +1302,7 @@
   }).finally(()=>{
     profileLoading=false;$('balanceProfile').disabled=false;
     $('playtestScenario').disabled=false;
-    $('opponentMode').disabled=scenarioId()==='duel';
+    $('opponentMode').disabled=scenarioId()!=='native';
     $('aiDifficulty').disabled=!state.opponent?.enabled||scenarioId()==='duel';
     $('resetBtn').disabled=false;render();
   });

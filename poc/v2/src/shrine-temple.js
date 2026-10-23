@@ -106,9 +106,12 @@ function observe(s,emit){
        proposed:null,buildProgress:0,materialsPaid:false,createdAtHour:s.hour};
      s.religiousSites.push(site);
      emit(s,'religion',faith.name+'的居民在 '+town.name+' 約定一處共同祈禱地點。',
-       ['居民自然形成集會場所，尚未建造 Shrine','場所本身不提供 Divine Power 或 Presence']);
+       ['居民自然形成集會場所，尚未建造 Shrine','場所本身不提供 Divine Power 或 Presence'],[],faith.godId);
    }
  }
+}
+function siteGod(s,site){
+ return [s.religion,s.opponentReligion].find(f=>f?.id===site.religionId)?.godId||null;
 }
 function recent(s,site){
  const cutoff=s.hour-s.shrineTemple.recentDays*24;
@@ -138,7 +141,7 @@ function daily(s,emit){
    if(site.condition===0&&site.stage!=='ruin'){
      site.stage='ruin';site.proposed=null;site.buildProgress=0;
      emit(s,'religion','一處宗教設施因長期荒廢成為遺址。',
-       ['建築衰敗不刪除任何人的信仰，居民仍可自行恢復祈禱']);
+       ['建築衰敗不刪除任何人的信仰，居民仍可自行恢復祈禱'],[],siteGod(s,site));
    }
    if(site.proposed)continue;
    const proposed=(site.stage==='gathering'||site.stage==='ruin')&&
@@ -148,7 +151,7 @@ function daily(s,emit){
    if(proposed){
      site.proposed=proposed;site.buildProgress=0;site.materialsPaid=false;
      emit(s,'religion','居民因反覆實際集會，開始籌建 '+(proposed==='temple'?'Temple':'Shrine')+'。',
-       ['須由願意的居民投入建材與工作時間，神明不能直接放置']);
+       ['須由願意的居民投入建材與工作時間，神明不能直接放置'],[],siteGod(s,site));
    }
  }
 }
@@ -187,7 +190,7 @@ function build(s,p,h,town,site,efficiency,emit){
    site.stage=built;site.condition=100;site.proposed=null;site.buildProgress=0;
    emit(s,'religion',town.name+' 的居民自主建成 '+(built==='temple'?'Temple':'Shrine')+'。',
      ['耗用實際工作與建材，並非由神明建造',
-      '建築不直接增加信仰、Divine Power 或 Local Presence']);
+      '建築不直接增加信仰、Divine Power 或 Local Presence'],[],siteGod(s,site));
  }
  return true;
 }
@@ -270,9 +273,9 @@ function strike(s,center,intensity,emit){
      site.stage='ruin';site.proposed=null;site.buildProgress=0;
      emit(s,'religion','宗教設施遭精確雷擊摧毀，居民留下廢墟。',
        ['建築損毀不會直接讓任何居民改宗或失去 Devotion',
-        '未來若仍有實際宗教需求，居民可自行決定是否重建']);
+        '未來若仍有實際宗教需求，居民可自行決定是否重建'],[],siteGod(s,site));
    }else emit(s,'religion','一處宗教設施受到精確雷擊，活動能力下降。',
-     ['修復與維護取決於實際資源和居民後續活動']);
+     ['修復與維護取決於實際資源和居民後續活動'],[],siteGod(s,site));
  }
  return hit;
 }

@@ -64,7 +64,8 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
     getItem(key){return memory.get(key)||null;}
   };
   const original=fs.readFileSync(path.join(__dirname,'../src/app.js'),'utf8');
-  const source=original.replace(/\}\)\(\);\s*$/,'window.__getWorld=()=>state;window.__render=render;window.__draw=draw;})();');
+  const source=original.replace(/\}\)\(\);\s*$/,'window.__getWorld=()=>state;window.__render=render;window.__draw=draw;'+
+    'window.__frame=animate;window.__setSpeed=x=>{speed=x};window.__runtime=()=>({paused,speed,lastAttentionSeq});})();');
   assert.notEqual(original,source,'test instrumentation must attach to actual browser code');
   new Function('window','document','performance','requestAnimationFrame','setTimeout',
     'clearTimeout','confirm','localStorage','URL','Blob','fetch',source)(
@@ -74,6 +75,7 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   await new Promise(resolve=>setImmediate(resolve));
   return {
     el:get,canvas,render:()=>win.__render(),draw:()=>{drawing.length=0;win.__draw();return drawing;},world:()=>win.__getWorld(),
+    frame:t=>win.__frame(t),runtime:()=>win.__runtime(),setSpeed:x=>win.__setSpeed(x),
     choose:id=>{get('divinePowerSelect').value=id;get('divinePowerSelect').onchange();},
     set:(id,value)=>{get(id).value=String(value);get(id).listeners.input();},
     key:(key,options={})=>{

@@ -32,6 +32,7 @@ jobs:
           node --check src/app.js
           node --check src/playtest.js
           node --check tests/polity-command.test.cjs
+          node --check tests/polity-intervention-ui.test.cjs
       - name: Polity causal regression (90 seconds max)
         working-directory: poc/v2
         run: timeout 90s npm run test:polity

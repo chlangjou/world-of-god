@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path');
 const V=require('../src/victory.js');
 const W=require('../src/sim.js');
 const profile=require('../config/victory-dominance-v0.1.json');
-const opponent=require('../config/opponent-v0.2.json');
+const opponent=require('../config/opponent-v0.1.json');
 
 function world(groups){
   const religions=groups.map((g,i)=>({id:'r'+(i+1),godId:'g'+(i+1),name:'Faith '+(i+1)}));

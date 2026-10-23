@@ -1229,7 +1229,7 @@
     activePlaytestProfile=playtest.status==='fulfilled'?playtest.value:null;
     activeShrineProfile=shrine.status==='fulfilled'?shrine.value:null;
     activeVictoryProfile=victory.status==='fulfilled'?victory.value:null;
-    if(!activeOracleStrategyProfile||!activePlaytestProfile||!activeShrineProfile||!activeVictoryProfile||!Playtest)
+    if(!activeOracleStrategyProfile||!activePlaytestProfile||!activeShrineProfile||!Playtest)
       throw Error('可玩版必需的神諭策略或場景模組無法載入');
     $('playtestScenario').value=activePlaytestProfile.defaultScenario||'duel';
     // The initial unconfigured render displays the single-God placeholder.

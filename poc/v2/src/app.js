@@ -532,15 +532,7 @@
       `${st.followers} / ${st.opponentFollowers}`:st.followers;
     $('followersMetric').title=st.opponentEnabled?'我方信徒 / 對手信徒（虔誠度 40+）':'我方信徒（虔誠度 40+）';
     const duel=competitionScore();
-    $('devotionMetric').textContent=duel?
-      '對決淨改宗 '+(duel.net>0?'+':'')+duel.net+
-        ' / 目標 +'+duel.goal+' · 敵方原核心 '+duel.oldAICoreStill:
-      st.opponentEnabled?
-        `信眾 己 ${st.believers} / 敵 ${st.opponentBelievers} · 未入教 ${st.unaffiliated}`:
-        `信眾 ${st.believers} · 未入教 ${st.unaffiliated} · 奉獻 ${format(st.devotionWeight)}`;
-    $('devotionMetric').title=duel?
-      '淨改宗追蹤開局雙方各15名原始居民；剛改宗的居民尚不屬於40+核心信徒':
-      '信眾代表 20+；上方大字信徒代表 40+';
+    updateVictoryStatus(duel);
     const myOracles=activeOracleNames(state.religion);
     const enemyOracles=state.opponent?.enabled?activeOracleNames(state.opponentReligion):'無對手';
     $('oracleDuelStatus').innerHTML=
@@ -1106,13 +1098,17 @@
       if(count>0){
         acc-=count;
         if(speed<=1){
-          S.advanceTicks(state,count);
-          lastAttentionSeq=state.attention?.seq||lastAttentionSeq;
+          for(let i=0;i<count;i++){
+            S.advanceTicks(state,1);
+            lastAttentionSeq=state.attention?.seq||lastAttentionSeq;
+            if(announceVictoryIfNeeded())break;
+          }
         }else{
           // Check each simulation tick, not the end of a fast-forward batch:
           // otherwise an urgent event could be skipped by many simulated days.
           for(let i=0;i<count;i++){
             S.advanceTicks(state,1);
+            if(announceVictoryIfNeeded())break;
             const items=(state.attention?.items||[]).filter(n=>n.seq>lastAttentionSeq);
             if(items.length){
               lastAttentionSeq=state.attention.seq;
@@ -1125,7 +1121,7 @@
     if(t-lastDraw>145){lastDraw=t;render();}
     requestAnimationFrame(animate);
   }
-  $('pauseBtn').onclick=()=>{paused=!paused;render();};
+  $('pauseBtn').onclick=()=>{if(paused&&state.victory?.winner&&!state.victory.continued){showVictoryDialog();return;}paused=!paused;render();};
   document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>{speed=+btn.dataset.speed;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',b===btn));render();});
   ['radius','intensity','duration'].forEach(id=>$(id).addEventListener('input',()=>{
     rememberMiracleSettings();updateCost();draw();
@@ -1177,13 +1173,26 @@
     else if(!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)&&
       !document.activeElement?.isContentEditable){
       if(e.code==='Space'){
-        e.preventDefault();paused=!paused;render();
+        e.preventDefault();if(paused&&state.victory?.winner&&!state.victory.continued){showVictoryDialog();return;}paused=!paused;render();
       }else if(!e.repeat&&/^[1-9]$/.test(e.key)){
         e.preventDefault();
         selectMiracleByHotkey(availablePowers.miracle[Number(e.key)-1].id);
       }
     }
   });
+  $('victoryStatusBtn').onclick=showVictoryDialog;
+  $('victoryCloseBtn').onclick=()=>$('victoryDialog').close();
+  $('victoryConfirmBtn').onclick=()=>{
+    if($('victoryContinueCheck').checked){
+      S.continueVictory(state);
+      paused=false;
+      say('已進入自由沙盒；神力、冷卻、Presence 與 AI 規則完全不變。');
+    }else{
+      paused=true;
+      say('勝負已結算，世界保持暫停。可點擊主導率重新選擇繼續遊戲。');
+    }
+    $('victoryDialog').close();render();
+  };
   $('saveBtn').onclick=save;
   $('loadBtn').onclick=()=>{let raw=null;try{raw=localStorage.getItem(storageKey()) || localStorage.getItem('wog-mvp0-web-save');}catch(_){}if(raw)restore(raw);else say('目前沒有本機存檔；可以匯入 JSON。');};
   $('exportBtn').onclick=exportSave;

@@ -73,6 +73,7 @@
         </div>
         <div class="map-wrap">
           <canvas id="world" width="768" height="768" aria-label="世界地圖，可點選居民或施展神蹟" tabindex="0"></canvas>
+          <button id="battleFocusBtn" type="button" class="battle-focus" hidden aria-live="polite" title="定位正在發生的人類戰事"></button>
           <div class="legend" aria-label="地圖圖例"><span><i class="sw river"></i>河流</span><span><i class="sw forest"></i>森林</span><span><i class="sw field"></i>農田</span><span><i class="sw homes"></i>住所</span><span><i class="sw granary"></i>糧倉</span><span><i class="sw shrine" style="background:#91c9ef"></i>Shrine</span><span><i class="sw temple" style="background:#e6b86f"></i>Temple</span><span><i class="sw human"></i>居民</span><span title="可直接接收神諭的聆聽者"><i class="sw saint"></i>Saint</span><span title="傳道並彙整信徒祈禱的祭司"><i class="sw priest"></i>Priest</span><span title="目前沒有加入任何神明宗教的居民；部分原住民後來也可能選擇信仰"><i class="sw native"></i>未入教</span><span title="暮影信仰：珊瑚紅居民及祭司屬於 AI 對手"><i class="sw rival"></i>對手</span></div>
           <div id="mapTip" class="map-tip">已進入神蹟選點模式：點地圖施放 · Esc 取消 · 1–9 快選</div>
         </div>

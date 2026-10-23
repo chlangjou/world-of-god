@@ -110,9 +110,18 @@
     const names=current.map(o=>availablePowers.oracle.find(a=>a.id===o.intentType)?.label||o.intentType);
     return names.length?names.join('／'):'未發布';
   }
+  const extraFaiths=()=>state.additionalReligions||[];
+  const allDisplayedFaiths=()=>[state.religion,...(state.opponent?.enabled?[state.opponentReligion]:[]),...extraFaiths()];
+  const factionColor=id=>id===state.religion.id?'#80d9e9':
+    id===state.opponentReligion?.id?'#ed9187':id==='r3'?'#bca1f4':
+    id==='r4'?'#e4c27e':'#bcd9d2';
+  const faithName=id=>allDisplayedFaiths().find(f=>f?.id===id)?.name||id;
+  const godFaithName=id=>allDisplayedFaiths().find(f=>f?.godId===id)?.name||id;
   function eventFaction(event){
     if(event.godId===state.god.id)return 'player';
     if(state.opponentGod&&event.godId===state.opponentGod.id)return 'opponent';
+    if(event.godId===state.additionalGods?.[0]?.id)return 'third';
+    if(event.godId===state.additionalGods?.[1]?.id)return 'fourth';
     if(event.godId)return 'neutral';
     // Only unambiguous old saved event text can be interpreted. Otherwise do
     // not invent an affiliation for a historical event without provenance.
@@ -540,19 +549,25 @@
     const dailyNeed=state.people.filter(p=>p.alive).reduce((a,p)=>a+(p.stage==='child'?state.rules.foodNeedChild:state.rules.foodNeedAdult),0);
     $('foodMetric').textContent=format(st.food);
     $('stockMetric').textContent=`約 ${format(st.food/Math.max(dailyNeed,.01),1)} 日 · 公共 ${format(st.commonFood)}`;
-    $('followersMetric').textContent=st.opponentEnabled?
-      `${st.followers} / ${st.opponentFollowers}`:st.followers;
-    $('followersMetric').title=st.opponentEnabled?'我方信徒 / 對手信徒（虔誠度 40+）':'我方信徒（虔誠度 40+）';
+    const followerBreakdown=allDisplayedFaiths().map(f=>({
+      name:f.name,count:state.people.filter(p=>p.alive&&p.religionId===f.id&&p.devotion>=40).length
+    }));
+    $('followersMetric').textContent=followerBreakdown.length>2?
+      followerBreakdown.map((f,i)=>(i===0?'己 ':'')+f.count).join(' / '):
+      st.opponentEnabled?`${st.followers} / ${st.opponentFollowers}`:st.followers;
+    $('followersMetric').title=followerBreakdown.map(f=>f.name+'：'+f.count+' 位 40+ 核心').join('｜');
     const duel=competitionScore();
     updateVictoryStatus(duel);
     const myOracles=activeOracleNames(state.religion);
-    const enemyOracles=state.opponent?.enabled?activeOracleNames(state.opponentReligion):'無對手';
-    $('oracleDuelStatus').innerHTML=
-      '<span class="side-player">己：'+html(myOracles)+'</span>'+
-      (state.opponent?.enabled?'　<span class="side-opponent">敵：'+html(enemyOracles)+'</span>':'');
+    const oracleSummary=allDisplayedFaiths().map((f,i)=>({
+      side:i===0?'player':i===1?'opponent':i===2?'third':'fourth',
+      name:f.name,oracle:activeOracleNames(f)
+    }));
+    $('oracleDuelStatus').innerHTML=oracleSummary.map((f,i)=>
+      '<span class="side-'+f.side+'">'+html(i===0?'己':'神'+(i+1))+'：'+
+      html(f.oracle)+'</span>').join('　');
     $('oracleDuelStatus').title='目前有效 Oracle（非歷史記錄）｜'+
-      state.religion.name+'：'+myOracles+
-      (state.opponent?.enabled?'｜'+state.opponentReligion.name+'：'+enemyOracles:'');
+      oracleSummary.map(f=>f.name+'：'+f.oracle).join('｜');
     $('powerMetric').textContent=format(state.god.dp,1);$('powerRate').textContent=`+${format(st.dpRateDay,2)} DP / 模擬日`;
     $('powerFill').style.width=Math.min(100,state.god.dp/state.god.cap*100)+'%';
     $('pauseBtn').textContent=paused?'▶ 開始 / 繼續':'Ⅱ 暫停';

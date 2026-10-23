@@ -35,6 +35,9 @@ jobs:
       - name: Polity causal regression (90 seconds max)
         working-directory: poc/v2
         run: timeout 90s npm run test:polity
+      - name: World map and inspector regressions (50 seconds max)
+        working-directory: poc/v2
+        run: timeout 50s node --test tests/layout.test.cjs
       - name: Existing core smoke (30 seconds max)
         working-directory: poc/v2
         run: timeout 30s npm run smoke

@@ -137,6 +137,31 @@ test('actual W.castMiracle applies one-cell lightning, pays DP and respects Pres
  const unsupported=W.evaluateMiracle(s,'lightning',{x:0,y:0,intensity:1,radius:1});
  assert.equal(unsupported.ok,false,'high dominance alone without density is insufficient');
 });
+test('simulation events identify the caster independently from their kind',()=>{
+ const opponent=require('../config/opponent-v0.2.json');
+ const s=W.create({seed:'event-source-world',opponentProfile:opponent});
+ s.god.dp=s.god.cap;s.opponentGod.dp=s.opponentGod.cap;
+ const at={x:s.camp.x,y:s.camp.y,radius:3,intensity:.7,durationDays:2};
+ assert.equal(W.castRain(s,at).ok,true);
+ const player=s.events.at(-1);
+ assert.equal(player.kind,'miracle');
+ assert.equal(player.godId,s.god.id);
+ assert.equal(W.castRain(s,{...at,godId:s.opponentGod.id}).ok,true);
+ const enemy=s.events.at(-1);
+ assert.equal(enemy.kind,'miracle');
+ assert.equal(enemy.godId,s.opponentGod.id);
+});
+test('temple attack event belongs to the attacking God, not the destroyed faith',()=>{
+ const s=fixture();T.daily(s,()=>{});
+ const site=s.religiousSites[0];site.stage='temple';
+ s.shrineTemple.precisionLightningEnabled=true;
+ const events=[];
+ T.strike(s,{x:site.x,y:site.y},1,(state,kind,text,reasons,entities,godId)=>
+   events.push({kind,godId}),'g2');
+ assert.equal(site.stage,'ruin');
+ assert.equal(events[0].kind,'religion');
+ assert.equal(events[0].godId,'g2');
+});
 test('opt-in is isolated, saves keep lifecycle and old saves stay disabled',()=>{
  const world=W.create({seed:'shrine-integration',shrineProfile:{...T.BASE,enabled:true}});
  assert.equal(world.shrineTemple.enabled,true);

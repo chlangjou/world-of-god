@@ -15,6 +15,71 @@
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
   const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
+
+  function victoryDays(days){
+    if(days%360===0)return (days/360)+' 年';
+    if(days%30===0)return (days/30)+' 個月';
+    return days+' 日';
+  }
+  function victoryOverview(){return S.victoryOverview(state);}
+  function updateVictoryStatus(duel){
+    const view=victoryOverview(), button=$('victoryStatusBtn');
+    if(!view.enabled){
+      button.disabled=true;
+      $('devotionMetric').textContent='單神世界 · 無競賽';
+      return;
+    }
+    button.disabled=false;
+    const mine=view.teams.find(f=>f.id===state.religion.id);
+    const leader=view.teams.find(f=>f.id===view.leaderId);
+    const best=mine?.tiers.filter(t=>t.qualified).sort((a,b)=>
+      a.remainingDays-b.remainingDays)[0];
+    const percent=mine?(mine.share*100).toFixed(1):'0.0';
+    $('devotionMetric').textContent=(view.winner?
+      (view.continued?'自由沙盒 · ':'已結算 · '):'我方信仰 ')+percent+'%'+
+      (best&&!view.winner?' · 距勝利 '+Math.ceil(best.remainingDays)+' 日':'');
+    button.title='全球加權信仰占比：我方 '+percent+
+      '%；領先宗教 '+(leader?.name||'尚無')+
+      (best?'；目前最快倒數 '+Math.ceil(best.remainingDays)+' 日':'')+
+      (duel?'；教學淨改宗 '+duel.net:'')+'。點擊查看全部門檻與進度。';
+  }
+  function showVictoryDialog(){
+    const view=victoryOverview();
+    if(!view.enabled){say('單神世界尚無宗教競賽。');return;}
+    const won=view.winner;
+    $('victoryDialogTitle').textContent=won?
+      (won.godId===state.god.id?'主導勝利 · ':'主導失利 · ')+won.name:
+      '全球宗教主導 · 勝負進度';
+    const sorted=[...view.teams].sort((a,b)=>b.weight-a.weight);
+    $('victoryReport').innerHTML=sorted.map(f=>
+      '<div class="victory-rank"><strong><span>'+html(f.name)+
+      (f.leading?' · 當前第一名':'')+'</span><span>'+
+      (f.share*100).toFixed(2)+'%</span></strong><small>信仰貢獻 '+
+      f.weight+' / '+view.totalWeight+'（全球在世信徒）</small></div>'+
+      f.tiers.map(t=>'<div class="victory-tier'+(t.qualified?' active':'')+
+        '"><span>≥'+(t.threshold*100).toFixed(1)+'% / '+
+        victoryDays(t.requiredDays)+'</span><small>'+
+        (t.qualified?'已維持 '+Math.floor(t.elapsedDays)+' 日':'未連續達標')+
+        '</small><strong>'+(t.qualified?'餘 '+Math.ceil(t.remainingDays)+' 日':'—')+
+        '</strong></div>').join('')
+    ).join('')+(won?'<p class="victory-explain">已於第 '+
+      (Math.floor(won.hour/24)+1)+' 日達成 '+
+      (won.threshold*100).toFixed(1)+'% / '+victoryDays(won.requiredDays)+
+      '；結算紀錄已保存，繼續遊戲也不會撤銷。</p>':'');
+    $('victoryResolution').hidden=!won||view.continued;
+    $('victoryContinueCheck').checked=false;
+    if(!$('victoryDialog').open)$('victoryDialog').showModal();
+  }
+  function announceVictoryIfNeeded(){
+    const verdict=state.victory;
+    if(!verdict?.winner||verdict.continued)return false;
+    paused=true;acc=0;
+    if(presentedVictoryHour!==verdict.winner.hour){
+      presentedVictoryHour=verdict.winner.hour;
+      showVictoryDialog();
+    }
+    return true;
+  }
   const taskName = {worship:'共同祈禱',build_ritual:'宗教設施施工',rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',travel:'短期出訪中',visit:'資源熱點停留',dead:'已離世'};
   const stageName = {adult:'成年人',child:'兒童',elder:'長者'};
   const occupationName = {food_producer:'糧食生產者',gatherer:'採集者',dependent:'受扶養者'};

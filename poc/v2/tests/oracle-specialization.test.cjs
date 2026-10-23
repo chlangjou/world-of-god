@@ -27,7 +27,7 @@ test('reset ends one lasting Saint policy without touching people, faith, homes 
   assert.equal(first.ok,true);
   const active=s.religion.oracles.find(o=>o.id===first.oracleId);
   assert.equal(active.expiresAtHour,null);
-  assert.equal(W.checkOracle(s,saint,'settlement.explore').ok,false);
+  assert.equal(W.checkOracle(s,saint,'settlement.explore').ok,true); // Direct replacement is now permitted.
   const before={people:JSON.stringify(s.people),homes:JSON.stringify(s.households),
     towns:JSON.stringify(s.settlements),hour:s.hour,dp:s.god.dp,
     quota:s.religion.saintQuota[saint].quota};

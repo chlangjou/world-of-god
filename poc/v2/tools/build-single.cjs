@@ -25,10 +25,10 @@ const scripts='<script>window.WOG_RELIGION_PROFILE='+religion+';</'+'script>'+
   '<script>window.WOG_ORACLE_STRATEGY_PROFILE='+oracleStrategy+';</'+'script>'+
   '<script>window.WOG_PLAYTEST_PROFILE='+playtest+';</'+'script>'+ 
   '<script>window.WOG_SHRINE_PROFILE='+shrine+';</'+'script>'+ 
-  '<script>window.WOG_VICTORY_PROFILE='+victory+';</'+'script'>+ 
+  '<script>window.WOG_VICTORY_PROFILE='+victory+';</'+'script>'+ 
   '<script>\n'+read('src/mobility.js')+'\n</'+'script>'+ 
   '<script>\n'+read('src/shrine-temple.js')+'\n</'+'script>'+ 
-  '<script>\n'+read('src/victory.js')+'\n</'+'script'>+ 
+  '<script>\n'+read('src/victory.js')+'\n</'+'script>'+ 
   '<script>\n'+read('src/sim.js')+'\n</'+'script>'+
   '<script>\n'+read('src/playtest.js')+'\n</'+'script>'+
   '<script>\n'+read('src/app.js')+'\n</'+'script>';

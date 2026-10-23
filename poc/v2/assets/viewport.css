@@ -293,3 +293,12 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
 #events .event.side-fourth:before{background:#e4c27e}
 #events .event.side-third .event-source{color:#bca1f4}
 #events .event.side-fourth .event-source{color:#e4c27e}
+
+/* Conflict feedback is anchored to the map instead of the history feed. */
+.map-wrap{position:relative}
+.battle-focus{position:absolute;z-index:4;top:11px;left:11px;max-width:min(330px,63%);padding:9px 12px;background:rgba(11,32,36,.93);border:1.6px solid #e1a36b;border-radius:9px;color:#f7ead8;text-align:left;display:flex;flex-direction:column;gap:3px;font:600 12px/1.35 system-ui;box-shadow:0 4px 22px #081c25ad;cursor:pointer;white-space:normal}
+.battle-focus:hover,.battle-focus:focus-visible{border-color:#ffdfa3;background:rgba(17,43,45,.98)}
+.battle-focus-title{font-weight:800;font-size:13px}
+.battle-focus-armies{font-size:11px;color:#f5eee0}
+.battle-focus-armies i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
+.battle-focus-detail{font-size:10px;color:#f4cf97}

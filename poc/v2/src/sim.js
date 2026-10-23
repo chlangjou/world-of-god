@@ -13,6 +13,9 @@
   const TEMPLE=(typeof module==='object'&&module.exports)?
     require('./shrine-temple.js'):globalThis.WoGTemple;
   if(!TEMPLE)throw Error('WoGTemple module must load before sim.js');
+  const VICTORY=(typeof module==='object'&&module.exports)?
+    require('./victory.js'):globalThis.WoGVictory;
+  if(!VICTORY)throw Error('WoGVictory module must load before sim.js');
   const VERSION = 'mvp0-web-2';
   const DEFAULT_RULES = Object.freeze({
     width: 64, height: 64, initialHouseholds: 8, tickHours: 8, daysPerMonth: 30,
@@ -807,6 +810,7 @@
       t.cropStock=t.crop*cap;
     }
     s.nextId = s.people.length + 1; // prevent later born Person IDs from colliding with Genesis people
+    VICTORY.reset(s,faithfulWeight,config.victoryProfile);
     return s;
   }
   function faithfulWeight(devotion) {
@@ -3358,6 +3362,10 @@
       processOracles(s);processScheduledBirths(s);updateWorld(s);updatePeople(s);
       if(s.tick%3===0) daily(s);
       if(s.hour>0 && s.hour%(s.rules.daysPerMonth*24)===0) demographic(s);
+      const victory=VICTORY.update(s,faithfulWeight);
+      if(victory)log(s,'victory',victory.name+' 達成全球宗教主導勝利。',
+        ['以在世人口的加權 Devotion 計算；勝利不會中止沙盒世界'],
+        [],victory.godId);
     }
     return s;
   }
@@ -3516,6 +3524,9 @@
     // discarding their existing event IDs, history or world state. Other tuned
     // event limits are intentionally left alone.
     if(candidate.rules?.eventLimit===130)candidate.rules.eventLimit=DEFAULT_RULES.eventLimit;
+    // Legacy saves begin the new contest clock at their actual loaded hour:
+    // never invent historical dominance streaks that were not recorded.
+    VICTORY.ensure(candidate,faithfulWeight);
     const verdict=validate(candidate);
     if(!verdict.ok) throw new Error('無法讀取世界：'+verdict.errors.join('；'));
     return candidate;
@@ -3526,5 +3537,8 @@
     evaluateMiracle,castMiracle,activeStatus,
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
     settlementReligionStats,priestPetitions,prayerLocation,OPPONENT_DEFAULTS,
-    setOpponentDifficulty,MOBILITY_DEFAULTS:MOBILITY.BASE};
+    setOpponentDifficulty,MOBILITY_DEFAULTS:MOBILITY.BASE,
+    victoryOverview:s=>VICTORY.overview(s,faithfulWeight),
+    resetVictory:(s,profile)=>VICTORY.reset(s,faithfulWeight,profile),
+    continueVictory:VICTORY.continueAfterVictory};
 });

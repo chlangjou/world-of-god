@@ -334,10 +334,10 @@
     if(!Object.hasOwn(OPPONENT_DIFFICULTIES,value))
       return {ok:false,reason:'未知的 AI 難度'};
     s.opponent.difficulty=value;
+    for(const ai of s.additionalOpponents||[])ai.difficulty=value;
     return {ok:true,difficulty:value};
   }
-  function opponentBehavior(s){
-    const ai=s.opponent;
+  function opponentBehavior(s,ai=s.opponent){
     const difficulty=ai?.difficultyProfiles?.[ai.difficulty]||
       OPPONENT_DIFFICULTIES.standard;
     return {
@@ -353,12 +353,21 @@
       choiceBudget:difficulty.choiceBudget||1
     };
   }
-  function allFaiths(s){return s.opponent?.enabled?[s.religion,s.opponentReligion]:[s.religion];}
+  function allFaiths(s){
+    return [s.religion,s.opponent?.enabled?s.opponentReligion:null,
+      ...(s.additionalReligions||[])].filter(Boolean);
+  }
+  function allGods(s){
+    return [s.god,s.opponent?.enabled?s.opponentGod:null,
+      ...(s.additionalGods||[])].filter(Boolean);
+  }
   function faithOf(s,id){return allFaiths(s).find(f=>f.id===id)||null;}
   function actorFor(s,godId){
-    if(s.opponent?.enabled&&godId===s.opponentGod.id)
-      return {faith:s.opponentReligion,god:s.opponentGod,enemy:true};
-    return {faith:s.religion,god:s.god,enemy:false};
+    if(!godId||godId===s.god.id)return {faith:s.religion,god:s.god,enemy:false};
+    const faith=allFaiths(s).find(f=>f.godId===godId);
+    const god=allGods(s).find(g=>g.id===godId);
+    if(!faith||!god)throw Error('未知神明 ID：'+godId);
+    return {faith,god,enemy:true};
   }
   function faithDpRate(s,faith){
     const weight=living(s).filter(p=>p.religionId===faith.id)
@@ -366,6 +375,14 @@
     return s.rules.naturalDpPerDay+weight*s.rules.devotionDpPerWeightDay;
   }
   function religionRand(s,faith=s.religion){
+    const extra=(s.additionalReligions||[]).some(f=>f.id===faith?.id);
+    if(extra){
+      s.additionalReligionRng ||= {};
+      let x=s.additionalReligionRng[faith.id]>>>0;
+      x^=x<<13;x^=x>>>17;x^=x<<5;
+      s.additionalReligionRng[faith.id]=x>>>0;
+      return s.additionalReligionRng[faith.id]/4294967296;
+    }
     const key=faith?.id===s.opponentReligion?.id?'opponentRng':'religionRng';
     let x=s[key]>>>0;
     x^=x<<13;x^=x>>>17;x^=x<<5;
@@ -1030,7 +1047,7 @@
     skill.cooldownCastCount=check.costMultiplier;
   }
   function resetReadyMiracleChains(s){
-    for(const god of [s.god,s.opponentGod]){
+    for(const god of allGods(s)){
       if(!god?.skills)continue;
       for(const skill of Object.values(god.skills)){
         if(skill.cooldownCastCount&&s.hour>=skill.readyAtHour)
@@ -1375,7 +1392,11 @@
       reachedSettlements:{}, fulfillmentCredited: false, progressFoodAtStart: stats(s).food,
       ...(s.oracleStrategy?{influenceCareCount:0,housesCompleted:0,lastHouseCompletedHour:null}:{}) };
     faith.oracles.push(o);
-    if(enemy)s.opponent.oracleIssues++;
+    if(enemy){
+      const ai=god.id===s.opponentGod?.id?s.opponent:
+        (s.additionalOpponents||[]).find(a=>a.godId===god.id);
+      if(ai)ai.oracleIssues++;
+    }
     log(s, 'oracle', `${enemy?faith.name+'的神諭':'神諭'}交給 ${test.saint.name}：${s.oracleStrategy?STRATEGY_LABELS[intentType]:(intentType==='religion.spread'?'鼓勵信眾更積極地傳播信仰':'請讓族人重視糧食生產')}。`,
       [prior.length?'已直接替換這位 Saint 先前的 '+prior.map(x=>STRATEGY_LABELS[x.type]||x.type).join('／')+' 神諭；只扣新神諭接收額度':'首次向這位 Saint 發佈此神諭',
        'Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定'],[],god.id);
@@ -3106,8 +3127,10 @@
     checkFulfillment(s);
     const rate=stats(s).dpRateDay;
     s.god.dp=Math.min(s.god.cap,s.god.dp+rate);
-    if(s.opponent?.enabled)s.opponentGod.dp=Math.min(s.opponentGod.cap,
-      s.opponentGod.dp+faithDpRate(s,s.opponentReligion));
+    for(const god of allGods(s).filter(g=>g.id!==s.god.id)){
+      const faith=allFaiths(s).find(f=>f.godId===god.id);
+      if(faith)god.dp=Math.min(god.cap,god.dp+faithDpRate(s,faith));
+    }
     for(const faith of allFaiths(s)){reconcileFaithOffices(s,faith);ensureSaint(s,faith);ensurePriest(s,faith);}
     collectPrayers(s);
     TEMPLE.daily(s,log);
@@ -3120,6 +3143,10 @@
       for(const faith of allFaiths(s))relayOracles(s,faith);
     }
     opponentTurn(s);
+    for(let i=0;i<(s.additionalOpponents||[]).length;i++){
+      opponentTurn(s,s.additionalOpponents[i],
+        s.additionalReligions[i],s.additionalGods[i]);
+    }
     s.lastFoodOutput=0;
   }
   function processOracles(s) {

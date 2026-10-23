@@ -489,6 +489,12 @@ test('real housing forms additional settlements with local crop access',()=>{
   assert.ok(s.settlements.length>=2,'built pioneer homes should found another real settlement');
   assert.ok(s.counts.newFields>0,'pioneers should cultivate reachable meadow when needed');
   assert.equal(s.counts.deaths,0,'healthy early pioneer fixtures should not starve for lack of any fields');
-  assert.ok(s.settlements.slice(1).every(t=>t.householdIds.filter(id=>s.households.find(h=>h.id===id)?.home).length>=3));
+  assert.equal(F.outpostMinHouseholds,2);
+  assert.equal(F.outpostMinHuts,2);
+  assert.ok(s.settlements.slice(1).every(t=>
+    t.householdIds.length>=F.outpostMinHouseholds&&
+    t.householdIds.filter(id=>s.households.find(h=>h.id===id)?.home).length>=F.outpostMinHuts));
+  assert.ok(!Object.values(s.environment).some(v=>typeof v==='number'&&!Number.isFinite(v)),
+    'cultivation must not write non-finite environment caches');
   valid(s);
 });

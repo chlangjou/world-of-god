@@ -93,7 +93,7 @@ function observe(s,emit){
  if(!active(s))return;
  s.religiousSites ||= [];
  for(const town of s.settlements){
-   for(const faith of [s.religion,s.opponentReligion].filter(Boolean)){
+   for(const faith of [s.religion,s.opponentReligion,...(s.additionalReligions||[])].filter(Boolean)){
      if(s.religiousSites.some(site=>site.townId===town.id&&site.religionId===faith.id))continue;
      // Informal meeting places require a real believer with a lived social/prayer reason.
      const followers=members(s,town,faith.id);
@@ -111,7 +111,7 @@ function observe(s,emit){
  }
 }
 function siteGod(s,site){
- return [s.religion,s.opponentReligion].find(f=>f?.id===site.religionId)?.godId||null;
+ return [s.religion,s.opponentReligion,...(s.additionalReligions||[])].find(f=>f?.id===site.religionId)?.godId||null;
 }
 function recent(s,site){
  const cutoff=s.hour-s.shrineTemple.recentDays*24;
@@ -199,7 +199,7 @@ function attend(s,p){
     p.health<30||p.hunger>.7)return false;
  const home=s.households.find(h=>h.id===p.householdId);
  if(!home)return false;
- const faiths=[s.religion,s.opponentReligion].filter(Boolean);
+ const faiths=[s.religion,s.opponentReligion,...(s.additionalReligions||[])].filter(Boolean);
  const sites=(s.religiousSites||[]).filter(t=>{
    const faith=faiths.find(f=>f.id===t.religionId);
    if(!faith)return false;
@@ -246,7 +246,7 @@ function afterContacts(s,oracleFor){
    const participants=s.people.filter(p=>p.alive&&
      p.religiousVisit?.siteId===site.id&&p.religiousVisit.hour===s.hour&&d(p,site)<=1);
    if(participants.length<2)continue;
-   const faith=[s.religion,s.opponentReligion].find(f=>f?.id===site.religionId);
+   const faith=[s.religion,s.opponentReligion,...(s.additionalReligions||[])].find(f=>f?.id===site.religionId);
    if(!faith)continue;
    for(const priest of participants.filter(p=>faith.priests.includes(p.id))){
      const hasRealContact=participants.some(other=>other!==priest&&
@@ -286,7 +286,7 @@ function validate(s){
    if(seen.has(site.id))errors.push('宗教設施 ID 重複');
    seen.add(site.id);
    if(!s.settlements.some(t=>t.id===site.townId)||
-      ![s.religion,s.opponentReligion].some(f=>f?.id===site.religionId))
+      ![s.religion,s.opponentReligion,...(s.additionalReligions||[])].some(f=>f?.id===site.religionId))
        errors.push('宗教設施歸屬無效');
    if(!Number.isFinite(site.condition)||site.condition<0||site.condition>100||
       !Number.isFinite(site.x)||!Number.isFinite(site.y)||!walkable(s,site.x,site.y))

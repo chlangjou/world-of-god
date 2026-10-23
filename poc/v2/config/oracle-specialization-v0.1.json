@@ -71,5 +71,16 @@
     }
   },
   "spreadMatrixEnabled": true,
-  "counterSpreadRecruitMin": 1
+  "counterSpreadRecruitMin": 1,
+  "oracleMiracleCounterEnabled": true,
+  "oracleMiracleCounterBaseChance": 0.27,
+  "oracleMiracleCounterMultiplier": 2,
+  "oracleMiracleCounterBonusFraction": 0.4,
+  "oracleMiracleCounterPairs": {
+    "family.nurture": "ripening",
+    "food.produce": "harvest",
+    "settlement.explore": "heal",
+    "religion.spread": "efficiency"
+  },
+  "oracleMiracleCounterDescription": "Pairs double probability of a modest extra attributable faith response after a real Miracle outcome. Base chance .27 -> .54; original physical output never doubles. Works for any deity. Efficiency may credibly benefit a rival Spread audience only with real subsequent work."
 }

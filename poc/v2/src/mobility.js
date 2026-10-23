@@ -102,7 +102,7 @@ function seedHotspots(s){
   s.mobilityHotspots=areas;
 }
 function activeSpread(s,p){
-  const faith=[s.religion,s.opponentReligion].find(f=>f&&f.id===p.religionId);
+  const faith=[s.religion,s.opponentReligion,...(s.additionalReligions||[])].find(f=>f&&f.id===p.religionId);
   if(!faith||!faith.priests.includes(p.id))return null;
   return faith.oracles.find(o=>o.status==='active'&&
     o.intentType==='religion.spread'&&Number.isFinite(o.propagatedAtHour)&&
@@ -192,7 +192,7 @@ function begin(s,p){
     (Number.isFinite(p.lastVisitStartHour)&&s.hour-p.lastVisitStartHour<m.tripCooldownDays*24))
     return false;
   const spread=activeSpread(s,p);
-  const priest=[s.religion,s.opponentReligion].some(f=>f?.priests.includes(p.id));
+  const priest=[s.religion,s.opponentReligion,...(s.additionalReligions||[])].some(f=>f?.priests.includes(p.id));
   const chance=spread?m.missionSpreadChancePerDay:
     priest?m.missionBaseChancePerDay:0;
   const missionRoll=hash(s.seed+'|mission|'+p.id+'|'+day(s))/4294967296;
@@ -248,7 +248,7 @@ function step(s,p,distribute){
       trip.resourceKind?'在珍稀資源區野營並工作':'在資源熱點停留';
     if(mission){
       p.lastPreachHour=s.hour;
-      const faith=[s.religion,s.opponentReligion].find(f=>f?.id===p.religionId);
+      const faith=[s.religion,s.opponentReligion,...(s.additionalReligions||[])].find(f=>f?.id===p.religionId);
       const oracle=faith?.oracles.find(o=>o.id===trip.spreadOracleId&&o.status==='active');
       if(oracle){
         oracle.influenceSermonCount=(oracle.influenceSermonCount||0)+1;
@@ -256,7 +256,7 @@ function step(s,p,distribute){
       }
     }else if(trip.resourceKind&&trip.siteTicks===1)campRisk(s,p,trip);
     if(!mission&&s.tick%3===2&&p.stage==='adult'&&p.devotion>=20){
-      const faith=[s.religion,s.opponentReligion].find(f=>f&&f.id===p.religionId);
+      const faith=[s.religion,s.opponentReligion,...(s.additionalReligions||[])].find(f=>f&&f.id===p.religionId);
       if(faith&&(faith.priests.includes(p.id)||hash(s.seed+'|visit-preach|'+p.id+'|'+s.hour)%4===0)){
         p.activity='preach';p.lastPreachHour=s.hour;
       }
@@ -335,7 +335,7 @@ function record(s){
           // A meeting can create actual sermon opportunity. It never converts
           // a 40+ rival by itself; existing evidence and faith rules still apply.
           for(const speaker of [p,q]){
-            const faith=[s.religion,s.opponentReligion].find(f=>
+            const faith=[s.religion,s.opponentReligion,...(s.additionalReligions||[])].find(f=>
               f&&f.id===speaker.religionId);
             if(!faith||speaker.stage!=='adult'||speaker.devotion<20)continue;
             const priest=faith.priests.includes(speaker.id);

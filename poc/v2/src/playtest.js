@@ -11,6 +11,40 @@ function buildStrategy(original,playtest,mode){
   return {...original,...playtest.faith.shared,...playtest.faith[mode],
     faithDefenseMatrix:JSON.parse(JSON.stringify(original.faithDefenseMatrix))};
 }
+// Populate curated playable worlds with ordinary unpartnered adult children.
+// Initial families remain real households; no people, homes, Faith or food are created.
+function seedYoungAdults(s){
+  const F=s.agriculture?.familyExpansion;
+  if(!F?.enabled)return {youngAdults:0,communities:0};
+  const grouped=s.settlements.map(t=>t.householdIds.map(id=>
+    s.households.find(h=>h.id===id)).filter(Boolean));
+  const assigned=new Set(s.settlements.flatMap(t=>t.householdIds));
+  const original=s.households.filter(h=>!assigned.has(h.id));
+  const opponentHomes=new Set((s.opponent?.initialHouseholdIndexes||[]).map(i=>'h'+(i+1)));
+  const local=original.filter(h=>!opponentHomes.has(h.id));
+  const rival=original.filter(h=>opponentHomes.has(h.id));
+  if(local.length)grouped.push(local);
+  if(rival.length)grouped.push(rival);
+  const createYoungAdults=s.playtest?.mode!=='duel'; // preserve 30-person Nurture evidence lesson
+  let youngAdults=0;
+  for(const [groupIndex,homes] of grouped.entries()){
+    const sorted=[...homes].sort((a,b)=>Number(a.id.slice(1))-Number(b.id.slice(1)));
+    for(const [i,h] of sorted.entries()){
+      const child=s.people.find(p=>p.alive&&p.householdId===h.id&&p.stage==='child');
+      if(!child)continue;
+      child.genderRole=(i<2?i:i+groupIndex)%2===0?'gestate':'fertilize';
+      if(!createYoungAdults||i>=Math.min(sorted.length,Math.max(0,F.starterYouthsPerCommunity||0)))continue;
+      child.stage='adult';
+      const min=Math.max(18,F.starterYoungAdultMinAge||19);
+      const max=Math.max(min,F.starterYoungAdultMaxAge||22);
+      child.age=min+(i%(max-min+1));
+      child.occupation=child.proficiency.food>=child.proficiency.gather?'food_producer':'gatherer';
+      child.partnerId=null;
+      youngAdults++;
+    }
+  }
+  return {youngAdults,communities:grouped.length};
+}
 function establishDuel(s,S,profile){
   if(!s.opponent?.enabled||!s.opponentReligion||!s.opponentCamp)
     throw Error('宗教對決必須有獨立的 AI 起始位置');
@@ -72,8 +106,10 @@ function establishDuel(s,S,profile){
 }
 function createWorld(S,options){
   const {mode,seed,playtestProfile,oracleStrategyProfile,opponentProfile,
-    balanceProfile,religionProfile,mobilityProfile,divineProfile,shrineProfile,difficulty,opponentMode}=options;
+    balanceProfile,religionProfile,mobilityProfile,divineProfile,shrineProfile,difficulty,opponentMode,victoryProfile,godCount=2}=options;
   if(!['duel','native'].includes(mode))throw Error('未知試玩情境');
+  const deityCount=mode==='duel'?2:Math.max(1,Math.min(4,Math.round(godCount)));
+  if(deityCount>2&&opponentMode==='off')throw Error('三神／四神情境需要 AI 神明');
   const oracleStrategy=buildStrategy(oracleStrategyProfile,playtestProfile,mode);
   const chosenSeed=mode==='duel'?playtestProfile.duel.seed:
     (seed||playtestProfile.native.seed);
@@ -86,10 +122,18 @@ function createWorld(S,options){
   const s=S.create({seed:chosenSeed,
     ...(balanceProfile?{balanceProfile}:{}),
     religionProfile,mobilityProfile,divineProfile,shrineProfile,oracleStrategyProfile:oracleStrategy,
-    worldGenesisMode:'native',opponentProfile:opponent});
-  if(mode==='duel')return establishDuel(s,S,playtestProfile);
+    worldGenesisMode:'native',opponentProfile:opponent,victoryProfile,
+    additionalAiGods:deityCount>2?deityCount-2:0,
+    fourGodGenesis:deityCount===4?playtestProfile.native.fourGodGenesis:null});
+  if(mode==='duel'){
+    const ready=establishDuel(s,S,playtestProfile);
+    ready.playtest.starterPopulation=seedYoungAdults(ready);
+    S.resetVictory(ready,victoryProfile); // The playable opening starts at Day 10, not Genesis.
+    return ready;
+  }
   s.playtest={profileId:playtestProfile.profileId,mode:'native',
-    startedAtHour:s.hour};
+    startedAtHour:s.hour,godCount:deityCount,starterPopulation:seedYoungAdults(s)};
+  S.resetVictory(s,victoryProfile);
   return s;
 }
 function score(s){

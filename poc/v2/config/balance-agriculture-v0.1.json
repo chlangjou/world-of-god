@@ -138,14 +138,27 @@
     "communalSafetyDays": 6,
     "homeSpacing": 3,
     "homeRadius": 12,
-    "pioneerAfterHouseholds": 12,
-    "pioneerChance": 0.55,
+    "pioneerAfterHouseholds": 5,
+    "pioneerChance": 0.34,
     "pioneerMinRadius": 17,
     "pioneerMaxRadius": 24,
     "outpostNeighborRadius": 8,
-    "outpostMinHouseholds": 3,
-    "outpostMinHuts": 3,
-    "outpostClusterRadius": 9
+    "outpostMinHouseholds": 2,
+    "outpostMinHuts": 2,
+    "outpostClusterRadius": 8,
+    "starterYouthsPerCommunity": 2,
+    "starterYoungAdultMinAge": 19,
+    "starterYoungAdultMaxAge": 22,
+    "frontierMigrationEnabled": true,
+    "frontierEarliestDay": 105,
+    "frontierMinOriginHouseholds": 4,
+    "frontierMoveChancePerMonth": 0.22,
+    "frontierExploreMultiplier": 2.2,
+    "frontierProvisionDays": 18,
+    "frontierMinCarryFoodDays": 9,
+    "frontierOriginSafetyDays": 7,
+    "frontierJoinMinDistance": 4,
+    "frontierJoinMaxDistance": 7
   },
   "granary": {
     "woodRequired": 6,
@@ -167,5 +180,6 @@
     "relaxReserveExtraDaysFarRiver": 18,
     "comfortableReserveExtraDaysFarRiver": 20,
     "units": "Food days of actual local living population; river distance in map cells"
-  }
+  },
+  "familyExpansionNotes": "Autonomous growth v0.2: initial mixed-age youth cohorts and balanced future fertility roles; adult families may choose to relocate and build homes to found an outpost. All food is transferred from real inventory."
 }

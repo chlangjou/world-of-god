@@ -2,6 +2,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),W=require('../src/sim.js');
 const root=path.resolve(__dirname,'..');
+const {boot}=require('./browser-harness.cjs');
 test('v2 browser loads separate JS, styles and editable balance JSON',()=>{
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  for(const p of ['src/sim.js','src/app.js','assets/style-base.css','assets/viewport.css','assets/file-menu.css']){
@@ -22,18 +23,17 @@ test('Original defaults are preserved without applying experimental numbers',()=
  assert.deepEqual(W.DEFAULT_RULES,original.rules);
 });
 
-test('granary construction is visible in the existing fixed viewport without new scrolling',()=>{
- const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
- const app=fs.readFileSync(path.join(root,'src/app.js'),'utf8');
- const styles=fs.readFileSync(path.join(root,'assets/viewport.css'),'utf8');
- const agriculture=require('../config/balance-agriculture-v0.1.json');
- assert.ok(html.includes('sw granary'),'a warehouse legend entry should be visible');
- assert.ok(app.includes('granaryStatus'),'inspector should show the selected settlement construction state');
- assert.ok(app.includes("if(g.built)"),'render physical granary separately from unfinished project');
- assert.ok(styles.includes('.sw.granary'));
- assert.ok(styles.includes('overflow:hidden'),'fixed viewport remains in use');
- assert.equal(agriculture.granary.woodRequired,6);
- assert.equal(agriculture.granary.stoneRequired,4);
+test('granary construction shows real materials, work and completion in the fixed inspector',async()=>{
+ const ui=await boot(),s=ui.world(),town=s.settlements[0];
+ town.granary={x:town.x,y:town.y,progress:1.5,built:false,materialsPaid:false};
+ town.storage.wood=2;town.storage.stone=1;
+ ui.el('settlementSelect').onchange({target:{value:town.id}});
+ assert.match(ui.el('townPanel').innerHTML,/公共糧倉：建造 1\.5 \/ 6 · 木材 2 \/ 6 · 石材 1 \/ 4/);
+ town.granary.materialsPaid=true;ui.render();
+ assert.match(ui.el('townPanel').innerHTML,/建材已投入/);
+ town.granary.built=true;ui.render();
+ assert.match(ui.el('townPanel').innerHTML,/公共糧倉：已完工/);
+ assert.ok(fs.readFileSync(path.join(root,'assets/viewport.css'),'utf8').includes('overflow:hidden'));
 });
 
 test('History only uses a fixed-height scrollbar with newest events first',()=>{
@@ -54,24 +54,27 @@ test('History only uses a fixed-height scrollbar with newest events first',()=>{
  assert.equal(W.DEFAULT_RULES.eventLimit,200);
 });
 
-test('Priest and Saint are distinct map roles; only collected petitions display clickable bubbles',()=>{
- const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
- const app=fs.readFileSync(path.join(root,'src/app.js'),'utf8');
- const viewport=fs.readFileSync(path.join(root,'assets/viewport.css'),'utf8');
- assert.ok(html.includes('sw saint')&&html.includes('sw priest'),
-   'special roles must be visible in the map legend');
- assert.ok(app.includes("saint?'#80e4eb':priest?'#c4a2fa'"),'separate role colors');
- assert.ok(app.includes('priestBubblePosition')&&app.includes('S.priestPetitions(state,id)'),
-   'real collected petitions must gate the bubble');
- assert.ok(app.includes("activePriestId=marked.id;showInspector('needs')"),
-   'a bubble click opens its Priest prayer information');
- assert.ok(app.includes('priestPetitionIndex')&&app.includes('data-priest-nav'),
-   'all collected petition types must remain navigable without scrolling');
- assert.ok(viewport.includes('.priest-prayer-nav')&&viewport.includes('.sw.priest'));
- assert.ok(viewport.includes('html,body{height:100%;max-height:100%;overflow:hidden}'));
+test('Priest and Saint are visually distinct; actual collected petitions gate clickable bubbles',async()=>{
+ const ui=await boot(),s=ui.world();W.advanceTicks(s,3*21);ui.render();
+ const saint=s.people.find(p=>p.id===s.religion.saints[0]);
+ const priest=s.people.find(p=>p.id===s.religion.priests[0]);
+ assert.ok(saint&&priest);assert.notEqual(saint.id,priest.id);
+ const drawing=ui.draw(),size=ui.canvas.width/s.width;
+ const fillAt=p=>drawing.find(c=>c.kind==='fill'&&c.arc&&Math.abs(c.arc[0]-(p.x+.5)*size)<1e-8&&Math.abs(c.arc[1]-(p.y+.5)*size)<1e-8);
+ assert.notEqual(fillAt(saint).fill,fillAt(priest).fill,'role colors must be visibly distinct');
+ for(const faith of [s.religion,s.opponentReligion,...(s.additionalReligions||[])])faith.prayers=[];
+ assert.equal(ui.draw().filter(c=>c.kind==='fillText'&&c.fill==='#4b3863').length,0);
+ const patient=s.people.find(p=>p.alive&&p.religionId===s.religion.id&&p.id!==priest.id);
+ patient.health=55;W.advanceTicks(s,3);ui.render();
+ const petition=W.priestPetitions(s,priest.id)[0];assert.ok(petition,'real injury should be collected by a Priest');
+ const bubbles=ui.draw().filter(c=>c.kind==='fillText'&&c.fill==='#4b3863');assert.ok(bubbles.length>0);
+ const bubble=bubbles[0];
+ ui.canvas.listeners.click({clientX:bubble.args[1],clientY:bubble.args[2]});
+ assert.ok(ui.el('needsPanel').innerHTML.includes(petition.id));
+ assert.equal(ui.el('needsPanel').innerHTML.includes('undefined'),false);
 });
 
-test('the selected Divine Power is routed through typed Miracle and Oracle actions',()=>{
+test('the selected Divine Power is routed through typed Miracle and Oracle actions',async()=>{
   const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
   const app=fs.readFileSync(path.join(root,'src/app.js'),'utf8');
   const profile=require('../config/divine-powers-v0.1.json');
@@ -81,10 +84,16 @@ test('the selected Divine Power is routed through typed Miracle and Oracle actio
     assert.ok(html.includes('id="'+id+'"'),'missing live power UI '+id);
   for(const type of ['ripening','harvest','heal','efficiency','drought','lightning','confusion','blindness','religion.spread'])
     assert.ok(app.includes(type),'power option is missing '+type);
-  assert.ok(app.includes("S.castMiracle(state,id,{x,y,...opts()})"),'map cast must use selected type');
-  assert.ok(app.includes("S.issueOracle(state,{saintId:selectedSaintId,intentType:selectedPower()})"),
-    'Oracle issuer must use the selected intent');
-  assert.ok(app.includes("S.evaluateMiracle(state,id"),'preview must match selected Miracle');
+  const calls=[];const sim={...W,
+    castMiracle:(s,id,input)=>{const result=W.castMiracle(s,id,input);calls.push({kind:'miracle',id,input,result});return result;},
+    issueOracle:(s,input)=>{const result=W.issueOracle(s,input);calls.push({kind:'oracle',input,result});return result;}};
+  const ui=await boot({sim}),s=ui.world();W.advanceTicks(s,3*21);ui.render();
+  s.god.dp=s.god.cap;ui.choose('ripening');ui.clickMap(s.camp.x,s.camp.y);
+  const cast=calls.find(c=>c.kind==='miracle');assert.ok(cast&&cast.result.ok);
+  assert.equal(cast.id,'ripening');assert.ok(Math.abs(cast.input.x-s.camp.x)<1);
+  ui.el('oracleTab').onclick();ui.choose('family.nurture');ui.el('oracleBtn').onclick();
+  const oracle=calls.find(c=>c.kind==='oracle');assert.ok(oracle&&oracle.result.ok);
+  assert.equal(oracle.input.intentType,'family.nurture');assert.ok(s.religion.saints.includes(oracle.input.saintId));
   assert.ok(app.includes("loadDivine()"),'runtime must load separate Divine Profile');
   assert.ok(fs.readFileSync(path.join(root,'tools/build-single.cjs'),'utf8').includes('WOG_DIVINE_PROFILE'),
     'standalone export must bundle tunable power parameters');

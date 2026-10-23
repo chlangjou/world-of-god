@@ -13,6 +13,9 @@
   const TEMPLE=(typeof module==='object'&&module.exports)?
     require('./shrine-temple.js'):globalThis.WoGTemple;
   if(!TEMPLE)throw Error('WoGTemple module must load before sim.js');
+  const VICTORY=(typeof module==='object'&&module.exports)?
+    require('./victory.js'):globalThis.WoGVictory;
+  if(!VICTORY)throw Error('WoGVictory module must load before sim.js');
   const VERSION = 'mvp0-web-2';
   const DEFAULT_RULES = Object.freeze({
     width: 64, height: 64, initialHouseholds: 8, tickHours: 8, daysPerMonth: 30,
@@ -221,6 +224,16 @@
     else if(Object.hasOwn(profile,'faithDefenseModel'))r.faithDefenseModel='linear-clamped';
     if(profile.counterDiagnosticsEnabled===true)r.counterDiagnosticsEnabled=true;
     if(profile.spreadMatrixEnabled===true)r.spreadMatrixEnabled=true;
+    // Optional evidence-response pairing, absent from legacy save rules.
+    if(profile.oracleMiracleCounterEnabled===true){
+      r.oracleMiracleCounterEnabled=true;
+      r.oracleMiracleCounterMultiplier=clamp(num(
+        profile.oracleMiracleCounterMultiplier,2),1,4);
+      r.oracleMiracleCounterBaseChance=clamp(num(
+        profile.oracleMiracleCounterBaseChance,.27),0,.5);
+      r.oracleMiracleCounterBonusFraction=clamp(num(
+        profile.oracleMiracleCounterBonusFraction,.4),.1,1);
+    }
     // Optional timing experiment: historically counterRepeatDays gated only 40+
     // challenges. Opt in to covering below-40 evidence follow-up as well.
     if(profile.counterRepeatIncludesFollowup===true)
@@ -331,10 +344,10 @@
     if(!Object.hasOwn(OPPONENT_DIFFICULTIES,value))
       return {ok:false,reason:'未知的 AI 難度'};
     s.opponent.difficulty=value;
+    for(const ai of s.additionalOpponents||[])ai.difficulty=value;
     return {ok:true,difficulty:value};
   }
-  function opponentBehavior(s){
-    const ai=s.opponent;
+  function opponentBehavior(s,ai=s.opponent){
     const difficulty=ai?.difficultyProfiles?.[ai.difficulty]||
       OPPONENT_DIFFICULTIES.standard;
     return {
@@ -350,12 +363,21 @@
       choiceBudget:difficulty.choiceBudget||1
     };
   }
-  function allFaiths(s){return s.opponent?.enabled?[s.religion,s.opponentReligion]:[s.religion];}
+  function allFaiths(s){
+    return [s.religion,s.opponent?.enabled?s.opponentReligion:null,
+      ...(s.additionalReligions||[])].filter(Boolean);
+  }
+  function allGods(s){
+    return [s.god,s.opponent?.enabled?s.opponentGod:null,
+      ...(s.additionalGods||[])].filter(Boolean);
+  }
   function faithOf(s,id){return allFaiths(s).find(f=>f.id===id)||null;}
   function actorFor(s,godId){
-    if(s.opponent?.enabled&&godId===s.opponentGod.id)
-      return {faith:s.opponentReligion,god:s.opponentGod,enemy:true};
-    return {faith:s.religion,god:s.god,enemy:false};
+    if(!godId||godId===s.god.id)return {faith:s.religion,god:s.god,enemy:false};
+    const faith=allFaiths(s).find(f=>f.godId===godId);
+    const god=allGods(s).find(g=>g.id===godId);
+    if(!faith||!god)throw Error('未知神明 ID：'+godId);
+    return {faith,god,enemy:true};
   }
   function faithDpRate(s,faith){
     const weight=living(s).filter(p=>p.religionId===faith.id)
@@ -363,6 +385,14 @@
     return s.rules.naturalDpPerDay+weight*s.rules.devotionDpPerWeightDay;
   }
   function religionRand(s,faith=s.religion){
+    const extra=(s.additionalReligions||[]).some(f=>f.id===faith?.id);
+    if(extra){
+      s.additionalReligionRng ||= {};
+      let x=s.additionalReligionRng[faith.id]>>>0;
+      x^=x<<13;x^=x>>>17;x^=x<<5;
+      s.additionalReligionRng[faith.id]=x>>>0;
+      return s.additionalReligionRng[faith.id]/4294967296;
+    }
     const key=faith?.id===s.opponentReligion?.id?'opponentRng':'religionRng';
     let x=s[key]>>>0;
     x^=x<<13;x^=x>>>17;x^=x<<5;
@@ -740,6 +770,70 @@
     populateNativeVillages(s,nativeGenesisSites(s,s.opponentCamp),
       opponent.nativeVillages,opponent.nativeHouseholdsPerVillage);
   }
+  // Opt-in multi-deity Genesis: reuse existing living native-village residents.
+  // They gain a religion only as a visible curated starting condition, not a
+  // conversion injected into a running world. There are no free people/structures.
+  function seedAdditionalGods(s,count,baseProfile){
+    s.additionalReligions=[];
+    s.additionalGods=[];
+    s.additionalOpponents=[];
+    s.additionalReligionRng={};
+    const names=['青木信仰','星塵信仰'];
+    const villages=['n3','n2'];
+    for(let i=0;i<count;i++){
+      const id='r'+(i+3),godId='g'+(i+3);
+      const town=s.settlements.find(t=>t.id===villages[i]);
+      if(!town)throw Error('多神創世缺少真實原生聚落 '+villages[i]);
+      const homeIds=town.householdIds.slice(); // All native founding homes, not only two of three.
+      const seedPeople=s.people.filter(p=>p.alive&&homeIds.includes(p.householdId));
+      if(seedPeople.length<2||seedPeople.some(p=>p.religionId!==null))
+        throw Error('多神創世必須選擇未入教的原生家戶');
+      const religion={id,godId,name:names[i],saints:[],priests:[],saintQuota:{},
+        oracles:[],prayers:[],lastPrayerHour:-1,regionalPrayerAt:{},
+        reachedSettlements:{}};
+      const ai=opponentRules({...baseProfile,name:names[i],startDay:
+        Math.min(360,(baseProfile?.startDay||14)+i*10)});
+      if(!ai)throw Error('新增神明必須使用有效 AI 規則');
+      Object.assign(ai,{godId,lastActionDay:-1,turns:0,casts:0,oracleIssues:0});
+      const god={id:godId,dp:ai.initialDp,cap:s.rules.maxDp,
+        skills:Object.fromEntries(['rain',...Object.keys(POWER_DEFAULTS)]
+          .map(key=>[key,{level:1,xp:0,readyAtHour:0}]))};
+      for(const p of seedPeople){p.religionId=id;p.devotion=60;}
+      s.additionalReligions.push(religion);
+      s.additionalGods.push(god);
+      s.additionalOpponents.push(ai);
+      s.additionalReligionRng[id]=hash(s.seed+'|religion-'+id);
+      log(s,'religion',names[i]+'已在 '+town.name+' 形成初始信仰群體。',
+        ['沿用創世時既有的原生居民、真實家戶與資源',
+         '不會在遊戲進行中無條件改宗，也不會憑空增加建築'],[],godId);
+    }
+  }
+  function balanceFourGodGenesis(s,profile){
+    if(!profile||allFaiths(s).length!==4)return;
+    const pattern=profile.householdDevotion;
+    if(!Array.isArray(pattern)||pattern.length!==3||
+      pattern.some(row=>!Array.isArray(row)||row.length!==3||
+        row.some(v=>!Number.isFinite(v)||v<20||v>100)))
+      throw Error('四神開局需要有效的三戶信仰分布');
+    const neutral=clamp(num(profile.neutralDevotion,10),0,19);
+    for(const faith of allFaiths(s)){
+      const homes=s.households.filter(h=>h.members.some(id=>
+        s.people.some(p=>p.id===id&&p.religionId===faith.id)));
+      if(homes.length<3)throw Error('四神開局缺少既有家戶');
+      for(const [i,h] of homes.entries()){
+        const members=h.members.map(id=>s.people.find(p=>p.id===id&&p.alive));
+        if(members.length!==3||members.some(p=>!p))
+          throw Error('四神開局家戶人口不符');
+        for(const [j,p] of members.entries()){
+          p.religionId=i<3?faith.id:null;
+          p.devotion=i<3?pattern[i][j]:neutral;
+        }
+      }
+    }
+    log(s,'religion','四神以相同信仰分布進入河谷。',
+      ['每神三戶、九名信眾、相同 Devotion 分布；其餘居民未入教',
+       '僅設定新世界初始信仰，不增加或搬遷人口、資源與建築']);
+  }
   function create(config = {}) {
     const rules = rulesFrom(config);
     const agriculture = config.balanceProfile?.profileId === 'agriculture-balance-v0.1'
@@ -799,6 +893,11 @@
         }
       }
     }
+    if(opponent&&config.additionalAiGods){
+      const count=Math.round(clamp(config.additionalAiGods,0,2));
+      if(count)seedAdditionalGods(s,count,config.opponentProfile);
+    }
+    balanceFourGodGenesis(s,config.fourGodGenesis);
     MOBILITY.seedHotspots(s);
     if (agriculture) {s.counts.newFields=0;s.counts.newFamilies=0;s.counts.newSettlements=0;}
     if (agriculture) for (const t of s.tiles) if (t.terrain === 'field') {
@@ -807,6 +906,7 @@
       t.cropStock=t.crop*cap;
     }
     s.nextId = s.people.length + 1; // prevent later born Person IDs from colliding with Genesis people
+    VICTORY.reset(s,faithfulWeight,config.victoryProfile);
     return s;
   }
   function faithfulWeight(devotion) {
@@ -907,6 +1007,14 @@
       score:clamp(old+value,0,60),
       expiresAtHour:s.hour+s.religionPropagation.miracleInterestDays*24};
   }
+  function oracleMiracleResponseChance(s,p,type){
+    if(!s.oracleStrategy?.oracleMiracleCounterEnabled)return null;
+    const original=s.oracleStrategy.oracleMiracleCounterBaseChance;
+    const match=oracleMiracleMatch(s,p,type);
+    return {chance:clamp(original*(match?
+      s.oracleStrategy.oracleMiracleCounterMultiplier:1),0,1),
+      match,baseline:original};
+  }
   function applyMiracleFaith(s,faith,p,amount,type,role){
     if(!p.alive||amount<=0)return false;
     const credible=faithContext(s,faith,p);
@@ -922,10 +1030,18 @@
     const magnitude=Math.max(0,Math.round(amount*credible*factor));
     if(!magnitude)return false;
     p.lastMiracleFaith[key]=s.hour;
+    const response=oracleMiracleResponseChance(s,p,type);
+    // The base outcome remains real and unchanged. A separate, modest
+    // evidence-response opportunity becomes twice as likely when the
+    // beneficiary's actually-heard Oracle matches this Miracle.
+    const extra=!!response&&religionRand(s,faith)<response.chance?
+      Math.max(1,Math.round(magnitude*s.oracleStrategy.oracleMiracleCounterBonusFraction)):0;
     if(p.religionId===faith.id){
-      const delta=Math.min(magnitude,100-p.devotion);
+      const delta=Math.min(magnitude+extra,100-p.devotion);
       p.devotion+=delta;
-      if(delta)p.lastFaithEvidence={hour:s.hour,cause:type+' 可信神蹟證據',change:delta,godId:faith.godId};
+      if(delta)p.lastFaithEvidence={hour:s.hour,cause:type+' 可信神蹟證據',
+        change:delta,godId:faith.godId,
+        ...(extra&&response?.match?{counterOracleId:response.match.oracleId}: {})};
       return delta>0;
     }
     if(p.religionId===null){
@@ -937,12 +1053,13 @@
     // Credible opposing miracles may challenge even 40+ commitment. Ordinary
     // preaching still cannot. Actual conversion requires personal later choice.
     const doubt=Math.max(1,Math.round(magnitude*s.religionPropagation.miracleRivalDoubtFactor));
-    const delta=Math.min(doubt,Math.max(0,p.devotion-1));
+    const delta=Math.min(doubt+extra,Math.max(0,p.devotion-1));
     p.devotion-=delta;
     recordDivineInterest(s,p,faith,magnitude);
     if(delta){
       p.lastFaithEvidence={hour:s.hour,cause:type+' 異教神蹟證據',
-        change:-delta,godId:faith.godId};
+        change:-delta,godId:faith.godId,
+        ...(extra&&response?.match?{counterOracleId:response.match.oracleId}: {})};
       if(faith===s.opponentReligion&&p.religionId===s.religion.id){
         const last=s.attention?.lastPreachingHour??-Infinity;
         if(role==='direct'||s.hour-last>=14*24){
@@ -1026,7 +1143,7 @@
     skill.cooldownCastCount=check.costMultiplier;
   }
   function resetReadyMiracleChains(s){
-    for(const god of [s.god,s.opponentGod]){
+    for(const god of allGods(s)){
       if(!god?.skills)continue;
       for(const skill of Object.values(god.skills)){
         if(skill.cooldownCastCount&&s.hour>=skill.readyAtHour)
@@ -1092,8 +1209,11 @@
   function activeStatus(s,p,type){
     const v=p.divineStatuses?.[type];
     if(!v||v.endsAtHour<=s.hour||!p.alive)return 0;
-    if(type==='efficiency'&&(p.devotion<s.rules.faithThreshold||
-      (v.godId||s.god.id)!==faithOf(s,p.religionId)?.godId))return 0;
+    if(type==='efficiency'&&!(
+      (p.devotion>=s.rules.faithThreshold&&
+       (v.godId||s.god.id)===faithOf(s,p.religionId)?.godId)||
+      (s.oracleStrategy?.oracleMiracleCounterEnabled&&v.counterOracleId&&p.devotion>=20)
+    ))return 0;
     return v.strength;
   }
   function expireStatuses(s){
@@ -1108,6 +1228,12 @@
   function perceivedReach(s,p,reach){
     const blind=activeStatus(s,p,'blindness');
     return blind?Math.max(1,Math.floor(reach*(1-s.divinePowers.blindnessReachReduction*Math.min(1,blind)))):reach;
+  }
+  function efficiencyEligible(s,p,faith){
+    return p.religionId===faith.id&&p.devotion>=s.rules.faithThreshold||
+      !!(s.oracleStrategy?.oracleMiracleCounterEnabled&&
+        p.religionId&&p.religionId!==faith.id&&p.devotion>=20&&
+        oracleMiracleMatch(s,p,'efficiency'));
   }
   function evaluateMiracle(s,type,input={}){
     if(type==='rain')return evalRain(s,input);
@@ -1133,7 +1259,7 @@
       t.terrain==='field'&&(type!=='harvest'||(s.agriculture?t.cropStock>1e-8:t.crop>.02))):[];
     const people=['heal','efficiency','confusion','blindness'].includes(type)?
       s.people.filter(p=>inArea(p)&&(type!=='heal'||p.health<100)&&
-       (type!=='efficiency'||(p.religionId===faith.id&&p.devotion>=s.rules.faithThreshold))):[];
+       (type!=='efficiency'||efficiencyEligible(s,p,faith))):[];
     const presence=validCenter?presenceAt(s,center,faith.id):null;
     let reason=null;
     if(!validCenter)reason='施展中心不在地圖內';
@@ -1145,7 +1271,7 @@
     else if(['ripening','harvest'].includes(type)&&!fields.length)reason='範圍內沒有可作用的現有農作物';
     else if(['heal','efficiency','confusion','blindness'].includes(type)&&!people.length)
       reason=type==='heal'?'範圍內沒有需要治療的在世居民':
-        type==='efficiency'?'範圍內沒有可祝福的己方信徒':'範圍內沒有可干擾的在世居民';
+        type==='efficiency'?'範圍內沒有己方40+信徒或正受傳教 Oracle 影響的異教徒':'範圍內沒有可干擾的在世居民';
     else if(god.dp+1e-8<cost)reason=overcast?
       '神力不足：冷卻期間強制施放需 '+cost+' DP（'+costMultiplier+'×）':'神力不足';
     return {ok:!reason,reason,cost,baseCost,costMultiplier,overcast,cooldownDays,
@@ -1207,12 +1333,15 @@
       applied+=TEMPLE.strike(s,center,intensity,log,god.id);
     }else if(['efficiency','confusion','blindness'].includes(type)){
       for(const p of people){
-        if(type==='efficiency'&&(p.religionId!==faith.id||p.devotion<s.rules.faithThreshold))continue;
+        if(type==='efficiency'&&!efficiencyEligible(s,p,faith))continue;
         const endsAtHour=s.hour+durationDays*24;
         p.divineStatuses ||= {};
         const old=p.divineStatuses[type],previous=old&&old.endsAtHour>s.hour?old:null;
+        const foreignCounter=type==='efficiency'&&p.religionId!==faith.id?
+          oracleMiracleMatch(s,p,type):null;
         p.divineStatuses[type]={strength:Math.max(intensity,previous?.strength||0),
-          endsAtHour:Math.max(endsAtHour,previous?.endsAtHour||0),godId:god.id};
+          endsAtHour:Math.max(endsAtHour,previous?.endsAtHour||0),godId:god.id,
+          ...(foreignCounter?{counterOracleId:foreignCounter.oracleId}:{})};
         applied++;
       }
     }else if(type==='ripening'||type==='drought'){
@@ -1328,12 +1457,13 @@
     const active=faith.oracles.filter(o=>o.saintId===saintId&&o.status==='active');
     if(intentType==='life.balance')
       return active.length?{ok:true,saint,active}:{ok:false,reason:'這位 Saint 目前沒有需要解除的特化'};
-    if(s.oracleStrategy&&active.length)
-      return {ok:false,reason:'請先發佈 Reset Oracle，結束目前特化'};
-    if (!record || record.quota < 1) return { ok: false, reason: 'Saint 的神諭接收額度不足' };
+    if(s.oracleStrategy&&active.some(o=>o.intentType===intentType))
+      return {ok:false,reason:'這位 Saint 已經持有相同類型的有效神諭'};
+    // Atomic switch: do not release an old calling until the replacement can be issued.
+    if (!record || record.quota < 1) return { ok: false, reason: 'Saint 的神諭接收額度不足；原神諭保持生效' };
     if (faith.oracles.some(o => o.saintId === saintId && o.intentType === intentType && o.status === 'active'))
       return { ok: false, reason: '這位 Saint 已經持有相同類型的有效神諭' };
-    return { ok: true, saint };
+    return { ok: true, saint, replace:s.oracleStrategy?active:[] };
   }
   function issueOracle(s, input = {}) {
     const {faith,god,enemy}=actorFor(s,input.godId);
@@ -1351,8 +1481,17 @@
     }
     const durationDays=s.oracleStrategy?null:
       clamp(num(input.durationDays, s.rules.oracleDurationDays), 1, 720);
+    // Replacement charges only the new Oracle issue quota; Reset stays a separate
+    // free choice for ending a calling without issuing another one.
+    const prior=(test.replace||[]).map(o=>({id:o.id,type:o.intentType}));
+    const id='o'+s.nextId++;
+    for(const active of test.replace||[]){
+      active.status='replaced';
+      active.releasedAtHour=s.hour;
+      active.replacedByOracleId=id;
+    }
     faith.saintQuota[saintId].quota--;
-    const o = { id: 'o' + s.nextId++, godId: god.id, saintId,
+    const o = { id, godId: god.id, saintId,
       intentType, audience: 'local-community', issuedAtHour: s.hour,
       expiresAtHour: durationDays===null?null:s.hour+durationDays*24,
       status: 'active', propagatedAtHour: null,
@@ -1361,10 +1500,16 @@
       reachedSettlements:{}, fulfillmentCredited: false, progressFoodAtStart: stats(s).food,
       ...(s.oracleStrategy?{influenceCareCount:0,housesCompleted:0,lastHouseCompletedHour:null}:{}) };
     faith.oracles.push(o);
-    if(enemy)s.opponent.oracleIssues++;
+    if(enemy){
+      const ai=god.id===s.opponentGod?.id?s.opponent:
+        (s.additionalOpponents||[]).find(a=>a.godId===god.id);
+      if(ai)ai.oracleIssues++;
+    }
     log(s, 'oracle', `${enemy?faith.name+'的神諭':'神諭'}交給 ${test.saint.name}：${s.oracleStrategy?STRATEGY_LABELS[intentType]:(intentType==='religion.spread'?'鼓勵信眾更積極地傳播信仰':'請讓族人重視糧食生產')}。`,
-      ['Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定'],[],god.id);
-    return { ok: true, oracleId: o.id, saintId, quotaLeft: faith.saintQuota[saintId].quota };
+      [prior.length?'已直接替換這位 Saint 先前的 '+prior.map(x=>STRATEGY_LABELS[x.type]||x.type).join('／')+' 神諭；只扣新神諭接收額度':'首次向這位 Saint 發佈此神諭',
+       'Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定'],[],god.id);
+    return { ok: true, oracleId: o.id, saintId, replaced:prior,
+      quotaLeft: faith.saintQuota[saintId].quota };
   }
   function concludeOracle(s, oracleId) {
     const faith=s.religion;
@@ -1847,6 +1992,49 @@
     }
     return best;
   }
+  // God-miracle counter selection is based on the individual's real active
+  // Oracle calling; an idle Saint or a historical Oracle is not a target.
+  const ORACLE_MIRACLE_COUNTERS=Object.freeze({
+    'family.nurture':'ripening','food.produce':'harvest',
+    'settlement.explore':'heal','religion.spread':'efficiency'
+  });
+  function oracleMiracleMatch(s,p,type){
+    if(!s.oracleStrategy||!p.religionId)return null;
+    const calling=strategyCalling(s,p).oracle;
+    if(!calling||ORACLE_MIRACLE_COUNTERS[calling.intentType]!==type)return null;
+    return {oracleId:calling.id,intent:calling.intentType};
+  }
+  function oracleMap(s){
+    const result=[];
+    for(const faith of allFaiths(s)){
+      for(const o of faith.oracles||[]){
+        if(o.status!=='active')continue;
+        const saint=s.people.find(p=>p.id===o.saintId&&p.alive);
+        if(!saint)continue;
+        const heard=o.propagatedAtHour!==null;
+        const base={id:o.id,godId:faith.godId,religionId:faith.id,
+          religionName:faith.name,intentType:o.intentType,
+          miracle:ORACLE_MIRACLE_COUNTERS[o.intentType]||null,
+          propagated:heard};
+        result.push({...base,kind:'saint',x:saint.x,y:saint.y,
+          saintId:saint.id,saintName:saint.name,listenerCount:heard?1:0});
+        if(!heard)continue;
+        for(const town of s.settlements){
+          // Only show towns where a real living person currently hears the
+          // active Oracle under the same contact and propagation constraints.
+          const listeners=living(s).filter(p=>
+            personSettlement(s,p)?.id===town.id&&
+            p.religionId===faith.id&&p.devotion>=20&&
+            oracleContact(s,p,o,faith)>0);
+          if(!listeners.length)continue;
+          result.push({...base,kind:'town',townId:town.id,townName:town.name,
+            x:town.x,y:town.y,saintId:saint.id,saintName:saint.name,
+            listenerCount:listeners.length});
+        }
+      }
+    }
+    return result;
+  }
   function spreadCalling(s,p,faith=s.religion){
     if(s.oracleStrategy){
       const focus=strategyCalling(s,p);
@@ -1999,20 +2187,6 @@
     return L.foodUnitsPerPlotPerDayAtFullFertilityAnd90PctMoisture*t.fertility*
       Math.pow(moisture/L.referenceMoisture,L.moistureExponent);
   }
-  function agricultureMildCapacity(s) {
-    if(s.environment.landCapacityEvalDay!==days(s)) {
-      const reach=s.agriculture.land.workReachCells;
-      const alive=new Set(living(s).map(p=>p.id));
-      const homes=s.households.filter(h=>h.members.some(id=>alive.has(id)));
-      let capacity=0;
-      for(const t of s.tiles)if(t.terrain==='field'&&
-        homes.some(h=>Math.abs(t.x-h.x)<=reach&&Math.abs(t.y-h.y)<=reach))
-          capacity+=agricultureMildFieldYield(s,t);
-      s.environment.landCapacityMild=capacity;
-      s.environment.landCapacityEvalDay=days(s);
-    }
-    return s.environment.landCapacityMild;
-  }
   function agricultureCultivate(s,p,h) {
     const L=s.agriculture.land;
     if(!L.autonomousExpansionEnabled)return false;
@@ -2035,7 +2209,6 @@
     if(!chosen)return false; // No reachable suitable land: a genuine local limit.
     // This real work shift opens a plot with zero crops and yields no Food.
     chosen.terrain='field';chosen.cropStock=0;chosen.crop=0;
-    s.environment.landCapacityMild+=agricultureMildFieldYield(s,chosen);
     s.counts.newFields=(s.counts.newFields||0)+1;
     p.proficiency.food=1-(1-p.proficiency.food)*
       Math.exp(-1/s.agriculture.worker.learningTimeConstantActualFoodWorkdays);
@@ -2487,8 +2660,12 @@
       ensureGranary(s,town);
       s.settlements.push(town);
       for(const h of group)for(const person of householdMembers(s,h))person.settlementId=id;
-      s.counts.newSettlements=(s.counts.newSettlements||0)+1;
-      log(s,'settlement',town.name+'由 '+finished.length+' 戶已建屋的居民形成。',
+       s.counts.newSettlements=(s.counts.newSettlements||0)+1;
+      if(group.some(h=>h.frontierOriginTownId)){
+        town.frontierFounded=true;
+        s.counts.frontierSettlements=(s.counts.frontierSettlements||0)+1;
+      }
+      log(s,'settlement',town.name+' 由 '+finished.length+' 戶已建屋的居民形成。',
         ['家戶自願向外定居','附近至少 '+F.outpostMinHuts+' 戶完成真實住屋',
          '獨立共享儲備從零開始；糧倉須由居民另外實際建造']);
       return;
@@ -2899,8 +3076,7 @@
   // legal one appears. They use partial local observations and independent
   // priorities, resembling a deity with limited attention, not a bad dice roll.
   // World physics and actual cast validation remain identical on every tier.
-  function opponentLimitedTurn(s,faith,adherents,saint,policy,day){
-    const ai=s.opponent;
+  function opponentLimitedTurn(s,faith,adherents,saint,policy,day,ai=s.opponent,god=s.opponentGod){
     const priests=faith.priests.map(id=>adherents.find(p=>p.id===id)).filter(Boolean);
     const source=priests[0]||saint||adherents.slice().sort((a,b)=>
       b.devotion-a.devotion||a.id.localeCompare(b.id))[0];
@@ -2933,9 +3109,9 @@
       const quota=faith.saintQuota?.[saint.id]?.quota??0;
       if(active&&active.intentType!==wanted&&quota>0&&
         day*24-active.issuedAtHour>=s.oracleStrategy.aiFocusDays*24)
-        issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,intentType:'life.balance'});
+        issueOracle(s,{godId:god.id,saintId:saint.id,intentType:'life.balance'});
       if(!faith.oracles.some(o=>o.status==='active'&&o.saintId===saint.id))
-        issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,intentType:wanted});
+        issueOracle(s,{godId:god.id,saintId:saint.id,intentType:wanted});
     }else if(saint&&day>=policy.oracleStartDay&&
       !faith.oracles.some(o=>o.status==='active')){
       let calling='religion.spread';
@@ -2955,7 +3131,7 @@
           (nearbyUnaffiliated>0||agenda===2)?'religion.spread':
             'food.produce';
       }
-      issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
+      issueOracle(s,{godId:god.id,saintId:saint.id,
         intentType:calling,durationDays:ai.spreadOracleDurationDays});
     }
     const blessed={...center,radius:Math.max(3,Math.min(7,r)),intensity:.85,durationDays:10};
@@ -2995,7 +3171,7 @@
       if(nearbyFields&&crop>.3)
         add('harvest',{...center,radius:6,intensity:.9},4.4);
       if(policy.offensiveEveryTurns>0&&ai.turns%policy.offensiveEveryTurns===0){
-        const nearbyEnemy=s.religion.priests.map(id=>living(s).find(p=>p.id===id))
+        const nearbyEnemy=allFaiths(s).filter(f=>f.id!==faith.id).flatMap(f=>f.priests).map(id=>living(s).find(p=>p.id===id))
           .filter(p=>p&&dist(p,center)<=r);
         const target=nearbyEnemy.sort((a,b)=>dist(a,center)-dist(b,center))[0];
         if(target)add('confusion',{x:target.x,y:target.y,radius:5,
@@ -3005,42 +3181,41 @@
       // expansion. It ranks only its few local alternatives and may overlook a
       // lower-ranked viable cast. This is not injecting arbitrary failed casts.
       const agenda=['heal','rain','ripening','efficiency','harvest','confusion'][
-        hash(s.seed+'|opponent-agenda|'+Math.floor(day/60))%6];
+        hash(s.seed+'|opponent-agenda|'+Math.floor(day/60)+(god.id==='g2'?'':'|'+god.id))%6];
       const score=v=>v.priority+(v.type===agenda?2.8:0);
       options.sort((a,b)=>score(b)-score(a)||a.type.localeCompare(b.type));
       for(const option of options.slice(0,policy.choiceBudget))
         action.push([option.type,option.args]);
     }
     for(const [type,args] of action){
-      const input={...args,godId:s.opponentGod.id};
+      const input={...args,godId:god.id};
       const check=evaluateMiracle(s,type,input);
       if(!check.ok||check.costMultiplier>policy.maxForcedMultiplier)continue;
       const result=castMiracle(s,type,input);
       if(result.ok){ai.casts++;break;}
     }
   }
-  function opponentTurn(s){
-    const ai=s.opponent;
+  function opponentTurn(s,ai=s.opponent,faith=s.opponentReligion,god=s.opponentGod){
     if(!ai?.enabled)return;
-    const day=days(s),policy=opponentBehavior(s);
+    const day=days(s),policy=opponentBehavior(s,ai);
     if(day<policy.startDay||day%policy.actionIntervalDays!==0||
       ai.lastActionDay===day)return;
     ai.lastActionDay=day;ai.turns++;
-    const faith=s.opponentReligion,adherents=living(s).filter(p=>
+    const adherents=living(s).filter(p=>
       p.religionId===faith.id&&p.devotion>=20);
     if(!adherents.length)return;
     const saint=faith.saints.map(id=>adherents.find(p=>p.id===id)).find(Boolean);
     if(policy.decisionStyle!=='historical'){
-      opponentLimitedTurn(s,faith,adherents,saint,policy,day);
+      opponentLimitedTurn(s,faith,adherents,saint,policy,day,ai,god);
       return;
     }
     if(saint&&day>=policy.oracleStartDay){
       if(s.oracleStrategy){
         if(!faith.oracles.some(o=>o.status==='active'&&o.saintId===saint.id))
-          issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
+          issueOracle(s,{godId:god.id,saintId:saint.id,
             intentType:['food.produce','family.nurture','settlement.explore'][Math.floor(day/90)%3]});
       }else if(!faith.oracles.some(o=>o.status==='active'&&o.intentType==='religion.spread'))
-        issueOracle(s,{godId:s.opponentGod.id,saintId:saint.id,
+        issueOracle(s,{godId:god.id,saintId:saint.id,
           intentType:'religion.spread',durationDays:ai.spreadOracleDurationDays});
     }
     // Real followers, physical farmland and local faith determine every target.
@@ -3052,7 +3227,7 @@
     const weak=adherents.filter(p=>dist(p,center)<=6&&p.health<85);
     const choices=[];
     if(policy.offensiveEveryTurns>0&&ai.turns%policy.offensiveEveryTurns===0){
-      const enemyPriest=s.religion.priests.map(id=>living(s).find(p=>p.id===id))
+      const enemyPriest=allFaiths(s).filter(f=>f.id!==faith.id).flatMap(f=>f.priests).map(id=>living(s).find(p=>p.id===id))
         .filter(Boolean).sort((a,b)=>dist(a,center)-dist(b,center))[0];
       if(enemyPriest&&dist(enemyPriest,center)<12)
         choices.push(['confusion',{x:enemyPriest.x,y:enemyPriest.y,radius:5,
@@ -3070,7 +3245,7 @@
     if(productiveCore)
       choices.push(['efficiency',{...center,radius:7,intensity:.85,durationDays:10}]);
     for(const [type,args] of choices){
-      const input={...args,godId:s.opponentGod.id};
+      const input={...args,godId:god.id};
       const evaluated=evaluateMiracle(s,type,input);
       if(!evaluated.ok||evaluated.costMultiplier>policy.maxForcedMultiplier)continue;
       const cast=castMiracle(s,type,input);
@@ -3086,8 +3261,10 @@
     checkFulfillment(s);
     const rate=stats(s).dpRateDay;
     s.god.dp=Math.min(s.god.cap,s.god.dp+rate);
-    if(s.opponent?.enabled)s.opponentGod.dp=Math.min(s.opponentGod.cap,
-      s.opponentGod.dp+faithDpRate(s,s.opponentReligion));
+    for(const god of allGods(s).filter(g=>g.id!==s.god.id)){
+      const faith=allFaiths(s).find(f=>f.godId===god.id);
+      if(faith)god.dp=Math.min(god.cap,god.dp+faithDpRate(s,faith));
+    }
     for(const faith of allFaiths(s)){reconcileFaithOffices(s,faith);ensureSaint(s,faith);ensurePriest(s,faith);}
     collectPrayers(s);
     TEMPLE.daily(s,log);
@@ -3100,6 +3277,10 @@
       for(const faith of allFaiths(s))relayOracles(s,faith);
     }
     opponentTurn(s);
+    for(let i=0;i<(s.additionalOpponents||[]).length;i++){
+      opponentTurn(s,s.additionalOpponents[i],
+        s.additionalReligions[i],s.additionalGods[i]);
+    }
     s.lastFoodOutput=0;
   }
   function processOracles(s) {
@@ -3244,6 +3425,139 @@
     if(remaining>1e-8)throw Error('新家庭糧食轉移不守恆');
     return true;
   }
+  // Existing households can voluntarily colonize real, resource-bearing land.
+  // This is a low-rate demographic decision, never a player move order.
+  function frontierSite(s,h,town,F){
+    const occupied=s.households.filter(v=>v.id!==h.id&&householdMembers(s,v).length);
+    const unclaimed=occupied.filter(v=>v.home&&v.frontierOriginTownId===town.id&&
+      !s.settlements.some(t=>t.householdIds.includes(v.id)));
+    const sites=[],seen=new Set();
+    function check(pos,joining){
+      const x=pos.x,y=pos.y,key=x+','+y;
+      if(x<2||y<2||x>=s.width-2||y>=s.height-2||seen.has(key))return;
+      seen.add(key);
+      const t=tile(s,x,y);
+      if(t.terrain==='river'||t.terrain==='rock')return;
+      if(s.settlements.some(v=>dist(v,pos)<=s.rules.settlementClusterDistance+1))return;
+      if(occupied.some(v=>dist(v,pos)<F.homeSpacing))return;
+      let food=0,wood=0,fiber=0,goodLand=0;
+      for(let dy=-6;dy<=6;dy+=2)for(let dx=-6;dx<=6;dx+=2){
+        const nx=x+dx,ny=y+dy;
+        if(nx<0||ny<0||nx>=s.width||ny>=s.height||dx*dx+dy*dy>36)continue;
+        const q=tile(s,nx,ny);
+        if(q.terrain==='river')continue;
+        food+=Math.min(2,Math.max(0,q.forage||0))+
+          (q.terrain==='field'?Math.max(0,q.crop||0)*2:0);
+        wood+=Math.min(4,Math.max(0,q.wood||0));
+        fiber+=Math.min(4,Math.max(0,q.fiber||0));
+        if(q.terrain==='meadow'&&q.fertility>=.45)goodLand++;
+      }
+      if(food<2||wood<4||fiber<3||goodLand<2)return;
+      const score=Math.min(food,12)*.09+Math.min(wood,20)*.07+
+        Math.min(fiber,18)*.07+goodLand*.08+t.fertility+
+        t.moisture*.4+(joining?4:0)-
+        .006*dist(town,pos);
+      sites.push({pos,score});
+    }
+    // Prefer joining a viable physical pioneer home, not seeding scattered dots.
+    for(const anchor of unclaimed.slice(0,10))
+      for(let i=0;i<16;i++)for(const radius of [F.frontierJoinMinDistance||4,
+        F.frontierJoinMaxDistance||7]){
+        const angle=i*Math.PI/8;
+        check(nearestLand(s,anchor.x+Math.cos(angle)*radius,
+          anchor.y+Math.sin(angle)*radius),true);
+      }
+    if(!sites.length){
+      for(let i=0;i<24;i++)for(const radius of [F.pioneerMinRadius,F.pioneerMaxRadius]){
+        const angle=i*Math.PI/12;
+        check(nearestLand(s,town.x+Math.cos(angle)*radius,
+          town.y+Math.sin(angle)*radius),false);
+      }
+    }
+    sites.sort((a,b)=>b.score-a.score||a.pos.x-b.pos.x||a.pos.y-b.pos.y);
+    return sites[0]?.pos||null;
+  }
+  function frontierMigration(s){
+    const F=s.agriculture?.familyExpansion;
+    if(!F?.enabled||F.frontierMigrationEnabled!==true||
+      days(s)<(F.frontierEarliestDay||0))return;
+    for(const town of [...s.settlements]){
+      const residents=s.households.filter(h=>town.householdIds.includes(h.id)&&
+        householdMembers(s,h).length);
+      const homes=residents.filter(h=>h.home);
+      if(homes.length<Math.max(3,F.frontierMinOriginHouseholds||4)||
+        town.famineActive||town.workDemand?.foodPressure>.65)continue;
+      const families=homes.filter(h=>h.migrated===0&&
+        householdMembers(s,h).some(p=>p.stage==='adult'&&p.health>=F.minHealth));
+      if(!families.length)continue;
+      const inspired=families.some(h=>householdMembers(s,h).some(p=>
+        strategyCalling(s,p).oracle?.intentType==='settlement.explore'));
+      const multiplier=inspired?num(F.frontierExploreMultiplier,2.2):1;
+      const chance=clamp(num(F.frontierMoveChancePerMonth,.15)*multiplier,0,.9);
+      if(rand(s)>=chance)continue;
+      const sourceNeed=residents.reduce((n,h)=>n+dailyFoodNeed(s,h),0);
+      const surplus=Math.max(0,town.storage.food-sourceNeed*
+        num(F.frontierOriginSafetyDays,7));
+      const sorted=families.sort((a,b)=>b.inventory.food-a.inventory.food||
+        a.id.localeCompare(b.id));
+      for(const h of sorted){
+        const need=dailyFoodNeed(s,h);
+        if(need<=0)continue;
+        const carryGoal=need*num(F.frontierProvisionDays,18);
+        const movedFood=Math.min(Math.max(0,carryGoal-h.inventory.food),surplus);
+        if(h.inventory.food+movedFood+1e-8<
+          need*num(F.frontierMinCarryFoodDays,9))continue;
+        const next=frontierSite(s,h,town,F);
+        if(!next)continue;
+        // Conservation: provisioning transfers real public food to private stores.
+        town.storage.food=Math.max(0,town.storage.food-movedFood);
+        h.inventory.food+=movedFood;
+        const old={x:h.x,y:h.y};
+        moveHousehold(s,h,next,town,true);
+        h.frontierOriginTownId=town.id;
+        h.frontierStartedHour=s.hour;
+        s.counts.frontierDepartures=(s.counts.frontierDepartures||0)+1;
+        log(s,'migration',h.name+' 自主離開 '+town.name+'，前往外地建屋開拓。',
+          ['原聚落有可帶走的實際糧食；轉移 '+movedFood.toFixed(1)+' 單位',
+           '來源 '+old.x+','+old.y+' → '+next.x+','+next.y,
+           inspired?'居民受到可聽見的探索神諭影響':'居民自主尋找新的資源與生活空間']);
+        break; // At most one deliberate frontier departure per town per month.
+      }
+    }
+  }
+  // Read-only physical frontier state for UI and bounded acceptance tests.
+  function frontierStatus(s){
+    const F=s.agriculture?.familyExpansion;
+    if(!F?.enabled)return {enabled:false,camps:[],formed:0};
+    const unclaimed=s.households.filter(h=>h.frontierOriginTownId&&
+      householdMembers(s,h).length&&
+      !s.settlements.some(t=>t.householdIds.includes(h.id)));
+    const ordered=[...unclaimed].sort((a,b)=>Number(b.home)-Number(a.home)||
+      Number(a.id.slice(1))-Number(b.id.slice(1)));
+    const seen=new Set(),camps=[];
+    for(const anchor of ordered){
+      if(seen.has(anchor.id))continue;
+      const group=ordered.filter(h=>!seen.has(h.id)&&
+        dist(h,anchor)<=F.outpostClusterRadius);
+      for(const h of group)seen.add(h.id);
+      const built=group.filter(h=>h.home).length;
+      camps.push({originTownId:anchor.frontierOriginTownId||null,
+        x:Math.round(group.reduce((n,h)=>n+h.x,0)/group.length),
+        y:Math.round(group.reduce((n,h)=>n+h.y,0)/group.length),
+        households:group.length,builtHomes:built,
+        missingHouseholds:Math.max(0,F.outpostMinHouseholds-group.length),
+        missingHomes:Math.max(0,F.outpostMinHuts-built),
+        names:group.map(h=>h.name)});
+    }
+    return {enabled:true,formed:s.counts.frontierSettlements||0,
+      departures:s.counts.frontierDepartures||0,
+      waiting:unclaimed.length,camps,
+      neededHouseholds:F.outpostMinHouseholds,neededHomes:F.outpostMinHuts,
+      originMinHouseholds:F.frontierMinOriginHouseholds||4,
+      origins:s.settlements.map(t=>({townId:t.id,name:t.name,
+        households:t.householdIds.filter(id=>s.households.some(h=>h.id===id&&
+          householdMembers(s,h).length)).length}))};
+  }
   function formNewHouseholds(s){
     const F=s.agriculture?.familyExpansion;
     if(!F?.enabled||!s.settlements.length)return;
@@ -3269,6 +3583,7 @@
         s.settlements.filter(t=>dist(t,h)<=s.rules.settlementClusterDistance)
         .sort((x,y)=>dist(x,h)-dist(y,h)||x.id.localeCompare(y.id))[0]||null;
       if(town)town.householdIds.push(h.id);
+      else if(sourceTown)h.frontierOriginTownId=sourceTown.id;
       for(const p of [a,partner]){
         p.householdId=h.id;p.settlementId=town?.id||null;p.x=site.x;p.y=site.y;
         if(p.occupation==='dependent')p.occupation=p.proficiency.food>=p.proficiency.gather?'food_producer':'gatherer';
@@ -3319,6 +3634,7 @@
       }
     }
     formNewHouseholds(s);
+    frontierMigration(s);
     // Household movement requires actual pressure AND a promising destination;
     // moving all hungry people to the same exhausted tile is not a survival strategy.
     const migrationTowns=s.agriculture?.familyExpansion?.enabled?s.settlements:s.settlements.slice(0,1);
@@ -3358,6 +3674,10 @@
       processOracles(s);processScheduledBirths(s);updateWorld(s);updatePeople(s);
       if(s.tick%3===0) daily(s);
       if(s.hour>0 && s.hour%(s.rules.daysPerMonth*24)===0) demographic(s);
+      const victory=VICTORY.update(s,faithfulWeight);
+      if(victory)log(s,'victory',victory.name+' 達成全球宗教主導勝利。',
+        ['以在世人口的加權 Devotion 計算；勝利不會中止沙盒世界'],
+        [],victory.godId);
     }
     return s;
   }
@@ -3417,11 +3737,16 @@
     if(profile?.profileId!=='agriculture-balance-v0.1')return {ok:false,reason:'無效的 Agriculture Profile'};
     s.agriculture=JSON.parse(JSON.stringify(profile));
     s.balanceProfileId=profile.profileId;
-    s.environment.landCapacityEvalDay=-1;
     return {ok:true};
   }
   function restore(json) {
     const candidate=typeof json==='string'?JSON.parse(json):JSON.parse(JSON.stringify(json));
+    // Retired, unused capacity cache could be NaN (serialized as null).
+    // Local cultivation already computes capacity from actual fields.
+    if(candidate.environment){
+      delete candidate.environment.landCapacityMild;
+      delete candidate.environment.landCapacityEvalDay;
+    }
     if(candidate?.version==='mvp0-web-1') {
       // Narrow, explicit upgrade path for users who already played the first MVP.
       // Keep all real people/deaths/history; never resurrect or overwrite outcomes.
@@ -3516,6 +3841,9 @@
     // discarding their existing event IDs, history or world state. Other tuned
     // event limits are intentionally left alone.
     if(candidate.rules?.eventLimit===130)candidate.rules.eventLimit=DEFAULT_RULES.eventLimit;
+    // Legacy saves begin the new contest clock at their actual loaded hour:
+    // never invent historical dominance streaks that were not recorded.
+    VICTORY.ensure(candidate,faithfulWeight);
     const verdict=validate(candidate);
     if(!verdict.ok) throw new Error('無法讀取世界：'+verdict.errors.join('；'));
     return candidate;
@@ -3526,5 +3854,9 @@
     evaluateMiracle,castMiracle,activeStatus,
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
     settlementReligionStats,priestPetitions,prayerLocation,OPPONENT_DEFAULTS,
-    setOpponentDifficulty,MOBILITY_DEFAULTS:MOBILITY.BASE};
+    setOpponentDifficulty,MOBILITY_DEFAULTS:MOBILITY.BASE,
+    frontierStatus,oracleMap,oracleMiracleResponseChance,ORACLE_MIRACLE_COUNTERS,
+    victoryOverview:s=>VICTORY.overview(s,faithfulWeight),
+    resetVictory:(s,profile)=>VICTORY.reset(s,faithfulWeight,profile),
+    continueVictory:VICTORY.continueAfterVictory};
 });

@@ -262,7 +262,7 @@ function afterContacts(s,oracleFor){
    }
  }
 }
-function strike(s,center,intensity,emit){
+function strike(s,center,intensity,emit,actorGodId=null){
  if(!active(s)||!s.shrineTemple.precisionLightningEnabled)return 0;
  let hit=0;
  for(const site of s.religiousSites||[]){
@@ -273,9 +273,9 @@ function strike(s,center,intensity,emit){
      site.stage='ruin';site.proposed=null;site.buildProgress=0;
      emit(s,'religion','宗教設施遭精確雷擊摧毀，居民留下廢墟。',
        ['建築損毀不會直接讓任何居民改宗或失去 Devotion',
-        '未來若仍有實際宗教需求，居民可自行決定是否重建'],[],siteGod(s,site));
+        '未來若仍有實際宗教需求，居民可自行決定是否重建'],[],actorGodId);
    }else emit(s,'religion','一處宗教設施受到精確雷擊，活動能力下降。',
-     ['修復與維護取決於實際資源和居民後續活動'],[],siteGod(s,site));
+     ['修復與維護取決於實際資源和居民後續活動'],[],actorGodId);
  }
  return hit;
 }

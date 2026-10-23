@@ -176,6 +176,72 @@ test('instant Lightning keeps truthful area/time preview without a fake duration
   assert.ok(ui.el('toast').textContent.includes('半徑 1 格，作用時間 瞬間（0 日）'));
   assert.equal(ui.el('mapTip').hidden,true);
 });
+
+test('current Oracle strategy is visible for both gods without reading History',async()=>{
+  const ui=await boot(),s=ui.world();
+  assert.ok(s.opponentReligion,'test needs a rival God');
+  s.religion.oracles.push({id:'visual-o1',godId:s.god.id,
+    intentType:'family.nurture',status:'active',saintId:'none',
+    issuedAtHour:s.hour,propagatedAtHour:s.hour,heardCount:5});
+  s.opponentReligion.oracles.push({id:'visual-o2',godId:s.opponentGod.id,
+    intentType:'settlement.explore',status:'active',saintId:'none',
+    issuedAtHour:s.hour,propagatedAtHour:s.hour,heardCount:8});
+  ui.el('miracleTab').onclick();
+  const strip=ui.el('oracleDuelStatus').innerHTML;
+  assert.ok(strip.includes('己：育兒'),strip);
+  assert.ok(strip.includes('敵：探索'),strip);
+  const overview=ui.el('faithOverview').innerHTML;
+  assert.ok(overview.includes('Oracle：育兒'),overview);
+  assert.ok(overview.includes('Oracle：探索'),overview);
+  assert.ok(overview.includes('side-player')&&overview.includes('side-opponent'));
+});
+test('History colors identify responsible God independently from event kind',async()=>{
+  const ui=await boot(),s=ui.world();
+  const types=[
+    {kind:'miracle',godId:s.god.id,text:'你施展治療'},
+    {kind:'miracle',godId:s.opponentGod.id,text:'敵神施展治療'},
+    {kind:'oracle',godId:s.opponentGod.id,text:'外教祭司宣布探索'},
+    {kind:'birth',text:'中立村落出生'}
+  ];
+  for(const e of types)s.events.push({id:++s.eventSeq,hour:s.hour,reasons:[],...e});
+  ui.el('miracleTab').onclick();
+  const history=ui.el('events').innerHTML;
+  assert.match(history,/class="event miracle side-player"/);
+  assert.match(history,/class="event miracle side-opponent"/);
+  assert.match(history,/class="event oracle side-opponent"/);
+  assert.match(history,/class="event birth side-neutral"/);
+  assert.ok(history.includes('對手')&&history.includes('己方')&&history.includes('中立／未標示'));
+});
+test('Heal targets the current position of a wounded person seen on a prior frame',async()=>{
+  const ui=await boot(),s=ui.world();
+  s.god.dp=s.god.cap;
+  const patient=s.people.find(p=>p.alive);
+  patient.health=38;patient.x=9;patient.y=9;
+  ui.choose('heal'); // Renders a snapshot of the patient on the map.
+  const tile=ui.canvas.width/s.width,original={x:patient.x,y:patient.y};
+  ui.canvas.listeners.mousemove({clientX:(original.x+.25)*tile,
+    clientY:(original.y+.25)*tile});
+  patient.x=original.x+13;patient.y=original.y+6;
+  const before=s.god.dp,health=patient.health;
+  // Pointer remains over where the person was last seen.
+  ui.clickMap(original.x,original.y);
+  assert.ok(patient.health>health,'Heal should cast at the tracked resident current position');
+  assert.ok(s.god.dp<before,'tracking cannot waive normal DP costs');
+  assert.ok(ui.el('toast').textContent.includes('治療 Heal'));
+  assert.equal(ui.el('mapTip').hidden,true);
+});
+test('Heal still allows a free area cast when the cursor is not on a wounded person',async()=>{
+  const ui=await boot(),s=ui.world();
+  s.god.dp=s.god.cap;
+  const patient=s.people.find(p=>p.alive);patient.health=36;
+  patient.x=9;patient.y=9;
+  ui.choose('heal');
+  const originalHealth=patient.health,center={x:21,y:18};
+  ui.clickMap(center.x,center.y);
+  assert.equal(patient.health,originalHealth);
+  assert.equal(s.god.dp,s.god.cap,'empty target never spends DP');
+});
+
 test('Miracle and Oracle tabs remember selected powers and sliders across world reset and load',async()=>{
   const ui=await boot();
   ui.choose('efficiency');

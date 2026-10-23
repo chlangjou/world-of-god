@@ -34,7 +34,7 @@ class Element {
   querySelectorAll(){return [];}
 }
 
-async function boot({sim=W}={}){
+async function boot({sim=W,politicsProfile={...require('../config/polity-command-v0.1.json'),enabled:false}}={}){
   const elements=new Map(),get=id=>{
     if(!elements.has(id))elements.set(id,new Element(id));
     return elements.get(id);
@@ -58,7 +58,7 @@ async function boot({sim=W}={}){
     WOG_OPPONENT_PROFILE:opponent,WOG_ORACLE_STRATEGY_PROFILE:strategy,
     WOG_PLAYTEST:playtest,
     WOG_PLAYTEST_PROFILE:{...playtestConfig,defaultScenario:'native'},
-    WOG_MOBILITY_PROFILE:require('../config/mobility-contact-v0.1.json'),WOG_VICTORY_PROFILE:require('../config/victory-dominance-v0.1.json'),WOG_SHRINE_PROFILE:require('../config/shrine-temple-v0.1.json')};
+    WOG_MOBILITY_PROFILE:require('../config/mobility-contact-v0.1.json'),WOG_VICTORY_PROFILE:require('../config/victory-dominance-v0.1.json'),WOG_SHRINE_PROFILE:require('../config/shrine-temple-v0.1.json'),WOG_POLITY_PROFILE:politicsProfile};
   const memory=new Map(),storage={
     setItem(key,value){memory.set(key,value);},
     getItem(key){return memory.get(key)||null;}

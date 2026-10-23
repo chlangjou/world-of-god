@@ -233,3 +233,29 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
 /* Opponent identity is visible without extending the fixed-height UI. */
 .sw.rival{background:#cf7775}
 .sw.native{background:#bcd9d2}
+
+
+/* Victory Conditions v1: compact always-visible score; full timers live in dialog. */
+.victory-inline{display:block;max-width:100%;padding:0;border:0;background:none;
+ color:#e5c894;text-align:left;cursor:pointer;font-size:10px;line-height:1.25;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.victory-inline:hover{text-decoration:underline;color:#ffe3a8}
+.victory-inline:disabled{opacity:.65;cursor:default}
+.victory-inline #devotionMetric{font-size:inherit;color:inherit;display:inline}
+#victoryDialog{max-width:570px;max-height:calc(100vh - 38px);overflow:auto;z-index:40}
+.victory-explain{font-size:12px;color:#b6cbc3;line-height:1.65;margin-bottom:12px}
+.victory-report{display:grid;gap:9px}
+.victory-rank{display:grid;gap:5px;padding:8px 11px;border:1px solid #46605c;
+ border-radius:8px;background:#18302c}
+.victory-rank strong{display:flex;align-items:center;justify-content:space-between;font-size:13px}
+.victory-rank small{color:#bed4ca;font-size:11px}
+.victory-tier{display:grid;grid-template-columns:1fr 90px 68px;gap:6px;align-items:center;
+ padding:7px 9px;background:#1a3533;border-radius:6px;font-size:12px}
+.victory-tier.active{border-left:3px solid #e0be7e;background:#243a33}
+.victory-tier small{color:#c4d3ca}
+.victory-resolution{display:grid;gap:10px;margin-top:13px;padding-top:12px;border-top:1px solid #47615b}
+.victory-continue{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.5}
+.victory-continue input{flex:none;margin-top:4px;accent-color:#cfaa62}
+.victory-actions{display:flex;justify-content:flex-end}
+.victory-resolution small{color:#bdc6b8;font-size:11px;line-height:1.5}
+@media(max-width:650px){.victory-tier{grid-template-columns:1fr 76px 55px;font-size:11px}}

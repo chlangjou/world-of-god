@@ -1182,8 +1182,11 @@
   function activeStatus(s,p,type){
     const v=p.divineStatuses?.[type];
     if(!v||v.endsAtHour<=s.hour||!p.alive)return 0;
-    if(type==='efficiency'&&(p.devotion<s.rules.faithThreshold||
-      (v.godId||s.god.id)!==faithOf(s,p.religionId)?.godId))return 0;
+    if(type==='efficiency'&&!(
+      (p.devotion>=s.rules.faithThreshold&&
+       (v.godId||s.god.id)===faithOf(s,p.religionId)?.godId)||
+      (s.oracleStrategy?.oracleMiracleCounterEnabled&&v.counterOracleId&&p.devotion>=20)
+    ))return 0;
     return v.strength;
   }
   function expireStatuses(s){
@@ -1198,6 +1201,12 @@
   function perceivedReach(s,p,reach){
     const blind=activeStatus(s,p,'blindness');
     return blind?Math.max(1,Math.floor(reach*(1-s.divinePowers.blindnessReachReduction*Math.min(1,blind)))):reach;
+  }
+  function efficiencyEligible(s,p,faith){
+    return p.religionId===faith.id&&p.devotion>=s.rules.faithThreshold||
+      !!(s.oracleStrategy?.oracleMiracleCounterEnabled&&
+        p.religionId&&p.religionId!==faith.id&&p.devotion>=20&&
+        oracleMiracleMatch(s,p,'efficiency'));
   }
   function evaluateMiracle(s,type,input={}){
     if(type==='rain')return evalRain(s,input);
@@ -1223,7 +1232,7 @@
       t.terrain==='field'&&(type!=='harvest'||(s.agriculture?t.cropStock>1e-8:t.crop>.02))):[];
     const people=['heal','efficiency','confusion','blindness'].includes(type)?
       s.people.filter(p=>inArea(p)&&(type!=='heal'||p.health<100)&&
-       (type!=='efficiency'||(p.religionId===faith.id&&p.devotion>=s.rules.faithThreshold))):[];
+       (type!=='efficiency'||efficiencyEligible(s,p,faith))):[];
     const presence=validCenter?presenceAt(s,center,faith.id):null;
     let reason=null;
     if(!validCenter)reason='施展中心不在地圖內';
@@ -1235,7 +1244,7 @@
     else if(['ripening','harvest'].includes(type)&&!fields.length)reason='範圍內沒有可作用的現有農作物';
     else if(['heal','efficiency','confusion','blindness'].includes(type)&&!people.length)
       reason=type==='heal'?'範圍內沒有需要治療的在世居民':
-        type==='efficiency'?'範圍內沒有可祝福的己方信徒':'範圍內沒有可干擾的在世居民';
+        type==='efficiency'?'範圍內沒有己方40+信徒或正受傳教 Oracle 影響的異教徒':'範圍內沒有可干擾的在世居民';
     else if(god.dp+1e-8<cost)reason=overcast?
       '神力不足：冷卻期間強制施放需 '+cost+' DP（'+costMultiplier+'×）':'神力不足';
     return {ok:!reason,reason,cost,baseCost,costMultiplier,overcast,cooldownDays,
@@ -1297,12 +1306,15 @@
       applied+=TEMPLE.strike(s,center,intensity,log,god.id);
     }else if(['efficiency','confusion','blindness'].includes(type)){
       for(const p of people){
-        if(type==='efficiency'&&(p.religionId!==faith.id||p.devotion<s.rules.faithThreshold))continue;
+        if(type==='efficiency'&&!efficiencyEligible(s,p,faith))continue;
         const endsAtHour=s.hour+durationDays*24;
         p.divineStatuses ||= {};
         const old=p.divineStatuses[type],previous=old&&old.endsAtHour>s.hour?old:null;
+        const foreignCounter=type==='efficiency'&&p.religionId!==faith.id?
+          oracleMiracleMatch(s,p,type):null;
         p.divineStatuses[type]={strength:Math.max(intensity,previous?.strength||0),
-          endsAtHour:Math.max(endsAtHour,previous?.endsAtHour||0),godId:god.id};
+          endsAtHour:Math.max(endsAtHour,previous?.endsAtHour||0),godId:god.id,
+          ...(foreignCounter?{counterOracleId:foreignCounter.oracleId}:{})};
         applied++;
       }
     }else if(type==='ripening'||type==='drought'){

@@ -7,6 +7,7 @@
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let lastMiraclePreview=null, lastCastVisual=null;
+  let visibleInjured=[],healLock=null; // UI-only snapshots, never stored in the world
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
   let selectedNeedId=null, needPage=0, lastNeedsMarkup=null;
   let lastAttentionSeq=0,attentionFocus=null;
@@ -190,9 +191,24 @@
     document.querySelectorAll('[data-inspect-panel]').forEach(el=>el.hidden=el.dataset.inspectPanel!==tab);
     render();
   }
+  function nearVisibleInjured(at){
+    if(!at)return null;
+    const candidates=visibleInjured.filter(v=>Math.hypot(v.x-at.x,v.y-at.y)<=2.5);
+    candidates.sort((a,b)=>Math.hypot(a.x-at.x,a.y-at.y)-
+      Math.hypot(b.x-at.x,b.y-at.y)||a.id.localeCompare(b.id));
+    return candidates[0]||null;
+  }
+  function healAimAt(at){
+    if(!at||armedMiracle!=='heal')return at;
+    const near=nearVisibleInjured(at);
+    const locked=healLock&&Math.hypot(at.x-healLock.anchor.x,at.y-healLock.anchor.y)<=2.6?
+      healLock:near?{id:near.id,anchor:at}:null;
+    const patient=locked&&state.people.find(p=>p.id===locked.id&&p.alive&&p.health<100);
+    return patient?{x:patient.x,y:patient.y,personId:patient.id,personName:patient.name}:at;
+  }
   function armMiracleTarget(){
     if(profileLoading||divineKind!=='miracle')return false;
-    const id=selectedPower(),target=cursor||state.camp;
+    const id=selectedPower(),target=healAimAt(cursor||state.camp);
     const result=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
     // Choosing a Miracle arms the map but does not cast. Target-specific
     // limitations (such as needing an injured recipient) remain checked at
@@ -316,7 +332,7 @@
     $('opponentMode').disabled=selected==='duel';
     $('aiDifficulty').disabled=selected==='duel';
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
-    lastCastVisual=null;paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
+    lastCastVisual=null;healLock=null;visibleInjured=[];paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -378,12 +394,12 @@
     $('opponentMode').disabled=scenarioId()==='duel';
     $('aiDifficulty').value=state.opponent?.difficulty||'standard';
     $('aiDifficulty').disabled=scenarioId()==='duel';
-    lastCastVisual=null;armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+    lastCastVisual=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
     const id=selectedPower();
-    const target=cursor||currentNeed()?.location?.center||state.camp,
+    const target=healAimAt(cursor||currentNeed()?.location?.center||state.camp),
       preview=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
     lastMiraclePreview=preview;
     const actualRadius=Number.isFinite(preview.radius)?preview.radius:+$('radius').value;
@@ -491,6 +507,8 @@
       $('mapTip').textContent=(powerMeta('miracle',armedMiracle)?.label||armedMiracle)+
         ' · 半徑 '+lastMiraclePreview.radius+' 格 · '+effectTime+
         ' · 點地圖施放 / Esc 取消';
+      const guided=healAimAt(cursor);
+      if(guided?.personId)$('mapTip').textContent+=' · 追蹤 '+guided.personName;
     }
     const saints=state.religion.saints.map(id=>state.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
     const saintRoster=saints.map(p=>p.id+':'+p.name).join('|');
@@ -807,6 +825,7 @@
           (origin.at.y-5)*size);c.restore();
       }
     }
+    visibleInjured=state.people.filter(p=>p.alive&&p.health<95).map(p=>({id:p.id,x:p.x,y:p.y}));
     const saintIds=new Set(state.religion.saints), priestIds=new Set(state.religion.priests);
     const rivalSaintIds=new Set(state.opponentReligion?.saints||[]),
       rivalPriestIds=new Set(state.opponentReligion?.priests||[]);
@@ -906,7 +925,7 @@
       c.restore();
     }
     if(armedMiracle) {
-      const target=cursor||source?.location?.center||state.camp;
+      const target=healAimAt(cursor||source?.location?.center||state.camp);
       const preview=lastMiraclePreview;
       const radius=Number.isFinite(preview?.radius)?preview.radius:+$('radius').value;
       const effectTime=preview?.instant?'瞬間（0 日）':
@@ -920,6 +939,10 @@
       const ly=Math.max(22,Math.min(canvas.height-5,py-size));
       c.fillStyle='#173032e9';c.fillRect(lx-4,ly-16,170,21);
       c.fillStyle='#ffe9bd';c.fillText(label,lx,ly-2);
+      if(armedMiracle==='heal'&&target.personId){
+        c.strokeStyle='#93f4c5';c.lineWidth=2;c.setLineDash([]);
+        c.beginPath();c.arc(px+size*.5,py+size*.5,size*.9,0,Math.PI*2);c.stroke();
+      }
       c.restore();
     }
   }
@@ -927,14 +950,15 @@
     const rect=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-rect.left)*state.width/rect.width), y=Math.floor((e.clientY-rect.top)*state.height/rect.height);
     if(x<0||y<0||x>=state.width||y>=state.height)return;
     if(armedMiracle){
-      const id=armedMiracle,r=S.castMiracle(state,id,{x,y,...opts()});
+      const aim=healAimAt({x,y});
+      const id=armedMiracle,r=S.castMiracle(state,id,{x:aim.x,y:aim.y,...opts()});
       const effectTime=r.instant?'瞬間（0 日）':format(r.durationDays,0)+' 日';
       say(r.ok?(powerMeta('miracle',id)?.label||id)+
         ` 已${r.overcast?'強制':''}施展（${r.costMultiplier}×），消耗 ${r.cost} DP；`+
         `半徑 ${r.radius} 格，作用時間 ${effectTime}。`:r.reason);
       if(r.ok){
-        lastCastVisual=r.instant?{x,y,radius:r.radius,untilMs:performance.now()+2400}:null;
-        armedMiracle=null;
+        lastCastVisual=r.instant?{x:aim.x,y:aim.y,radius:r.radius,untilMs:performance.now()+2400}:null;
+        healLock=null;armedMiracle=null;
       }
       render();return;
     }
@@ -1030,8 +1054,18 @@
   $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{saintId:selectedSaintId,intentType:selectedPower()});say(r.ok?(r.reset?'特化已解除；居民回歸自主需求。':'神諭已交給 Saint；居民稍後自主聆聽與回應。'):r.reason);render();};
   $('concludeBtn').onclick=()=>{const o=state.religion.oracles.find(v=>v.status==='active'&&v.saintId===selectedSaintId&&v.intentType===selectedPower());const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
   canvas.addEventListener('click',onMap);
-  canvas.addEventListener('mousemove',e=>{const rect=canvas.getBoundingClientRect();cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};});
-  canvas.addEventListener('mouseleave',()=>{cursor=null;});
+  canvas.addEventListener('mousemove',e=>{
+    const rect=canvas.getBoundingClientRect();
+    cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),
+      y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};
+    if(armedMiracle==='heal'){
+      const nearby=nearVisibleInjured(cursor);
+      if(nearby)healLock={id:nearby.id,anchor:{...cursor}};
+      else if(healLock&&Math.hypot(cursor.x-healLock.anchor.x,
+        cursor.y-healLock.anchor.y)>2.6)healLock=null;
+    }
+  });
+  canvas.addEventListener('mouseleave',()=>{cursor=null;healLock=null;});
   $('residentSelect').onchange=e=>{chosen=e.target.value;render();};
   $('saintSelect').onchange=e=>{selectedSaintId=e.target.value;render();};
   $('settlementSelect').onchange=e=>{selectedTownId=e.target.value;housePage=0;render();};
@@ -1040,7 +1074,7 @@
   $('miracleTab').onclick=()=>{showDivineKind('miracle');armMiracleTarget();};
   $('oracleTab').onclick=()=>showDivineKind('oracle');
   $('divinePowerSelect').onchange=()=>{
-    armedMiracle=null;
+    armedMiracle=null;healLock=null;
     if(divineKind==='miracle'){
       rememberMiracleSettings();
       rememberedPower.miracle=selectedPower();

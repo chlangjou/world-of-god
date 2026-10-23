@@ -3,7 +3,7 @@
   const S = window.WoG2, Playtest = window.WOG_PLAYTEST;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, activePolityProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let lastMiraclePreview=null, lastCastVisual=null;
@@ -414,6 +414,12 @@
     if(!response.ok)throw new Error('Shrine / Temple Profile 無法載入');
     return response.json();
   }
+  async function loadPolity(){
+    if(window.WOG_POLITY_PROFILE)return window.WOG_POLITY_PROFILE;
+    const response=await fetch('config/polity-command-v0.1.json');
+    if(!response.ok)throw Error('Polity Command Profile 無法載入');
+    return response.json();
+  }
   async function loadVictory(){
     if(window.WOG_VICTORY_PROFILE)return window.WOG_VICTORY_PROFILE;
     const response=await fetch('config/victory-dominance-v0.1.json');
@@ -451,6 +457,7 @@
       balanceProfile:activeProfile,religionProfile:activeReligionProfile,
        mobilityProfile:activeMobilityProfile,
       divineProfile:activeDivineProfile,shrineProfile:activeShrineProfile,victoryProfile:activeVictoryProfile,
+      politicsProfile:activePolityProfile,
       opponentMode:$('opponentMode').value,
       godCount:scenario==='native4'?4:scenario==='native3'?3:2,
       difficulty:$('aiDifficulty').value||'standard'
@@ -812,6 +819,11 @@
       ' · '+(granary.materialsPaid?'建材已投入':
         '木材 '+format(town.storage.wood)+' / '+format(granaryRules?.woodRequired??6)+
         ' · 石材 '+format(town.storage.stone)+' / '+format(granaryRules?.stoneRequired??4));
+    const polity=town?S.politicsOverview(state,town.id):null;
+    const politySummary=polity?'<div>政體：'+
+      (polity.leaderName?'領袖 '+html(polity.leaderName):'繼承空窗 '+polity.vacantDays+' 日')+
+      ' · 民兵 '+polity.militia+' · '+(polity.stance==='march'?'向礦區行軍':polity.stance==='return'?'撤退中':'防守')+
+      ' · 瞭望塔 '+(polity.fort==='built'?'完成':polity.fort==='building'?'施工':'未建')+'</div>':'';
     $('townPanel').innerHTML=town?'<div class="religion-local">'+
       '<b>'+html(town.name)+'</b> · '+(town.native?'原生聚落':'居民聚落')+
       '<div>己方：核心 '+localReligion.followers+'／信眾 '+localReligion.believers+
@@ -826,7 +838,7 @@
       (extraLocals.map(v=>
         '<div>'+html(v.faith.name)+'：核心 '+v.core+'／信眾 '+v.believers+
         ' · Presence '+format(v.presence*100)+'%</div>').join(''))+
-      '<div>設施：'+html(venue)+'</div><div>公共糧倉：'+html(granarySummary)+'</div></div>':
+      '<div>設施：'+html(venue)+'</div><div>公共糧倉：'+html(granarySummary)+'</div>'+politySummary+'</div>':
       '<div class="religion-local">尚未形成聚落。宗教仍可由個別信徒自主發展。</div>';
     const townFrontier=frontier.camps.filter(p=>p.originTownId===town?.id);
     const ownedHomes=town?.householdIds.filter(id=>state.households.some(h=>
@@ -1403,7 +1415,7 @@
   $('aiDifficulty').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
-  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest(),loadShrine(),loadVictory()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory])=>{
+  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest(),loadShrine(),loadVictory(),loadPolity()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory,polity])=>{
     activeProfile=agriculture.status==='fulfilled'?agriculture.value:null;
     activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
     activeMobilityProfile=mobility.status==='fulfilled'?mobility.value:null;
@@ -1413,6 +1425,7 @@
     activePlaytestProfile=playtest.status==='fulfilled'?playtest.value:null;
     activeShrineProfile=shrine.status==='fulfilled'?shrine.value:null;
     activeVictoryProfile=victory.status==='fulfilled'?victory.value:null;
+    activePolityProfile=polity.status==='fulfilled'?polity.value:null;
     if(!activeOracleStrategyProfile||!activePlaytestProfile||!activeShrineProfile||!Playtest)
       throw Error('可玩版必需的神諭策略或場景模組無法載入');
     $('playtestScenario').value=activePlaytestProfile.defaultScenario||'duel';
@@ -1420,7 +1433,7 @@
     // Explicitly opt new browser worlds into the AI mode after profiles load.
     $('opponentMode').value='ai';
     newWorld();
-    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory,polity].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     say(failures.length?'Profile 載入失敗：'+failures.join('；'):
       '宗教對決已就緒。AI 選存糧；選育兒 Oracle → 傳下神諭 → 開始。');
   }).catch(err=>{

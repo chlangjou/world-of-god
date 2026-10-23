@@ -106,7 +106,7 @@ function establishDuel(s,S,profile){
 }
 function createWorld(S,options){
   const {mode,seed,playtestProfile,oracleStrategyProfile,opponentProfile,
-    balanceProfile,religionProfile,mobilityProfile,divineProfile,shrineProfile,difficulty,opponentMode,victoryProfile,godCount=2}=options;
+    balanceProfile,religionProfile,mobilityProfile,divineProfile,shrineProfile,politicsProfile,difficulty,opponentMode,victoryProfile,godCount=2}=options;
   if(!['duel','native'].includes(mode))throw Error('未知試玩情境');
   const deityCount=mode==='duel'?2:Math.max(1,Math.min(4,Math.round(godCount)));
   if(deityCount>2&&opponentMode==='off')throw Error('三神／四神情境需要 AI 神明');
@@ -121,7 +121,7 @@ function createWorld(S,options){
   };
   const s=S.create({seed:chosenSeed,
     ...(balanceProfile?{balanceProfile}:{}),
-    religionProfile,mobilityProfile,divineProfile,shrineProfile,oracleStrategyProfile:oracleStrategy,
+    religionProfile,mobilityProfile,divineProfile,shrineProfile,politicsProfile,oracleStrategyProfile:oracleStrategy,
     worldGenesisMode:'native',opponentProfile:opponent,victoryProfile,
     additionalAiGods:deityCount>2?deityCount-2:0,
     fourGodGenesis:deityCount===4?playtestProfile.native.fourGodGenesis:null});

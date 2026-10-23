@@ -16,6 +16,9 @@
   const VICTORY=(typeof module==='object'&&module.exports)?
     require('./victory.js'):globalThis.WoGVictory;
   if(!VICTORY)throw Error('WoGVictory module must load before sim.js');
+  const POLITICS=(typeof module==='object'&&module.exports)?
+    require('./politics.js'):globalThis.WoGPolitics;
+  if(!POLITICS)throw Error('WoGPolitics module must load before sim.js');
   const VERSION = 'mvp0-web-2';
   const DEFAULT_RULES = Object.freeze({
     width: 64, height: 64, initialHouseholds: 8, tickHours: 8, daysPerMonth: 30,
@@ -875,6 +878,7 @@
       metrics: { workChoices: 0, oracleInfluencedChoices: 0,
         foodProductionByTown:{} } };
     TEMPLE.init(s,config.shrineProfile);
+    POLITICS.init(s,config.politicsProfile);
     generate(s, initialMoisture);
     if(opponent?.originMode==='separated-native')generateSeparatedOrigins(s,opponent);
     else if(!opponent&&nativeWorld)generateSoloNativeWorld(s);
@@ -2487,6 +2491,7 @@
     const phase = s.tick % 3;
     for (const p of s.people) {
       if (!p.alive) continue;
+      if(POLITICS.personDuty(s,p))continue;
       if(s.mobility?.enabled&&p.mobilityTrip){MOBILITY.step(s,p,distribute);continue;}
       if (phase === 0) {
         if(s.mobility?.enabled){const h=householdOf(s,p);if(h){p.x=h.x;p.y=h.y;}}
@@ -2516,6 +2521,7 @@
           p.stage==='child'?'兒童由家人照顧，也可能接受宗教教育':'非工作時段，用於家戶生活及照料';
       }
       else if (p.stage === 'adult' && p.health >= 20){
+         if(POLITICS.construct(s,p,log))continue;
          if(MOBILITY.begin(s,p))MOBILITY.step(s,p,distribute);
          else performWork(s,p);
        }
@@ -3268,6 +3274,7 @@
     for(const faith of allFaiths(s)){reconcileFaithOffices(s,faith);ensureSaint(s,faith);ensurePriest(s,faith);}
     collectPrayers(s);
     TEMPLE.daily(s,log);
+    POLITICS.daily(s,log,die);
     if(days(s)>0&&days(s)%s.religionPropagation.pulseDays===0){
       const faiths=allFaiths(s);
       if(s.opponent?.enabled&&Math.floor(days(s)/s.religionPropagation.pulseDays)%2===1)
@@ -3655,6 +3662,7 @@
     const p=s.people.find(v=>v.id===personId && v.alive);
     if(!p) return {ok:false,reason:'居民不存在或已死亡'};
     p.alive=false;p.activity='dead';s.counts.deaths++;
+    POLITICS.onDeath(s,p,log);
     for(const faith of allFaiths(s))for(const o of faith.oracles) if(o.status==='active' && o.saintId===personId) {
       o.status='saint_dead';
       log(s,'oracle',`聆聽者 ${p.name} 離世，這道神諭不再傳播。`,['神諭歸屬於 Saint，不會繼承'],[],faith.godId);
@@ -3690,6 +3698,7 @@
     if(!Array.isArray(s.tiles)||s.tiles.length!==s.width*s.height) errors.push('地圖資料不完整');
     if(!Array.isArray(s.people)||!Array.isArray(s.households)||!Array.isArray(s.settlements)) errors.push('人口資料不完整');
     errors.push(...TEMPLE.validate(s));
+    errors.push(...POLITICS.validate(s));
     if(!s.god || !Number.isFinite(s.god.dp)||s.god.dp<0||s.god.dp>s.rules.maxDp+.001) errors.push('神力不正確');
     if(s.opponent?.enabled){
       if(!s.opponentGod||!s.opponentReligion||s.opponentReligion.id===s.religion.id||
@@ -3844,6 +3853,7 @@
     // Legacy saves begin the new contest clock at their actual loaded hour:
     // never invent historical dominance streaks that were not recorded.
     VICTORY.ensure(candidate,faithfulWeight);
+    POLITICS.reconcile(candidate);
     const verdict=validate(candidate);
     if(!verdict.ok) throw new Error('無法讀取世界：'+verdict.errors.join('；'));
     return candidate;
@@ -3857,6 +3867,7 @@
     setOpponentDifficulty,MOBILITY_DEFAULTS:MOBILITY.BASE,
     frontierStatus,oracleMap,oracleMiracleResponseChance,ORACLE_MIRACLE_COUNTERS,
     victoryOverview:s=>VICTORY.overview(s,faithfulWeight),
+    politicsOverview:(s,townId)=>POLITICS.overview(s,townId),
     resetVictory:(s,profile)=>VICTORY.reset(s,faithfulWeight,profile),
     continueVictory:VICTORY.continueAfterVictory};
 });

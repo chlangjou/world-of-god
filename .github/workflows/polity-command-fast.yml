@@ -44,3 +44,4 @@ jobs:
           timeout 20s npm run build:standalone
           grep -q 'WoGPolitics' dist/World-of-God-PoC-v2.html
           grep -q 'WOG_POLITY_PROFILE' dist/World-of-God-PoC-v2.html
+          timeout 20s npm run check:playable

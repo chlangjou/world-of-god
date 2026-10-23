@@ -1,6 +1,41 @@
 # World of God — Web PoC v2
 
 
+## Autonomous Frontier v0.2 — 自主成家、遷居與建立新聚落（2026-10-23）
+
+功能分支：`feature/autonomous-frontier-playable-v0.2`（以 Victory Conditions v1 為基底，`main` 不動）。
+
+**試玩：**在本分支下載 [World-of-God-Playable.html](World-of-God-Playable.html) 的 **Download raw file**，
+直接以瀏覽器開啟完整離線版。也可從 `poc/v2` 執行 `npm start`（Node.js 22）。
+
+本版沿用相同世界、同一套 Faith／Oracle／Miracle／DP／Presence 規則，以及四段 Victory 勝負計時。
+
+- **人口 Genesis：**自然河谷 51 人／17 戶仍維持總數，五個社群各有兩名成年未婚青年
+  （合計 10 名、男女生育角色各半），從既有家戶成員轉為成年，不加人口、不加資源；
+  其餘兒童採混合生育角色。**30 人對決**保留原本 10 名兒童的年齡組成與起始
+  15:15 Faith，以免改寫舊的受控對決；僅修正其兒童生育角色比例。
+- **自主拓荒：**新家戶可能外移，而成熟家戶在來源村莊有足夠住屋、實際存糧且
+  遠方有食物、木材、纖維及可用土地時，也有按月機會自願遷居；實際搬走後需重新
+  建屋。搬遷食品由當地真實公共倉庫轉入家庭庫存，**不生成免費糧食／房屋／人口**。
+  探索 Oracle 只在真實聆聽時提高遷居機會，不是強制命令。
+- **可調門檻：**來源村至少約 4 戶完成住屋即可考慮獨立遷出，原本新家庭的拓荒
+  判定由 12 戶改為 5 戶；外地新聚落需要 **2 戶相鄰家戶、2 棟已完工住屋**，
+  不是有人抵達就自動成立。核心參數都在
+  `config/balance-agriculture-v0.1.json` 的 `familyExpansion`。
+- **介面回饋：**聚落摘要顯示建屋／新成家或候選拓荒進度；「宗教」分頁的
+  聚落資訊顯示母村規模、在外家戶、候選地、已完工房屋及距離正式成村的缺口。
+  地圖以中性色虛線標示尚未建村的拓荒家戶集結點。
+- **存檔：**真實家戶搬遷、建屋、宗教歸屬、拓荒進度均隨原世界 JSON 保存。
+  舊存檔仍載入原本的 `agriculture` 參數，不會自動搬人或變更 Genesis。
+- **驗證：**Node.js 22，`npm run test:fast` 和
+  `npm run build:standalone`，CI 上限 3 分鐘。
+  固定 seed 的**短程觀測**出現：
+  自然河谷約 Day 210 成立外移新村；30 人對決約 Day 577／633 成立兩座新村。
+  這不是對不同 seed 的勝率或平衡保證。新村建造會受到資源、出訪、食物保障及
+  居民自主工作選擇影響。
+
+---
+
 ## Victory Conditions v1 — 全球信仰主導勝利（功能分支，2026-10-23）
 
 分支：`feature/victory-dominance-playable-v0.1`。直接下載

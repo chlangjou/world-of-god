@@ -56,6 +56,36 @@ body{display:flex;flex-direction:column;min-height:0}
 .intervention{margin:0;flex:0 0 234px;min-height:234px;display:flex;flex-direction:column;overflow:hidden}
 .command-heading{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:8px 11px 4px}
 .command-heading h2{font-size:14px}.command-heading small{font-size:10px;color:var(--muted);white-space:nowrap}
+.command-heading .oracle-duel-status{display:block!important;min-width:0;max-width:285px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;text-align:right;font-size:10px}
+.oracle-duel-status .side-player{color:#8ddcef;font-weight:700}
+.oracle-duel-status .side-opponent{color:#f2a29f;font-weight:700}
+.faith-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:2px 0 7px}
+.faith-card{min-width:0;padding:7px;border-radius:7px;background:#203332;border:1px solid #45605b;
+  border-left:3px solid #839992}
+.faith-card.side-player{border-left-color:#66c6e5}
+.faith-card.side-opponent{border-left-color:#ed8f87}
+.faith-card strong{display:block;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.faith-card .faith-active{display:block;font-weight:700;font-size:12px;margin:3px 0;
+  color:#ebd8b1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.faith-card small{display:block;font-size:10px;line-height:1.5;color:#b2c6c0;overflow:hidden;
+  white-space:nowrap;text-overflow:ellipsis}
+.faith-card.side-player strong{color:#8ddcef}
+.faith-card.side-opponent strong{color:#f2a29f}
+#townPanel .religion-local{background:#203332;border:1px solid #3b5550;border-radius:7px;
+  padding:7px 8px;font-size:11px;line-height:1.5}
+#townPanel .religion-local b{color:#e6d4a9}
+#events .event.side-player{border-left-color:#66c6e5}
+#events .event.side-opponent{border-left-color:#ed8f87}
+#events .event.side-neutral{border-left-color:#819c90}
+#events .event.side-player:before{background:#66c6e5}
+#events .event.side-opponent:before{background:#ed8f87}
+#events .event.side-neutral:before{background:#819c90}
+#events .event .event-source{font-weight:700;margin-right:5px}
+#events .event.side-player .event-source{color:#8ddcef}
+#events .event.side-opponent .event-source{color:#f2a29f}
+#events .event.side-neutral .event-source{color:#b5c5bf}
+
 .command-toolbar{display:grid;grid-template-columns:1.2fr 1fr;align-items:center;gap:7px;padding:4px 10px}
 .command-tabs{display:grid;grid-template-columns:1fr 1fr;gap:3px}
 .command-tabs button,.inspector-tabs button{font:inherit;font-size:11px;color:#bbcfc4;border:1px solid #3d554f;border-radius:7px;background:#213331;padding:7px 4px;cursor:pointer}
@@ -301,7 +331,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
       </section>
       <aside class="side-column" aria-label="神意與世界觀察">
         <section class="intervention" aria-label="神意介入">
-          <div class="command-heading"><h2>神意介入</h2><small>Miracle 改變現實 · Oracle 傳達意圖</small></div>
+          <div class="command-heading"><h2>神意介入</h2><small id="oracleDuelStatus" class="oracle-duel-status" title="雙方當前有效的 Oracle">己方：—　對手：—</small></div>
           <div class="command-toolbar">
             <div class="command-tabs" role="tablist" aria-label="神意類別">
               <button id="miracleTab" type="button" role="tab" aria-controls="miraclePanel" aria-selected="true" class="active">Miracle</button>
@@ -332,7 +362,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
         <section class="inspector-shell" aria-label="世界狀態檢視">
           <div class="inspector-tabs" role="tablist" aria-label="觀察資訊">
             <button type="button" data-inspect-tab="needs" aria-selected="true" class="active">需求</button>
-            <button type="button" data-inspect-tab="town" aria-selected="false">聚落</button>
+            <button type="button" data-inspect-tab="town" aria-selected="false">宗教</button>
             <button type="button" data-inspect-tab="person" aria-selected="false">居民</button>
             <button type="button" data-inspect-tab="history" aria-selected="false">歷史</button>
           </div>
@@ -342,12 +372,12 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
               <div id="needsPanel" class="content-text">目前沒有迫切的祈禱。</div>
               <div id="weatherNotice" class="notice">自然環境在變化。</div>
             </section>
-            <section class="panel" data-inspect-panel="town" aria-label="聚落與家戶" hidden>
-              <div class="panel-heading"><h2>聚落與家戶</h2><span class="eyebrow">SETTLEMENT</span></div>
-              <label class="compact-select"><span>檢視聚落</span><select id="settlementSelect" aria-label="選擇聚落"></select></label>
+            <section class="panel" data-inspect-panel="town" aria-label="宗教競爭" hidden>
+              <div class="panel-heading"><h2>宗教競爭</h2><span class="eyebrow">RELIGION</span></div>
+              <div id="faithOverview" class="faith-overview" aria-label="雙方宗教與當前神諭"></div>
+              <label class="compact-select"><span>當地宗教</span><select id="settlementSelect" aria-label="檢視聚落的宗教分布"></select></label>
               <div id="townPanel" class="content-text"></div>
-              <div class="panel-pager"><button id="housePrev" type="button" aria-label="上一頁家戶">‹</button><span id="housePageLabel">家戶</span><button id="houseNext" type="button" aria-label="下一頁家戶">›</button></div>
-              <div id="houseList" class="house-list"></div>
+              <div hidden aria-hidden="true"><div class="panel-pager"><button id="housePrev" type="button">‹</button><span id="housePageLabel"></span><button id="houseNext" type="button">›</button></div><div id="houseList"></div></div>
             </section>
             <section class="panel" data-inspect-panel="person" aria-label="居民觀察" hidden>
               <div class="panel-heading"><h2>居民觀察</h2><span class="eyebrow">INDIVIDUAL</span></div>
@@ -369,9 +399,9 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
       <p><strong>快速開始 — 30人宗教對決：</strong>預設兩個宗教各有15名 Devotion 60 的信徒；兩邊都有既有住屋及已自然出現的 Saint／Priest。AI 已對聆聽者傳下「存糧」神諭，暫不自行改變方針。請切換 Oracle，選「育兒」，按「傳下神諭」，再按「開始／16×」。100個模擬日內目標是從對方原15名信徒中取得至少3人淨改宗。右上角可切換「自然河谷」玩正常拓荒與AI互動。</p>
       <p><strong>信仰爭奪：</strong>核心信徒的門檻仍是 Devotion 40。普通傳教不能直接改宗40+；但多次見證可歸因的真實神諭成果，加上仍有實際傳教接觸，居民可能自主轉向另一宗教，即使原 Devotion 尚未跌到20。這套數值是測試版：100天後可能發生過快的連鎖轉宗，不代表最終平衡。可在「居民」檢視異教信任和改宗依據，在「歷史」看轉宗事件。對決開場是刻意設計的受控場景，不是自然生成的勝率證據。</p>
       <p><strong>兩層神意操作：</strong>先選 Miracle／Oracle 類別，再從下拉清單選能力。Miracle 可以指定地圖目標；Oracle 由 Saint 傳達。</p>
-      <p><strong>神蹟：</strong>從選單選擇降雨、促熟、豐收、治療、效率祝福、乾旱、雷擊、混亂或致盲。依能力調整範圍、強度與作用時間；瞬間型神蹟（如雷擊、治療、豐收）仍會顯示「瞬間（0 日）」但不能調整，另顯示真實施展半徑及冷卻時間。選完神蹟即自動進入選點，直接點地圖施放，不需要再按「選擇位置」。Esc 或「取消選點」可退出；數字鍵 1–9 可直接選取九種 Miracle（輸入框內不觸發）。沒有目標、神力不足或當地臨在不足時不消耗 DP。每項神蹟獨立熟練度和冷卻，並各自保留上次的範圍、強度與持續天數；冷卻中若神力足夠仍可強制施放，DP 依同技能本輪次數計為 2×、3×、4×…，完全冷卻後恢復 1×，不影響其他 Miracle；切回神蹟時不必重新設定。持續型神蹟的冷卻也取決於施展時間：同條件下 5 天降雨比 30 天降雨更快恢復，預計冷卻時間會隨滑桿即時更新。</p><p><strong>神諭策略（實驗）：</strong>存糧／育兒／探索各自偏重有限行動時間，也留下其他需求的弱點；同一 Saint 一次只能有一個持續方針。Reset「神很滿意你們的行為，放下心中的執著去追尋自己的需求」解除特化、不消耗額度，不清空既有成果。對手須有真實成果與跨聚落接觸才可能動搖既有核心。傳教不直接改宗。</p>
+      <p><strong>神蹟：</strong>從選單選擇降雨、促熟、豐收、治療、效率祝福、乾旱、雷擊、混亂或致盲。依能力調整範圍、強度與作用時間；瞬間型神蹟（如雷擊、治療、豐收）仍會顯示「瞬間（0 日）」但不能調整，另顯示真實施展半徑及冷卻時間。選完神蹟即自動進入選點，直接點地圖施放，不需要再按「選擇位置」。Esc 或「取消選點」可退出；數字鍵 1–9 可直接選取九種 Miracle（輸入框內不觸發）。Heal 瞄準時可追蹤已看到的傷者，施放瞬間使用其最新座標；沒選到傷者仍可自由選區域。沒有目標、神力不足或當地臨在不足時不消耗 DP。每項神蹟獨立熟練度和冷卻，並各自保留上次的範圍、強度與持續天數；冷卻中若神力足夠仍可強制施放，DP 依同技能本輪次數計為 2×、3×、4×…，完全冷卻後恢復 1×，不影響其他 Miracle；切回神蹟時不必重新設定。持續型神蹟的冷卻也取決於施展時間：同條件下 5 天降雨比 30 天降雨更快恢復，預計冷卻時間會隨滑桿即時更新。</p><p><strong>神諭策略（實驗）：</strong>存糧／育兒／探索各自偏重有限行動時間，也留下其他需求的弱點；同一 Saint 一次只能有一個持續方針。Reset「神很滿意你們的行為，放下心中的執著去追尋自己的需求」解除特化、不消耗額度，不清空既有成果。對手須有真實成果與跨聚落接觸才可能動搖既有核心。傳教不直接改宗。</p>
       <p><strong>需求定位：</strong>在「需求」分頁點選任一祈求，即可在地圖標出來源中心與座標。缺雨祈求還會顯示當時農田的需求評估範圍；這是定位參考，不代表施展神蹟時會自動覆蓋全部農田。多筆祈求可翻頁，Priest 祈求泡泡也可以定位。定位不消耗 Divine Power。</p>
-       <p><strong>資訊：</strong>右側以需求、聚落、居民、歷史分頁觀察；上下頁切換，不需要捲動整頁。空白鍵暫停，1–9 鍵直接選擇神蹟並進入選點，Esc 取消。</p>
+       <p><strong>資訊：</strong>右側以需求、宗教、居民、歷史分頁觀察；「宗教」可直接比較雙方 Oracle、信徒與 Shrine / Temple，不需翻查歷史；上下頁切換，不需要捲動整頁。空白鍵暫停，1–9 鍵直接選擇神蹟並進入選點，Esc 取消。</p>
       <p><strong>宗教設施 v0.1：</strong>居民先在實際地點集會；反覆參與後，自行使用工作時間及聚落建材興建 Shrine／Temple。可在地圖觀察標記，點設施跳至所在聚落。不同宗教影響可重疊，但 Temple 實體核心不重疊。到場的人與 Priest 必須真正在 5 格內接觸，才會產生既有傳教／Oracle 的機會。建築本身不加信仰、神力或 Presence；本版沒有自動寺廟攻擊／完整戰爭。</p>
       <p><strong>原住民：</strong>新世界原本就有三個原生村落與未入教居民，不屬於任何神明。居民擁有自己的家戶、住所和農田，可逐步接受不同宗教；他們即使入教，原生身分仍保留。地圖聚落虛線圈代表生活範圍，不是神明領地。</p>
        <p><strong>對手：</strong>玩家與 AI 各自在地圖不同區域建立信仰核心，不能在創世時直接瓜分原住民。兩位神明有各自的 Saint、Priest、神力、神諭與神蹟冷卻。40+ 信徒不受一般傳教動搖，低於 20 才能改宗。切換對手模式會重新創世；載入舊存檔不會搬動居民。</p>
@@ -875,9 +905,12 @@ function observe(s,emit){
        proposed:null,buildProgress:0,materialsPaid:false,createdAtHour:s.hour};
      s.religiousSites.push(site);
      emit(s,'religion',faith.name+'的居民在 '+town.name+' 約定一處共同祈禱地點。',
-       ['居民自然形成集會場所，尚未建造 Shrine','場所本身不提供 Divine Power 或 Presence']);
+       ['居民自然形成集會場所，尚未建造 Shrine','場所本身不提供 Divine Power 或 Presence'],[],faith.godId);
    }
  }
+}
+function siteGod(s,site){
+ return [s.religion,s.opponentReligion].find(f=>f?.id===site.religionId)?.godId||null;
 }
 function recent(s,site){
  const cutoff=s.hour-s.shrineTemple.recentDays*24;
@@ -907,7 +940,7 @@ function daily(s,emit){
    if(site.condition===0&&site.stage!=='ruin'){
      site.stage='ruin';site.proposed=null;site.buildProgress=0;
      emit(s,'religion','一處宗教設施因長期荒廢成為遺址。',
-       ['建築衰敗不刪除任何人的信仰，居民仍可自行恢復祈禱']);
+       ['建築衰敗不刪除任何人的信仰，居民仍可自行恢復祈禱'],[],siteGod(s,site));
    }
    if(site.proposed)continue;
    const proposed=(site.stage==='gathering'||site.stage==='ruin')&&
@@ -917,7 +950,7 @@ function daily(s,emit){
    if(proposed){
      site.proposed=proposed;site.buildProgress=0;site.materialsPaid=false;
      emit(s,'religion','居民因反覆實際集會，開始籌建 '+(proposed==='temple'?'Temple':'Shrine')+'。',
-       ['須由願意的居民投入建材與工作時間，神明不能直接放置']);
+       ['須由願意的居民投入建材與工作時間，神明不能直接放置'],[],siteGod(s,site));
    }
  }
 }
@@ -956,7 +989,7 @@ function build(s,p,h,town,site,efficiency,emit){
    site.stage=built;site.condition=100;site.proposed=null;site.buildProgress=0;
    emit(s,'religion',town.name+' 的居民自主建成 '+(built==='temple'?'Temple':'Shrine')+'。',
      ['耗用實際工作與建材，並非由神明建造',
-      '建築不直接增加信仰、Divine Power 或 Local Presence']);
+      '建築不直接增加信仰、Divine Power 或 Local Presence'],[],siteGod(s,site));
  }
  return true;
 }
@@ -1028,7 +1061,7 @@ function afterContacts(s,oracleFor){
    }
  }
 }
-function strike(s,center,intensity,emit){
+function strike(s,center,intensity,emit,actorGodId=null){
  if(!active(s)||!s.shrineTemple.precisionLightningEnabled)return 0;
  let hit=0;
  for(const site of s.religiousSites||[]){
@@ -1039,9 +1072,9 @@ function strike(s,center,intensity,emit){
      site.stage='ruin';site.proposed=null;site.buildProgress=0;
      emit(s,'religion','宗教設施遭精確雷擊摧毀，居民留下廢墟。',
        ['建築損毀不會直接讓任何居民改宗或失去 Devotion',
-        '未來若仍有實際宗教需求，居民可自行決定是否重建']);
+        '未來若仍有實際宗教需求，居民可自行決定是否重建'],[],actorGodId);
    }else emit(s,'religion','一處宗教設施受到精確雷擊，活動能力下降。',
-     ['修復與維護取決於實際資源和居民後續活動']);
+     ['修復與維護取決於實際資源和居民後續活動'],[],actorGodId);
  }
  return hit;
 }
@@ -1481,8 +1514,10 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
     result.householdShare = clamp(result.householdShare, 0, 1);
     return result;
   }
-  function log(s, kind, text, reasons = [], entities = []) {
-    const evt = { id: ++s.eventSeq, hour: s.hour, kind, text, reasons, entities };
+  function log(s, kind, text, reasons = [], entities = [], godId = null) {
+    // Event kind explains WHAT happened; provenance identifies the responsible God.
+    const evt = { id: ++s.eventSeq, hour: s.hour, kind, text, reasons, entities,
+      ...(godId ? {godId} : {}) };
     s.events.push(evt);
     if (s.events.length > s.rules.eventLimit) s.events.shift();
     return evt.id;
@@ -2043,7 +2078,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
         '成果獲得見證：'+recipients+
         ' 位直接受益者、'+witnesses+' 位附近居民受到信仰影響。',
         ['只有具體改善或自主工作成果才能構成證據',
-         '觀察者需有可信的本宗教來源；不會在施法時強制改宗']);
+         '觀察者需有可信的本宗教來源；不會在施法時強制改宗'],[],faith.godId);
     return {recipients,witnesses};
   }
   function miracleAgriculturalEvidence(s,faith,type,center,amount){
@@ -2052,7 +2087,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
       log(s,'faith',faith.name+'的'+(POWER_DEFAULTS[type]?.label||type)+
         '成果在農地被見證；'+
         witness+' 位附近居民受到小幅度信仰影響。',
-        ['只根據實際存在的作物改善；沒有直接的人體神蹟受益者']);
+        ['只根據實際存在的作物改善；沒有直接的人體神蹟受益者'],[],faith.godId);
     return witness;
   }
   // The same cooldown policy is used for Rain and all newly added Miracles:
@@ -2139,7 +2174,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
     s.counts.rainCasts++;
     log(s, 'miracle', `${enemy?faith.name+'的神明':'你'}向河谷施展降雨，雨雲將停留約 ${test.durationDays} 日。`,
       [`直接效果：選定範圍增加降雨；不保證豐收`,
-       `神力 -${test.cost}（${test.costMultiplier}×）；喚雨冷卻至少至第 ${Math.ceil(god.skills.rain.readyAtHour/24)} 日`]);
+       `神力 -${test.cost}（${test.costMultiplier}×）；喚雨冷卻至少至第 ${Math.ceil(god.skills.rain.readyAtHour/24)} 日`],[],god.id);
     return { ...test, effectId: effect.id };
   }
 
@@ -2268,7 +2303,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
         if(s.agriculture)t.cropStock=Math.max(0,t.cropStock*(1-fraction));
         else t.crop=Math.max(.02,t.crop*(1-fraction));
       }
-      applied+=TEMPLE.strike(s,center,intensity,log);
+      applied+=TEMPLE.strike(s,center,intensity,log,god.id);
     }else if(['efficiency','confusion','blindness'].includes(type)){
       for(const p of people){
         if(type==='efficiency'&&(p.religionId!==faith.id||p.devotion<s.rules.faithThreshold))continue;
@@ -2306,7 +2341,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
     log(s,'miracle',(enemy?faith.name+'的神明':'你')+'施展 '+tuning.powers[type].label+'，作用於 '+applied+' 個目標。',
       ['直接作用於世界或居民；實際後續結果仍由模擬決定',
        '神力 -'+check.cost+'（'+check.costMultiplier+'×），技能冷卻至少至第 '+
-         Math.ceil(skill.readyAtHour/24)+' 日']);
+         Math.ceil(skill.readyAtHour/24)+' 日'],[],god.id);
     return {...check,applied,actual};
   }
 
@@ -2340,7 +2375,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
     faith.saintQuota[p.id]={quota:s.rules.oracleQuota,nextRefillHour:s.hour+s.rules.oracleRefillDays*24};
     if(faith===s.religion&&s.history.firstSaintHour===null)s.history.firstSaintHour=s.hour;
     log(s,'religion',`${faith.name}：${p.name} 在信仰生活中成為${first?'第一位':'另一位'}聆聽者。`,
-      ['自主形成的 Saint 資格不等於 Priest 職位，也不是神直接指定']);
+      ['自主形成的 Saint 資格不等於 Priest 職位，也不是神直接指定'],[],faith.godId);
   }
   function ensureSaint(s,faith=s.religion){
     if(days(s)<2)return;
@@ -2378,7 +2413,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
       if(faith.priests.includes(candidate.id))continue;
       faith.priests.push(candidate.id);
       log(s,'religion',`${faith.name}：${candidate.name} 在${town.name}得到支持，兼任祭司與傳道者。`,
-        ['當地信眾需求、個人適任性及實際居所促成宗教角色']);
+        ['當地信眾需求、個人適任性及實際居所促成宗教角色'],[],faith.godId);
     }
   }
   function checkOracle(s, saintId, intentType,faith=s.religion) {
@@ -2410,7 +2445,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
       log(s,'oracle',(enemy?faith.name+'：':'')+
         '神很滿意你們的行為，放下心中的執著，去追尋你們自己的需求。',
         ['這位 Saint 的特化已結束；居民依實際需求自主行動',
-         '已完成的食物、人口與住房不回溯；Reset 不消耗神力或接收額度']);
+         '已完成的食物、人口與住房不回溯；Reset 不消耗神力或接收額度'],[],god.id);
       return {ok:true,reset:true,ended:test.active.length,saintId};
     }
     const durationDays=s.oracleStrategy?null:
@@ -2427,7 +2462,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
     faith.oracles.push(o);
     if(enemy)s.opponent.oracleIssues++;
     log(s, 'oracle', `${enemy?faith.name+'的神諭':'神諭'}交給 ${test.saint.name}：${s.oracleStrategy?STRATEGY_LABELS[intentType]:(intentType==='religion.spread'?'鼓勵信眾更積極地傳播信仰':'請讓族人重視糧食生產')}。`,
-      ['Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定']);
+      ['Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定'],[],god.id);
     return { ok: true, oracleId: o.id, saintId, quotaLeft: faith.saintQuota[saintId].quota };
   }
   function concludeOracle(s, oracleId) {
@@ -2437,7 +2472,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
     const q = faith.saintQuota[o.saintId];
     if (!q || q.quota <= -1) return { ok: false, reason: 'Saint 的額度已達 -1 下限' };
     q.quota--; o.status = 'concluded';
-    log(s, 'oracle', '神宣告這道神諭的使命已經結束。', ['結束此 Saint 的單一指派；既有生活成果仍保留']);
+    log(s, 'oracle', '神宣告這道神諭的使命已經結束。', ['結束此 Saint 的單一指派；既有生活成果仍保留'],[],s.god.id);
     return { ok: true, quotaLeft: q.quota };
   }
 
@@ -2585,7 +2620,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
             (STRATEGY_LABELS[ownIntent]||'自主生活')+'方針。',
             [reason,'消息來自'+source.name+'近期真實傳教者',
              '對方神諭的行動成果已記錄；沒有強迫改宗',
-             '此輪信仰防禦 '+Math.round(defense*100)+'%，有效接觸機率 '+Math.round(chance*100)+'%']);
+             '此輪信仰防禦 '+Math.round(defense*100)+'%，有效接觸機率 '+Math.round(chance*100)+'%'],[],challenger.godId);
         }
         return {person:p,before,after:p.devotion,reason};
       }
@@ -2677,7 +2712,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
          '；新宗教 Devotion '+p.devotion,
          '已有 '+evidenceCount+' 次可信觀察，累積信任 '+Math.round(earned*10)/10,
          '來源：'+sourceName+'；有效神諭：'+oracleId,
-         '不是單次施放或普通傳教強迫改宗']);
+         '不是單次施放或普通傳教強迫改宗'],[],faith.godId);
       return true;
     };
     for(const p of people){
@@ -2881,7 +2916,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
         reached[town.id]=s.hour;
         if(town.id!==s.settlements[0]?.id)
           log(s,'religion',`${faith.name} 隨實際信眾傳入${town.name}。`,
-            ['已歸屬該聚落的居民具有宗教信仰；可能來自家庭、遷移、交流或傳道']);
+            ['已歸屬該聚落的居民具有宗教信仰；可能來自家庭、遷移、交流或傳道'],[],faith.godId);
       }
     }
   }
@@ -2954,7 +2989,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
         if(religionRand(s,faith)>r.oracleRelayChance*(priest?1:.25))continue;
         o.reachedSettlements[town.id]={hour:s.hour,via:priest?'priest':'social'};
         log(s,'oracle',`${town.name} 經由${priest?'祭司':'居民交流'}聽見神諭。`,
-          ['訊息沿已建立信仰聯繫的相鄰聚落傳遞，並未直接廣播所有居民']);
+          ['訊息沿已建立信仰聯繫的相鄰聚落傳遞，並未直接廣播所有居民'],[],faith.godId);
       }
       o.heardCount=people.filter(p=>oracleContact(s,p,o,faith)>0).length;
     }
@@ -3495,7 +3530,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
     const expired = s.effects.filter(e => s.hour >= e.endsAtHour);
     if (expired.length) {
       s.effects = s.effects.filter(e => s.hour < e.endsAtHour);
-      for (const e of expired) log(s,'miracle', (e.type==='ripening'?'促熟':e.type==='drought'?'乾旱':'降雨')+'神蹟已結束；土地保留已產生的實際變化。', ['持續輸入到期，自然過程繼續，不回溯結果']);
+      for (const e of expired) log(s,'miracle', (e.type==='ripening'?'促熟':e.type==='drought'?'乾旱':'降雨')+'神蹟已結束；土地保留已產生的實際變化。', ['持續輸入到期，自然過程繼續，不回溯結果'],[],e.godId);
     }
   }
 
@@ -3926,7 +3961,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
           log(s,'faith',faith.name+'回應了當地缺雨祈求：'+changed+
             ' 位祈禱者加深信仰，'+secondary+' 位居民受到小幅影響。',
             ['來源相符的神明降雨改善當地農田水分',
-             '當地居民確實收成糧食；每筆需求只給一次信仰回饋']);
+             '當地居民確實收成糧食；每筆需求只給一次信仰回饋'],[],faith.godId);
         }else if(!recent)prayer.status='lapsed';
       }
       for(const o of faith.oracles){
@@ -3941,7 +3976,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
           log(s,'faith',faith.name+'的糧食神諭成果逐漸被看見；'+changed+
             ' 位居民加深信仰。',
             ['部分居民自主提高糧食工作優先度','實際總食物有所改善',
-             '有效的 Saint 神諭提供可追溯的宗教歸因']);
+             '有效的 Saint 神諭提供可追溯的宗教歸因'],[],faith.godId);
         }
       }
     }
@@ -3956,7 +3991,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
     for(const o of faith.oracles)if(o.status==='active'&&!faith.saints.includes(o.saintId)){
       o.status='saint_departed';
       log(s,'oracle',`${faith.name}：聆聽者已不再具備所屬宗教的 Saint 資格，神諭停止傳播。`,
-        ['角色依照真實居民當前信仰與虔誠度維持，無法繼續代表原神明傳播']);
+        ['角色依照真實居民當前信仰與虔誠度維持，無法繼續代表原神明傳播'],[],faith.godId);
     }
   }
   // Lower difficulties do not search all applicable Miracle types until a
@@ -4173,18 +4208,18 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
       const owner=s.people.find(p=>p.id===o.saintId && p.alive);
       if(!owner) {
         o.status='saint_dead';
-        log(s,'oracle','聆聽者離世，屬於他的神諭停止傳播。',['不自動轉移給下一位 Saint；既有生活成果繼續存在']);
+        log(s,'oracle','聆聽者離世，屬於他的神諭停止傳播。',['不自動轉移給下一位 Saint；既有生活成果繼續存在'],[],faith.godId);
       } else if(Number.isFinite(o.expiresAtHour)&&s.hour>=o.expiresAtHour) {
         o.status='expired';
         log(s,'oracle',(s.oracleStrategy?(STRATEGY_LABELS[o.intentType]||'神諭'):
-          (o.intentType==='religion.spread'?'傳教':'糧食'))+'神諭的效期自然結束。',['到期免費，已完成的生活成果不回溯']);
+          (o.intentType==='religion.spread'?'傳教':'糧食'))+'神諭的效期自然結束。',['到期免費，已完成的生活成果不回溯'],[],faith.godId);
       } else if (o.propagatedAtHour===null && s.hour>=o.issuedAtHour+24) {
         o.propagatedAtHour=s.hour;
         const town=personSettlement(s,owner);
         if(town)(o.reachedSettlements ||= {})[town.id]={hour:s.hour,via:'saint'};
         o.heardCount=living(s).filter(p=>oracleContact(s,p,o,faith)>0).length;
         log(s,'oracle',`${owner.name} 開始向附近居民講述${s.oracleStrategy?(STRATEGY_LABELS[o.intentType]||'神諭'):(o.intentType==='religion.spread'?'傳教':'糧食')}神諭；${o.heardCount} 人有機會聽見。`,
-          ['Saint 接收內容可靠','傳播受個人距離與社群影響，不是向全地圖強制廣播']);
+          ['Saint 接收內容可靠','傳播受個人距離與社群影響，不是向全地圖強制廣播'],[],faith.godId);
       }
     }
     // Independent quota refill from simulation time, including overdraft debt.
@@ -4405,7 +4440,7 @@ return {BASE,normalize,init,daily,candidates,build,attend,afterContacts,strike,v
     p.alive=false;p.activity='dead';s.counts.deaths++;
     for(const faith of allFaiths(s))for(const o of faith.oracles) if(o.status==='active' && o.saintId===personId) {
       o.status='saint_dead';
-      log(s,'oracle',`聆聽者 ${p.name} 離世，這道神諭不再傳播。`,['神諭歸屬於 Saint，不會繼承']);
+      log(s,'oracle',`聆聽者 ${p.name} 離世，這道神諭不再傳播。`,['神諭歸屬於 Saint，不會繼承'],[],faith.godId);
     }
     for(const faith of allFaiths(s)){
       faith.saints=faith.saints.filter(id=>id!==personId);
@@ -4723,6 +4758,7 @@ if(root)root.WOG_PLAYTEST=API;
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let lastMiraclePreview=null, lastCastVisual=null;
+  let visibleInjured=[],healLock=null; // UI-only snapshots, never stored in the world
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
   let selectedNeedId=null, needPage=0, lastNeedsMarkup=null;
   let lastAttentionSeq=0,attentionFocus=null;
@@ -4754,6 +4790,24 @@ if(root)root.WOG_PLAYTEST=API;
       {id:'life.balance',label:'Reset · 回歸自主',hint:'神很滿意你們的行為，放下執著去追尋自己的需求'}
     ]
   };
+  function activeOracleNames(faith){
+    const current=(faith?.oracles||[]).filter(o=>o.status==='active');
+    const names=current.map(o=>availablePowers.oracle.find(a=>a.id===o.intentType)?.label||o.intentType);
+    return names.length?names.join('／'):'未發布';
+  }
+  function eventFaction(event){
+    if(event.godId===state.god.id)return 'player';
+    if(state.opponentGod&&event.godId===state.opponentGod.id)return 'opponent';
+    if(event.godId)return 'neutral';
+    // Only unambiguous old saved event text can be interpreted. Otherwise do
+    // not invent an affiliation for a historical event without provenance.
+    const own=event.text?.includes(state.religion.name);
+    const enemy=state.opponentReligion&&event.text?.includes(state.opponentReligion.name);
+    if(own&&!enemy)return 'player';
+    if(enemy&&!own)return 'opponent';
+    if(/^(你施展|你向|神諭交給|神宣告)/.test(event.text||''))return 'player';
+    return 'neutral';
+  }
   // Purely presentational input presets: each Miracle retains its last chosen
   // radius, intensity and duration; Oracle selection is remembered separately.
   // No presets are written into the deterministic World state or save schema.
@@ -4888,9 +4942,24 @@ if(root)root.WOG_PLAYTEST=API;
     document.querySelectorAll('[data-inspect-panel]').forEach(el=>el.hidden=el.dataset.inspectPanel!==tab);
     render();
   }
+  function nearVisibleInjured(at){
+    if(!at)return null;
+    const candidates=visibleInjured.filter(v=>Math.hypot(v.x-at.x,v.y-at.y)<=2.5);
+    candidates.sort((a,b)=>Math.hypot(a.x-at.x,a.y-at.y)-
+      Math.hypot(b.x-at.x,b.y-at.y)||a.id.localeCompare(b.id));
+    return candidates[0]||null;
+  }
+  function healAimAt(at){
+    if(!at||armedMiracle!=='heal')return at;
+    const near=nearVisibleInjured(at);
+    const locked=healLock&&Math.hypot(at.x-healLock.anchor.x,at.y-healLock.anchor.y)<=2.6?
+      healLock:near?{id:near.id,anchor:at}:null;
+    const patient=locked&&state.people.find(p=>p.id===locked.id&&p.alive&&p.health<100);
+    return patient?{x:patient.x,y:patient.y,personId:patient.id,personName:patient.name}:at;
+  }
   function armMiracleTarget(){
     if(profileLoading||divineKind!=='miracle')return false;
-    const id=selectedPower(),target=cursor||state.camp;
+    const id=selectedPower(),target=healAimAt(cursor||state.camp);
     const result=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
     // Choosing a Miracle arms the map but does not cast. Target-specific
     // limitations (such as needing an injured recipient) remain checked at
@@ -5014,7 +5083,7 @@ if(root)root.WOG_PLAYTEST=API;
     $('opponentMode').disabled=selected==='duel';
     $('aiDifficulty').disabled=selected==='duel';
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
-    lastCastVisual=null;paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
+    lastCastVisual=null;healLock=null;visibleInjured=[];paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -5076,12 +5145,12 @@ if(root)root.WOG_PLAYTEST=API;
     $('opponentMode').disabled=scenarioId()==='duel';
     $('aiDifficulty').value=state.opponent?.difficulty||'standard';
     $('aiDifficulty').disabled=scenarioId()==='duel';
-    lastCastVisual=null;armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+    lastCastVisual=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
     const id=selectedPower();
-    const target=cursor||currentNeed()?.location?.center||state.camp,
+    const target=healAimAt(cursor||currentNeed()?.location?.center||state.camp),
       preview=S.evaluateMiracle(state,id,{x:target.x,y:target.y,...opts()});
     lastMiraclePreview=preview;
     const actualRadius=Number.isFinite(preview.radius)?preview.radius:+$('radius').value;
@@ -5151,6 +5220,14 @@ if(root)root.WOG_PLAYTEST=API;
     $('devotionMetric').title=duel?
       '淨改宗追蹤開局雙方各15名原始居民；剛改宗的居民尚不屬於40+核心信徒':
       '信眾代表 20+；上方大字信徒代表 40+';
+    const myOracles=activeOracleNames(state.religion);
+    const enemyOracles=state.opponent?.enabled?activeOracleNames(state.opponentReligion):'無對手';
+    $('oracleDuelStatus').innerHTML=
+      '<span class="side-player">己：'+html(myOracles)+'</span>'+
+      (state.opponent?.enabled?'　<span class="side-opponent">敵：'+html(enemyOracles)+'</span>':'');
+    $('oracleDuelStatus').title='目前有效 Oracle（非歷史記錄）｜'+
+      state.religion.name+'：'+myOracles+
+      (state.opponent?.enabled?'｜'+state.opponentReligion.name+'：'+enemyOracles:'');
     $('powerMetric').textContent=format(state.god.dp,1);$('powerRate').textContent=`+${format(st.dpRateDay,2)} DP / 模擬日`;
     $('powerFill').style.width=Math.min(100,state.god.dp/state.god.cap*100)+'%';
     $('pauseBtn').textContent=paused?'▶ 開始 / 繼續':'Ⅱ 暫停';
@@ -5181,6 +5258,8 @@ if(root)root.WOG_PLAYTEST=API;
       $('mapTip').textContent=(powerMeta('miracle',armedMiracle)?.label||armedMiracle)+
         ' · 半徑 '+lastMiraclePreview.radius+' 格 · '+effectTime+
         ' · 點地圖施放 / Esc 取消';
+      const guided=healAimAt(cursor);
+      if(guided?.personId)$('mapTip').textContent+=' · 追蹤 '+guided.personName;
     }
     const saints=state.religion.saints.map(id=>state.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
     const saintRoster=saints.map(p=>p.id+':'+p.name).join('|');
@@ -5265,29 +5344,60 @@ if(root)root.WOG_PLAYTEST=API;
     $('settlementSelect').disabled=!state.settlements.length;
     const town=state.settlements.find(t=>t.id===selectedTownId)||state.settlements[0];
     const localReligion=town?S.settlementReligionStats(state,town.id):null;
-    const rivalTown=town&&state.opponent?.enabled?
-      `<p title="${html(state.opponentReligion.name)}：S=Saint，P=Priest；對手以真實信徒恢復神力">對手：信眾 ${localReligion.opponentBelievers} ·
-        40+ ${localReligion.opponentFollowers} · S${localReligion.opponentSaints}/P${localReligion.opponentPriests}
-        · ${format(state.opponentGod.dp)} DP</p>`:'';
-    const reserveHint=town?.workDemand?.reserveTargetDays?
-      ` · 儲糧目標 ${town.workDemand.reserveTargetDays} 日`:'';
-    const granary=town?.granary;
-    const granaryStatus=granary?.built?'已建成':
-      granary?.materialsPaid?'建造中':granary?'籌備建材':'尚無計畫';
-    $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b>${town.native?' · 原生聚落':''} · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><p title="信眾為 Devotion 20+；信徒為 40+。Saint 與 Priest 是獨立角色。">宗教：信眾 ${localReligion.believers}/${localReligion.population} · 未入教 ${localReligion.unaffiliated} · 信徒 ${localReligion.followers} · Saint ${localReligion.saints} / Priest ${localReligion.priests} · 神諭 ${localReligion.activeOracles}</p>${rivalTown}<p title="未完成糧倉時，公共糧食以臨時共同儲備方式保管並保持可及；真正的糧倉需使用本聚落材料及居民建造。">公共糧倉：${granaryStatus} · 本地公糧 ${format(town.storage.food)} · 石材 ${format(town.storage.stone,1)}${reserveHint}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
-      `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
-    if(town){
-      const venues=(state.religiousSites||[]).filter(site=>site.townId===town.id);
-      const names={gathering:'自然集會點',shrine:'Shrine',temple:'Temple',ruin:'遺址'};
-      $('townPanel').innerHTML+='<p title="宗教設施不會直接增加 Divine Power、Local Presence 或 Devotion；活動須居民實際到場">宗教設施：'+
-        (venues.length?venues.map(v=>{
-          const owner=v.religionId===state.religion.id?state.religion.name:
-            state.opponentReligion?.name||'其他宗教';
-          return html(owner)+' '+(names[v.stage]||v.stage)+
-            (v.proposed?'（籌建 '+html(v.proposed)+'）':'')+
-            ' · 近30日 '+(v.visits||[]).length+' 次集會';
-        }).join(' / '):'尚未形成')+'</p>';
-    }
+    // This inspector represents religious competition, not town accounting.
+    // Existing household controls are retained hidden for old UI test bindings.
+    const allReligions=[{faith:state.religion,side:'player',role:'己方',dp:state.god.dp},
+      ...(state.opponent?.enabled?[{faith:state.opponentReligion,side:'opponent',
+        role:'對手',dp:state.opponentGod.dp}]:[])];
+    $('faithOverview').innerHTML=allReligions.map(({faith,side,role,dp})=>{
+      const adherents=state.people.filter(p=>p.alive&&p.religionId===faith.id);
+      const believers=adherents.filter(p=>p.devotion>=20).length;
+      const core=adherents.filter(p=>p.devotion>=40).length;
+      const active=(faith.oracles||[]).filter(o=>o.status==='active');
+      const saintIds=new Set(faith.saints||[]),priestIds=new Set(faith.priests||[]);
+      const livingSaints=adherents.filter(p=>saintIds.has(p.id)).length;
+      const livingPriests=adherents.filter(p=>priestIds.has(p.id)).length;
+      const shrineCount=(state.religiousSites||[]).filter(v=>v.religionId===faith.id&&v.stage==='shrine').length;
+      const templeCount=(state.religiousSites||[]).filter(v=>v.religionId===faith.id&&v.stage==='temple').length;
+      const oracleSummary=active.length?active.slice(0,2).map(o=>
+        availablePowers.oracle.find(x=>x.id===o.intentType)?.label||o.intentType).join('／')+
+        (active.length>2?' +'+(active.length-2):''):'尚無有效神諭';
+      const detail=active.map(o=>{
+        const owner=state.people.find(p=>p.id===o.saintId);
+        return (availablePowers.oracle.find(x=>x.id===o.intentType)?.label||o.intentType)+
+          ' · '+(owner?.name||'Saint 已離世')+
+          ' · 第'+Math.floor(o.issuedAtHour/24+1)+'日發布'+
+          (o.propagatedAtHour===null?'（尚未傳播）':'（已傳達）');
+      }).join('\n');
+      return '<div class="faith-card side-'+side+'" title="'+html(detail||'目前沒有有效 Oracle')+'">'+
+        '<strong>'+role+' · '+html(faith.name)+'</strong>'+
+        '<span class="faith-active">Oracle：'+html(oracleSummary)+'</span>'+
+        '<small>核心 40+：'+core+' · 信眾 20+：'+believers+'</small>'+
+        '<small>Saint '+livingSaints+' / Priest '+livingPriests+' · DP '+format(dp,1)+'</small>'+
+        '<small>Shrine '+shrineCount+' · Temple '+templeCount+'</small></div>';
+    }).join('');
+    const names={gathering:'聚會點',shrine:'Shrine',temple:'Temple',ruin:'遺址'};
+    const sites=town?(state.religiousSites||[]).filter(v=>v.townId===town.id):[];
+    const venue=sites.length?sites.map(v=>{
+      const owner=v.religionId===state.religion.id?'己':'敵';
+      return owner+' '+(names[v.stage]||v.stage)+(v.proposed?' → 籌建'+names[v.proposed]:'')+
+        '（近30日 '+(v.visits||[]).length+' 次）';
+    }).join('、'):'尚無固定宗教設施';
+    const myPresence=town?S.presenceAt(state,town,state.religion.id):null;
+    const enemyPresence=town&&state.opponent?.enabled?S.presenceAt(state,town,state.opponentReligion.id):null;
+    $('townPanel').innerHTML=town?'<div class="religion-local">'+
+      '<b>'+html(town.name)+'</b> · '+(town.native?'原生聚落':'居民聚落')+
+      '<div>己方：核心 '+localReligion.followers+'／信眾 '+localReligion.believers+
+      ' · Saint '+localReligion.saints+' / Priest '+localReligion.priests+'</div>'+
+      (state.opponent?.enabled?'<div>對手：核心 '+localReligion.opponentFollowers+
+        '／信眾 '+localReligion.opponentBelievers+' · Saint '+localReligion.opponentSaints+
+        ' / Priest '+localReligion.opponentPriests+'</div>':'')+
+      '<div>未入教 '+localReligion.unaffiliated+' · 當地 Presence：己 '+
+      format((myPresence?.share||0)*100)+'%'+
+      (enemyPresence?' / 敵 '+format(enemyPresence.share*100)+'%':'')+
+      '（須同時看有效密度）</div>'+
+      '<div>設施：'+html(venue)+'</div></div>':
+      '<div class="religion-local">尚未形成聚落。宗教仍可由個別信徒自主發展。</div>';
     const filteredHomes=town?state.households.filter(h=>town.householdIds.includes(h.id)):state.households;
     const housePageSize=2;
     const housePages=Math.max(1,Math.ceil(filteredHomes.length/housePageSize));
@@ -5363,7 +5473,11 @@ if(root)root.WOG_PLAYTEST=API;
       const oldNewestId=feed.firstElementChild?.dataset.eventId;
       const readingOlder=oldTop>4;
       feed.innerHTML=state.events.slice().reverse()
-        .map(e=>`<div class="event ${html(e.kind)}" data-event-id="${html(e.id)}"><small>第 ${Math.floor(e.hour/24)+1} 日 · ${html(e.kind)}</small><div>${html(e.text)}</div>${e.reasons?.length?`<details><summary>原因</summary>${e.reasons.map(x=>'<div>'+html(x)+'</div>').join('')}</details>`:''}</div>`).join('')||'<div class="muted">尚無重大歷史事件</div>';
+        .map(e=>{
+          const side=eventFaction(e);
+          const sideLabel=side==='player'?'己方':side==='opponent'?'對手':'中立／未標示';
+          return `<div class="event ${html(e.kind)} side-${side}" data-event-id="${html(e.id)}"><small><span class="event-source">${sideLabel}</span>第 ${Math.floor(e.hour/24)+1} 日 · ${html(e.kind)}</small><div>${html(e.text)}</div>${e.reasons?.length?`<details><summary>原因</summary>${e.reasons.map(x=>'<div>'+html(x)+'</div>').join('')}</details>`:''}</div>`;
+        }).join('')||'<div class="muted">尚無重大歷史事件</div>';
       if(readingOlder && oldNewestId){
         const previousTopEvent=Array.from(feed.children).find(el=>el.dataset.eventId===oldNewestId);
         feed.scrollTop=oldTop+(previousTopEvent && feed.firstElementChild
@@ -5462,6 +5576,7 @@ if(root)root.WOG_PLAYTEST=API;
           (origin.at.y-5)*size);c.restore();
       }
     }
+    visibleInjured=state.people.filter(p=>p.alive&&p.health<95).map(p=>({id:p.id,x:p.x,y:p.y}));
     const saintIds=new Set(state.religion.saints), priestIds=new Set(state.religion.priests);
     const rivalSaintIds=new Set(state.opponentReligion?.saints||[]),
       rivalPriestIds=new Set(state.opponentReligion?.priests||[]);
@@ -5515,6 +5630,14 @@ if(root)root.WOG_PLAYTEST=API;
       c.fillStyle=kind==='ripening'?'#f3ce6622':kind==='drought'?'#b97e4926':'#9dccde24';
       c.strokeStyle=kind==='ripening'?'#e5c86b':kind==='drought'?'#bf885a':'#bfeaff';
       c.lineWidth=2.5;c.beginPath();c.arc(e.x*size,e.y*size,e.radius*size,0,Math.PI*2);c.fill();c.stroke();
+      // The effect fill explains WHAT is happening; the outside outline
+      // identifies WHICH God cast it. Neither changes the simulation.
+      if(e.godId===state.god.id||e.godId===state.opponentGod?.id){
+        c.strokeStyle=e.godId===state.god.id?'#66c6e5':'#ed8f87';
+        c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();
+        c.arc(e.x*size,e.y*size,e.radius*size+3,0,Math.PI*2);c.stroke();
+        c.setLineDash([]);
+      }
       if(kind==='rain'){
         c.strokeStyle='#acd7e680';
         for(let i=0;i<30;i++){const aa=i*2.39996,rr=(i%10)/10*e.radius*size;const x=e.x*size+Math.cos(aa)*rr,y=e.y*size+Math.sin(aa)*rr;const fall=(time*19+i*13)%24;c.beginPath();c.moveTo(x,y+fall-12);c.lineTo(x-3,y+fall);c.stroke();}
@@ -5561,7 +5684,7 @@ if(root)root.WOG_PLAYTEST=API;
       c.restore();
     }
     if(armedMiracle) {
-      const target=cursor||source?.location?.center||state.camp;
+      const target=healAimAt(cursor||source?.location?.center||state.camp);
       const preview=lastMiraclePreview;
       const radius=Number.isFinite(preview?.radius)?preview.radius:+$('radius').value;
       const effectTime=preview?.instant?'瞬間（0 日）':
@@ -5575,6 +5698,10 @@ if(root)root.WOG_PLAYTEST=API;
       const ly=Math.max(22,Math.min(canvas.height-5,py-size));
       c.fillStyle='#173032e9';c.fillRect(lx-4,ly-16,170,21);
       c.fillStyle='#ffe9bd';c.fillText(label,lx,ly-2);
+      if(armedMiracle==='heal'&&target.personId){
+        c.strokeStyle='#93f4c5';c.lineWidth=2;c.setLineDash([]);
+        c.beginPath();c.arc(px+size*.5,py+size*.5,size*.9,0,Math.PI*2);c.stroke();
+      }
       c.restore();
     }
   }
@@ -5582,14 +5709,15 @@ if(root)root.WOG_PLAYTEST=API;
     const rect=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-rect.left)*state.width/rect.width), y=Math.floor((e.clientY-rect.top)*state.height/rect.height);
     if(x<0||y<0||x>=state.width||y>=state.height)return;
     if(armedMiracle){
-      const id=armedMiracle,r=S.castMiracle(state,id,{x,y,...opts()});
+      const aim=healAimAt({x,y});
+      const id=armedMiracle,r=S.castMiracle(state,id,{x:aim.x,y:aim.y,...opts()});
       const effectTime=r.instant?'瞬間（0 日）':format(r.durationDays,0)+' 日';
       say(r.ok?(powerMeta('miracle',id)?.label||id)+
         ` 已${r.overcast?'強制':''}施展（${r.costMultiplier}×），消耗 ${r.cost} DP；`+
         `半徑 ${r.radius} 格，作用時間 ${effectTime}。`:r.reason);
       if(r.ok){
-        lastCastVisual=r.instant?{x,y,radius:r.radius,untilMs:performance.now()+2400}:null;
-        armedMiracle=null;
+        lastCastVisual=r.instant?{x:aim.x,y:aim.y,radius:r.radius,untilMs:performance.now()+2400}:null;
+        healLock=null;armedMiracle=null;
       }
       render();return;
     }
@@ -5685,8 +5813,18 @@ if(root)root.WOG_PLAYTEST=API;
   $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{saintId:selectedSaintId,intentType:selectedPower()});say(r.ok?(r.reset?'特化已解除；居民回歸自主需求。':'神諭已交給 Saint；居民稍後自主聆聽與回應。'):r.reason);render();};
   $('concludeBtn').onclick=()=>{const o=state.religion.oracles.find(v=>v.status==='active'&&v.saintId===selectedSaintId&&v.intentType===selectedPower());const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
   canvas.addEventListener('click',onMap);
-  canvas.addEventListener('mousemove',e=>{const rect=canvas.getBoundingClientRect();cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};});
-  canvas.addEventListener('mouseleave',()=>{cursor=null;});
+  canvas.addEventListener('mousemove',e=>{
+    const rect=canvas.getBoundingClientRect();
+    cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),
+      y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};
+    if(armedMiracle==='heal'){
+      const nearby=nearVisibleInjured(cursor);
+      if(nearby)healLock={id:nearby.id,anchor:{...cursor}};
+      else if(healLock&&Math.hypot(cursor.x-healLock.anchor.x,
+        cursor.y-healLock.anchor.y)>2.6)healLock=null;
+    }
+  });
+  canvas.addEventListener('mouseleave',()=>{cursor=null;healLock=null;});
   $('residentSelect').onchange=e=>{chosen=e.target.value;render();};
   $('saintSelect').onchange=e=>{selectedSaintId=e.target.value;render();};
   $('settlementSelect').onchange=e=>{selectedTownId=e.target.value;housePage=0;render();};
@@ -5695,7 +5833,7 @@ if(root)root.WOG_PLAYTEST=API;
   $('miracleTab').onclick=()=>{showDivineKind('miracle');armMiracleTarget();};
   $('oracleTab').onclick=()=>showDivineKind('oracle');
   $('divinePowerSelect').onchange=()=>{
-    armedMiracle=null;
+    armedMiracle=null;healLock=null;
     if(divineKind==='miracle'){
       rememberMiracleSettings();
       rememberedPower.miracle=selectedPower();

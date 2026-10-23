@@ -605,10 +605,15 @@
        '持續中 · 已採取相關工作 '+(active.influenceWorkCount||0)+' 次'):
       (currentDirective?'Saint 正在執行 '+(powerMeta('oracle',currentDirective.intentType)?.label||current.intentType):
         '目前沒有有效指派');
-    $('oracleReason').textContent=active?active.propagatedAtHour===null?'Saint 已接收，準備向居民傳達。':
-      `已傳播到 ${active.heardCount} 位可聆聽的居民；實際結果仍取決於當地活動。`:
-      (saint?S.checkOracle(state,saint.id,intent).reason||'神諭不消耗 DP；會使用 Saint 個人接收額度。':'需要合格 Saint 和可用額度');
-    $('oracleBtn').disabled=profileLoading||!saint||!S.checkOracle(state,saint?.id,intent).ok;
+    const issueCheck=saint?S.checkOracle(state,saint.id,intent):
+      {ok:false,reason:'需要合格 Saint 和可用額度'};
+    const switching=!!(issueCheck.ok&&issueCheck.replace?.length);
+    $('oracleReason').textContent=issueCheck.ok?
+      (switching?'發佈後直接替換目前神諭，只消耗新神諭的 1 個額度。':
+      active?'此神諭已在傳播。':'神諭不消耗 DP；使用 Saint 個人接收額度。'):
+      (issueCheck.reason||'無法發佈');
+    $('oracleBtn').textContent=switching?'替換神諭':'傳下神諭';
+    $('oracleBtn').disabled=profileLoading||!issueCheck.ok;
     $('concludeBtn').hidden=!active||intent==='life.balance'||!!state.oracleStrategy;
     $('concludeBtn').disabled=!active||!quota||quota.quota<=-1;
     const prayers=openPrayers();
@@ -1167,7 +1172,13 @@
     rememberMiracleSettings();updateCost();draw();
   }));
   $('rainBtn').onclick=toggleMiracleTarget;
-  $('oracleBtn').onclick=()=>{const r=S.issueOracle(state,{saintId:selectedSaintId,intentType:selectedPower()});say(r.ok?(r.reset?'特化已解除；居民回歸自主需求。':'神諭已交給 Saint；居民稍後自主聆聽與回應。'):r.reason);render();};
+  $('oracleBtn').onclick=()=>{
+    const r=S.issueOracle(state,{saintId:selectedSaintId,intentType:selectedPower()});
+    say(r.ok?(r.reset?'特化已解除；居民回歸自主需求。':
+      r.replaced?.length?'已直接替換這位 Saint 的舊神諭，新策略開始傳播。':
+      '神諭已交給 Saint；居民稍後自主聆聽與回應。'):r.reason);
+    render();
+  };
   $('concludeBtn').onclick=()=>{const o=state.religion.oracles.find(v=>v.status==='active'&&v.saintId===selectedSaintId&&v.intentType===selectedPower());const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
   canvas.addEventListener('click',onMap);
   canvas.addEventListener('mousemove',e=>{

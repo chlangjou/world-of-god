@@ -691,9 +691,12 @@
     const localReligion=town?S.settlementReligionStats(state,town.id):null;
     // This inspector represents religious competition, not town accounting.
     // Existing household controls are retained hidden for old UI test bindings.
-    const allReligions=[{faith:state.religion,side:'player',role:'己方',dp:state.god.dp},
-      ...(state.opponent?.enabled?[{faith:state.opponentReligion,side:'opponent',
-        role:'對手',dp:state.opponentGod.dp}]:[])];
+    const allReligions=allDisplayedFaiths().map((faith,i)=>({
+      faith,side:['player','opponent','third','fourth'][i]||'neutral',
+      role:i===0?'己方':'神'+(i+1),
+      dp:i===0?state.god.dp:i===1?state.opponentGod.dp:
+        state.additionalGods?.[i-2]?.dp||0
+    }));
     $('faithOverview').innerHTML=allReligions.map(({faith,side,role,dp})=>{
       const adherents=state.people.filter(p=>p.alive&&p.religionId===faith.id);
       const believers=adherents.filter(p=>p.devotion>=20).length;
@@ -717,19 +720,37 @@
       return '<div class="faith-card side-'+side+'" title="'+html(detail||'目前沒有有效 Oracle')+'">'+
         '<strong>'+role+' · '+html(faith.name)+'</strong>'+
         '<span class="faith-active">Oracle：'+html(oracleSummary)+'</span>'+
+        (side==='player'?'':active.map(o=>
+          '<button type="button" class="oracle-locate" data-oracle-focus="'+html(o.id)+
+          '" title="定位這道 Oracle 的真實接收者，選擇建議的 Miracle（不會直接施放）">'+
+          '⌖ '+html(availablePowers.oracle.find(x=>x.id===o.intentType)?.label||o.intentType)+
+          ' → '+html(S.ORACLE_MIRACLE_COUNTERS[o.intentType]||
+            '僅觀察')+'</button>').join(''))+
         '<small>核心 40+：'+core+' · 信眾 20+：'+believers+'</small>'+
         '<small>Saint '+livingSaints+' / Priest '+livingPriests+' · DP '+format(dp,1)+'</small>'+
         '<small>Shrine '+shrineCount+' · Temple '+templeCount+'</small></div>';
     }).join('');
+    $('faithOverview').querySelectorAll('[data-oracle-focus]').forEach(button=>{
+      button.onclick=()=>focusOpponentOracle(button.dataset.oracleFocus);
+    });
     const names={gathering:'聚會點',shrine:'Shrine',temple:'Temple',ruin:'遺址'};
     const sites=town?(state.religiousSites||[]).filter(v=>v.townId===town.id):[];
     const venue=sites.length?sites.map(v=>{
-      const owner=v.religionId===state.religion.id?'己':'敵';
+      const owner=v.religionId===state.religion.id?'己':
+        faithName(v.religionId);
       return owner+' '+(names[v.stage]||v.stage)+(v.proposed?' → 籌建'+names[v.proposed]:'')+
         '（近30日 '+(v.visits||[]).length+' 次）';
     }).join('、'):'尚無固定宗教設施';
     const myPresence=town?S.presenceAt(state,town,state.religion.id):null;
     const enemyPresence=town&&state.opponent?.enabled?S.presenceAt(state,town,state.opponentReligion.id):null;
+    const extraLocals=allDisplayedFaiths().slice(2).map(f=>{
+      const residents=state.people.filter(p=>p.alive&&p.settlementId===town?.id&&
+        p.religionId===f.id);
+      const presence=town?S.presenceAt(state,town,f.id):null;
+      return {faith:f,core:residents.filter(p=>p.devotion>=40).length,
+        believers:residents.filter(p=>p.devotion>=20).length,
+        presence:presence?.share||0};
+    });
     $('townPanel').innerHTML=town?'<div class="religion-local">'+
       '<b>'+html(town.name)+'</b> · '+(town.native?'原生聚落':'居民聚落')+
       '<div>己方：核心 '+localReligion.followers+'／信眾 '+localReligion.believers+
@@ -741,6 +762,9 @@
       format((myPresence?.share||0)*100)+'%'+
       (enemyPresence?' / 敵 '+format(enemyPresence.share*100)+'%':'')+
       '（須同時看有效密度）</div>'+
+      (extraLocals.map(v=>
+        '<div>'+html(v.faith.name)+'：核心 '+v.core+'／信眾 '+v.believers+
+        ' · Presence '+format(v.presence*100)+'%</div>').join(''))+
       '<div>設施：'+html(venue)+'</div></div>':
       '<div class="religion-local">尚未形成聚落。宗教仍可由個別信徒自主發展。</div>';
     const townFrontier=frontier.camps.filter(p=>p.originTownId===town?.id);
@@ -788,11 +812,11 @@
       const current=selectedPerson;
       const p=current,h=state.households.find(v=>v.id===p.householdId),dec=p.lastDecision;
       const nativeInfo=current.nativeOrigin?' · 原生居民':'';
-      const religious=current.religionId===state.religion.id?state.religion.name:
-        current.religionId===state.opponentReligion?.id?state.opponentReligion.name:'尚未歸屬';
-      const isOpponent=current.religionId===state.opponentReligion?.id;
-      const isPriest=(isOpponent?state.opponentReligion?.priests:state.religion.priests).includes(p.id);
-      const isSaint=(isOpponent?state.opponentReligion?.saints:state.religion.saints).includes(p.id);
+      const religious=allDisplayedFaiths().find(f=>f.id===current.religionId)?.name||'尚未歸屬';
+      const currentFaith=allDisplayedFaiths().find(f=>f.id===current.religionId);
+      const isOpponent=current.religionId!==state.religion.id;
+      const isPriest=!!currentFaith?.priests.includes(p.id);
+      const isSaint=!!currentFaith?.saints.includes(p.id);
       const roles=[isSaint?'Saint · 神諭聆聽者':null,isPriest?'Priest · 祭司':null].filter(Boolean);
       const prayerCount=isPriest&&!isOpponent?S.priestPetitions(state,p.id).length:0;
       const roleInfo=roles.length?`<div class="priest-summary">${html(roles.join(' / '))}${prayerCount?` · 已彙整 ${prayerCount} 類祈求（點地圖泡泡查看）`:''}</div>`:'';
@@ -816,12 +840,11 @@
           ' · '+(p.lastFaithEvidence.change>0?'+':'')+format(p.lastFaithEvidence.change):''}</div>`:'';
       const impressions=Object.entries(p.miracleInterest||{}).filter(([,record])=>
         record.expiresAtHour>state.hour&&record.score>0).map(([godId,record])=>
-        (godId===state.god.id?state.religion.name:state.opponentReligion?.name||godId)+
+        godFaithName(godId)+
         ' '+format(record.score)).join('／');
       const impressionHint=impressions?`<div title="對神蹟的暫時印象會影響個人日後自行接受宗教的可能；尚不等於改宗">神蹟印象：${html(impressions)}</div>`:'';
       const attraction=Object.entries(p.strategyAttraction||{}).filter(([,a])=>a.score>0)
-        .map(([id,a])=>(id===state.religion.id?state.religion.name:
-          state.opponentReligion?.name||id)+' '+format(a.score,1)+
+        .map(([id,a])=>faithName(id)+' '+format(a.score,1)+
           '（可信觀察 '+a.observations+' 次）').join('／');
       const attractionHint=attraction?
         `<div title="必須反覆得到其他宗教真正的成果，才可能自主改宗">異教信任：${html(attraction)}</div>`:'';

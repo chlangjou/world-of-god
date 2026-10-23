@@ -415,8 +415,10 @@
     result.householdShare = clamp(result.householdShare, 0, 1);
     return result;
   }
-  function log(s, kind, text, reasons = [], entities = []) {
-    const evt = { id: ++s.eventSeq, hour: s.hour, kind, text, reasons, entities };
+  function log(s, kind, text, reasons = [], entities = [], godId = null) {
+    // Event kind explains WHAT happened; provenance identifies the responsible God.
+    const evt = { id: ++s.eventSeq, hour: s.hour, kind, text, reasons, entities,
+      ...(godId ? {godId} : {}) };
     s.events.push(evt);
     if (s.events.length > s.rules.eventLimit) s.events.shift();
     return evt.id;
@@ -977,7 +979,7 @@
         '成果獲得見證：'+recipients+
         ' 位直接受益者、'+witnesses+' 位附近居民受到信仰影響。',
         ['只有具體改善或自主工作成果才能構成證據',
-         '觀察者需有可信的本宗教來源；不會在施法時強制改宗']);
+         '觀察者需有可信的本宗教來源；不會在施法時強制改宗'],[],faith.godId);
     return {recipients,witnesses};
   }
   function miracleAgriculturalEvidence(s,faith,type,center,amount){
@@ -986,7 +988,7 @@
       log(s,'faith',faith.name+'的'+(POWER_DEFAULTS[type]?.label||type)+
         '成果在農地被見證；'+
         witness+' 位附近居民受到小幅度信仰影響。',
-        ['只根據實際存在的作物改善；沒有直接的人體神蹟受益者']);
+        ['只根據實際存在的作物改善；沒有直接的人體神蹟受益者'],[],faith.godId);
     return witness;
   }
   // The same cooldown policy is used for Rain and all newly added Miracles:
@@ -1073,7 +1075,7 @@
     s.counts.rainCasts++;
     log(s, 'miracle', `${enemy?faith.name+'的神明':'你'}向河谷施展降雨，雨雲將停留約 ${test.durationDays} 日。`,
       [`直接效果：選定範圍增加降雨；不保證豐收`,
-       `神力 -${test.cost}（${test.costMultiplier}×）；喚雨冷卻至少至第 ${Math.ceil(god.skills.rain.readyAtHour/24)} 日`]);
+       `神力 -${test.cost}（${test.costMultiplier}×）；喚雨冷卻至少至第 ${Math.ceil(god.skills.rain.readyAtHour/24)} 日`],[],god.id);
     return { ...test, effectId: effect.id };
   }
 
@@ -1240,7 +1242,7 @@
     log(s,'miracle',(enemy?faith.name+'的神明':'你')+'施展 '+tuning.powers[type].label+'，作用於 '+applied+' 個目標。',
       ['直接作用於世界或居民；實際後續結果仍由模擬決定',
        '神力 -'+check.cost+'（'+check.costMultiplier+'×），技能冷卻至少至第 '+
-         Math.ceil(skill.readyAtHour/24)+' 日']);
+         Math.ceil(skill.readyAtHour/24)+' 日'],[],god.id);
     return {...check,applied,actual};
   }
 
@@ -1274,7 +1276,7 @@
     faith.saintQuota[p.id]={quota:s.rules.oracleQuota,nextRefillHour:s.hour+s.rules.oracleRefillDays*24};
     if(faith===s.religion&&s.history.firstSaintHour===null)s.history.firstSaintHour=s.hour;
     log(s,'religion',`${faith.name}：${p.name} 在信仰生活中成為${first?'第一位':'另一位'}聆聽者。`,
-      ['自主形成的 Saint 資格不等於 Priest 職位，也不是神直接指定']);
+      ['自主形成的 Saint 資格不等於 Priest 職位，也不是神直接指定'],[],faith.godId);
   }
   function ensureSaint(s,faith=s.religion){
     if(days(s)<2)return;
@@ -1312,7 +1314,7 @@
       if(faith.priests.includes(candidate.id))continue;
       faith.priests.push(candidate.id);
       log(s,'religion',`${faith.name}：${candidate.name} 在${town.name}得到支持，兼任祭司與傳道者。`,
-        ['當地信眾需求、個人適任性及實際居所促成宗教角色']);
+        ['當地信眾需求、個人適任性及實際居所促成宗教角色'],[],faith.godId);
     }
   }
   function checkOracle(s, saintId, intentType,faith=s.religion) {
@@ -1344,7 +1346,7 @@
       log(s,'oracle',(enemy?faith.name+'：':'')+
         '神很滿意你們的行為，放下心中的執著，去追尋你們自己的需求。',
         ['這位 Saint 的特化已結束；居民依實際需求自主行動',
-         '已完成的食物、人口與住房不回溯；Reset 不消耗神力或接收額度']);
+         '已完成的食物、人口與住房不回溯；Reset 不消耗神力或接收額度'],[],god.id);
       return {ok:true,reset:true,ended:test.active.length,saintId};
     }
     const durationDays=s.oracleStrategy?null:
@@ -1361,7 +1363,7 @@
     faith.oracles.push(o);
     if(enemy)s.opponent.oracleIssues++;
     log(s, 'oracle', `${enemy?faith.name+'的神諭':'神諭'}交給 ${test.saint.name}：${s.oracleStrategy?STRATEGY_LABELS[intentType]:(intentType==='religion.spread'?'鼓勵信眾更積極地傳播信仰':'請讓族人重視糧食生產')}。`,
-      ['Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定']);
+      ['Saint 接收並理解核心意圖；居民是否採取行動由其需求與能力決定'],[],god.id);
     return { ok: true, oracleId: o.id, saintId, quotaLeft: faith.saintQuota[saintId].quota };
   }
   function concludeOracle(s, oracleId) {
@@ -1371,7 +1373,7 @@
     const q = faith.saintQuota[o.saintId];
     if (!q || q.quota <= -1) return { ok: false, reason: 'Saint 的額度已達 -1 下限' };
     q.quota--; o.status = 'concluded';
-    log(s, 'oracle', '神宣告這道神諭的使命已經結束。', ['結束此 Saint 的單一指派；既有生活成果仍保留']);
+    log(s, 'oracle', '神宣告這道神諭的使命已經結束。', ['結束此 Saint 的單一指派；既有生活成果仍保留'],[],s.god.id);
     return { ok: true, quotaLeft: q.quota };
   }
 
@@ -1519,7 +1521,7 @@
             (STRATEGY_LABELS[ownIntent]||'自主生活')+'方針。',
             [reason,'消息來自'+source.name+'近期真實傳教者',
              '對方神諭的行動成果已記錄；沒有強迫改宗',
-             '此輪信仰防禦 '+Math.round(defense*100)+'%，有效接觸機率 '+Math.round(chance*100)+'%']);
+             '此輪信仰防禦 '+Math.round(defense*100)+'%，有效接觸機率 '+Math.round(chance*100)+'%'],[],challenger.godId);
         }
         return {person:p,before,after:p.devotion,reason};
       }
@@ -1611,7 +1613,7 @@
          '；新宗教 Devotion '+p.devotion,
          '已有 '+evidenceCount+' 次可信觀察，累積信任 '+Math.round(earned*10)/10,
          '來源：'+sourceName+'；有效神諭：'+oracleId,
-         '不是單次施放或普通傳教強迫改宗']);
+         '不是單次施放或普通傳教強迫改宗'],[],faith.godId);
       return true;
     };
     for(const p of people){
@@ -1815,7 +1817,7 @@
         reached[town.id]=s.hour;
         if(town.id!==s.settlements[0]?.id)
           log(s,'religion',`${faith.name} 隨實際信眾傳入${town.name}。`,
-            ['已歸屬該聚落的居民具有宗教信仰；可能來自家庭、遷移、交流或傳道']);
+            ['已歸屬該聚落的居民具有宗教信仰；可能來自家庭、遷移、交流或傳道'],[],faith.godId);
       }
     }
   }
@@ -1888,7 +1890,7 @@
         if(religionRand(s,faith)>r.oracleRelayChance*(priest?1:.25))continue;
         o.reachedSettlements[town.id]={hour:s.hour,via:priest?'priest':'social'};
         log(s,'oracle',`${town.name} 經由${priest?'祭司':'居民交流'}聽見神諭。`,
-          ['訊息沿已建立信仰聯繫的相鄰聚落傳遞，並未直接廣播所有居民']);
+          ['訊息沿已建立信仰聯繫的相鄰聚落傳遞，並未直接廣播所有居民'],[],faith.godId);
       }
       o.heardCount=people.filter(p=>oracleContact(s,p,o,faith)>0).length;
     }
@@ -2429,7 +2431,7 @@
     const expired = s.effects.filter(e => s.hour >= e.endsAtHour);
     if (expired.length) {
       s.effects = s.effects.filter(e => s.hour < e.endsAtHour);
-      for (const e of expired) log(s,'miracle', (e.type==='ripening'?'促熟':e.type==='drought'?'乾旱':'降雨')+'神蹟已結束；土地保留已產生的實際變化。', ['持續輸入到期，自然過程繼續，不回溯結果']);
+      for (const e of expired) log(s,'miracle', (e.type==='ripening'?'促熟':e.type==='drought'?'乾旱':'降雨')+'神蹟已結束；土地保留已產生的實際變化。', ['持續輸入到期，自然過程繼續，不回溯結果'],[],e.godId);
     }
   }
 
@@ -2860,7 +2862,7 @@
           log(s,'faith',faith.name+'回應了當地缺雨祈求：'+changed+
             ' 位祈禱者加深信仰，'+secondary+' 位居民受到小幅影響。',
             ['來源相符的神明降雨改善當地農田水分',
-             '當地居民確實收成糧食；每筆需求只給一次信仰回饋']);
+             '當地居民確實收成糧食；每筆需求只給一次信仰回饋'],[],faith.godId);
         }else if(!recent)prayer.status='lapsed';
       }
       for(const o of faith.oracles){
@@ -2875,7 +2877,7 @@
           log(s,'faith',faith.name+'的糧食神諭成果逐漸被看見；'+changed+
             ' 位居民加深信仰。',
             ['部分居民自主提高糧食工作優先度','實際總食物有所改善',
-             '有效的 Saint 神諭提供可追溯的宗教歸因']);
+             '有效的 Saint 神諭提供可追溯的宗教歸因'],[],faith.godId);
         }
       }
     }
@@ -2890,7 +2892,7 @@
     for(const o of faith.oracles)if(o.status==='active'&&!faith.saints.includes(o.saintId)){
       o.status='saint_departed';
       log(s,'oracle',`${faith.name}：聆聽者已不再具備所屬宗教的 Saint 資格，神諭停止傳播。`,
-        ['角色依照真實居民當前信仰與虔誠度維持，無法繼續代表原神明傳播']);
+        ['角色依照真實居民當前信仰與虔誠度維持，無法繼續代表原神明傳播'],[],faith.godId);
     }
   }
   // Lower difficulties do not search all applicable Miracle types until a
@@ -3107,18 +3109,18 @@
       const owner=s.people.find(p=>p.id===o.saintId && p.alive);
       if(!owner) {
         o.status='saint_dead';
-        log(s,'oracle','聆聽者離世，屬於他的神諭停止傳播。',['不自動轉移給下一位 Saint；既有生活成果繼續存在']);
+        log(s,'oracle','聆聽者離世，屬於他的神諭停止傳播。',['不自動轉移給下一位 Saint；既有生活成果繼續存在'],[],faith.godId);
       } else if(Number.isFinite(o.expiresAtHour)&&s.hour>=o.expiresAtHour) {
         o.status='expired';
         log(s,'oracle',(s.oracleStrategy?(STRATEGY_LABELS[o.intentType]||'神諭'):
-          (o.intentType==='religion.spread'?'傳教':'糧食'))+'神諭的效期自然結束。',['到期免費，已完成的生活成果不回溯']);
+          (o.intentType==='religion.spread'?'傳教':'糧食'))+'神諭的效期自然結束。',['到期免費，已完成的生活成果不回溯'],[],faith.godId);
       } else if (o.propagatedAtHour===null && s.hour>=o.issuedAtHour+24) {
         o.propagatedAtHour=s.hour;
         const town=personSettlement(s,owner);
         if(town)(o.reachedSettlements ||= {})[town.id]={hour:s.hour,via:'saint'};
         o.heardCount=living(s).filter(p=>oracleContact(s,p,o,faith)>0).length;
         log(s,'oracle',`${owner.name} 開始向附近居民講述${s.oracleStrategy?(STRATEGY_LABELS[o.intentType]||'神諭'):(o.intentType==='religion.spread'?'傳教':'糧食')}神諭；${o.heardCount} 人有機會聽見。`,
-          ['Saint 接收內容可靠','傳播受個人距離與社群影響，不是向全地圖強制廣播']);
+          ['Saint 接收內容可靠','傳播受個人距離與社群影響，不是向全地圖強制廣播'],[],faith.godId);
       }
     }
     // Independent quota refill from simulation time, including overdraft debt.
@@ -3339,7 +3341,7 @@
     p.alive=false;p.activity='dead';s.counts.deaths++;
     for(const faith of allFaiths(s))for(const o of faith.oracles) if(o.status==='active' && o.saintId===personId) {
       o.status='saint_dead';
-      log(s,'oracle',`聆聽者 ${p.name} 離世，這道神諭不再傳播。`,['神諭歸屬於 Saint，不會繼承']);
+      log(s,'oracle',`聆聽者 ${p.name} 離世，這道神諭不再傳播。`,['神諭歸屬於 Saint，不會繼承'],[],faith.godId);
     }
     for(const faith of allFaiths(s)){
       faith.saints=faith.saints.filter(id=>id!==personId);

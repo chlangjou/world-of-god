@@ -3,7 +3,7 @@
   const S = window.WoG2, Playtest = window.WOG_PLAYTEST;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let lastMiraclePreview=null, lastCastVisual=null;
@@ -11,6 +11,7 @@
   let selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
   let selectedNeedId=null, needPage=0, lastNeedsMarkup=null;
   let lastAttentionSeq=0,attentionFocus=null;
+  let presentedVictoryHour = null;
   const ticksPerRealSecond = 12 / 8;
   const format = (v, n=0) => Number(v || 0).toFixed(n);
   const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
@@ -288,6 +289,12 @@
     if(!response.ok)throw new Error('Shrine / Temple Profile 無法載入');
     return response.json();
   }
+  async function loadVictory(){
+    if(window.WOG_VICTORY_PROFILE)return window.WOG_VICTORY_PROFILE;
+    const response=await fetch('config/victory-dominance-v0.1.json');
+    if(!response.ok)throw new Error('Victory Profile 無法載入');
+    return response.json();
+  }
   async function loadOpponent(){
     if(window.WOG_OPPONENT_PROFILE)return window.WOG_OPPONENT_PROFILE;
     const response=await fetch('config/opponent-v0.2.json');
@@ -316,7 +323,7 @@
       opponentProfile:activeOpponentProfile||S.OPPONENT_DEFAULTS,
       balanceProfile:activeProfile,religionProfile:activeReligionProfile,
        mobilityProfile:activeMobilityProfile,
-      divineProfile:activeDivineProfile,shrineProfile:activeShrineProfile,
+      divineProfile:activeDivineProfile,shrineProfile:activeShrineProfile,victoryProfile:activeVictoryProfile,
       opponentMode:$('opponentMode').value,
       difficulty:$('aiDifficulty').value||'standard'
     });
@@ -332,7 +339,7 @@
     $('opponentMode').disabled=selected==='duel';
     $('aiDifficulty').disabled=selected==='duel';
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
-    lastCastVisual=null;healLock=null;visibleInjured=[];paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
+    presentedVictoryHour=null;lastCastVisual=null;healLock=null;visibleInjured=[];paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -394,7 +401,7 @@
     $('opponentMode').disabled=scenarioId()==='duel';
     $('aiDifficulty').value=state.opponent?.difficulty||'standard';
     $('aiDifficulty').disabled=scenarioId()==='duel';
-    lastCastVisual=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+    presentedVictoryHour=null;lastCastVisual=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();announceVictoryIfNeeded();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
@@ -1138,7 +1145,7 @@
   $('aiDifficulty').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
-  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest(),loadShrine()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine])=>{
+  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest(),loadShrine(),loadVictory()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory])=>{
     activeProfile=agriculture.status==='fulfilled'?agriculture.value:null;
     activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
     activeMobilityProfile=mobility.status==='fulfilled'?mobility.value:null;
@@ -1147,14 +1154,15 @@
     activeOracleStrategyProfile=oracleStrategy.status==='fulfilled'?oracleStrategy.value:null;
     activePlaytestProfile=playtest.status==='fulfilled'?playtest.value:null;
     activeShrineProfile=shrine.status==='fulfilled'?shrine.value:null;
-    if(!activeOracleStrategyProfile||!activePlaytestProfile||!activeShrineProfile||!Playtest)
+    activeVictoryProfile=victory.status==='fulfilled'?victory.value:null;
+    if(!activeOracleStrategyProfile||!activePlaytestProfile||!activeShrineProfile||!activeVictoryProfile||!Playtest)
       throw Error('可玩版必需的神諭策略或場景模組無法載入');
     $('playtestScenario').value=activePlaytestProfile.defaultScenario||'duel';
     // The initial unconfigured render displays the single-God placeholder.
     // Explicitly opt new browser worlds into the AI mode after profiles load.
     $('opponentMode').value='ai';
     newWorld();
-    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     say(failures.length?'Profile 載入失敗：'+failures.join('；'):
       '宗教對決已就緒。AI 選存糧；選育兒 Oracle → 傳下神諭 → 開始。');
   }).catch(err=>{

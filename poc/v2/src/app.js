@@ -879,6 +879,14 @@
       c.fillStyle=kind==='ripening'?'#f3ce6622':kind==='drought'?'#b97e4926':'#9dccde24';
       c.strokeStyle=kind==='ripening'?'#e5c86b':kind==='drought'?'#bf885a':'#bfeaff';
       c.lineWidth=2.5;c.beginPath();c.arc(e.x*size,e.y*size,e.radius*size,0,Math.PI*2);c.fill();c.stroke();
+      // The effect fill explains WHAT is happening; the outside outline
+      // identifies WHICH God cast it. Neither changes the simulation.
+      if(e.godId===state.god.id||e.godId===state.opponentGod?.id){
+        c.strokeStyle=e.godId===state.god.id?'#66c6e5':'#ed8f87';
+        c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();
+        c.arc(e.x*size,e.y*size,e.radius*size+3,0,Math.PI*2);c.stroke();
+        c.setLineDash([]);
+      }
       if(kind==='rain'){
         c.strokeStyle='#acd7e680';
         for(let i=0;i<30;i++){const aa=i*2.39996,rr=(i%10)/10*e.radius*size;const x=e.x*size+Math.cos(aa)*rr,y=e.y*size+Math.sin(aa)*rr;const fall=(time*19+i*13)%24;c.beginPath();c.moveTo(x,y+fall-12);c.lineTo(x-3,y+fall);c.stroke();}

@@ -1,0 +1,46 @@
+name: World of God polity command fast
+on:
+  push:
+    branches:
+      - feature/polity-command-v0.1
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/polity-command-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  polity-fast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Syntax checks
+        working-directory: poc/v2
+        run: |
+          node --check src/politics.js
+          node --check src/sim.js
+          node --check src/app.js
+          node --check src/playtest.js
+          node --check tests/polity-command.test.cjs
+      - name: Polity causal regression (90 seconds max)
+        working-directory: poc/v2
+        run: timeout 90s npm run test:polity
+      - name: Existing core smoke (30 seconds max)
+        working-directory: poc/v2
+        run: timeout 30s npm run smoke
+      - name: Offline bundle compile (20 seconds max)
+        working-directory: poc/v2
+        run: |
+          timeout 20s npm run build:standalone
+          grep -q 'WoGPolitics' dist/World-of-God-PoC-v2.html
+          grep -q 'WOG_POLITY_PROFILE' dist/World-of-God-PoC-v2.html

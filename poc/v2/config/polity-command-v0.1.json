@@ -1,0 +1,23 @@
+{
+  "profileId": "polity-command-v0.1",
+  "status": "experimental-runtime-profile",
+  "enabled": true,
+  "description": "Opt-in human command: real residents form militia, leaders control offense and works, death produces 90-180d command vacancy, actual watchtower materials, physical quarry skirmishes.",
+  "successionMinDays": 90,
+  "successionMaxDays": 180,
+  "vacantCommandFactor": 0.5,
+  "militiaLimit": 2,
+  "minReserveFood": 8,
+  "watchtowerWood": 3,
+  "watchtowerStone": 1,
+  "watchtowerWork": 5,
+  "watchtowerDefense": 2,
+  "commandDefense": 2,
+  "resourceNeedStone": 10,
+  "disputeEveryDays": 14,
+  "disputeCooldownDays": 120,
+  "maxClaimDistance": 25,
+  "maxMarchDays": 18,
+  "marchCellsPerDay": 4,
+  "claimStoneUnits": 1.5
+}

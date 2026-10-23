@@ -152,3 +152,78 @@ test('save/restore including mobile units and elections is deterministic',()=>{
   assert.deepEqual(copy,s);
   good(copy);
 });
+
+test('battle is an observable multi-day event; soldiers are separated and can be healed selectively',()=>{
+  const s=world();
+  for(let day=0;day<65&&!s.politics.disputes.some(c=>c.status==='clashing');day++)
+    days(s,1);
+  const clash=s.politics.disputes.find(c=>c.status==='clashing');
+  assert.ok(clash,'at least one skirmish should enter a visible ongoing phase');
+  assert.equal(clash.roundsCompleted,0);
+  const a=s.politics.polities.find(p=>p.id===clash.aId);
+  const b=s.politics.polities.find(p=>p.id===clash.bId);
+  assert.ok(Math.hypot(a.militia.x-b.militia.x,a.militia.y-b.militia.y)>=3,
+    'opposing armies must have distinct nearby positions for tactical healing');
+  assert.equal(a.militia.stance,'clash');
+  assert.equal(b.militia.stance,'clash');
+  assert.ok(s.attention.items.some(n=>n.type==='battle'&&n.disputeId===clash.id&&n.level==='slow'),
+    'clash must create a real attention signal for fast-forward slowdown');
+  days(s,1);
+  assert.equal(clash.status,'clashing','first clash round cannot immediately settle war');
+  assert.equal(clash.roundsCompleted,1);
+  const wounded=a.militia.memberIds.map(id=>s.people.find(p=>p.id===id&&p.alive));
+  assert.ok(wounded.some(p=>p.health<100),'real soldiers must acquire actual wounds');
+  const opponentHealth=b.militia.memberIds.map(id=>s.people.find(p=>p.id===id).health);
+  const healthBefore=wounded.map(p=>p.health);
+  s.god.dp=s.god.cap;
+  const heal=W.castMiracle(s,'heal',{x:a.militia.x,y:a.militia.y,radius:1,intensity:1});
+  assert.equal(heal.ok,true,heal.reason||'tactical Heal should be possible during combat');
+  assert.ok(wounded.some((p,i)=>p.health>healthBefore[i]),
+    'Heal must visibly repair real participating soldiers');
+  assert.deepEqual(b.militia.memberIds.map(id=>s.people.find(p=>p.id===id).health),opponentHealth,
+    'a small-radius Heal should not heal the opposing formation');
+  days(s,Profile.battleRounds-1);
+  assert.equal(clash.status,'resolved');
+  assert.equal(clash.roundsCompleted,Profile.battleRounds);
+  good(s);
+});
+
+test('killing leader during ongoing clash withdraws the army and blocks new offense',()=>{
+  const s=world();
+  for(let day=0;day<65&&!s.politics.disputes.some(c=>c.status==='clashing');day++)
+    days(s,1);
+  const clash=s.politics.disputes.find(c=>c.status==='clashing');
+  assert.ok(clash,'needs an active multi-day conflict');
+  const a=s.politics.polities.find(p=>p.id===clash.aId);
+  assert.equal(W.die(s,a.leaderId,'測試：領袖在交戰中遭到攻擊').ok,true);
+  assert.equal(clash.status,'withdrawn');
+  assert.equal(a.militia.stance,'return');
+  assert.ok(a.vacantUntilHour>s.hour);
+  days(s,5);
+  assert.notEqual(a.militia.stance,'march');
+  good(s);
+});
+
+test('the opt-in browser shows actual battle on map instead of history-only events',async()=>{
+  const {boot}=require('./browser-harness.cjs');
+  const ui=await boot({politicsProfile:Profile});
+  const s=ui.world();
+  assert.equal(s.politics?.enabled,true);
+  for(let day=0;day<65&&!s.politics.disputes.some(c=>c.status==='clashing');day++)
+    days(s,1);
+  const clash=s.politics.disputes.find(c=>c.status==='clashing');
+  assert.ok(clash);
+  ui.render();
+  const banner=ui.el('battleFocusBtn');
+  assert.equal(banner.hidden,false);
+  assert.match(banner.innerHTML,/石礦交戰中/);
+  assert.match(banner.innerHTML,/回合/);
+  assert.match(ui.el('mapStatus').textContent,/正在石礦交戰/);
+  const drawn=ui.draw();
+  assert.ok(drawn.some(x=>x.kind==='fillText'&&String(x.args[0]).includes('交戰')),
+    'the map must paint a fighting marker, not only a text alert');
+  const first=drawn.filter(x=>x.kind==='fillText'&&x.args[0]==='⚔');
+  assert.ok(first.length,'the battlefield needs an immediately recognizable crossed-swords indicator');
+  banner.onclick();
+  assert.match(banner.title||ui.el('simHint').textContent,/./);
+});

@@ -627,7 +627,12 @@
     $('aiDifficulty').disabled=profileLoading||!state.opponent?.enabled||scenarioId()==='duel';
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
     $('applyAgricultureBtn').disabled=profileLoading||!state.agriculture;
-    $('mapStatus').textContent=profileLoading?'載入平衡設定中…':located?.location?
+    const focused=focusedOracleId&&S.oracleMap(state).find(m=>
+      m.id===focusedOracleId&&m.religionId!==state.religion.id);
+    $('mapStatus').textContent=profileLoading?'載入平衡設定中…':focused?
+      '對手神諭定位：'+focused.religionName+' · '+
+      (availablePowers.oracle.find(o=>o.id===focused.intentType)?.label||focused.intentType)+
+      '（地圖有 Oracle 接收與傳達標記，實際受眾由個人傳播決定）':located?.location?
       `已定位 ${needTitles[located.prayer.type]||'需求'} · ${located.location.locationName} (${format(located.location.center.x)}, ${format(located.location.center.y)})`:
       state.agriculture?(state.nativeWorld?'原住民已在此生活 · Agriculture v0.1':'Agriculture v0.1 · 河流、季節與實際農作物'):
         'Original · 原始平衡對照';
@@ -744,6 +749,7 @@
       dp:i===0?state.god.dp:i===1?state.opponentGod.dp:
         state.additionalGods?.[i-2]?.dp||0
     }));
+    $('faithOverview').classList.toggle('multi-deity',allReligions.length>2);
     $('faithOverview').innerHTML=allReligions.map(({faith,side,role,dp})=>{
       const adherents=state.people.filter(p=>p.alive&&p.religionId===faith.id);
       const believers=adherents.filter(p=>p.devotion>=20).length;

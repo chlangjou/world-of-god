@@ -1038,7 +1038,7 @@
       c.save();c.globalAlpha=oracle.propagated?1:.55;
       c.fillStyle='#112526e8';c.strokeStyle=tint;c.lineWidth=selected?3:1.7;
       const w=label.length*9+13,h=18;
-      c.beginPath();c.roundRect(px-w/2,py-h/2,w,h,5);c.fill();c.stroke();
+      c.fillRect(px-w/2,py-h/2,w,h);c.strokeRect(px-w/2,py-h/2,w,h);
       c.font='bold 11px system-ui';c.textAlign='center';c.textBaseline='middle';
       c.fillStyle=tint;c.fillText(label,px,py);
       if(selected){
@@ -1103,8 +1103,9 @@
       c.lineWidth=2.5;c.beginPath();c.arc(e.x*size,e.y*size,e.radius*size,0,Math.PI*2);c.fill();c.stroke();
       // The effect fill explains WHAT is happening; the outside outline
       // identifies WHICH God cast it. Neither changes the simulation.
-      if(e.godId===state.god.id||e.godId===state.opponentGod?.id){
-        c.strokeStyle=e.godId===state.god.id?'#66c6e5':'#ed8f87';
+      if(allDisplayedFaiths().some(f=>f.godId===e.godId)){
+        const actor=allDisplayedFaiths().find(f=>f.godId===e.godId);
+        c.strokeStyle=factionColor(actor.id);
         c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();
         c.arc(e.x*size,e.y*size,e.radius*size+3,0,Math.PI*2);c.stroke();
         c.setLineDash([]);

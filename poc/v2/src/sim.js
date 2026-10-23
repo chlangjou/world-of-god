@@ -1926,6 +1926,49 @@
     }
     return best;
   }
+  // God-miracle counter selection is based on the individual's real active
+  // Oracle calling; an idle Saint or a historical Oracle is not a target.
+  const ORACLE_MIRACLE_COUNTERS=Object.freeze({
+    'family.nurture':'ripening','food.produce':'harvest',
+    'settlement.explore':'heal','religion.spread':'efficiency'
+  });
+  function oracleMiracleMatch(s,p,type){
+    if(!s.oracleStrategy||!p.religionId)return null;
+    const calling=strategyCalling(s,p).oracle;
+    if(!calling||ORACLE_MIRACLE_COUNTERS[calling.intentType]!==type)return null;
+    return {oracleId:calling.id,intent:calling.intentType};
+  }
+  function oracleMap(s){
+    const result=[];
+    for(const faith of allFaiths(s)){
+      for(const o of faith.oracles||[]){
+        if(o.status!=='active')continue;
+        const saint=s.people.find(p=>p.id===o.saintId&&p.alive);
+        if(!saint)continue;
+        const heard=o.propagatedAtHour!==null;
+        const base={id:o.id,godId:faith.godId,religionId:faith.id,
+          religionName:faith.name,intentType:o.intentType,
+          miracle:ORACLE_MIRACLE_COUNTERS[o.intentType]||null,
+          propagated:heard};
+        result.push({...base,kind:'saint',x:saint.x,y:saint.y,
+          saintId:saint.id,saintName:saint.name,listenerCount:heard?1:0});
+        if(!heard)continue;
+        for(const town of s.settlements){
+          // Only show towns where a real living person currently hears the
+          // active Oracle under the same contact and propagation constraints.
+          const listeners=living(s).filter(p=>
+            personSettlement(s,p)?.id===town.id&&
+            p.religionId===faith.id&&p.devotion>=20&&
+            oracleContact(s,p,o,faith)>0);
+          if(!listeners.length)continue;
+          result.push({...base,kind:'town',townId:town.id,townName:town.name,
+            x:town.x,y:town.y,saintId:saint.id,saintName:saint.name,
+            listenerCount:listeners.length});
+        }
+      }
+    }
+    return result;
+  }
   function spreadCalling(s,p,faith=s.religion){
     if(s.oracleStrategy){
       const focus=strategyCalling(s,p);
@@ -3756,7 +3799,7 @@
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
     settlementReligionStats,priestPetitions,prayerLocation,OPPONENT_DEFAULTS,
     setOpponentDifficulty,MOBILITY_DEFAULTS:MOBILITY.BASE,
-    frontierStatus,
+    frontierStatus,oracleMap,ORACLE_MIRACLE_COUNTERS,
     victoryOverview:s=>VICTORY.overview(s,faithfulWeight),
     resetVictory:(s,profile)=>VICTORY.reset(s,faithfulWeight,profile),
     continueVictory:VICTORY.continueAfterVictory};

@@ -166,11 +166,13 @@ test('battle is an observable multi-day event; soldiers are separated and can be
     'opposing armies must have distinct nearby positions for tactical healing');
   assert.equal(a.militia.stance,'clash');
   assert.equal(b.militia.stance,'clash');
-  assert.ok(s.attention.items.some(n=>n.type==='battle'&&n.disputeId===clash.id&&n.level==='slow'),
-    'clash must create a real attention signal for fast-forward slowdown');
+  assert.ok(s.attention.items.some(n=>n.type==='battle'&&n.disputeId===clash.id&&n.level==='pause'),
+    'first contact must allow the player to react before the first combat round');
   days(s,1);
   assert.equal(clash.status,'clashing','first clash round cannot immediately settle war');
   assert.equal(clash.roundsCompleted,1);
+  assert.ok(s.attention.items.some(n=>n.type==='battle-wounded'&&n.level==='pause'&&n.disputeId===clash.id),
+    'first actual wounds must pause again for targeted Healing');
   const wounded=a.militia.memberIds.map(id=>s.people.find(p=>p.id===id&&p.alive));
   assert.ok(wounded.some(p=>p.health<100),'real soldiers must acquire actual wounds');
   const opponentHealth=b.militia.memberIds.map(id=>s.people.find(p=>p.id===id).health);

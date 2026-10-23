@@ -784,7 +784,7 @@
       const id='r'+(i+3),godId='g'+(i+3);
       const town=s.settlements.find(t=>t.id===villages[i]);
       if(!town)throw Error('多神創世缺少真實原生聚落 '+villages[i]);
-      const homeIds=town.householdIds.slice(0,2);
+      const homeIds=town.householdIds.slice(); // All native founding homes, not only two of three.
       const seedPeople=s.people.filter(p=>p.alive&&homeIds.includes(p.householdId));
       if(seedPeople.length<2||seedPeople.some(p=>p.religionId!==null))
         throw Error('多神創世必須選擇未入教的原生家戶');

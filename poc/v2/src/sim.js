@@ -3248,6 +3248,139 @@
     if(remaining>1e-8)throw Error('新家庭糧食轉移不守恆');
     return true;
   }
+  // Existing households can voluntarily colonize real, resource-bearing land.
+  // This is a low-rate demographic decision, never a player move order.
+  function frontierSite(s,h,town,F){
+    const occupied=s.households.filter(v=>v.id!==h.id&&householdMembers(s,v).length);
+    const unclaimed=occupied.filter(v=>v.home&&v.frontierOriginTownId===town.id&&
+      !s.settlements.some(t=>t.householdIds.includes(v.id)));
+    const sites=[],seen=new Set();
+    function check(pos,joining){
+      const x=pos.x,y=pos.y,key=x+','+y;
+      if(x<2||y<2||x>=s.width-2||y>=s.height-2||seen.has(key))return;
+      seen.add(key);
+      const t=tile(s,x,y);
+      if(t.terrain==='river'||t.terrain==='rock')return;
+      if(s.settlements.some(v=>dist(v,pos)<=s.rules.settlementClusterDistance+1))return;
+      if(occupied.some(v=>dist(v,pos)<F.homeSpacing))return;
+      let food=0,wood=0,fiber=0,goodLand=0;
+      for(let dy=-6;dy<=6;dy+=2)for(let dx=-6;dx<=6;dx+=2){
+        const nx=x+dx,ny=y+dy;
+        if(nx<0||ny<0||nx>=s.width||ny>=s.height||dx*dx+dy*dy>36)continue;
+        const q=tile(s,nx,ny);
+        if(q.terrain==='river')continue;
+        food+=Math.min(2,Math.max(0,q.forage||0))+
+          (q.terrain==='field'?Math.max(0,q.crop||0)*2:0);
+        wood+=Math.min(4,Math.max(0,q.wood||0));
+        fiber+=Math.min(4,Math.max(0,q.fiber||0));
+        if(q.terrain==='meadow'&&q.fertility>=.45)goodLand++;
+      }
+      if(food<2||wood<4||fiber<3||goodLand<2)return;
+      const score=Math.min(food,12)*.09+Math.min(wood,20)*.07+
+        Math.min(fiber,18)*.07+goodLand*.08+t.fertility+
+        t.moisture*.4+(joining?4:0)-
+        .006*dist(town,pos);
+      sites.push({pos,score});
+    }
+    // Prefer joining a viable physical pioneer home, not seeding scattered dots.
+    for(const anchor of unclaimed.slice(0,10))
+      for(let i=0;i<16;i++)for(const radius of [F.frontierJoinMinDistance||4,
+        F.frontierJoinMaxDistance||7]){
+        const angle=i*Math.PI/8;
+        check(nearestLand(s,anchor.x+Math.cos(angle)*radius,
+          anchor.y+Math.sin(angle)*radius),true);
+      }
+    if(!sites.length){
+      for(let i=0;i<24;i++)for(const radius of [F.pioneerMinRadius,F.pioneerMaxRadius]){
+        const angle=i*Math.PI/12;
+        check(nearestLand(s,town.x+Math.cos(angle)*radius,
+          town.y+Math.sin(angle)*radius),false);
+      }
+    }
+    sites.sort((a,b)=>b.score-a.score||a.pos.x-b.pos.x||a.pos.y-b.pos.y);
+    return sites[0]?.pos||null;
+  }
+  function frontierMigration(s){
+    const F=s.agriculture?.familyExpansion;
+    if(!F?.enabled||F.frontierMigrationEnabled!==true||
+      days(s)<(F.frontierEarliestDay||0))return;
+    for(const town of [...s.settlements]){
+      const residents=s.households.filter(h=>town.householdIds.includes(h.id)&&
+        householdMembers(s,h).length);
+      const homes=residents.filter(h=>h.home);
+      if(homes.length<Math.max(3,F.frontierMinOriginHouseholds||4)||
+        town.famineActive||town.workDemand?.foodPressure>.65)continue;
+      const families=homes.filter(h=>h.migrated===0&&
+        householdMembers(s,h).some(p=>p.stage==='adult'&&p.health>=F.minHealth));
+      if(!families.length)continue;
+      const inspired=families.some(h=>householdMembers(s,h).some(p=>
+        strategyCalling(s,p).oracle?.intentType==='settlement.explore'));
+      const multiplier=inspired?num(F.frontierExploreMultiplier,2.2):1;
+      const chance=clamp(num(F.frontierMoveChancePerMonth,.15)*multiplier,0,.9);
+      if(rand(s)>=chance)continue;
+      const sourceNeed=residents.reduce((n,h)=>n+dailyFoodNeed(s,h),0);
+      const surplus=Math.max(0,town.storage.food-sourceNeed*
+        num(F.frontierOriginSafetyDays,7));
+      const sorted=families.sort((a,b)=>b.inventory.food-a.inventory.food||
+        a.id.localeCompare(b.id));
+      for(const h of sorted){
+        const need=dailyFoodNeed(s,h);
+        if(need<=0)continue;
+        const carryGoal=need*num(F.frontierProvisionDays,18);
+        const movedFood=Math.min(Math.max(0,carryGoal-h.inventory.food),surplus);
+        if(h.inventory.food+movedFood+1e-8<
+          need*num(F.frontierMinCarryFoodDays,9))continue;
+        const next=frontierSite(s,h,town,F);
+        if(!next)continue;
+        // Conservation: provisioning transfers real public food to private stores.
+        town.storage.food=Math.max(0,town.storage.food-movedFood);
+        h.inventory.food+=movedFood;
+        const old={x:h.x,y:h.y};
+        moveHousehold(s,h,next,town,true);
+        h.frontierOriginTownId=town.id;
+        h.frontierStartedHour=s.hour;
+        s.counts.frontierDepartures=(s.counts.frontierDepartures||0)+1;
+        log(s,'migration',h.name+' 自主離開 '+town.name+'，前往外地建屋開拓。',
+          ['原聚落有可帶走的實際糧食；轉移 '+movedFood.toFixed(1)+' 單位',
+           '來源 '+old.x+','+old.y+' → '+next.x+','+next.y,
+           inspired?'居民受到可聽見的探索神諭影響':'居民自主尋找新的資源與生活空間']);
+        break; // At most one deliberate frontier departure per town per month.
+      }
+    }
+  }
+  // Read-only physical frontier state for UI and bounded acceptance tests.
+  function frontierStatus(s){
+    const F=s.agriculture?.familyExpansion;
+    if(!F?.enabled)return {enabled:false,camps:[],formed:0};
+    const unclaimed=s.households.filter(h=>h.frontierOriginTownId&&
+      householdMembers(s,h).length&&
+      !s.settlements.some(t=>t.householdIds.includes(h.id)));
+    const ordered=[...unclaimed].sort((a,b)=>Number(b.home)-Number(a.home)||
+      Number(a.id.slice(1))-Number(b.id.slice(1)));
+    const seen=new Set(),camps=[];
+    for(const anchor of ordered){
+      if(seen.has(anchor.id))continue;
+      const group=ordered.filter(h=>!seen.has(h.id)&&
+        dist(h,anchor)<=F.outpostClusterRadius);
+      for(const h of group)seen.add(h.id);
+      const built=group.filter(h=>h.home).length;
+      camps.push({originTownId:anchor.frontierOriginTownId||null,
+        x:Math.round(group.reduce((n,h)=>n+h.x,0)/group.length),
+        y:Math.round(group.reduce((n,h)=>n+h.y,0)/group.length),
+        households:group.length,builtHomes:built,
+        missingHouseholds:Math.max(0,F.outpostMinHouseholds-group.length),
+        missingHomes:Math.max(0,F.outpostMinHuts-built),
+        names:group.map(h=>h.name)});
+    }
+    return {enabled:true,formed:s.counts.newSettlements||0,
+      departures:s.counts.frontierDepartures||0,
+      waiting:unclaimed.length,camps,
+      neededHouseholds:F.outpostMinHouseholds,neededHomes:F.outpostMinHuts,
+      originMinHouseholds:F.frontierMinOriginHouseholds||4,
+      origins:s.settlements.map(t=>({townId:t.id,name:t.name,
+        households:t.householdIds.filter(id=>s.households.some(h=>h.id===id&&
+          householdMembers(s,h).length)).length}))};
+  }
   function formNewHouseholds(s){
     const F=s.agriculture?.familyExpansion;
     if(!F?.enabled||!s.settlements.length)return;
@@ -3540,6 +3673,7 @@
     issueOracle,concludeOracle,checkOracle,die,validate,restore,days,inspectHousehold,applyAgricultureProfile,
     settlementReligionStats,priestPetitions,prayerLocation,OPPONENT_DEFAULTS,
     setOpponentDifficulty,MOBILITY_DEFAULTS:MOBILITY.BASE,
+    frontierStatus,
     victoryOverview:s=>VICTORY.overview(s,faithfulWeight),
     resetVictory:(s,profile)=>VICTORY.reset(s,faithfulWeight,profile),
     continueVictory:VICTORY.continueAfterVictory};

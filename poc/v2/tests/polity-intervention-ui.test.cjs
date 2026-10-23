@@ -37,7 +37,7 @@ for(const speed of [1,16]){
     advanceUntil(session,()=>ui.runtime().paused&&!!engaged(s));
     const c=engaged(s);
     assert.equal(ui.runtime().paused,true);
-    assert.equal(ui.runtime().speed,1,'fast-forward should reset to human observation speed');
+    assert.equal(ui.runtime().speed,0.1,'combat resumes at 0.1x for deliberate intervention');
     assert.equal(c.roundsCompleted,0,'the first contact may not deal hidden damage');
     assert.equal(ui.el('battleFocusBtn').hidden,false,'battle must be visible');
     assert.match(ui.el('battleFocusBtn').innerHTML,/交戰/);
@@ -67,5 +67,23 @@ test('first combat wounds pause time again; God can Heal militia without advanci
   assert.ok(injured.health>health,'the player should be able to Heal a combatant');
   assert.equal(s.hour,clock,'casting during pause does not advance simulation time');
   assert.equal(ui.runtime().paused,true,'Miracle casting may not unpause the game');
+  assert.deepEqual(W.validate(s).errors,[]);
+});
+
+
+test('0.1× is a real selectable speed: one 8-hour tick takes about 6.67 real seconds',async()=>{
+  const ui=await boot({politicsProfile:{...config,enabled:false}}),s=ui.world();
+  const slow=ui.speedButton(0.1);
+  assert.ok(slow&&typeof slow.onclick==='function','0.1× must be in the clickable speed toolbar');
+  slow.onclick();
+  assert.equal(ui.runtime().speed,0.1);
+  assert.ok(slow.classList.contains('active'),'slow motion should be visibly selected');
+  assert.match(ui.el('simRate').textContent,/0\.1×.*20\.00 秒/);
+  ui.el('pauseBtn').onclick();
+  const tick=s.tick;
+  for(let i=1;i<=25;i++)ui.frame(i*250);
+  assert.equal(s.tick,tick,'world must not run one 8-hour tick in only six seconds');
+  for(let i=26;i<=32;i++)ui.frame(i*250);
+  assert.equal(s.tick,tick+1,'world must run an 8-hour tick after roughly 6.67 seconds');
   assert.deepEqual(W.validate(s).errors,[]);
 });

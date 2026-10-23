@@ -388,6 +388,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
           <div><h2>世界觀察</h2><p id="mapStatus">居民自主生活，神明可介入自然。</p></div>
           <div class="time-bar" aria-label="模擬速度">
             <button id="pauseBtn" class="btn primary" disabled>▶ 開始</button>
+            <button class="btn speed" data-speed="0.1" title="慢速觀察：20 秒／模擬日">0.1×</button>
             <button class="btn speed active" data-speed="1">1×</button>
             <button class="btn speed" data-speed="4">4×</button>
             <button class="btn speed" data-speed="16">16×</button>
@@ -5813,6 +5814,14 @@ if(root)root.WOG_PLAYTEST=API;
   let lastAttentionSeq=0,attentionFocus=null;
   let presentedVictoryHour = null;
   const ticksPerRealSecond = 12 / 8;
+  const SPEED_PRESETS = Object.freeze([0.1,1,4,16]);
+  function selectSpeed(value){
+    if(!SPEED_PRESETS.includes(value))return false;
+    speed=value;acc=0;
+    document.querySelectorAll('[data-speed]').forEach(b=>
+      b.classList.toggle('active',Number(b.dataset.speed)===value));
+    return true;
+  }
   const format = (v, n=0) => Number(v || 0).toFixed(n);
   const html = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -7276,20 +7285,18 @@ if(root)root.WOG_PLAYTEST=API;
     const note=notes.find(v=>v.type==='battle'||v.type==='battle-wounded')||
       notes.find(v=>v.level==='pause')||notes.find(v=>v.level==='slow');
     if(!note)return false;
-    speed=1;acc=0;
-    document.querySelectorAll('[data-speed]').forEach(b=>
-      b.classList.toggle('active',Number(b.dataset.speed)===1));
+    selectSpeed(note.type==='battle'||note.type==='battle-wounded'?0.1:1);
     attentionFocus=note;
     if(note.type==='battle'||note.type==='battle-wounded'){
       selectedDisputeId=note.disputeId;
-      // UI gate: the simulation has not applied any combat damage at first
-      // contact, and waits for the human God to press Continue. No real-time
-      // reaction deadline, even when the prior speed was 16×.
+      // First contact auto-pauses before damage. Resuming defaults to 0.1×,
+      // giving 20 real seconds per simulation day; users can still change it.
+      // No real-time reaction deadline, even when prior speed was 16×.
       paused=true;
       attentionFocus={...note,level:'pause'};
       say(note.type==='battle'?
-        '民兵接戰，模擬已自動暫停（尚未造成戰鬥傷害）。可先觀察雙方並選擇神蹟，按繼續才會交戰。':
-        '首輪交戰出現傷兵，模擬已自動暫停。可使用 Heal 或其他合法 Miracle；按繼續才進入下一回合。');
+        '民兵接戰，模擬已自動暫停（尚未造成戰鬥傷害）。已切至 0.1×；按繼續後慢速交戰，仍可施放神蹟。':
+        '首輪交戰出現傷兵，模擬已自動暫停。已切至 0.1×；可先 Heal，按繼續才進入下一回合。');
       render();return true;
     }
     if(note.level==='pause'){
@@ -7357,7 +7364,9 @@ if(root)root.WOG_PLAYTEST=API;
     render();
   };
   $('pauseBtn').onclick=()=>{if(paused&&state.victory?.winner&&!state.victory.continued){showVictoryDialog();return;}paused=!paused;render();};
-  document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>{speed=+btn.dataset.speed;document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',b===btn));render();});
+  document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>{
+    selectSpeed(Number(btn.dataset.speed));render();
+  });
   ['radius','intensity','duration'].forEach(id=>$(id).addEventListener('input',()=>{
     rememberMiracleSettings();updateCost();draw();
   }));

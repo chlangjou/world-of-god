@@ -47,7 +47,13 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   });
   canvas.getContext=()=>ctx;
   const documentListeners={};
-  const doc={getElementById:get,querySelectorAll:()=>[],
+  const speedButtons=[0.1,1,4,16].map(rate=>{
+    const classes=new Set();
+    return {dataset:{speed:String(rate)},onclick:null,
+      classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name);},
+        contains:name=>classes.has(name)}};
+  });
+  const doc={getElementById:get,querySelectorAll:selector=>selector==='[data-speed]'?speedButtons:[],
     addEventListener(name,handler){documentListeners[name]=handler;},
     activeElement:{tagName:'BODY'}};
   // Existing UI interaction regressions exercise the original open-ended
@@ -76,6 +82,7 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   return {
     el:get,canvas,render:()=>win.__render(),draw:()=>{drawing.length=0;win.__draw();return drawing;},world:()=>win.__getWorld(),
     frame:t=>win.__frame(t),runtime:()=>win.__runtime(),setSpeed:x=>win.__setSpeed(x),
+    speedButton:x=>speedButtons.find(b=>Number(b.dataset.speed)===x),
     choose:id=>{get('divinePowerSelect').value=id;get('divinePowerSelect').onchange();},
     set:(id,value)=>{get(id).value=String(value);get(id).listeners.input();},
     key:(key,options={})=>{

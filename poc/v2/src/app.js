@@ -978,9 +978,10 @@
     // Buildings and informal gathering places; neither is a Divine Presence source.
     for(const site of state.religiousSites||[]){
       const px=(site.x+.5)*size,py=(site.y+.5)*size;
-      const own=site.religionId===state.religion.id;
-      c.save();c.strokeStyle=own?'#95def4':'#ffaf93';
-      c.fillStyle=own?'#447b8b':'#a35c50';c.lineWidth=1.8;
+      const color=factionColor(site.religionId);
+      c.save();c.strokeStyle=color;
+      c.fillStyle=site.religionId===state.religion.id?'#447b8b':'#554b4d';
+      c.lineWidth=1.8;
       if(site.stage==='temple'){
         c.fillRect(px-size*.85,py-size*.35,size*1.7,size*1.15);
         c.strokeRect(px-size*.85,py-size*.35,size*1.7,size*1.15);
@@ -1024,17 +1025,39 @@
           (origin.at.y-5)*size);c.restore();
       }
     }
+    // Actual active Oracle transmission: visible town listeners and living
+    // Saint sources only. Badge number is listeners, not a blanket area buff.
+    for(const oracle of opponentOracleMarkers()){
+      const point=oracleMarkerPosition(oracle);
+      const px=(point.x+.5)*size,py=(point.y+.5)*size;
+      const tint=factionColor(oracle.religionId);
+      const letter={'family.nurture':'育','food.produce':'糧',
+        'settlement.explore':'拓','religion.spread':'傳'}[oracle.intentType]||'諭';
+      const label=oracle.kind==='town'?letter+oracle.listenerCount:'S'+letter;
+      const selected=focusedOracleId===oracle.id;
+      c.save();c.globalAlpha=oracle.propagated?1:.55;
+      c.fillStyle='#112526e8';c.strokeStyle=tint;c.lineWidth=selected?3:1.7;
+      const w=label.length*9+13,h=18;
+      c.beginPath();c.roundRect(px-w/2,py-h/2,w,h,5);c.fill();c.stroke();
+      c.font='bold 11px system-ui';c.textAlign='center';c.textBaseline='middle';
+      c.fillStyle=tint;c.fillText(label,px,py);
+      if(selected){
+        c.setLineDash([3,3]);c.strokeStyle='#fff0c7';c.lineWidth=1.7;
+        c.beginPath();c.arc(px,py,Math.max(13,size*1.8),0,2*Math.PI);c.stroke();
+      }
+      c.restore();
+    }
     visibleInjured=state.people.filter(p=>p.alive&&p.health<95).map(p=>({id:p.id,x:p.x,y:p.y}));
-    const saintIds=new Set(state.religion.saints), priestIds=new Set(state.religion.priests);
-    const rivalSaintIds=new Set(state.opponentReligion?.saints||[]),
-      rivalPriestIds=new Set(state.opponentReligion?.priests||[]);
+    const allFaithForMap=allDisplayedFaiths();
     for(const p of state.people){if(!p.alive)continue;const px=(p.x+.5)*size,py=(p.y+.5)*size;
-      const saint=saintIds.has(p.id),priest=priestIds.has(p.id),
-        rivalSaint=rivalSaintIds.has(p.id),rivalPriest=rivalPriestIds.has(p.id),
-        rival=p.religionId===state.opponentReligion?.id;
+      const faction=allFaithForMap.find(f=>f.id===p.religionId);
+      const saint=!!faction?.saints.includes(p.id),priest=!!faction?.priests.includes(p.id);
+      const rivalSaint=saint&&faction.id!==state.religion.id;
+      const rivalPriest=priest&&faction.id!==state.religion.id;
+      const rival=faction&&faction.id!==state.religion.id;
       c.beginPath();c.arc(px,py,p.stage==='child'?size*.23:size*.32,0,Math.PI*2);
-      c.fillStyle=rivalSaint?'#ff7d98':rivalPriest?'#f0a070':rival?'#cf7775':
-        saint?'#80e4eb':priest?'#c4a2fa':p.devotion>=40?'#f6d2a0':p.devotion>=20?'#e1e6c2':'#bcd9d2';
+      c.fillStyle=rivalSaint?'#ff8ca7':rivalPriest?'#ffd69e':
+        faction?factionColor(faction.id):p.devotion>=20?'#e1e6c2':'#bcd9d2';
       c.fill();c.strokeStyle='#21342fcc';c.lineWidth=1.4;c.stroke();
       if(p.mobilityTrip){
         c.strokeStyle='#f4e2ae';c.lineWidth=1.2;c.setLineDash([2,2]);

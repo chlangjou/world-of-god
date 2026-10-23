@@ -5,7 +5,7 @@
   "description": "Modular Web PoC v2; main/docs retains design authority",
   "scripts": {
     "start": "node tools/serve.cjs",
-    "test": "node --test tests/core.test.cjs tests/layout.test.cjs tests/religion.test.cjs tests/granary.test.cjs tests/priest.test.cjs tests/divine-powers.test.cjs tests/need-location.test.cjs tests/miracle-parameters.test.cjs tests/miracle-cooldowns.test.cjs tests/opponent.test.cjs tests/native-world.test.cjs tests/miracle-faith-evidence.test.cjs tests/cooldown-escalation.test.cjs tests/opponent-difficulty.test.cjs tests/strategy-reversal-evaluation.test.cjs tests/strategy-late-comeback-p2.test.cjs tests/oracle-specialization.test.cjs tests/oracle-30-core-ratio-sweep.test.cjs tests/oracle-core30-cadence-loss-sweep.test.cjs tests/oracle-attraction-evidence.test.cjs tests/playable-world.test.cjs tests/mobility-contact.test.cjs tests/victory.test.cjs",
+    "test": "node --test tests/core.test.cjs tests/layout.test.cjs tests/religion.test.cjs tests/granary.test.cjs tests/priest.test.cjs tests/divine-powers.test.cjs tests/need-location.test.cjs tests/miracle-parameters.test.cjs tests/miracle-cooldowns.test.cjs tests/opponent.test.cjs tests/native-world.test.cjs tests/miracle-faith-evidence.test.cjs tests/cooldown-escalation.test.cjs tests/opponent-difficulty.test.cjs tests/strategy-reversal-evaluation.test.cjs tests/strategy-late-comeback-p2.test.cjs tests/oracle-specialization.test.cjs tests/oracle-30-core-ratio-sweep.test.cjs tests/oracle-core30-cadence-loss-sweep.test.cjs tests/oracle-attraction-evidence.test.cjs tests/playable-world.test.cjs tests/mobility-contact.test.cjs tests/victory.test.cjs tests/frontier-playable.test.cjs",
     "smoke": "node tests/smoke.cjs",
     "check:agriculture": "node tools/agriculture-balance-check.mjs --check && node tools/agriculture-climate-check.mjs --check",
     "build:standalone": "node tools/build-single.cjs",
@@ -18,7 +18,7 @@
     "evaluate:oracle:cadence": "node --max-old-space-size=512 tools/oracle-core30-cadence-loss-sweep.cjs",
     "evaluate:oracle:attraction": "node --max-old-space-size=512 tools/oracle-attraction-evidence-study.cjs",
     "build:playable": "node tools/build-single.cjs",
-    "test:fast": "node --test tests/mobility-contact-fast.test.cjs tests/miracle-parameters.test.cjs tests/shrine-temple.test.cjs tests/victory.test.cjs"
+    "test:fast": "node --test tests/mobility-contact-fast.test.cjs tests/miracle-parameters.test.cjs tests/shrine-temple.test.cjs tests/victory.test.cjs tests/frontier-playable.test.cjs"
   },
   "engines": {
     "node": ">=22"

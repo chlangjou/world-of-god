@@ -595,7 +595,8 @@
     const title=c.status==='marching'?'正在向石礦進軍':
       c.status==='clashing'?'石礦交戰中':'石礦衝突已結束';
     const status=c.status==='clashing'?
-      '第 '+(c.roundsCompleted||0)+' / '+(state.politics.battleRounds||3)+' 回合 · 可施放 Heal 介入':
+      '第 '+(c.roundsCompleted||0)+' / '+(state.politics.battleRounds||3)+' 回合 · '+
+      (paused?'模擬已暫停，可選擇神蹟後按繼續':'交戰中，可施放 Heal 介入'):
       c.status==='marching'?'雙方民兵正沿地圖行軍；接觸時將自動降至 1×':
       (c.winnerId?'勝方：'+townName(state.politics.polities.find(p=>p.id===c.winnerId)):'雙方撤退');
     return {title,status,a,b,sideA:side(a),sideB:side(b)};
@@ -1148,7 +1149,10 @@
       }
       c.restore();
     }
-    visibleInjured=state.people.filter(p=>p.alive&&p.health<95).map(p=>({id:p.id,x:p.x,y:p.y}));
+    const militiaIds=new Set((state.politics?.polities||[]).flatMap(v=>v.militia.memberIds));
+    visibleInjured=state.people.filter(p=>p.alive&&
+      (p.health<95||(militiaIds.has(p.id)&&p.health<100)))
+      .map(p=>({id:p.id,x:p.x,y:p.y}));
     const allFaithForMap=allDisplayedFaiths();
     for(const p of state.people){if(!p.alive)continue;
       const soldierOf=(state.politics?.polities||[]).find(polity=>
@@ -1200,7 +1204,8 @@
         c.strokeStyle='#f4e2ae';c.lineWidth=1.2;c.setLineDash([2,2]);
         c.beginPath();c.arc(px,py,size*.56,0,Math.PI*2);c.stroke();c.setLineDash([]);
       }
-      if(p.campInjury&&!p.campInjury.recoveredAtHour&&p.health<95){
+      if((p.campInjury&&!p.campInjury.recoveredAtHour&&p.health<95)||
+        (soldierOf&&p.health<100)){
         c.save();c.strokeStyle='#e53f48';c.lineWidth=Math.max(2,size*.25);
         c.beginPath();c.moveTo(px-size*.35,py-size*.72);
         c.lineTo(px+size*.35,py-size*.72);
@@ -1469,16 +1474,23 @@
     if(selected && dd<3.2){chosen=selected.id;showInspector('person');say(`正在觀察 ${selected.name} 的生活與工作選擇`);}else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
   }
   function receiveFastForwardNotice(notes){
-    const note=notes.find(v=>v.level==='pause')||notes.find(v=>v.level==='slow');
+    const note=notes.find(v=>v.type==='battle'||v.type==='battle-wounded')||
+      notes.find(v=>v.level==='pause')||notes.find(v=>v.level==='slow');
     if(!note)return false;
     speed=1;acc=0;
     document.querySelectorAll('[data-speed]').forEach(b=>
       b.classList.toggle('active',Number(b.dataset.speed)===1));
     attentionFocus=note;
-    if(note.type==='battle'){
+    if(note.type==='battle'||note.type==='battle-wounded'){
       selectedDisputeId=note.disputeId;
-      paused=false;
-      say('石礦交戰開始：自動降為 1×；地圖兩側有各自的民兵，可使用 Heal 等合法神蹟介入。');
+      // UI gate: the simulation has not applied any combat damage at first
+      // contact, and waits for the human God to press Continue. No real-time
+      // reaction deadline, even when the prior speed was 16×.
+      paused=true;
+      attentionFocus={...note,level:'pause'};
+      say(note.type==='battle'?
+        '民兵接戰，模擬已自動暫停（尚未造成戰鬥傷害）。可先觀察雙方並選擇神蹟，按繼續才會交戰。':
+        '首輪交戰出現傷兵，模擬已自動暫停。可使用 Heal 或其他合法 Miracle；按繼續才進入下一回合。');
       render();return true;
     }
     if(note.level==='pause'){
@@ -1508,8 +1520,14 @@
         if(speed<=1){
           for(let i=0;i<count;i++){
             S.advanceTicks(state,1);
-            lastAttentionSeq=state.attention?.seq||lastAttentionSeq;
             if(announceVictoryIfNeeded())break;
+            const items=(state.attention?.items||[]).filter(n=>n.seq>lastAttentionSeq);
+            lastAttentionSeq=state.attention?.seq||lastAttentionSeq;
+            // Ordinary prayer slowdown stays a fast-forward feature.
+            // Actual combat, however, must pause even at 1×.
+            if(items.some(n=>n.type==='battle'||n.type==='battle-wounded')&&
+              receiveFastForwardNotice(items.filter(n=>
+                n.type==='battle'||n.type==='battle-wounded')))break;
           }
         }else{
           // Check each simulation tick, not the end of a fast-forward batch:

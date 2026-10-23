@@ -311,7 +311,7 @@ function resolveDisputes(s,emit,die,notify){
         ['雙方實際抵達礦區；交戰預計 '+cfg.battleRounds+' 日',
          '玩家可在交戰期間使用合法 Miracle；不需指揮士兵']);
       if(typeof notify==='function')
-        notify(s,'slow','battle','石礦交戰：'+townA.name+' vs '+townB.name,
+        notify(s,'pause','battle','石礦交戰：'+townA.name+' vs '+townB.name,
           c.site,{disputeId:c.id});
       continue;
     }
@@ -333,6 +333,12 @@ function resolveDisputes(s,emit,die,notify){
     c.roundsCompleted++;
     c.lastRoundAtHour=s.hour;
     if(c.status!=='clashing')continue; // a participant death could break command
+    if(c.roundsCompleted===1&&c.roundsCompleted<cfg.battleRounds&&typeof notify==='function'){
+      const wa=ua.memberIds.filter(id=>s.people.some(p=>p.id===id&&p.alive&&p.health<100)).length;
+      const wb=ub.memberIds.filter(id=>s.people.some(p=>p.id===id&&p.alive&&p.health<100)).length;
+      if(wa+wb>0)notify(s,'pause','battle-wounded','石礦首輪交戰出現傷兵',c.site,
+        {disputeId:c.id,woundedCount:wa+wb});
+    }
     if(c.roundsCompleted<cfg.battleRounds)continue;
     const strengthA=defense(s,a,c.site).total,strengthB=defense(s,b,c.site).total;
     const tie=(hash(s.seed+'|battle|'+c.id)/4294967296-.5)*.3;

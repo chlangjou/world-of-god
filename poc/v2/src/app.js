@@ -38,6 +38,24 @@
       {id:'life.balance',label:'Reset · 回歸自主',hint:'神很滿意你們的行為，放下執著去追尋自己的需求'}
     ]
   };
+  function activeOracleNames(faith){
+    const current=(faith?.oracles||[]).filter(o=>o.status==='active');
+    const names=current.map(o=>availablePowers.oracle.find(a=>a.id===o.intentType)?.label||o.intentType);
+    return names.length?names.join('／'):'未發布';
+  }
+  function eventFaction(event){
+    if(event.godId===state.god.id)return 'player';
+    if(state.opponentGod&&event.godId===state.opponentGod.id)return 'opponent';
+    if(event.godId)return 'neutral';
+    // Only unambiguous old saved event text can be interpreted. Otherwise do
+    // not invent an affiliation for a historical event without provenance.
+    const own=event.text?.includes(state.religion.name);
+    const enemy=state.opponentReligion&&event.text?.includes(state.opponentReligion.name);
+    if(own&&!enemy)return 'player';
+    if(enemy&&!own)return 'opponent';
+    if(/^(你施展|你向|神諭交給|神宣告)/.test(event.text||''))return 'player';
+    return 'neutral';
+  }
   // Purely presentational input presets: each Miracle retains its last chosen
   // radius, intensity and duration; Oracle selection is remembered separately.
   // No presets are written into the deterministic World state or save schema.
@@ -435,6 +453,14 @@
     $('devotionMetric').title=duel?
       '淨改宗追蹤開局雙方各15名原始居民；剛改宗的居民尚不屬於40+核心信徒':
       '信眾代表 20+；上方大字信徒代表 40+';
+    const myOracles=activeOracleNames(state.religion);
+    const enemyOracles=state.opponent?.enabled?activeOracleNames(state.opponentReligion):'無對手';
+    $('oracleDuelStatus').innerHTML=
+      '<span class="side-player">己：'+html(myOracles)+'</span>'+
+      (state.opponent?.enabled?'　<span class="side-opponent">敵：'+html(enemyOracles)+'</span>':'');
+    $('oracleDuelStatus').title='目前有效 Oracle（非歷史記錄）｜'+
+      state.religion.name+'：'+myOracles+
+      (state.opponent?.enabled?'｜'+state.opponentReligion.name+'：'+enemyOracles:'');
     $('powerMetric').textContent=format(state.god.dp,1);$('powerRate').textContent=`+${format(st.dpRateDay,2)} DP / 模擬日`;
     $('powerFill').style.width=Math.min(100,state.god.dp/state.god.cap*100)+'%';
     $('pauseBtn').textContent=paused?'▶ 開始 / 繼續':'Ⅱ 暫停';
@@ -549,29 +575,60 @@
     $('settlementSelect').disabled=!state.settlements.length;
     const town=state.settlements.find(t=>t.id===selectedTownId)||state.settlements[0];
     const localReligion=town?S.settlementReligionStats(state,town.id):null;
-    const rivalTown=town&&state.opponent?.enabled?
-      `<p title="${html(state.opponentReligion.name)}：S=Saint，P=Priest；對手以真實信徒恢復神力">對手：信眾 ${localReligion.opponentBelievers} ·
-        40+ ${localReligion.opponentFollowers} · S${localReligion.opponentSaints}/P${localReligion.opponentPriests}
-        · ${format(state.opponentGod.dp)} DP</p>`:'';
-    const reserveHint=town?.workDemand?.reserveTargetDays?
-      ` · 儲糧目標 ${town.workDemand.reserveTargetDays} 日`:'';
-    const granary=town?.granary;
-    const granaryStatus=granary?.built?'已建成':
-      granary?.materialsPaid?'建造中':granary?'籌備建材':'尚無計畫';
-    $('townPanel').innerHTML=town?`<p><b>${html(town.name)}</b>${town.native?' · 原生聚落':''} · 第 ${Math.floor(town.foundedAtHour/24)+1} 日形成。${town.famineActive?' · 目前正處於飢荒危機':''}</p><p title="信眾為 Devotion 20+；信徒為 40+。Saint 與 Priest 是獨立角色。">宗教：信眾 ${localReligion.believers}/${localReligion.population} · 未入教 ${localReligion.unaffiliated} · 信徒 ${localReligion.followers} · Saint ${localReligion.saints} / Priest ${localReligion.priests} · 神諭 ${localReligion.activeOracles}</p>${rivalTown}<p title="未完成糧倉時，公共糧食以臨時共同儲備方式保管並保持可及；真正的糧倉需使用本聚落材料及居民建造。">公共糧倉：${granaryStatus} · 本地公糧 ${format(town.storage.food)} · 石材 ${format(town.storage.stone,1)}${reserveHint}</p><div class="details-grid"><div><small>共享糧食</small><b>${format(town.storage.food)}</b></div><div><small>共享木材</small><b>${format(town.storage.wood)}</b></div><div><small>食物需求壓力</small><b>${format(town.workDemand.foodPressure*100)}%</b></div><div><small>住房需求</small><b>${format(town.workDemand.housingPressure*100)}%</b></div></div>`:
-      `<p>尚未形成正式聚落。當附近家戶實際收集材料、完成至少 ${state.rules.settlementMinHuts} 座住所並維持聚居，才會開始共同生活。</p><div class="details-grid"><div><small>已建住屋</small><b>${st.houses}</b></div><div><small>仍需住屋</small><b>${st.householdsUnhoused}</b></div></div>`;
-    if(town){
-      const venues=(state.religiousSites||[]).filter(site=>site.townId===town.id);
-      const names={gathering:'自然集會點',shrine:'Shrine',temple:'Temple',ruin:'遺址'};
-      $('townPanel').innerHTML+='<p title="宗教設施不會直接增加 Divine Power、Local Presence 或 Devotion；活動須居民實際到場">宗教設施：'+
-        (venues.length?venues.map(v=>{
-          const owner=v.religionId===state.religion.id?state.religion.name:
-            state.opponentReligion?.name||'其他宗教';
-          return html(owner)+' '+(names[v.stage]||v.stage)+
-            (v.proposed?'（籌建 '+html(v.proposed)+'）':'')+
-            ' · 近30日 '+(v.visits||[]).length+' 次集會';
-        }).join(' / '):'尚未形成')+'</p>';
-    }
+    // This inspector represents religious competition, not town accounting.
+    // Existing household controls are retained hidden for old UI test bindings.
+    const allReligions=[{faith:state.religion,side:'player',role:'己方',dp:state.god.dp},
+      ...(state.opponent?.enabled?[{faith:state.opponentReligion,side:'opponent',
+        role:'對手',dp:state.opponentGod.dp}]:[])];
+    $('faithOverview').innerHTML=allReligions.map(({faith,side,role,dp})=>{
+      const adherents=state.people.filter(p=>p.alive&&p.religionId===faith.id);
+      const believers=adherents.filter(p=>p.devotion>=20).length;
+      const core=adherents.filter(p=>p.devotion>=40).length;
+      const active=(faith.oracles||[]).filter(o=>o.status==='active');
+      const saintIds=new Set(faith.saints||[]),priestIds=new Set(faith.priests||[]);
+      const livingSaints=adherents.filter(p=>saintIds.has(p.id)).length;
+      const livingPriests=adherents.filter(p=>priestIds.has(p.id)).length;
+      const shrineCount=(state.religiousSites||[]).filter(v=>v.religionId===faith.id&&v.stage==='shrine').length;
+      const templeCount=(state.religiousSites||[]).filter(v=>v.religionId===faith.id&&v.stage==='temple').length;
+      const oracleSummary=active.length?active.slice(0,2).map(o=>
+        availablePowers.oracle.find(x=>x.id===o.intentType)?.label||o.intentType).join('／')+
+        (active.length>2?' +'+(active.length-2):''):'尚無有效神諭';
+      const detail=active.map(o=>{
+        const owner=state.people.find(p=>p.id===o.saintId);
+        return (availablePowers.oracle.find(x=>x.id===o.intentType)?.label||o.intentType)+
+          ' · '+(owner?.name||'Saint 已離世')+
+          ' · 第'+Math.floor(o.issuedAtHour/24+1)+'日發布'+
+          (o.propagatedAtHour===null?'（尚未傳播）':'（已傳達）');
+      }).join('\n');
+      return '<div class="faith-card side-'+side+'" title="'+html(detail||'目前沒有有效 Oracle')+'">'+
+        '<strong>'+role+' · '+html(faith.name)+'</strong>'+
+        '<span class="faith-active">Oracle：'+html(oracleSummary)+'</span>'+
+        '<small>核心 40+：'+core+' · 信眾 20+：'+believers+'</small>'+
+        '<small>Saint '+livingSaints+' / Priest '+livingPriests+' · DP '+format(dp,1)+'</small>'+
+        '<small>Shrine '+shrineCount+' · Temple '+templeCount+'</small></div>';
+    }).join('');
+    const names={gathering:'聚會點',shrine:'Shrine',temple:'Temple',ruin:'遺址'};
+    const sites=town?(state.religiousSites||[]).filter(v=>v.townId===town.id):[];
+    const venue=sites.length?sites.map(v=>{
+      const owner=v.religionId===state.religion.id?'己':'敵';
+      return owner+' '+(names[v.stage]||v.stage)+(v.proposed?' → 籌建'+names[v.proposed]:'')+
+        '（近30日 '+(v.visits||[]).length+' 次）';
+    }).join('、'):'尚無固定宗教設施';
+    const myPresence=town?S.presenceAt(state,town,state.religion.id):null;
+    const enemyPresence=town&&state.opponent?.enabled?S.presenceAt(state,town,state.opponentReligion.id):null;
+    $('townPanel').innerHTML=town?'<div class="religion-local">'+
+      '<b>'+html(town.name)+'</b> · '+(town.native?'原生聚落':'居民聚落')+
+      '<div>己方：核心 '+localReligion.followers+'／信眾 '+localReligion.believers+
+      ' · Saint '+localReligion.saints+' / Priest '+localReligion.priests+'</div>'+
+      (state.opponent?.enabled?'<div>對手：核心 '+localReligion.opponentFollowers+
+        '／信眾 '+localReligion.opponentBelievers+' · Saint '+localReligion.opponentSaints+
+        ' / Priest '+localReligion.opponentPriests+'</div>':'')+
+      '<div>未入教 '+localReligion.unaffiliated+' · 當地 Presence：己 '+
+      format((myPresence?.share||0)*100)+'%'+
+      (enemyPresence?' / 敵 '+format(enemyPresence.share*100)+'%':'')+
+      '（須同時看有效密度）</div>'+
+      '<div>設施：'+html(venue)+'</div></div>':
+      '<div class="religion-local">尚未形成聚落。宗教仍可由個別信徒自主發展。</div>';
     const filteredHomes=town?state.households.filter(h=>town.householdIds.includes(h.id)):state.households;
     const housePageSize=2;
     const housePages=Math.max(1,Math.ceil(filteredHomes.length/housePageSize));
@@ -647,7 +704,11 @@
       const oldNewestId=feed.firstElementChild?.dataset.eventId;
       const readingOlder=oldTop>4;
       feed.innerHTML=state.events.slice().reverse()
-        .map(e=>`<div class="event ${html(e.kind)}" data-event-id="${html(e.id)}"><small>第 ${Math.floor(e.hour/24)+1} 日 · ${html(e.kind)}</small><div>${html(e.text)}</div>${e.reasons?.length?`<details><summary>原因</summary>${e.reasons.map(x=>'<div>'+html(x)+'</div>').join('')}</details>`:''}</div>`).join('')||'<div class="muted">尚無重大歷史事件</div>';
+        .map(e=>{
+          const side=eventFaction(e);
+          const sideLabel=side==='player'?'己方':side==='opponent'?'對手':'中立／未標示';
+          return `<div class="event ${html(e.kind)} side-${side}" data-event-id="${html(e.id)}"><small><span class="event-source">${sideLabel}</span>第 ${Math.floor(e.hour/24)+1} 日 · ${html(e.kind)}</small><div>${html(e.text)}</div>${e.reasons?.length?`<details><summary>原因</summary>${e.reasons.map(x=>'<div>'+html(x)+'</div>').join('')}</details>`:''}</div>`;
+        }).join('')||'<div class="muted">尚無重大歷史事件</div>';
       if(readingOlder && oldNewestId){
         const previousTopEvent=Array.from(feed.children).find(el=>el.dataset.eventId===oldNewestId);
         feed.scrollTop=oldTop+(previousTopEvent && feed.firstElementChild

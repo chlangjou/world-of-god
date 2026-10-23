@@ -760,6 +760,44 @@
     populateNativeVillages(s,nativeGenesisSites(s,s.opponentCamp),
       opponent.nativeVillages,opponent.nativeHouseholdsPerVillage);
   }
+  // Opt-in multi-deity Genesis: reuse existing living native-village residents.
+  // They gain a religion only as a visible curated starting condition, not a
+  // conversion injected into a running world. There are no free people/structures.
+  function seedAdditionalGods(s,count,baseProfile){
+    s.additionalReligions=[];
+    s.additionalGods=[];
+    s.additionalOpponents=[];
+    s.additionalReligionRng={};
+    const names=['青木信仰','星塵信仰'];
+    const villages=['n3','n2'];
+    for(let i=0;i<count;i++){
+      const id='r'+(i+3),godId='g'+(i+3);
+      const town=s.settlements.find(t=>t.id===villages[i]);
+      if(!town)throw Error('多神創世缺少真實原生聚落 '+villages[i]);
+      const homeIds=town.householdIds.slice(0,2);
+      const seedPeople=s.people.filter(p=>p.alive&&homeIds.includes(p.householdId));
+      if(seedPeople.length<2||seedPeople.some(p=>p.religionId!==null))
+        throw Error('多神創世必須選擇未入教的原生家戶');
+      const religion={id,godId,name:names[i],saints:[],priests:[],saintQuota:{},
+        oracles:[],prayers:[],lastPrayerHour:-1,regionalPrayerAt:{},
+        reachedSettlements:{}};
+      const ai=opponentRules({...baseProfile,name:names[i],startDay:
+        Math.min(360,(baseProfile?.startDay||14)+i*10)});
+      if(!ai)throw Error('新增神明必須使用有效 AI 規則');
+      Object.assign(ai,{godId,lastActionDay:-1,turns:0,casts:0,oracleIssues:0});
+      const god={id:godId,dp:ai.initialDp,cap:s.rules.maxDp,
+        skills:Object.fromEntries(['rain',...Object.keys(POWER_DEFAULTS)]
+          .map(key=>[key,{level:1,xp:0,readyAtHour:0}]))};
+      for(const p of seedPeople){p.religionId=id;p.devotion=60;}
+      s.additionalReligions.push(religion);
+      s.additionalGods.push(god);
+      s.additionalOpponents.push(ai);
+      s.additionalReligionRng[id]=hash(s.seed+'|religion-'+id);
+      log(s,'religion',names[i]+'已在 '+town.name+' 形成初始信仰群體。',
+        ['沿用創世時既有的原生居民、真實家戶與資源',
+         '不會在遊戲進行中無條件改宗，也不會憑空增加建築'],[],godId);
+    }
+  }
   function create(config = {}) {
     const rules = rulesFrom(config);
     const agriculture = config.balanceProfile?.profileId === 'agriculture-balance-v0.1'
@@ -818,6 +856,10 @@
           }else p.devotion=opponent.familyDevotion;
         }
       }
+    }
+    if(opponent&&config.additionalAiGods){
+      const count=Math.round(clamp(config.additionalAiGods,0,2));
+      if(count)seedAdditionalGods(s,count,config.opponentProfile);
     }
     MOBILITY.seedHotspots(s);
     if (agriculture) {s.counts.newFields=0;s.counts.newFamilies=0;s.counts.newSettlements=0;}

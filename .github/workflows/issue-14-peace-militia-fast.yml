@@ -32,10 +32,12 @@ jobs:
           node --check src/app.js
           node --check tests/peace-militia.test.cjs
           node --check tests/readiness-risk.test.cjs
+          node --check tests/political-agenda.test.cjs
+          node --check tools/political-agenda-experiment.cjs
           node --check tools/peace-militia-experiment.cjs
       - name: Opt-in reserve causal contracts
         working-directory: poc/v2
-        run: timeout 55s node --test tests/peace-militia.test.cjs tests/readiness-risk.test.cjs
+        run: timeout 55s node --test tests/peace-militia.test.cjs tests/readiness-risk.test.cjs tests/political-agenda.test.cjs
       - name: Original polity and diplomacy regressions
         working-directory: poc/v2
         run: timeout 55s node --test tests/polity-command.test.cjs tests/diplomacy.test.cjs tests/political-union.test.cjs tests/layout.test.cjs

@@ -91,7 +91,7 @@
     }
     return true;
   }
-  const taskName = {guard:'守備',march:'軍隊行軍',fight:'交戰',retreat:'撤退',build_watchtower:'修築瞭望塔',worship:'共同祈禱',build_ritual:'宗教設施施工',rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',travel:'短期出訪中',visit:'資源熱點停留',dead:'已離世'};
+  const taskName = {guard:'守備',march:'軍隊行軍',fight:'交戰',retreat:'撤退',build_watchtower:'修築瞭望塔',worship:'共同祈禱',build_ritual:'宗教設施施工',rest:'休息',family:'家庭／社交',pray:'祈禱',preach:'分享信仰',forage:'採集食物',farm:'耕作',wood:'伐木',stone:'採石',fiber:'採集纖維',build:'建造住所',care:'照顧家人／維護住所',travel:'短期出訪中',visit:'資源熱點停留',quarry_guard:'真人礦場守衛',dead:'已離世'};
   const stageName = {adult:'成年人',child:'兒童',elder:'長者'};
   const occupationName = {food_producer:'糧食生產者',gatherer:'採集者',dependent:'受扶養者'};
   // First layer: action category; second layer: available power within that category.
@@ -418,6 +418,13 @@
     return response.json();
   }
   async function loadMineralExperiment(){
+    const mode=new URLSearchParams(window.location?.search||'').get('mineralRights');
+    if(mode==='2'){
+      if(window.WOG_MINERAL_P1_5_PROFILE)return window.WOG_MINERAL_P1_5_PROFILE;
+      const response=await fetch('config/mineral-rights-p1-5-v0.1.json');
+      if(!response.ok)throw Error('P1.5 Mineral Rights Profile 無法載入');
+      return response.json();
+    }
     if(window.WOG_MINERAL_RIGHTS_PROFILE)return window.WOG_MINERAL_RIGHTS_PROFILE;
     const response=await fetch('config/mineral-rights-experiment-v0.1.json');
     if(!response.ok)throw Error('Mineral Rights Profile 無法載入');
@@ -460,8 +467,10 @@
     return response.json();
   }
   function newWorld() {
-    // Explicit opt-in in a browser: ?mineralRights=1. Existing worlds unchanged.
-    const wantMineRights=new URLSearchParams(window.location?.search||'').get('mineralRights')==='1';
+    // Explicit web opt-ins: ?mineralRights=1 (P1), ?mineralRights=2 (P1.5).
+    // Existing worlds without the query parameter remain unchanged.
+    const mineMode=new URLSearchParams(window.location?.search||'').get('mineralRights');
+    const wantMineRights=mineMode==='1'||mineMode==='2';
     if(wantMineRights&&(!activeMineralExperimentProfile||!activeMobilityProfile||!activePolityProfile))
       throw Error('礦權實驗需要完整的 Mobility / Polity / Mineral Rights Profiles');
     const overlay=wantMineRights?activeMineralExperimentProfile:null;
@@ -1790,7 +1799,10 @@
     $('opponentMode').value='ai';
     newWorld();
     const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory,polity,minerals].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    const mineMode=new URLSearchParams(window.location?.search||'').get('mineralRights');
     say(failures.length?'Profile 載入失敗：'+failures.join('；'):
+      mineMode==='2'?'P1.5 礦權實驗已就緒：真人領袖決定避讓／協商／抗議；採石後仍需居民返村入庫。':
+      mineMode==='1'?'P1 礦權共享與實際守衛已就緒：自然礦藏有限、緩慢恢復。':
       '宗教對決已就緒。AI 選存糧；選育兒 Oracle → 傳下神諭 → 開始。');
   }).catch(err=>{
     console.error('Playtest bootstrap failed:',err);

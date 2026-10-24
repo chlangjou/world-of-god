@@ -36,7 +36,9 @@
     "test:peace-militia": "node --test tests/peace-militia.test.cjs",
     "evaluate:peace-militia": "node tools/peace-militia-experiment.cjs",
     "test:political-agenda": "node --test tests/political-agenda.test.cjs",
-    "evaluate:political-agenda": "node tools/political-agenda-experiment.cjs"
+    "evaluate:political-agenda": "node tools/political-agenda-experiment.cjs",
+    "test:mineral-rights": "node --test tests/mineral-rights.test.cjs",
+    "evaluate:mineral-rights": "node tools/mineral-natural-experiment.cjs --days=180"
   },
   "engines": {
     "node": ">=22"

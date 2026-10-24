@@ -1,0 +1,47 @@
+name: Issue 14 quarry P1.5 human choices
+on:
+  push:
+    branches:
+      - codex/issue-14-quarry-p1-5-human-choices
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-14-quarry-p1-5-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-14-quarry-p1-5-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  bounded:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Syntax and profile checks
+        working-directory: poc/v2
+        run: |
+          node --check src/mobility.js
+          node --check src/politics.js
+          node --check src/sim.js
+          node --check src/app.js
+          node --check tests/quarry-human-choices.test.cjs
+          node --check tools/mineral-natural-experiment.cjs
+      - name: P0 P1 and P1.5 causal contracts
+        working-directory: poc/v2
+        run: timeout 75s node --test tests/mineral-rights.test.cjs tests/quarry-human-choices.test.cjs
+      - name: Mobility and politics regressions
+        working-directory: poc/v2
+        run: timeout 55s node --test tests/mobility-contact-fast.test.cjs tests/polity-command.test.cjs tests/diplomacy.test.cjs tests/layout.test.cjs
+      - name: Smoke
+        working-directory: poc/v2
+        run: timeout 20s npm run smoke
+      - name: Offline playable synchronization
+        working-directory: poc/v2
+        run: timeout 20s npm run check:playable

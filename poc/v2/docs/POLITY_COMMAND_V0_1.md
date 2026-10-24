@@ -4,6 +4,8 @@ Status: **experimental**, Issue [#13](https://github.com/chlangjou/world-of-god/
 
 本功能分支另接續 [Issue #14 外交實驗](ISSUE_14_DIPLOMACY_EXPERIMENT.md) 與 [兩村政治聯合實驗](ISSUE_14_POLITICAL_UNION_EXPERIMENT.md)：新增可關閉的和解、互助同盟與上層政治聯合，保留地方政體和庫存。以下「無外交」界線描述的是原 v0.1 基準。
 
+最新接續：[退出與破約](ISSUE_14_UNION_FRACTURE_EXPERIMENT.md)，包含利益分歧、協商通知、和平退出／破約、未到貨返還與重新合作冷卻。
+
 ## 暫定原則
 - 神可以在既有 Local Presence 條件允許時施放 Lightning 殺領袖；不能直接當國王下軍事或建設命令。
 - 人類政體指揮真正的人類居民，基礎生產和宗教不依附統治者；政體和宗教維持獨立。

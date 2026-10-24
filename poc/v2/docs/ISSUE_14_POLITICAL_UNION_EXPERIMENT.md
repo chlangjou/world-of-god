@@ -1,5 +1,7 @@
 # Issue #14：保留地方自治的兩村政治聯合
 
+後續已加入[利益衝突、退出與破約實驗](ISSUE_14_UNION_FRACTURE_EXPERIMENT.md)。下文保留本輪當時的實作範圍與數據。
+
 日期：2026-10-24。接續 [第一輪外交實驗](ISSUE_14_DIPLOMACY_EXPERIMENT.md)，基準 `f244a8d`，沿用 `codex/issue-14-cooperation` 分支。實驗、測試與長跑全部在本機 Node 24.12.0 執行，未修改 GitHub workflow 或既有 CI 測試入口。
 
 ## 本輪行為

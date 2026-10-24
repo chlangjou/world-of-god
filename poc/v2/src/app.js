@@ -586,7 +586,7 @@
   const polityColors=['#75b7e0','#f1b46f','#a4ce90','#d9a1e8','#e78c80','#d7cc76'];
   let diplomacyPage=0;
   function polityColor(polity){
-    const union=(state.politics?.unions||[]).find(u=>u.memberPolityIds.includes(polity?.id));
+    const union=(state.politics?.unions||[]).find(u=>!Number.isFinite(u.dissolvedAtHour)&&u.memberPolityIds.includes(polity?.id));
     if(union)return ['#efd16f','#85d7bc','#b8a5ed'][(state.politics.unions.indexOf(union))%3];
     const i=(state.politics?.polities||[]).indexOf(polity);
     return polityColors[Math.max(0,i)%polityColors.length];
@@ -874,7 +874,7 @@
         '木材 '+format(town.storage.wood)+' / '+format(granaryRules?.woodRequired??6)+
         ' · 石材 '+format(town.storage.stone)+' / '+format(granaryRules?.stoneRequired??4));
     const polity=town?S.politicsOverview(state,town.id):null;
-    const diplomaticRelations=(polity?.relations||[]).filter(r=>r.status!=='competition');
+    const diplomaticRelations=(polity?.relations||[]).filter(r=>r.status!=='competition'||r.lastSeparation);
     diplomacyPage%=Math.max(1,diplomaticRelations.length);
     const politySummary=polity?'<div>政體：'+
       (polity.leaderName?'地方領袖 '+html(polity.leaderName):'地方繼承空窗 '+polity.vacantDays+' 日')+
@@ -882,10 +882,15 @@
       ' · 瞭望塔 '+(polity.fort==='built'?'完成':polity.fort==='building'?'施工':'未建')+'</div>'+
       (polity.union?'<div title="'+html(polity.union.reason)+'">政治聯合：'+html(polity.union.name)+
         ' · '+(polity.union.leaderName?'共同領袖 '+html(polity.union.leaderName):'共同指揮空窗 '+polity.union.vacantDays+' 日')+
-        ' · 各村庫存獨立</div>':'')+
+        ' · 各村庫存獨立</div>'+(polity.union.exitNotice?'<div title="'+html(polity.union.exitNotice.reason||'地方利益分歧')+
+        '">退出協商：剩 '+Math.max(0,Math.ceil((polity.union.exitNotice.deadlineHour-state.hour)/24))+' 日</div>':''):
+        polity.lastUnionSeparation?'<div title="'+html(polity.lastUnionSeparation.dissolutionReason)+'">前聯合已'+
+          (polity.lastUnionSeparation.dissolutionKind==='breach'?'破約分裂':'和平退出')+'，各村獨立。</div>':'')+
       diplomaticRelations.slice(diplomacyPage,diplomacyPage+1).map(r=>'<div>外交：'+
         html(state.settlements.find(t=>t.id===r.partnerTownId)?.name||r.partnerTownId)+' · '+
-        (r.status==='alliance'?'互助同盟':'和平協議')+' · 已運抵 '+format(r.delivered,1)+
+        (r.status==='competition'?'破約後競爭':r.status==='alliance'?'互助同盟':'和平協議')+
+        (state.hour<(r.nonAggressionUntilHour||0)?' · 禁戰 '+Math.ceil((r.nonAggressionUntilHour-state.hour)/24)+' 日':'')+
+        ' · 已運抵 '+format(r.delivered,1)+
         '<br>'+html(r.reason)+'</div>').join('')+
       (diplomaticRelations.length>1?'<button id="diplomacyNext" class="secondary">外交 '+
         (diplomacyPage+1)+' / '+diplomaticRelations.length+' · 下一個</button>':''):'';
@@ -1096,17 +1101,17 @@
     for(const t of state.settlements){c.save();c.strokeStyle=t.id===selectedTownId?'#f4d69f':t.native?'#98cbb7':'#bed9b4';c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();}
     // Political links are visible independently of the history feed and religion.
     for(const r of state.politics?.diplomacy?.relations||[]){
-      if(r.status==='competition')continue;
+      if(r.status==='competition'&&!r.lastSeparation)continue;
       const a=state.politics.polities.find(p=>p.id===r.aId),b=state.politics.polities.find(p=>p.id===r.bId);
       const ta=state.settlements.find(t=>t.id===a?.townId),tb=state.settlements.find(t=>t.id===b?.townId);
       if(!ta||!tb)continue;
-      const union=(state.politics?.unions||[]).find(u=>u.memberPolityIds.includes(a.id)&&u.memberPolityIds.includes(b.id));
-      c.save();c.strokeStyle=union?polityColor(a):r.status==='alliance'?'#eed383':'#a4d9ce';c.fillStyle=c.strokeStyle;
+      const union=(state.politics?.unions||[]).find(u=>!Number.isFinite(u.dissolvedAtHour)&&u.memberPolityIds.includes(a.id)&&u.memberPolityIds.includes(b.id));
+      c.save();c.strokeStyle=union?polityColor(a):r.status==='competition'?'#dc9c8a':r.status==='alliance'?'#eed383':'#a4d9ce';c.fillStyle=c.strokeStyle;
       c.lineWidth=union?4:r.status==='alliance'?3:1.5;c.setLineDash(r.status==='alliance'?[]:[5,5]);
       c.beginPath();c.moveTo(ta.x*size,ta.y*size);c.lineTo(tb.x*size,tb.y*size);c.stroke();
       c.font='bold 12px system-ui';c.textAlign='center';
-      c.fillText(union?'◆ 政治聯合 '+union.name:r.status==='alliance'?'⚑ 互助同盟':'和平協議',(ta.x+tb.x)*size/2,(ta.y+tb.y)*size/2-8);
-      for(const t of [ta,tb])c.fillText(union?'◆ 聯合 '+(state.politics.unions.indexOf(union)+1):r.status==='alliance'?'⚑':'☮',t.x*size,(t.y-3)*size);
+      c.fillText(union?(union.exitNotice?'◆ 退出協商 ':'◆ 政治聯合 ')+union.name:r.status==='competition'?'破約後競爭':r.status==='alliance'?'⚑ 互助同盟':r.lastSeparation?.kind==='exit'?'退出後和平':'和平協議',(ta.x+tb.x)*size/2,(ta.y+tb.y)*size/2-8);
+      for(const t of [ta,tb])c.fillText(union?'◆ 聯合 '+(state.politics.unions.indexOf(union)+1):r.status==='competition'?'獨立':r.status==='alliance'?'⚑':'☮',t.x*size,(t.y-3)*size);
       c.restore();
     }
     for(const q of state.politics?.diplomacy?.shipments||[]){

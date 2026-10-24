@@ -2,7 +2,7 @@
 // Issue #14: bounded real-kernel A/B. No population, faith, stock or contacts injected.
 const W=require('../src/sim.js'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const profile=require('../config/polity-command-v0.1.json');
-function options(seed,enabled,unionEnabled=false){return {seed,
+function options(seed,enabled,unionEnabled=false,fractureEnabled=false){return {seed,
   balanceProfile:require('../config/balance-agriculture-v0.1.json'),
   religionProfile:require('../config/religion-propagation-v0.1.json'),
   mobilityProfile:require('../config/mobility-contact-v0.1.json'),
@@ -10,7 +10,8 @@ function options(seed,enabled,unionEnabled=false){return {seed,
   divineProfile:require('../config/divine-powers-v0.1.json'),
   opponentProfile:require('../config/opponent-v0.2.json'),
   politicsProfile:{...profile,diplomacy:{...profile.diplomacy,enabled,
-    union:{...profile.diplomacy.union,enabled:unionEnabled}}}};}
+    union:{...profile.diplomacy.union,enabled:unionEnabled,
+      fracture:{...profile.diplomacy.union.fracture,enabled:fractureEnabled}}}}};}
 function run(seed,enabled,days=180){
   assert.ok(Number.isInteger(days)&&days>=1&&days<=180,'bounded 1–180 days');
   const start=performance.now(),s=W.create(options(seed,enabled));

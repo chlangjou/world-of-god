@@ -37,7 +37,18 @@
       "delivered": 1.5,
       "contactDays": 20,
       "recentContactDays": 7,
-      "maxReluctance": 0.8
+      "maxReluctance": 0.8,
+      "fracture": {
+        "enabled": true,
+        "minUnionDays": 21,
+        "exitPressure": 24,
+        "breachPressure": 36,
+        "noticeDays": 7,
+        "breachAmbition": 0.7,
+        "nonAggressionDays": 14,
+        "negotiationDays": 30,
+        "reunionDays": 90
+      }
     }
   }
 }

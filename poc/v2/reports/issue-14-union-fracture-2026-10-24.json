@@ -1,0 +1,3467 @@
+{
+  "issue": 14,
+  "baseCommit": "d20c2d3",
+  "node": "v24.12.0",
+  "elapsedMs": 21212.4003,
+  "fractureProfile": {
+    "enabled": true,
+    "minUnionDays": 21,
+    "exitPressure": 24,
+    "breachPressure": 36,
+    "noticeDays": 7,
+    "breachAmbition": 0.7,
+    "nonAggressionDays": 14,
+    "negotiationDays": 30,
+    "reunionDays": 90
+  },
+  "scope": "Natural 3-seed 180-day A/B; no manufactured contacts, people, faith, treaties or stock. Separate controlled tests cover breach and logistics.",
+  "results": [
+    {
+      "seed": "valley-spring-01",
+      "fractureEnabled": false,
+      "days": 180,
+      "genesisHash": "8b540b40abb98e540717fa15ea9f3af8778421f3337a5ebfa9cd1ac01160dc28",
+      "elapsedMs": 3289.213,
+      "summary": {
+        "formed": 2,
+        "active": 2,
+        "exits": 0,
+        "breaches": 0,
+        "notices": 0,
+        "retractions": 0,
+        "conflicts": 1,
+        "deliveredBatches": 3,
+        "recalled": 0,
+        "refunded": 0
+      },
+      "moments": [
+        {
+          "day": 30,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 0,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 60,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 1,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 120,
+          "formed": 2,
+          "active": 2,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 3,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 180,
+          "formed": 2,
+          "active": 2,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 3,
+          "recalled": 0,
+          "refunded": 0
+        }
+      ],
+      "unions": [
+        {
+          "id": "union-1",
+          "name": "河岸原生村・初穗聚落聯合",
+          "memberPolityIds": [
+            "polity-n1",
+            "polity-s1"
+          ],
+          "memberTownIds": [
+            "n1",
+            "s1"
+          ],
+          "leaderId": "p32",
+          "formedAtHour": 1992,
+          "vacantUntilHour": null,
+          "reason": "同盟維持 30 日；實際運抵 1.5；接觸 45 日；雙方領袖同意協調，地方自治保留",
+          "decisions": [],
+          "history": [
+            {
+              "type": "formed",
+              "hour": 1992,
+              "personId": "p32",
+              "reason": "同盟維持 30 日；實際運抵 1.5；接觸 45 日；雙方領袖同意協調，地方自治保留"
+            }
+          ]
+        },
+        {
+          "id": "union-2",
+          "name": "谷地原生村・新拓聚落 2聯合",
+          "memberPolityIds": [
+            "polity-n3",
+            "polity-s2"
+          ],
+          "memberTownIds": [
+            "n3",
+            "s2"
+          ],
+          "leaderId": "p47",
+          "formedAtHour": 2088,
+          "vacantUntilHour": null,
+          "reason": "同盟維持 30 日；實際運抵 3；接觸 67 日；雙方領袖同意協調，地方自治保留",
+          "decisions": [],
+          "history": [
+            {
+              "type": "formed",
+              "hour": 2088,
+              "personId": "p47",
+              "reason": "同盟維持 30 日；實際運抵 3；接觸 67 日；雙方領袖同意協調，地方自治保留"
+            }
+          ]
+        }
+      ],
+      "relations": [
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "competition",
+          "trust": 0,
+          "contactDays": 0,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 24,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.15"
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 98.92764886660186,
+          "contactDays": 83,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-1"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1752,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.34",
+          "seenRounds": {
+            "conflict-1": 3
+          },
+          "peaceAtHour": 744,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 744,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 9.2；領袖保留 0.34"
+            },
+            {
+              "status": "alliance",
+              "hour": 1752,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 2.6；領袖保留 0.34"
+            }
+          ],
+          "allianceAtHour": 1752
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 112,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1728,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.41",
+          "peaceAtHour": 576,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 576,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.41"
+            },
+            {
+              "status": "alliance",
+              "hour": 1728,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.41"
+            }
+          ],
+          "allianceAtHour": 1728
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s2",
+          "status": "competition",
+          "trust": 10.165999999999999,
+          "contactDays": 8,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 168,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.51"
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 129,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1320,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.57",
+          "peaceAtHour": 600,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 600,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.57"
+            },
+            {
+              "status": "alliance",
+              "hour": 1320,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.57"
+            }
+          ],
+          "allianceAtHour": 1320
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 133,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1368,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.77",
+          "peaceAtHour": 648,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 648,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 5；舊怨 0.0；領袖保留 0.77"
+            },
+            {
+              "status": "alliance",
+              "hour": 1368,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 16；舊怨 0.0；領袖保留 0.77"
+            }
+          ],
+          "allianceAtHour": 1368,
+          "lastShipmentHour": 1704
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 100,
+          "delivered": 1.5,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1272,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.16",
+          "peaceAtHour": 576,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 576,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 24；舊怨 0.0；領袖保留 0.16"
+            },
+            {
+              "status": "alliance",
+              "hour": 1272,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.16"
+            }
+          ],
+          "allianceAtHour": 1272,
+          "lastShipmentHour": 1296
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 15.045,
+          "contactDays": 10,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 264,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.23"
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 120,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 984,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 13；舊怨 0.0；領袖保留 0.42",
+          "peaceAtHour": 600,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 600,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.42"
+            },
+            {
+              "status": "alliance",
+              "hour": 984,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 20；舊怨 0.0；領袖保留 0.42"
+            }
+          ],
+          "allianceAtHour": 984
+        },
+        {
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 4.811,
+          "contactDays": 4,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 264,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.58"
+        }
+      ],
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "site": {
+            "x": 38,
+            "y": 32,
+            "kind": "stone"
+          },
+          "startedAtHour": 336,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-n3",
+          "resolvedAtHour": 576,
+          "clashStartedAtHour": 504,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 576
+        }
+      ],
+      "shipments": [
+        {
+          "id": "aid-1",
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n1",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 18,
+          "status": "complete",
+          "startedAtHour": 1296,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1416,
+          "finishedAtHour": 1536,
+          "pathCells": 19
+        },
+        {
+          "id": "aid-2",
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "fromTownId": "n3",
+          "toTownId": "s2",
+          "carrierId": "p49",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 17,
+          "status": "complete",
+          "startedAtHour": 1368,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1488,
+          "finishedAtHour": 1608,
+          "pathCells": 18
+        },
+        {
+          "id": "aid-3",
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "fromTownId": "n3",
+          "toTownId": "s2",
+          "carrierId": "p50",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 17,
+          "status": "complete",
+          "startedAtHour": 1704,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1824,
+          "finishedAtHour": 1944,
+          "pathCells": 18
+        }
+      ],
+      "stocks": [
+        {
+          "id": "s1",
+          "storage": {
+            "food": 85.72877729038416,
+            "wood": 36.07108778558671,
+            "stone": 14.091945193447174,
+            "fiber": 3,
+            "gold": 13.440000000000001
+          }
+        },
+        {
+          "id": "n1",
+          "storage": {
+            "food": 88.5031018063565,
+            "wood": 20.511734781488784,
+            "stone": 22.89999999999999,
+            "fiber": 0,
+            "gold": 5.759999999999998
+          }
+        },
+        {
+          "id": "n2",
+          "storage": {
+            "food": 77.09556694636849,
+            "wood": 34.11126064449549,
+            "stone": 10.599999999999998,
+            "fiber": 0,
+            "gold": 12.96
+          }
+        },
+        {
+          "id": "n3",
+          "storage": {
+            "food": 77.43738430229725,
+            "wood": 21.576027135849,
+            "stone": 53.50000000000004,
+            "fiber": 0
+          }
+        },
+        {
+          "id": "s2",
+          "storage": {
+            "food": 286.5264651077452,
+            "wood": 26.92882832825184,
+            "stone": 4.124036136958748,
+            "fiber": 9.429900968009607,
+            "gold": 19.680000000000007
+          }
+        }
+      ],
+      "validation": "every day W.validate; exact save roundtrip and next-day deterministic replay"
+    },
+    {
+      "seed": "valley-spring-01",
+      "fractureEnabled": true,
+      "days": 180,
+      "genesisHash": "8b540b40abb98e540717fa15ea9f3af8778421f3337a5ebfa9cd1ac01160dc28",
+      "elapsedMs": 3735.0706,
+      "summary": {
+        "formed": 2,
+        "active": 2,
+        "exits": 0,
+        "breaches": 0,
+        "notices": 0,
+        "retractions": 0,
+        "conflicts": 1,
+        "deliveredBatches": 3,
+        "recalled": 0,
+        "refunded": 0
+      },
+      "moments": [
+        {
+          "day": 30,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 0,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 60,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 1,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 120,
+          "formed": 2,
+          "active": 2,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 3,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 180,
+          "formed": 2,
+          "active": 2,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 3,
+          "recalled": 0,
+          "refunded": 0
+        }
+      ],
+      "unions": [
+        {
+          "id": "union-1",
+          "name": "河岸原生村・初穗聚落聯合",
+          "memberPolityIds": [
+            "polity-n1",
+            "polity-s1"
+          ],
+          "memberTownIds": [
+            "n1",
+            "s1"
+          ],
+          "leaderId": "p32",
+          "formedAtHour": 1992,
+          "vacantUntilHour": null,
+          "reason": "同盟維持 30 日；實際運抵 1.5；接觸 45 日；雙方領袖同意協調，地方自治保留",
+          "decisions": [],
+          "history": [
+            {
+              "type": "formed",
+              "hour": 1992,
+              "personId": "p32",
+              "reason": "同盟維持 30 日；實際運抵 1.5；接觸 45 日；雙方領袖同意協調，地方自治保留"
+            }
+          ],
+          "stabilityHour": 4320,
+          "interests": {
+            "polity-n1": {
+              "reasons": [],
+              "inputs": {
+                "stone": 22.89999999999999,
+                "peerStone": 14.091945193447174,
+                "publicFoodDays": 29.2089444905467,
+                "peerPublicFoodDays": 28.293325838410617
+              },
+              "blockedPolityId": null,
+              "weight": 0,
+              "pressure": 0,
+              "hour": 4320
+            },
+            "polity-s1": {
+              "reasons": [],
+              "inputs": {
+                "stone": 14.091945193447174,
+                "peerStone": 22.89999999999999,
+                "publicFoodDays": 28.293325838410617,
+                "peerPublicFoodDays": 29.2089444905467
+              },
+              "blockedPolityId": null,
+              "weight": 0,
+              "pressure": 0,
+              "hour": 4320
+            }
+          }
+        },
+        {
+          "id": "union-2",
+          "name": "谷地原生村・新拓聚落 2聯合",
+          "memberPolityIds": [
+            "polity-n3",
+            "polity-s2"
+          ],
+          "memberTownIds": [
+            "n3",
+            "s2"
+          ],
+          "leaderId": "p47",
+          "formedAtHour": 2088,
+          "vacantUntilHour": null,
+          "reason": "同盟維持 30 日；實際運抵 3；接觸 67 日；雙方領袖同意協調，地方自治保留",
+          "decisions": [],
+          "history": [
+            {
+              "type": "formed",
+              "hour": 2088,
+              "personId": "p47",
+              "reason": "同盟維持 30 日；實際運抵 3；接觸 67 日；雙方領袖同意協調，地方自治保留"
+            }
+          ],
+          "stabilityHour": 4320,
+          "interests": {
+            "polity-n3": {
+              "reasons": [],
+              "inputs": {
+                "stone": 53.50000000000004,
+                "peerStone": 4.124036136958748,
+                "publicFoodDays": 25.556892509008993,
+                "peerPublicFoodDays": 94.56318980453638
+              },
+              "blockedPolityId": null,
+              "weight": 0,
+              "pressure": 0,
+              "hour": 4320
+            },
+            "polity-s2": {
+              "reasons": [],
+              "inputs": {
+                "stone": 4.124036136958748,
+                "peerStone": 53.50000000000004,
+                "publicFoodDays": 94.56318980453638,
+                "peerPublicFoodDays": 25.556892509008993
+              },
+              "blockedPolityId": null,
+              "weight": 0,
+              "pressure": 0,
+              "hour": 4320
+            }
+          }
+        }
+      ],
+      "relations": [
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "competition",
+          "trust": 0,
+          "contactDays": 0,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 24,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.15"
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 98.92764886660186,
+          "contactDays": 83,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-1"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1752,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.34",
+          "seenRounds": {
+            "conflict-1": 3
+          },
+          "peaceAtHour": 744,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 744,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 9.2；領袖保留 0.34"
+            },
+            {
+              "status": "alliance",
+              "hour": 1752,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 2.6；領袖保留 0.34"
+            }
+          ],
+          "allianceAtHour": 1752
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 112,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1728,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.41",
+          "peaceAtHour": 576,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 576,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.41"
+            },
+            {
+              "status": "alliance",
+              "hour": 1728,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.41"
+            }
+          ],
+          "allianceAtHour": 1728
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s2",
+          "status": "competition",
+          "trust": 10.165999999999999,
+          "contactDays": 8,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 168,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.51"
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 129,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1320,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.57",
+          "peaceAtHour": 600,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 600,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.57"
+            },
+            {
+              "status": "alliance",
+              "hour": 1320,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.57"
+            }
+          ],
+          "allianceAtHour": 1320
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 133,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1368,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.77",
+          "peaceAtHour": 648,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 648,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 5；舊怨 0.0；領袖保留 0.77"
+            },
+            {
+              "status": "alliance",
+              "hour": 1368,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 16；舊怨 0.0；領袖保留 0.77"
+            }
+          ],
+          "allianceAtHour": 1368,
+          "lastShipmentHour": 1704
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 100,
+          "delivered": 1.5,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1272,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.16",
+          "peaceAtHour": 576,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 576,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 24；舊怨 0.0；領袖保留 0.16"
+            },
+            {
+              "status": "alliance",
+              "hour": 1272,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.16"
+            }
+          ],
+          "allianceAtHour": 1272,
+          "lastShipmentHour": 1296
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 15.045,
+          "contactDays": 10,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 264,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.23"
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 120,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 984,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 13；舊怨 0.0；領袖保留 0.42",
+          "peaceAtHour": 600,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 600,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.42"
+            },
+            {
+              "status": "alliance",
+              "hour": 984,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 20；舊怨 0.0；領袖保留 0.42"
+            }
+          ],
+          "allianceAtHour": 984
+        },
+        {
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 4.811,
+          "contactDays": 4,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 264,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.58"
+        }
+      ],
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "site": {
+            "x": 38,
+            "y": 32,
+            "kind": "stone"
+          },
+          "startedAtHour": 336,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-n3",
+          "resolvedAtHour": 576,
+          "clashStartedAtHour": 504,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 576
+        }
+      ],
+      "shipments": [
+        {
+          "id": "aid-1",
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n1",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 18,
+          "status": "complete",
+          "startedAtHour": 1296,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1416,
+          "finishedAtHour": 1536,
+          "pathCells": 19
+        },
+        {
+          "id": "aid-2",
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "fromTownId": "n3",
+          "toTownId": "s2",
+          "carrierId": "p49",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 17,
+          "status": "complete",
+          "startedAtHour": 1368,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1488,
+          "finishedAtHour": 1608,
+          "pathCells": 18
+        },
+        {
+          "id": "aid-3",
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "fromTownId": "n3",
+          "toTownId": "s2",
+          "carrierId": "p50",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 17,
+          "status": "complete",
+          "startedAtHour": 1704,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1824,
+          "finishedAtHour": 1944,
+          "pathCells": 18
+        }
+      ],
+      "stocks": [
+        {
+          "id": "s1",
+          "storage": {
+            "food": 85.72877729038416,
+            "wood": 36.07108778558671,
+            "stone": 14.091945193447174,
+            "fiber": 3,
+            "gold": 13.440000000000001
+          }
+        },
+        {
+          "id": "n1",
+          "storage": {
+            "food": 88.5031018063565,
+            "wood": 20.511734781488784,
+            "stone": 22.89999999999999,
+            "fiber": 0,
+            "gold": 5.759999999999998
+          }
+        },
+        {
+          "id": "n2",
+          "storage": {
+            "food": 77.09556694636849,
+            "wood": 34.11126064449549,
+            "stone": 10.599999999999998,
+            "fiber": 0,
+            "gold": 12.96
+          }
+        },
+        {
+          "id": "n3",
+          "storage": {
+            "food": 77.43738430229725,
+            "wood": 21.576027135849,
+            "stone": 53.50000000000004,
+            "fiber": 0
+          }
+        },
+        {
+          "id": "s2",
+          "storage": {
+            "food": 286.5264651077452,
+            "wood": 26.92882832825184,
+            "stone": 4.124036136958748,
+            "fiber": 9.429900968009607,
+            "gold": 19.680000000000007
+          }
+        }
+      ],
+      "validation": "every day W.validate; exact save roundtrip and next-day deterministic replay"
+    },
+    {
+      "seed": "dry-stress",
+      "fractureEnabled": false,
+      "days": 180,
+      "genesisHash": "e2b2a0b82f6ac68242aba96720c477750b5122d816a1bc294e3385a4a2a52c7e",
+      "elapsedMs": 3555.0312000000004,
+      "summary": {
+        "formed": 2,
+        "active": 2,
+        "exits": 0,
+        "breaches": 0,
+        "notices": 0,
+        "retractions": 0,
+        "conflicts": 1,
+        "deliveredBatches": 10,
+        "recalled": 0,
+        "refunded": 0
+      },
+      "moments": [
+        {
+          "day": 30,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 0,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 60,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 1,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 120,
+          "formed": 1,
+          "active": 1,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 7,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 180,
+          "formed": 2,
+          "active": 2,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 10,
+          "recalled": 0,
+          "refunded": 0
+        }
+      ],
+      "unions": [
+        {
+          "id": "union-1",
+          "name": "谷地原生村・初穗聚落聯合",
+          "memberPolityIds": [
+            "polity-n3",
+            "polity-s1"
+          ],
+          "memberTownIds": [
+            "n3",
+            "s1"
+          ],
+          "leaderId": "p49",
+          "formedAtHour": 1896,
+          "vacantUntilHour": null,
+          "reason": "同盟維持 30 日；實際運抵 6；接觸 51 日；雙方領袖同意協調，地方自治保留",
+          "decisions": [],
+          "history": [
+            {
+              "type": "formed",
+              "hour": 1896,
+              "personId": "p49",
+              "reason": "同盟維持 30 日；實際運抵 6；接觸 51 日；雙方領袖同意協調，地方自治保留"
+            }
+          ]
+        },
+        {
+          "id": "union-2",
+          "name": "北林原生村・新拓聚落 2聯合",
+          "memberPolityIds": [
+            "polity-n2",
+            "polity-s2"
+          ],
+          "memberTownIds": [
+            "n2",
+            "s2"
+          ],
+          "leaderId": "p16",
+          "formedAtHour": 3240,
+          "vacantUntilHour": null,
+          "reason": "同盟維持 57 日；實際運抵 1.5；接觸 53 日；雙方領袖同意協調，地方自治保留",
+          "decisions": [],
+          "history": [
+            {
+              "type": "formed",
+              "hour": 3240,
+              "personId": "p16",
+              "reason": "同盟維持 57 日；實際運抵 1.5；接觸 53 日；雙方領袖同意協調，地方自治保留"
+            }
+          ]
+        }
+      ],
+      "relations": [
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "peace",
+          "trust": 35.38156370519932,
+          "contactDays": 36,
+          "delivered": 0,
+          "grievance": 3.4999999999999964,
+          "seenDisputes": [
+            "conflict-1"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1896,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 3.8；領袖保留 0.08",
+          "seenRounds": {
+            "conflict-1": 3
+          },
+          "peaceAtHour": 1896,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1896,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 8.6；領袖保留 0.08"
+            }
+          ]
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 132,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 960,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 14；舊怨 0.0；領袖保留 0.41",
+          "peaceAtHour": 552,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 552,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.41"
+            },
+            {
+              "status": "alliance",
+              "hour": 960,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.41"
+            }
+          ],
+          "allianceAtHour": 960
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 77.80849999999991,
+          "contactDays": 70,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 3864,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.35",
+          "peaceAtHour": 888,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 888,
+              "reason": "主要核心信仰不同或不足；領袖同教；互補有限；接觸 1；舊怨 0.0；領袖保留 0.35"
+            },
+            {
+              "status": "alliance",
+              "hour": 3864,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.35"
+            }
+          ],
+          "allianceAtHour": 3864
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 96.47925000000005,
+          "contactDays": 69,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1848,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.35",
+          "peaceAtHour": 984,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 984,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.35"
+            },
+            {
+              "status": "alliance",
+              "hour": 1848,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.35"
+            }
+          ],
+          "allianceAtHour": 1848
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 93.68974999999996,
+          "contactDays": 61,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1872,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.29",
+          "peaceAtHour": 696,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 696,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.29"
+            },
+            {
+              "status": "alliance",
+              "hour": 1872,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.29"
+            }
+          ],
+          "allianceAtHour": 1872,
+          "lastShipmentHour": 3216
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 141,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1320,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.63",
+          "peaceAtHour": 624,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 624,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.63"
+            },
+            {
+              "status": "alliance",
+              "hour": 1320,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 18；舊怨 0.0；領袖保留 0.63"
+            }
+          ],
+          "allianceAtHour": 1320
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 103,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1368,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 5；舊怨 0.0；領袖保留 0.23",
+          "peaceAtHour": 840,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 840,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.23"
+            },
+            {
+              "status": "alliance",
+              "hour": 1368,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.23"
+            }
+          ],
+          "allianceAtHour": 1368,
+          "lastShipmentHour": 1632
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 51.28250000000004,
+          "contactDays": 32,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 4032,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17",
+          "peaceAtHour": 1728,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1728,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17"
+            },
+            {
+              "status": "alliance",
+              "hour": 4032,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17"
+            }
+          ],
+          "allianceAtHour": 4032
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 108,
+          "delivered": 6,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1176,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.51",
+          "peaceAtHour": 648,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 648,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.51"
+            },
+            {
+              "status": "alliance",
+              "hour": 1176,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 19；舊怨 0.0；領袖保留 0.51"
+            }
+          ],
+          "allianceAtHour": 1176,
+          "lastShipmentHour": 1704
+        },
+        {
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 65.02250000000005,
+          "contactDays": 51,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 2616,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.45",
+          "peaceAtHour": 1488,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1488,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 0.0；領袖保留 0.45"
+            },
+            {
+              "status": "alliance",
+              "hour": 2616,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 0.0；領袖保留 0.45"
+            }
+          ],
+          "allianceAtHour": 2616,
+          "lastShipmentHour": 2784
+        }
+      ],
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "site": {
+            "x": 20,
+            "y": 9,
+            "kind": "stone"
+          },
+          "startedAtHour": 336,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-n1",
+          "resolvedAtHour": 624,
+          "clashStartedAtHour": 552,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 624
+        }
+      ],
+      "shipments": [
+        {
+          "id": "aid-1",
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n3",
+          "carrierId": "p4",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 27,
+          "status": "complete",
+          "startedAtHour": 1176,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1344,
+          "finishedAtHour": 1512,
+          "pathCells": 28
+        },
+        {
+          "id": "aid-2",
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n3",
+          "carrierId": "p7",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 24,
+          "status": "complete",
+          "startedAtHour": 1344,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1488,
+          "finishedAtHour": 1632,
+          "pathCells": 25
+        },
+        {
+          "id": "aid-3",
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n1",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 20,
+          "status": "complete",
+          "startedAtHour": 1416,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1536,
+          "finishedAtHour": 1656,
+          "pathCells": 21
+        },
+        {
+          "id": "aid-4",
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n3",
+          "carrierId": "p4",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 27,
+          "status": "complete",
+          "startedAtHour": 1512,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1680,
+          "finishedAtHour": 1848,
+          "pathCells": 28
+        },
+        {
+          "id": "aid-5",
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n1",
+          "carrierId": "p7",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 20,
+          "status": "complete",
+          "startedAtHour": 1632,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1752,
+          "finishedAtHour": 1872,
+          "pathCells": 21
+        },
+        {
+          "id": "aid-6",
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n3",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 24,
+          "status": "complete",
+          "startedAtHour": 1704,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1848,
+          "finishedAtHour": 1992,
+          "pathCells": 25
+        },
+        {
+          "id": "aid-7",
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "s2",
+          "carrierId": "p7",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 43,
+          "status": "complete",
+          "startedAtHour": 2616,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 2880,
+          "finishedAtHour": 3144,
+          "pathCells": 44
+        },
+        {
+          "id": "aid-8",
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "s2",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 43,
+          "status": "complete",
+          "startedAtHour": 2784,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 3048,
+          "finishedAtHour": 3312,
+          "pathCells": 44
+        },
+        {
+          "id": "aid-9",
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "fromTownId": "s2",
+          "toTownId": "n2",
+          "carrierId": "p17",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 32,
+          "status": "complete",
+          "startedAtHour": 3048,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 3240,
+          "finishedAtHour": 3432,
+          "pathCells": 33
+        },
+        {
+          "id": "aid-10",
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "fromTownId": "s2",
+          "toTownId": "n2",
+          "carrierId": "p19",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 35,
+          "status": "complete",
+          "startedAtHour": 3216,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 3432,
+          "finishedAtHour": 3648,
+          "pathCells": 36
+        }
+      ],
+      "stocks": [
+        {
+          "id": "s1",
+          "storage": {
+            "food": 111.31438627143518,
+            "wood": 23.693317942097785,
+            "stone": 27.67916481357066,
+            "fiber": 0,
+            "gold": 14.880000000000003
+          }
+        },
+        {
+          "id": "n1",
+          "storage": {
+            "food": 98.96486942759616,
+            "wood": 28.275953768491753,
+            "stone": 3.5,
+            "fiber": 0,
+            "gold": 16.800000000000004
+          }
+        },
+        {
+          "id": "n2",
+          "storage": {
+            "food": 76.4747245745986,
+            "wood": 28.48803032785655,
+            "stone": 5.200000000000001,
+            "fiber": 0,
+            "gold": 6.719999999999997
+          }
+        },
+        {
+          "id": "n3",
+          "storage": {
+            "food": 75.8223575843701,
+            "wood": 41.31300360605121,
+            "stone": 16.599999999999994,
+            "fiber": 1
+          }
+        },
+        {
+          "id": "s2",
+          "storage": {
+            "food": 241.2787206413604,
+            "wood": 18.228268249332906,
+            "stone": 12.032720025312154,
+            "fiber": 0,
+            "gold": 17.760000000000005
+          }
+        }
+      ],
+      "validation": "every day W.validate; exact save roundtrip and next-day deterministic replay"
+    },
+    {
+      "seed": "dry-stress",
+      "fractureEnabled": true,
+      "days": 180,
+      "genesisHash": "e2b2a0b82f6ac68242aba96720c477750b5122d816a1bc294e3385a4a2a52c7e",
+      "elapsedMs": 3920.6702999999998,
+      "summary": {
+        "formed": 2,
+        "active": 2,
+        "exits": 0,
+        "breaches": 0,
+        "notices": 0,
+        "retractions": 0,
+        "conflicts": 1,
+        "deliveredBatches": 10,
+        "recalled": 0,
+        "refunded": 0
+      },
+      "moments": [
+        {
+          "day": 30,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 0,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 60,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 1,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 120,
+          "formed": 1,
+          "active": 1,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 7,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 180,
+          "formed": 2,
+          "active": 2,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 1,
+          "deliveredBatches": 10,
+          "recalled": 0,
+          "refunded": 0
+        }
+      ],
+      "unions": [
+        {
+          "id": "union-1",
+          "name": "谷地原生村・初穗聚落聯合",
+          "memberPolityIds": [
+            "polity-n3",
+            "polity-s1"
+          ],
+          "memberTownIds": [
+            "n3",
+            "s1"
+          ],
+          "leaderId": "p49",
+          "formedAtHour": 1896,
+          "vacantUntilHour": null,
+          "reason": "同盟維持 30 日；實際運抵 6；接觸 51 日；雙方領袖同意協調，地方自治保留",
+          "decisions": [],
+          "history": [
+            {
+              "type": "formed",
+              "hour": 1896,
+              "personId": "p49",
+              "reason": "同盟維持 30 日；實際運抵 6；接觸 51 日；雙方領袖同意協調，地方自治保留"
+            }
+          ],
+          "stabilityHour": 4320,
+          "interests": {
+            "polity-n3": {
+              "reasons": [],
+              "inputs": {
+                "stone": 16.599999999999994,
+                "peerStone": 27.67916481357066,
+                "publicFoodDays": 25.02388039088122,
+                "peerPublicFoodDays": 27.553065908771092
+              },
+              "blockedPolityId": null,
+              "weight": 0,
+              "pressure": 0,
+              "hour": 4320
+            },
+            "polity-s1": {
+              "reasons": [],
+              "inputs": {
+                "stone": 27.67916481357066,
+                "peerStone": 16.599999999999994,
+                "publicFoodDays": 27.553065908771092,
+                "peerPublicFoodDays": 25.02388039088122
+              },
+              "blockedPolityId": null,
+              "weight": 0,
+              "pressure": 0,
+              "hour": 4320
+            }
+          }
+        },
+        {
+          "id": "union-2",
+          "name": "北林原生村・新拓聚落 2聯合",
+          "memberPolityIds": [
+            "polity-n2",
+            "polity-s2"
+          ],
+          "memberTownIds": [
+            "n2",
+            "s2"
+          ],
+          "leaderId": "p16",
+          "formedAtHour": 3240,
+          "vacantUntilHour": null,
+          "reason": "同盟維持 57 日；實際運抵 1.5；接觸 53 日；雙方領袖同意協調，地方自治保留",
+          "decisions": [],
+          "history": [
+            {
+              "type": "formed",
+              "hour": 3240,
+              "personId": "p16",
+              "reason": "同盟維持 57 日；實際運抵 1.5；接觸 53 日；雙方領袖同意協調，地方自治保留"
+            }
+          ],
+          "stabilityHour": 4320,
+          "interests": {
+            "polity-n2": {
+              "reasons": [],
+              "inputs": {
+                "stone": 5.200000000000001,
+                "peerStone": 12.032720025312154,
+                "publicFoodDays": 25.23918302792033,
+                "peerPublicFoodDays": 79.6299408057295
+              },
+              "blockedPolityId": null,
+              "weight": 0,
+              "pressure": 0,
+              "hour": 4320
+            },
+            "polity-s2": {
+              "reasons": [],
+              "inputs": {
+                "stone": 12.032720025312154,
+                "peerStone": 5.200000000000001,
+                "publicFoodDays": 79.6299408057295,
+                "peerPublicFoodDays": 25.23918302792033
+              },
+              "blockedPolityId": null,
+              "weight": 0,
+              "pressure": 0,
+              "hour": 4320
+            }
+          }
+        }
+      ],
+      "relations": [
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "peace",
+          "trust": 35.38156370519932,
+          "contactDays": 36,
+          "delivered": 0,
+          "grievance": 3.4999999999999964,
+          "seenDisputes": [
+            "conflict-1"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1896,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 3.8；領袖保留 0.08",
+          "seenRounds": {
+            "conflict-1": 3
+          },
+          "peaceAtHour": 1896,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1896,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 8.6；領袖保留 0.08"
+            }
+          ]
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 132,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 960,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 14；舊怨 0.0；領袖保留 0.41",
+          "peaceAtHour": 552,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 552,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.41"
+            },
+            {
+              "status": "alliance",
+              "hour": 960,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.41"
+            }
+          ],
+          "allianceAtHour": 960
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 77.80849999999991,
+          "contactDays": 70,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 3864,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.35",
+          "peaceAtHour": 888,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 888,
+              "reason": "主要核心信仰不同或不足；領袖同教；互補有限；接觸 1；舊怨 0.0；領袖保留 0.35"
+            },
+            {
+              "status": "alliance",
+              "hour": 3864,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.35"
+            }
+          ],
+          "allianceAtHour": 3864
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 96.47925000000005,
+          "contactDays": 69,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1848,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.35",
+          "peaceAtHour": 984,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 984,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.35"
+            },
+            {
+              "status": "alliance",
+              "hour": 1848,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.35"
+            }
+          ],
+          "allianceAtHour": 1848
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 93.68974999999996,
+          "contactDays": 61,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1872,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.29",
+          "peaceAtHour": 696,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 696,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.29"
+            },
+            {
+              "status": "alliance",
+              "hour": 1872,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.29"
+            }
+          ],
+          "allianceAtHour": 1872,
+          "lastShipmentHour": 3216
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 141,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1320,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.63",
+          "peaceAtHour": 624,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 624,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.63"
+            },
+            {
+              "status": "alliance",
+              "hour": 1320,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 18；舊怨 0.0；領袖保留 0.63"
+            }
+          ],
+          "allianceAtHour": 1320
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 103,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1368,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 5；舊怨 0.0；領袖保留 0.23",
+          "peaceAtHour": 840,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 840,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.23"
+            },
+            {
+              "status": "alliance",
+              "hour": 1368,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.23"
+            }
+          ],
+          "allianceAtHour": 1368,
+          "lastShipmentHour": 1632
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 51.28250000000004,
+          "contactDays": 32,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 4032,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17",
+          "peaceAtHour": 1728,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1728,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17"
+            },
+            {
+              "status": "alliance",
+              "hour": 4032,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17"
+            }
+          ],
+          "allianceAtHour": 4032
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 108,
+          "delivered": 6,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1176,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.51",
+          "peaceAtHour": 648,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 648,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.51"
+            },
+            {
+              "status": "alliance",
+              "hour": 1176,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 19；舊怨 0.0；領袖保留 0.51"
+            }
+          ],
+          "allianceAtHour": 1176,
+          "lastShipmentHour": 1704
+        },
+        {
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 65.02250000000005,
+          "contactDays": 51,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 2616,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.45",
+          "peaceAtHour": 1488,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1488,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 0.0；領袖保留 0.45"
+            },
+            {
+              "status": "alliance",
+              "hour": 2616,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 0.0；領袖保留 0.45"
+            }
+          ],
+          "allianceAtHour": 2616,
+          "lastShipmentHour": 2784
+        }
+      ],
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "site": {
+            "x": 20,
+            "y": 9,
+            "kind": "stone"
+          },
+          "startedAtHour": 336,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-n1",
+          "resolvedAtHour": 624,
+          "clashStartedAtHour": 552,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 624
+        }
+      ],
+      "shipments": [
+        {
+          "id": "aid-1",
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n3",
+          "carrierId": "p4",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 27,
+          "status": "complete",
+          "startedAtHour": 1176,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1344,
+          "finishedAtHour": 1512,
+          "pathCells": 28
+        },
+        {
+          "id": "aid-2",
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n3",
+          "carrierId": "p7",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 24,
+          "status": "complete",
+          "startedAtHour": 1344,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1488,
+          "finishedAtHour": 1632,
+          "pathCells": 25
+        },
+        {
+          "id": "aid-3",
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n1",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 20,
+          "status": "complete",
+          "startedAtHour": 1416,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1536,
+          "finishedAtHour": 1656,
+          "pathCells": 21
+        },
+        {
+          "id": "aid-4",
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n3",
+          "carrierId": "p4",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 27,
+          "status": "complete",
+          "startedAtHour": 1512,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1680,
+          "finishedAtHour": 1848,
+          "pathCells": 28
+        },
+        {
+          "id": "aid-5",
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n1",
+          "carrierId": "p7",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 20,
+          "status": "complete",
+          "startedAtHour": 1632,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1752,
+          "finishedAtHour": 1872,
+          "pathCells": 21
+        },
+        {
+          "id": "aid-6",
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "n3",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 24,
+          "status": "complete",
+          "startedAtHour": 1704,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1848,
+          "finishedAtHour": 1992,
+          "pathCells": 25
+        },
+        {
+          "id": "aid-7",
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "s2",
+          "carrierId": "p7",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 43,
+          "status": "complete",
+          "startedAtHour": 2616,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 2880,
+          "finishedAtHour": 3144,
+          "pathCells": 44
+        },
+        {
+          "id": "aid-8",
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "fromTownId": "s1",
+          "toTownId": "s2",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 43,
+          "status": "complete",
+          "startedAtHour": 2784,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 3048,
+          "finishedAtHour": 3312,
+          "pathCells": 44
+        },
+        {
+          "id": "aid-9",
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "fromTownId": "s2",
+          "toTownId": "n2",
+          "carrierId": "p17",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 32,
+          "status": "complete",
+          "startedAtHour": 3048,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 3240,
+          "finishedAtHour": 3432,
+          "pathCells": 33
+        },
+        {
+          "id": "aid-10",
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "fromTownId": "s2",
+          "toTownId": "n2",
+          "carrierId": "p19",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 35,
+          "status": "complete",
+          "startedAtHour": 3216,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 3432,
+          "finishedAtHour": 3648,
+          "pathCells": 36
+        }
+      ],
+      "stocks": [
+        {
+          "id": "s1",
+          "storage": {
+            "food": 111.31438627143518,
+            "wood": 23.693317942097785,
+            "stone": 27.67916481357066,
+            "fiber": 0,
+            "gold": 14.880000000000003
+          }
+        },
+        {
+          "id": "n1",
+          "storage": {
+            "food": 98.96486942759616,
+            "wood": 28.275953768491753,
+            "stone": 3.5,
+            "fiber": 0,
+            "gold": 16.800000000000004
+          }
+        },
+        {
+          "id": "n2",
+          "storage": {
+            "food": 76.4747245745986,
+            "wood": 28.48803032785655,
+            "stone": 5.200000000000001,
+            "fiber": 0,
+            "gold": 6.719999999999997
+          }
+        },
+        {
+          "id": "n3",
+          "storage": {
+            "food": 75.8223575843701,
+            "wood": 41.31300360605121,
+            "stone": 16.599999999999994,
+            "fiber": 1
+          }
+        },
+        {
+          "id": "s2",
+          "storage": {
+            "food": 241.2787206413604,
+            "wood": 18.228268249332906,
+            "stone": 12.032720025312154,
+            "fiber": 0,
+            "gold": 17.760000000000005
+          }
+        }
+      ],
+      "validation": "every day W.validate; exact save roundtrip and next-day deterministic replay"
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "fractureEnabled": false,
+      "days": 180,
+      "genesisHash": "b212180fcb4c6fadb5e1c252f523bbbe51bb036fdbe8da0f5dad3fd84d1919cc",
+      "elapsedMs": 3439.1900000000005,
+      "summary": {
+        "formed": 1,
+        "active": 1,
+        "exits": 0,
+        "breaches": 0,
+        "notices": 0,
+        "retractions": 0,
+        "conflicts": 4,
+        "deliveredBatches": 3,
+        "recalled": 0,
+        "refunded": 0
+      },
+      "moments": [
+        {
+          "day": 30,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 2,
+          "deliveredBatches": 0,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 60,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 4,
+          "deliveredBatches": 0,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 120,
+          "formed": 1,
+          "active": 1,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 4,
+          "deliveredBatches": 3,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 180,
+          "formed": 1,
+          "active": 1,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 4,
+          "deliveredBatches": 3,
+          "recalled": 0,
+          "refunded": 0
+        }
+      ],
+      "unions": [
+        {
+          "id": "union-1",
+          "name": "北林原生村・谷地原生村聯合",
+          "memberPolityIds": [
+            "polity-n2",
+            "polity-n3"
+          ],
+          "memberTownIds": [
+            "n2",
+            "n3"
+          ],
+          "leaderId": "p47",
+          "formedAtHour": 2184,
+          "vacantUntilHour": null,
+          "reason": "同盟維持 30 日；實際運抵 3；接觸 62 日；雙方領袖同意協調，地方自治保留",
+          "decisions": [],
+          "history": [
+            {
+              "type": "formed",
+              "hour": 2184,
+              "personId": "p47",
+              "reason": "同盟維持 30 日；實際運抵 3；接觸 62 日；雙方領袖同意協調，地方自治保留"
+            }
+          ]
+        }
+      ],
+      "relations": [
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "alliance",
+          "trust": 43.183170497636695,
+          "contactDays": 53,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-1"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 2352,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.59",
+          "seenRounds": {
+            "conflict-1": 3
+          },
+          "peaceAtHour": 1536,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1536,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 5.9；領袖保留 0.59"
+            },
+            {
+              "status": "alliance",
+              "hour": 2352,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.59"
+            }
+          ],
+          "allianceAtHour": 2352
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 88.7750000000001,
+          "contactDays": 88,
+          "delivered": 1.5,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1368,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.66",
+          "peaceAtHour": 672,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 672,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.66"
+            },
+            {
+              "status": "alliance",
+              "hour": 1368,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.66"
+            }
+          ],
+          "allianceAtHour": 1368,
+          "lastShipmentHour": 1368
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 97,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1464,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.67",
+          "peaceAtHour": 768,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 768,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；互補有限；接觸 9；舊怨 0.0；領袖保留 0.67"
+            },
+            {
+              "status": "alliance",
+              "hour": 1464,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.67"
+            }
+          ],
+          "allianceAtHour": 1464,
+          "lastShipmentHour": 1800
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s2",
+          "status": "competition",
+          "trust": 4.199,
+          "contactDays": 4,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 192,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.77"
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 51.10534050826703,
+          "contactDays": 63,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-3"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 3384,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.78",
+          "seenRounds": {
+            "conflict-3": 3
+          },
+          "peaceAtHour": 1776,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1776,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 8；舊怨 7.7；領袖保留 0.78"
+            },
+            {
+              "status": "alliance",
+              "hour": 3384,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 9；舊怨 0.8；領袖保留 0.78"
+            }
+          ],
+          "allianceAtHour": 3384
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 45.09105037233417,
+          "contactDays": 59,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-4"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 4080,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.84",
+          "seenRounds": {
+            "conflict-4": 3
+          },
+          "peaceAtHour": 2352,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 2352,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 9；舊怨 7.4；領袖保留 0.84"
+            },
+            {
+              "status": "alliance",
+              "hour": 4080,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 3；舊怨 0.2；領袖保留 0.84"
+            }
+          ],
+          "allianceAtHour": 4080
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 10.06460491525529,
+          "contactDays": 16,
+          "delivered": 0,
+          "grievance": 7.699999999999992,
+          "seenDisputes": [
+            "conflict-2"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 336,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 7.7；領袖保留 0.51",
+          "seenRounds": {
+            "conflict-2": 3
+          }
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 0,
+          "contactDays": 0,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 336,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.52"
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 84.71099999999997,
+          "contactDays": 79,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 2616,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.59",
+          "peaceAtHour": 1536,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1536,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 17；舊怨 0.0；領袖保留 0.84"
+            },
+            {
+              "status": "alliance",
+              "hour": 2616,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.84"
+            }
+          ],
+          "allianceAtHour": 2616
+        },
+        {
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 0,
+          "contactDays": 0,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 336,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.69"
+        }
+      ],
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "site": {
+            "x": 49,
+            "y": 13,
+            "kind": "stone"
+          },
+          "startedAtHour": 336,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-n2",
+          "resolvedAtHour": 600,
+          "clashStartedAtHour": 528,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 600
+        },
+        {
+          "id": "conflict-2",
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "site": {
+            "x": 38,
+            "y": 32,
+            "kind": "stone"
+          },
+          "startedAtHour": 672,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-s1",
+          "resolvedAtHour": 864,
+          "clashStartedAtHour": 792,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 864
+        },
+        {
+          "id": "conflict-3",
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "site": {
+            "x": 14,
+            "y": 14,
+            "kind": "stone"
+          },
+          "startedAtHour": 1008,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-s2",
+          "resolvedAtHour": 1224,
+          "clashStartedAtHour": 1152,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 1224
+        },
+        {
+          "id": "conflict-4",
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "site": {
+            "x": 14,
+            "y": 14,
+            "kind": "stone"
+          },
+          "startedAtHour": 1344,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-s2",
+          "resolvedAtHour": 1560,
+          "clashStartedAtHour": 1488,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 1560
+        }
+      ],
+      "shipments": [
+        {
+          "id": "aid-1",
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "fromTownId": "n1",
+          "toTownId": "n3",
+          "carrierId": "p26",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 23,
+          "status": "complete",
+          "startedAtHour": 1368,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1512,
+          "finishedAtHour": 1656,
+          "pathCells": 24
+        },
+        {
+          "id": "aid-2",
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "fromTownId": "n3",
+          "toTownId": "n2",
+          "carrierId": "p43",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 15,
+          "status": "complete",
+          "startedAtHour": 1608,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1704,
+          "finishedAtHour": 1800,
+          "pathCells": 16
+        },
+        {
+          "id": "aid-3",
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "fromTownId": "n3",
+          "toTownId": "n2",
+          "carrierId": "p43",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 15,
+          "status": "complete",
+          "startedAtHour": 1800,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1896,
+          "finishedAtHour": 1992,
+          "pathCells": 16
+        }
+      ],
+      "stocks": [
+        {
+          "id": "s1",
+          "storage": {
+            "food": 85.5795248029049,
+            "wood": 37.351880164891476,
+            "stone": 14.285235486309976,
+            "fiber": 4,
+            "gold": 18.720000000000006
+          }
+        },
+        {
+          "id": "n1",
+          "storage": {
+            "food": 76.53566271419017,
+            "wood": 22.216242758035655,
+            "stone": 17.71669399993494,
+            "fiber": 0,
+            "gold": 12
+          }
+        },
+        {
+          "id": "n2",
+          "storage": {
+            "food": 85.3341470895323,
+            "wood": 38.79557775147259,
+            "stone": 3.5,
+            "fiber": 2,
+            "gold": 11.04
+          }
+        },
+        {
+          "id": "n3",
+          "storage": {
+            "food": 76.80837153533432,
+            "wood": 22.125255934521554,
+            "stone": 24.69999999999999,
+            "fiber": 0,
+            "gold": 0.48
+          }
+        },
+        {
+          "id": "s2",
+          "storage": {
+            "food": 216.485615118675,
+            "wood": 33.89738717456144,
+            "stone": 13.913495079372076,
+            "fiber": 9.98156903694733,
+            "gold": 1.44
+          }
+        }
+      ],
+      "validation": "every day W.validate; exact save roundtrip and next-day deterministic replay"
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "fractureEnabled": true,
+      "days": 180,
+      "genesisHash": "b212180fcb4c6fadb5e1c252f523bbbe51bb036fdbe8da0f5dad3fd84d1919cc",
+      "elapsedMs": 3271.0813000000016,
+      "summary": {
+        "formed": 1,
+        "active": 1,
+        "exits": 0,
+        "breaches": 0,
+        "notices": 0,
+        "retractions": 0,
+        "conflicts": 4,
+        "deliveredBatches": 3,
+        "recalled": 0,
+        "refunded": 0
+      },
+      "moments": [
+        {
+          "day": 30,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 2,
+          "deliveredBatches": 0,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 60,
+          "formed": 0,
+          "active": 0,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 4,
+          "deliveredBatches": 0,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 120,
+          "formed": 1,
+          "active": 1,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 4,
+          "deliveredBatches": 3,
+          "recalled": 0,
+          "refunded": 0
+        },
+        {
+          "day": 180,
+          "formed": 1,
+          "active": 1,
+          "exits": 0,
+          "breaches": 0,
+          "notices": 0,
+          "retractions": 0,
+          "conflicts": 4,
+          "deliveredBatches": 3,
+          "recalled": 0,
+          "refunded": 0
+        }
+      ],
+      "unions": [
+        {
+          "id": "union-1",
+          "name": "北林原生村・谷地原生村聯合",
+          "memberPolityIds": [
+            "polity-n2",
+            "polity-n3"
+          ],
+          "memberTownIds": [
+            "n2",
+            "n3"
+          ],
+          "leaderId": "p47",
+          "formedAtHour": 2184,
+          "vacantUntilHour": null,
+          "reason": "同盟維持 30 日；實際運抵 3；接觸 62 日；雙方領袖同意協調，地方自治保留",
+          "decisions": [],
+          "history": [
+            {
+              "type": "formed",
+              "hour": 2184,
+              "personId": "p47",
+              "reason": "同盟維持 30 日；實際運抵 3；接觸 62 日；雙方領袖同意協調，地方自治保留"
+            }
+          ],
+          "stabilityHour": 4320,
+          "interests": {
+            "polity-n2": {
+              "reasons": [],
+              "inputs": {
+                "stone": 3.5,
+                "peerStone": 24.69999999999999,
+                "publicFoodDays": 28.16308484803046,
+                "peerPublicFoodDays": 25.349297536413967
+              },
+              "blockedPolityId": null,
+              "weight": 0,
+              "pressure": 0,
+              "hour": 4320
+            },
+            "polity-n3": {
+              "reasons": [],
+              "inputs": {
+                "stone": 24.69999999999999,
+                "peerStone": 3.5,
+                "publicFoodDays": 25.349297536413967,
+                "peerPublicFoodDays": 28.16308484803046
+              },
+              "blockedPolityId": null,
+              "weight": 0,
+              "pressure": 0,
+              "hour": 4320
+            }
+          }
+        }
+      ],
+      "relations": [
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "alliance",
+          "trust": 43.183170497636695,
+          "contactDays": 53,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-1"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 2352,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.59",
+          "seenRounds": {
+            "conflict-1": 3
+          },
+          "peaceAtHour": 1536,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1536,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 5.9；領袖保留 0.59"
+            },
+            {
+              "status": "alliance",
+              "hour": 2352,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.59"
+            }
+          ],
+          "allianceAtHour": 2352
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 88.7750000000001,
+          "contactDays": 88,
+          "delivered": 1.5,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1368,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.66",
+          "peaceAtHour": 672,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 672,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.66"
+            },
+            {
+              "status": "alliance",
+              "hour": 1368,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.66"
+            }
+          ],
+          "allianceAtHour": 1368,
+          "lastShipmentHour": 1368
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 97,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1464,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.67",
+          "peaceAtHour": 768,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 768,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；互補有限；接觸 9；舊怨 0.0；領袖保留 0.67"
+            },
+            {
+              "status": "alliance",
+              "hour": 1464,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.67"
+            }
+          ],
+          "allianceAtHour": 1464,
+          "lastShipmentHour": 1800
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s2",
+          "status": "competition",
+          "trust": 4.199,
+          "contactDays": 4,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 192,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.77"
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 51.10534050826703,
+          "contactDays": 63,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-3"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 3384,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.78",
+          "seenRounds": {
+            "conflict-3": 3
+          },
+          "peaceAtHour": 1776,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1776,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 8；舊怨 7.7；領袖保留 0.78"
+            },
+            {
+              "status": "alliance",
+              "hour": 3384,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 9；舊怨 0.8；領袖保留 0.78"
+            }
+          ],
+          "allianceAtHour": 3384
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 45.09105037233417,
+          "contactDays": 59,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-4"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 4080,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.84",
+          "seenRounds": {
+            "conflict-4": 3
+          },
+          "peaceAtHour": 2352,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 2352,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 9；舊怨 7.4；領袖保留 0.84"
+            },
+            {
+              "status": "alliance",
+              "hour": 4080,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 3；舊怨 0.2；領袖保留 0.84"
+            }
+          ],
+          "allianceAtHour": 4080
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 10.06460491525529,
+          "contactDays": 16,
+          "delivered": 0,
+          "grievance": 7.699999999999992,
+          "seenDisputes": [
+            "conflict-2"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 336,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 7.7；領袖保留 0.51",
+          "seenRounds": {
+            "conflict-2": 3
+          }
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 0,
+          "contactDays": 0,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 336,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.52"
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 84.71099999999997,
+          "contactDays": 79,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 2616,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.59",
+          "peaceAtHour": 1536,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1536,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 17；舊怨 0.0；領袖保留 0.84"
+            },
+            {
+              "status": "alliance",
+              "hour": 2616,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.84"
+            }
+          ],
+          "allianceAtHour": 2616
+        },
+        {
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 0,
+          "contactDays": 0,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 336,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.69"
+        }
+      ],
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "site": {
+            "x": 49,
+            "y": 13,
+            "kind": "stone"
+          },
+          "startedAtHour": 336,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-n2",
+          "resolvedAtHour": 600,
+          "clashStartedAtHour": 528,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 600
+        },
+        {
+          "id": "conflict-2",
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "site": {
+            "x": 38,
+            "y": 32,
+            "kind": "stone"
+          },
+          "startedAtHour": 672,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-s1",
+          "resolvedAtHour": 864,
+          "clashStartedAtHour": 792,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 864
+        },
+        {
+          "id": "conflict-3",
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "site": {
+            "x": 14,
+            "y": 14,
+            "kind": "stone"
+          },
+          "startedAtHour": 1008,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-s2",
+          "resolvedAtHour": 1224,
+          "clashStartedAtHour": 1152,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 1224
+        },
+        {
+          "id": "conflict-4",
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "site": {
+            "x": 14,
+            "y": 14,
+            "kind": "stone"
+          },
+          "startedAtHour": 1344,
+          "status": "resolved",
+          "trigger": "both stone reserves below 10",
+          "winnerId": "polity-s2",
+          "resolvedAtHour": 1560,
+          "clashStartedAtHour": 1488,
+          "roundsCompleted": 3,
+          "lastRoundAtHour": 1560
+        }
+      ],
+      "shipments": [
+        {
+          "id": "aid-1",
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "fromTownId": "n1",
+          "toTownId": "n3",
+          "carrierId": "p26",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 23,
+          "status": "complete",
+          "startedAtHour": 1368,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1512,
+          "finishedAtHour": 1656,
+          "pathCells": 24
+        },
+        {
+          "id": "aid-2",
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "fromTownId": "n3",
+          "toTownId": "n2",
+          "carrierId": "p43",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 15,
+          "status": "complete",
+          "startedAtHour": 1608,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1704,
+          "finishedAtHour": 1800,
+          "pathCells": 16
+        },
+        {
+          "id": "aid-3",
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "fromTownId": "n3",
+          "toTownId": "n2",
+          "carrierId": "p43",
+          "resource": "stone",
+          "amount": 1.5,
+          "pathIndex": 15,
+          "status": "complete",
+          "startedAtHour": 1800,
+          "delivered": true,
+          "lost": 0,
+          "deliveredAtHour": 1896,
+          "finishedAtHour": 1992,
+          "pathCells": 16
+        }
+      ],
+      "stocks": [
+        {
+          "id": "s1",
+          "storage": {
+            "food": 85.5795248029049,
+            "wood": 37.351880164891476,
+            "stone": 14.285235486309976,
+            "fiber": 4,
+            "gold": 18.720000000000006
+          }
+        },
+        {
+          "id": "n1",
+          "storage": {
+            "food": 76.53566271419017,
+            "wood": 22.216242758035655,
+            "stone": 17.71669399993494,
+            "fiber": 0,
+            "gold": 12
+          }
+        },
+        {
+          "id": "n2",
+          "storage": {
+            "food": 85.3341470895323,
+            "wood": 38.79557775147259,
+            "stone": 3.5,
+            "fiber": 2,
+            "gold": 11.04
+          }
+        },
+        {
+          "id": "n3",
+          "storage": {
+            "food": 76.80837153533432,
+            "wood": 22.125255934521554,
+            "stone": 24.69999999999999,
+            "fiber": 0,
+            "gold": 0.48
+          }
+        },
+        {
+          "id": "s2",
+          "storage": {
+            "food": 216.485615118675,
+            "wood": 33.89738717456144,
+            "stone": 13.913495079372076,
+            "fiber": 9.98156903694733,
+            "gold": 1.44
+          }
+        }
+      ],
+      "validation": "every day W.validate; exact save roundtrip and next-day deterministic replay"
+    }
+  ]
+}

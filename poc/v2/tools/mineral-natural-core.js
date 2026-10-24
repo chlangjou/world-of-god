@@ -9,7 +9,7 @@ if(root)root.WoGMineralNaturalCore=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const SEEDS=['valley-spring-01','dry-stress','opponent-competition-replay'];
-const MODES=['legacy','finite-shared','finite-rights'];
+const MODES=['legacy','finite-shared','finite-rights','finite-rights-p1-5'];
 const SNAPSHOTS=[30,60,120,180];
 const round=x=>Math.round(x*1e4)/1e4;
 const fingerprint=str=>{let h=2166136261;for(let i=0;i<str.length;i++){
@@ -47,7 +47,22 @@ const snapshot=(s,day,metrics)=>{
     protectedDays:total(claims,c=>c.protectedDays||0),
     quarryDetours:s.counts.quarryDetours||0,
     protectedArrivals:s.counts.quarryBlockedArrivals||0,
-    quarryNegotiations:0, // P1 does not yet implement a negotiated-access policy
+    quarryNegotiations:(s.politics.quarryNegotiations||[]).length,
+    accessRequests:s.counts.quarryAccessRequested||0,
+    accessGrants:s.counts.quarryAccessGranted||0,
+    accessRejections:s.counts.quarryAccessRejected||0,
+    permittedUnits:round(s.counts.quarryPermittedUnits||0),
+    safeChoices:s.counts.quarrySafeChoices||0,
+    challengeChoices:s.counts.quarryChallengeDecisions||0,
+    actualChallenges:s.counts.quarryActualChallenges||0,
+    oreTripsDelivered:s.counts.quarryOreTripsDelivered||0,
+    oreUnitsDelivered:round(s.counts.quarryOreUnitsDelivered||0),
+    alternativeOreTripsDelivered:s.counts.quarryAlternativeTripsDelivered||0,
+    alternativeOreUnitsDelivered:round(s.counts.quarryAlternativeUnitsDelivered||0),
+    deliveries:(s.politics.quarryDeliveries||[]).slice(-12),
+    quarryChoiceEvidence:(s.politics.quarryChoices||[]).map(q=>({
+      claimId:q.claimId,visitorTownId:q.visitorTownId,ownerTownId:q.ownerTownId,
+      action:q.action,alternative:q.alternative,contactEvidence:q.contactEvidence})),
     conflicts:s.politics.disputes.length,
     resourceVisits:s.counts.resourceVisitsCompleted||0,
     crossTownMeetings:s.counts.crossTownMeetings||0,

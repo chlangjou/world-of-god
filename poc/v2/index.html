@@ -75,6 +75,28 @@
         <div class="map-wrap">
           <canvas id="world" width="768" height="768" aria-label="世界地圖，可點選居民或施展神蹟" tabindex="0"></canvas>
           <button id="battleFocusBtn" type="button" class="battle-focus" hidden aria-live="polite" title="定位正在發生的人類戰事"></button>
+          <div class="map-layers" aria-label="地圖資訊圖層">
+            <button type="button" id="mapLayersButton" class="map-layers-toggle" aria-controls="mapLayersPanel" aria-expanded="false" title="調整地圖資訊顯示（不影響世界模擬）">圖層 · 一般</button>
+            <div id="mapLayersPanel" class="map-layers-panel" role="group" aria-label="地圖圖層設定" hidden>
+              <div class="map-layer-caption">快速視圖</div>
+              <div class="map-layer-presets" role="group" aria-label="地圖視圖預設">
+                <button type="button" id="mapPresetWorld" aria-pressed="true">一般</button>
+                <button type="button" id="mapPresetPolitical" aria-pressed="false">外交</button>
+                <button type="button" id="mapPresetMilitary" aria-pressed="false">軍事</button>
+              </div>
+              <div class="map-layer-caption">個別圖層</div>
+              <div class="map-layer-switches" role="group" aria-label="獨立顯示圖層">
+                <label title="顯示和平、同盟、聯合與破約關係的跨村連線"><input id="mapLayerDiplomacy" type="checkbox">外交連線</label>
+                <label title="顯示聚落管理圓圈與拓荒區域"><input id="mapLayerSettlements" type="checkbox">聚落範圍</label>
+                <label title="顯示礦點、礦權宣告和真人保護狀態"><input id="mapLayerQuarries" type="checkbox" checked>礦場礦權</label>
+                <label title="顯示民兵、行軍目標與戰場（交戰通知仍會出現）"><input id="mapLayerMilitary" type="checkbox" checked>民兵戰場</label>
+                <label title="顯示神殿、神龕、對手神諭與祭司祈求泡泡"><input id="mapLayerReligion" type="checkbox" checked>宗教神諭</label>
+                <label title="顯示既有神蹟作用範圍；施法瞄準與警告仍會出現"><input id="mapLayerEffects" type="checkbox" checked>神蹟效果</label>
+              </div>
+              <label class="map-layer-focus" title="請先在「宗教」分頁選擇聚落；未選取時顯示全部外交關係"><input id="mapLayerFocusTown" type="checkbox">外交僅看選取聚落</label>
+              <div class="map-layer-help">只改地圖顯示，居民、信仰、戰爭與存檔不變。</div>
+            </div>
+          </div>
           <div class="legend" aria-label="地圖圖例"><span><i class="sw river"></i>河流</span><span><i class="sw forest"></i>森林</span><span><i class="sw field"></i>農田</span><span><i class="sw homes"></i>住所</span><span><i class="sw granary"></i>糧倉</span><span><i class="sw shrine" style="background:#91c9ef"></i>Shrine</span><span><i class="sw temple" style="background:#e6b86f"></i>Temple</span><span><i class="sw human"></i>居民</span><span title="可直接接收神諭的聆聽者"><i class="sw saint"></i>Saint</span><span title="傳道並彙整信徒祈禱的祭司"><i class="sw priest"></i>Priest</span><span title="目前沒有加入任何神明宗教的居民；部分原住民後來也可能選擇信仰"><i class="sw native"></i>未入教</span><span title="暮影信仰：珊瑚紅居民及祭司屬於 AI 對手"><i class="sw rival"></i>對手</span></div>
           <div id="mapTip" class="map-tip">已進入神蹟選點模式：點地圖施放 · Esc 取消 · 1–9 快選</div>
         </div>

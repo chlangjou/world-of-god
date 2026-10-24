@@ -302,3 +302,29 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
 .battle-focus-armies{font-size:11px;color:#f5eee0}
 .battle-focus-armies i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
 .battle-focus-detail{font-size:10px;color:#f4cf97}
+
+/* Map-only display toggles; never take space from the fixed viewport. */
+.map-layers{position:absolute;top:10px;right:10px;z-index:7;
+  font:600 11px/1.35 system-ui,sans-serif;color:#f3e9d2}
+.map-layers-toggle{display:block;margin-left:auto;background:#173237f2;color:#f2e9d7;
+  border:1px solid #9bb8a9;border-radius:7px;padding:7px 10px;
+  font:700 11px system-ui;cursor:pointer;box-shadow:0 3px 12px #051c21a8}
+.map-layers-toggle:hover,.map-layers-toggle:focus-visible{border-color:#f5d69e;background:#294d4a}
+.map-layers-panel{margin-top:5px;width:min(246px,80vw);max-height:min(350px,calc(100cqh - 57px));
+  padding:10px;border:1px solid #6f9087;border-radius:9px;background:#11292bf5;
+  box-shadow:0 7px 24px #071419d9;overflow-y:auto;overscroll-behavior:contain}
+.map-layer-caption{font-size:10px;letter-spacing:.3px;color:#b8d6ca;margin:1px 0 5px}
+.map-layer-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-bottom:9px}
+.map-layer-presets button{font:700 11px system-ui;border:1px solid #53776e;border-radius:5px;
+  background:#223b3a;color:#e6eae1;padding:5px 3px;cursor:pointer}
+.map-layer-presets button[aria-pressed="true"]{background:#496d60;border-color:#f4d59b;color:#fff1c8}
+.map-layer-presets button:hover,.map-layer-presets button:focus-visible{border-color:#f4d59b}
+.map-layer-switches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:6px;row-gap:5px}
+.map-layer-switches label,.map-layer-focus{display:flex;gap:5px;align-items:center;
+  font:500 10px/1.3 system-ui;white-space:nowrap;color:#eee4d0;cursor:pointer;min-height:22px}
+.map-layer-switches input,.map-layer-focus input{accent-color:#b5e3cd;margin:0;width:14px;height:14px;
+  flex:0 0 14px}
+.map-layer-focus{margin-top:8px;padding-top:8px;border-top:1px solid #45635c}
+.map-layer-help{font:400 10px/1.4 system-ui;color:#b5c8c1;margin-top:6px}
+@media(max-height:650px){.map-layers{top:5px;right:5px}.map-layers-toggle{padding:5px 7px}
+ .map-layers-panel{padding:7px;max-height:calc(100cqh - 42px)}}

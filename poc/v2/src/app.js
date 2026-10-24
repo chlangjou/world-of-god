@@ -15,6 +15,61 @@
   let presentedVictoryHour = null;
   const ticksPerRealSecond = 12 / 8;
   const SPEED_PRESETS = Object.freeze([0.1,1,4,16]);
+  // Presentation-only map layers. None of these flags is part of the world save.
+  const MAP_LAYER_INPUTS=Object.freeze({
+    diplomacy:'mapLayerDiplomacy',settlements:'mapLayerSettlements',
+    quarries:'mapLayerQuarries',military:'mapLayerMilitary',
+    religion:'mapLayerReligion',effects:'mapLayerEffects',
+    focusTown:'mapLayerFocusTown'
+  });
+  const MAP_PRESETS=Object.freeze({
+    world:Object.freeze({diplomacy:false,settlements:false,quarries:true,
+      military:true,religion:true,effects:true,focusTown:false}),
+    political:Object.freeze({diplomacy:true,settlements:true,quarries:true,
+      military:false,religion:false,effects:false,focusTown:true}),
+    military:Object.freeze({diplomacy:false,settlements:false,quarries:true,
+      military:true,religion:false,effects:true,focusTown:false})
+  });
+  const MAP_PRESET_NAMES=Object.freeze({world:'一般',political:'外交',military:'軍事'});
+  const MAP_LAYER_STORAGE_KEY='wog-v2-ui-map-layers-v1';
+  let mapLayers={...MAP_PRESETS.world};
+  try{
+    const saved=JSON.parse(localStorage.getItem(MAP_LAYER_STORAGE_KEY));
+    if(saved&&Object.keys(MAP_LAYER_INPUTS).every(k=>typeof saved[k]==='boolean'))
+      mapLayers=Object.fromEntries(Object.keys(MAP_LAYER_INPUTS).map(k=>[k,saved[k]]));
+  }catch(_){/* storage may be disabled; the default is always safe */}
+  const layerOn=key=>!!mapLayers[key];
+  function activeMapPreset(){
+    return Object.keys(MAP_PRESETS).find(id=>
+      Object.keys(MAP_LAYER_INPUTS).every(key=>mapLayers[key]===MAP_PRESETS[id][key]))||null;
+  }
+  function syncMapLayerControls(){
+    for(const [key,id] of Object.entries(MAP_LAYER_INPUTS))$(id).checked=layerOn(key);
+    const preset=activeMapPreset();
+    for(const [name,id] of [['world','mapPresetWorld'],['political','mapPresetPolitical'],
+      ['military','mapPresetMilitary']])$(id).setAttribute('aria-pressed',String(preset===name));
+    $('mapLayersButton').textContent='圖層 · '+(MAP_PRESET_NAMES[preset]||'自訂');
+    $('mapLayersButton').setAttribute('aria-expanded',String(!$('mapLayersPanel').hidden));
+  }
+  function setMapLayers(preset){
+    if(!MAP_PRESETS[preset])return;
+    mapLayers={...MAP_PRESETS[preset]};
+    saveMapLayers();syncMapLayerControls();draw();
+  }
+  function saveMapLayers(){
+    try{localStorage.setItem(MAP_LAYER_STORAGE_KEY,JSON.stringify(mapLayers));}
+    catch(_){/* display changes still work without storage */}
+  }
+  function setMapLayer(key,visible){
+    if(!(key in MAP_LAYER_INPUTS)||typeof visible!=='boolean')return;
+    mapLayers={...mapLayers,[key]:visible};
+    saveMapLayers();syncMapLayerControls();draw();
+  }
+  function closeMapLayers(){
+    $('mapLayersPanel').hidden=true;
+    $('mapLayersButton').setAttribute('aria-expanded','false');
+  }
+
   function selectSpeed(value){
     if(!SPEED_PRESETS.includes(value))return false;
     speed=value;acc=0;
@@ -1108,7 +1163,7 @@
     }
     // Shared natural mineral sites remain visible while exhausted; actual
     // guarded rights are represented as small rings, not full-map borders.
-    for(const site of state.mobilityHotspots||[]){
+    if(layerOn('quarries'))for(const site of state.mobilityHotspots||[]){
       const px=(site.x+.5)*size,py=(site.y+.5)*size,rich=site.kind==='gold';
       const mineral=state.tiles[site.y*state.width+site.x]?.mineral;
       const right=(state.politics?.quarryClaims||[]).find(q=>q.site.x===site.x&&q.site.y===site.y);
@@ -1150,7 +1205,7 @@
       c.restore();
     }
     // Buildings and informal gathering places; neither is a Divine Presence source.
-    for(const site of state.religiousSites||[]){
+    if(layerOn('religion'))for(const site of state.religiousSites||[]){
       const px=(site.x+.5)*size,py=(site.y+.5)*size;
       const color=factionColor(site.religionId);
       c.save();c.strokeStyle=color;
@@ -1175,13 +1230,28 @@
         c.strokeRect(px-size*1.25,py-size*1.25,size*2.5,size*2.5);}
       c.restore();
     }
-    for(const t of state.settlements){c.save();c.strokeStyle=t.id===selectedTownId?'#f4d69f':t.native?'#98cbb7':'#bed9b4';c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();}
-    // Political links are visible independently of the history feed and religion.
-    for(const r of state.politics?.diplomacy?.relations||[]){
+    for(const t of state.settlements){
+      c.save();
+      if(layerOn('settlements')){
+        c.strokeStyle=t.id===selectedTownId?'#f4d69f':t.native?'#98cbb7':'#bed9b4';
+        c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);
+        c.beginPath();c.arc(t.x*size,t.y*size,
+          state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();
+        c.setLineDash([]);
+      }
+      // A town's name remains visible even if its administrative ring is hidden.
+      c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';
+      c.shadowColor='#0d1e18';c.shadowBlur=7;
+      c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();
+    }
+    // Political links are separate from religion and are hidden in normal play.
+    if(layerOn('diplomacy'))for(const r of state.politics?.diplomacy?.relations||[]){
       if(r.status==='competition'&&!r.lastSeparation)continue;
       const a=state.politics.polities.find(p=>p.id===r.aId),b=state.politics.polities.find(p=>p.id===r.bId);
       const ta=state.settlements.find(t=>t.id===a?.townId),tb=state.settlements.find(t=>t.id===b?.townId);
       if(!ta||!tb)continue;
+      const focusTown=selectedTownId||$('settlementSelect').value;
+      if(layerOn('focusTown')&&focusTown&&ta.id!==focusTown&&tb.id!==focusTown)continue;
       const union=(state.politics?.unions||[]).find(u=>!Number.isFinite(u.dissolvedAtHour)&&u.memberPolityIds.includes(a.id)&&u.memberPolityIds.includes(b.id));
       c.save();c.strokeStyle=union?polityColor(a):r.status==='competition'?'#dc9c8a':r.status==='alliance'?'#eed383':'#a4d9ce';c.fillStyle=c.strokeStyle;
       c.lineWidth=union?4:r.status==='alliance'?3:1.5;c.setLineDash(r.status==='alliance'?[]:[5,5]);
@@ -1213,7 +1283,7 @@
       c.restore();
     }
     // Outpost construction is derived from real independent households, not a divine zone.
-    for(const camp of S.frontierStatus(state).camps){
+    if(layerOn('settlements'))for(const camp of S.frontierStatus(state).camps){
       const px=(camp.x+.5)*size,py=(camp.y+.5)*size;
       c.save();c.strokeStyle='#e7cc87';c.lineWidth=1.5;c.setLineDash([3,4]);
       c.beginPath();c.arc(px,py,size*2.5,0,Math.PI*2);c.stroke();
@@ -1225,7 +1295,7 @@
       c.restore();
     }
     // Starting positions are historical camps, not fixed divine property lines.
-    if(state.opponent?.originMode==='separated-native'&&state.opponentCamp){
+    if(layerOn('settlements')&&state.opponent?.originMode==='separated-native'&&state.opponentCamp){
       for(const origin of [{at:state.camp,name:'初光起點',stroke:'#f4d69f'},
         {at:state.opponentCamp,name:'暮影起點',stroke:'#ffb2a3'}]){
         c.save();c.lineWidth=1.3;c.strokeStyle=origin.stroke;c.setLineDash([3,4]);
@@ -1237,7 +1307,7 @@
     }
     // Actual active Oracle transmission: visible town listeners and living
     // Saint sources only. Badge number is listeners, not a blanket area buff.
-    for(const oracle of opponentOracleMarkers()){
+    if(layerOn('religion'))for(const oracle of opponentOracleMarkers()){
       const point=oracleMarkerPosition(oracle);
       const px=(point.x+.5)*size,py=(point.y+.5)*size;
       const tint=factionColor(oracle.religionId);
@@ -1259,7 +1329,7 @@
     }
     // Military group banners are POLITICAL, not religious. Real citizens
     // wear their own faith colors below; avoid a God-to-army one-to-one mapping.
-    for(const polity of state.politics?.polities||[]){
+    if(layerOn('military'))for(const polity of state.politics?.polities||[]){
       const m=polity.militia;
       if(!m.memberIds.length)continue;
       const px=(m.x+.5)*size,py=(m.y+.5)*size;
@@ -1309,7 +1379,7 @@
       c.strokeRect(px-size*.24,py+size*.26,size*.48,size*.41);
       c.beginPath();c.moveTo(px-size*.25,py+size*.34);c.lineTo(px-size*.43,py+size*.55);
       c.moveTo(px+size*.25,py+size*.34);c.lineTo(px+size*.43,py+size*.55);c.stroke();
-      if(soldierOf){
+      if(soldierOf&&layerOn('military')){
         const tint=polityColor(soldierOf);
         c.save();c.fillStyle=tint;c.strokeStyle='#10292c';c.lineWidth=1;
         c.beginPath();c.moveTo(px+size*.35,py+size*.13);
@@ -1340,7 +1410,7 @@
       if(rivalSaint&&rivalPriest){c.strokeStyle='#ffb06d';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.53,0,Math.PI*2);c.stroke();}
       // Temporary statuses remain visible without obscuring Saint/Priest role colors.
       const statuses=Object.entries(p.divineStatuses||{}).filter(([,v])=>v.endsAtHour>state.hour);
-      if(statuses.length){
+      if(statuses.length&&layerOn('effects')){
         const statusColors={efficiency:'#77ecb2',confusion:'#e6a0d8',blindness:'#8799aa'};
         for(const [idx,[kind]] of statuses.entries()){
           c.strokeStyle=statusColors[kind]||'#ffffff';c.lineWidth=2;
@@ -1350,7 +1420,7 @@
       if(p.id===chosen){c.strokeStyle='#faf5c7';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.84,0,Math.PI*2);c.stroke();}
     }
     // A speech bubble belongs only to a Priest who has collected real open petitions.
-    for(const id of state.religion.priests){
+    if(layerOn('religion'))for(const id of state.religion.priests){
       const priest=state.people.find(p=>p.id===id&&p.alive);
       if(!priest)continue;
       const petitions=S.priestPetitions(state,id);if(!petitions.length)continue;
@@ -1361,7 +1431,7 @@
       c.textBaseline='middle';c.fillText(petitions.length>9?'9+':String(petitions.length),b.x,b.y);
       c.restore();
     }
-    for(const e of state.effects){
+    if(layerOn('effects'))for(const e of state.effects){
       if(state.hour>=e.endsAtHour)continue;
       const kind=e.type||'rain';
       c.save();
@@ -1383,9 +1453,9 @@
       }
       c.restore();
     }
-    // Persistent geographic conflict markers: line of approach and a
-    // multi-day clash, instead of letting a one-tick decision vanish in logs.
-    for(const conflict of state.politics?.disputes||[]){
+    // Persistent geographic conflict markers are optional, unlike the
+    // important combat focus button and auto-pause which always remain active.
+    if(layerOn('military'))for(const conflict of state.politics?.disputes||[]){
       if(!['marching','clashing'].includes(conflict.status)&&
          !(conflict.resolvedAtHour!==null&&state.hour-conflict.resolvedAtHour<8*24))continue;
       const selected=conflict.id===visibleConflict()?.id;
@@ -1484,7 +1554,7 @@
     // This is presentation only: every health bar belongs to a real citizen;
     // battle resolution remains in the deterministic human polity kernel.
     const battle=visibleConflict();
-    if(battle?.status==='clashing'&&!armedMiracle){
+    if(battle?.status==='clashing'&&!armedMiracle&&layerOn('military')){
       const a=state.politics.polities.find(p=>p.id===battle.aId),
         b=state.politics.polities.find(p=>p.id===battle.bId);
       if(a&&b){
@@ -1539,7 +1609,7 @@
   function onMap(e) {
     const rect=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-rect.left)*state.width/rect.width), y=Math.floor((e.clientY-rect.top)*state.height/rect.height);
     if(x<0||y<0||x>=state.width||y>=state.height)return;
-    if(!armedMiracle){
+    if(!armedMiracle&&layerOn('religion')){
       const oracle=oracleMarkerAt({x,y});
       if(oracle){focusOpponentOracle(oracle.id);return;}
     }
@@ -1559,7 +1629,7 @@
     const mx=(e.clientX-rect.left)*canvas.width/rect.width;
     const my=(e.clientY-rect.top)*canvas.height/rect.height;
     let marked=null,hit=Infinity;
-    for(const id of state.religion.priests){
+    for(const id of (layerOn('religion')?state.religion.priests:[])){
       const priest=state.people.find(p=>p.id===id&&p.alive);
       if(!priest||!S.priestPetitions(state,id).length)continue;
       const b=priestBubblePosition(priest,canvas.width/state.width);
@@ -1578,7 +1648,7 @@
     if(marker?.location&&Math.hypot(x-marker.location.center.x,y-marker.location.center.y)<=1.6){
       showInspector('needs');return;
     }
-    const dispute=(state.politics?.disputes||[]).slice().reverse().find(c=>
+    const dispute=(layerOn('military')?state.politics?.disputes||[]:[]).slice().reverse().find(c=>
       Math.hypot(c.site.x-x,c.site.y-y)<=2.3&&
       (['marching','clashing'].includes(c.status)||
        (c.resolvedAtHour!==null&&state.hour-c.resolvedAtHour<8*24)));
@@ -1588,7 +1658,7 @@
       say('已定位石礦爭端：'+summary.sideA+' 對 '+summary.sideB+'。'+summary.status);
       return;
     }
-    const site=(state.religiousSites||[]).find(v=>Math.hypot(v.x-x,v.y-y)<=1.5);
+    const site=(layerOn('religion')?state.religiousSites||[]:[]).find(v=>Math.hypot(v.x-x,v.y-y)<=1.5);
     if(site){
       selectedTownId=site.townId;showInspector('town');
       say('宗教集會點：'+(site.stage==='temple'?'Temple':site.stage==='shrine'?'Shrine':'自然聚會／遺址')+
@@ -1678,6 +1748,20 @@
     if(t-lastDraw>145){lastDraw=t;render();}
     requestAnimationFrame(animate);
   }
+  // Keep the layer chooser outside the simulation kernel and outside saves.
+  $('mapLayersButton').onclick=()=>{
+    $('mapLayersPanel').hidden=!$('mapLayersPanel').hidden;
+    syncMapLayerControls();
+  };
+  for(const [preset,id] of [['world','mapPresetWorld'],['political','mapPresetPolitical'],
+    ['military','mapPresetMilitary']])$(id).onclick=()=>setMapLayers(preset);
+  for(const [key,id] of Object.entries(MAP_LAYER_INPUTS))
+    $(id).onchange=()=>setMapLayer(key,!!$(id).checked);
+  document.addEventListener('pointerdown',event=>{
+    if(!$('mapLayersPanel').hidden&&!event.target?.closest?.('.map-layers'))
+      closeMapLayers();
+  });
+  syncMapLayerControls();
   $('battleFocusBtn').onclick=()=>{
     const battle=visibleConflict();
     if(!battle)return;
@@ -1738,6 +1822,9 @@
   };
   document.querySelectorAll('[data-inspect-tab]').forEach(button=>button.onclick=()=>{if(button.dataset.inspectTab==='needs'){activePriestId=null;priestPetitionIndex=0;needPage=0;}showInspector(button.dataset.inspectTab);});
   document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&!$('mapLayersPanel').hidden){
+      closeMapLayers();e.preventDefault();return;
+    }
     if(e.key==='Escape'&&armedMiracle){
       armedMiracle=null;render();
     }else if(e.key==='Escape'&&selectedNeedId){

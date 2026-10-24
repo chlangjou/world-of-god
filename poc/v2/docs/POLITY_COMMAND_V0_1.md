@@ -2,7 +2,7 @@
 
 Status: **experimental**, Issue [#13](https://github.com/chlangjou/world-of-god/issues/13), 延伸 #9。這不是正式國家制度或政教關係規格。
 
-本功能分支另接續 [Issue #14 外交實驗](ISSUE_14_DIPLOMACY_EXPERIMENT.md)：新增可關閉的和解與互助同盟，以下「無外交」界線描述的是原 v0.1 基準；政治聯合仍未實作。
+本功能分支另接續 [Issue #14 外交實驗](ISSUE_14_DIPLOMACY_EXPERIMENT.md) 與 [兩村政治聯合實驗](ISSUE_14_POLITICAL_UNION_EXPERIMENT.md)：新增可關閉的和解、互助同盟與上層政治聯合，保留地方政體和庫存。以下「無外交」界線描述的是原 v0.1 基準。
 
 ## 暫定原則
 - 神可以在既有 Local Presence 條件允許時施放 Lightning 殺領袖；不能直接當國王下軍事或建設命令。

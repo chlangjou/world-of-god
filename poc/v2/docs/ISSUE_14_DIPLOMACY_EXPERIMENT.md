@@ -1,5 +1,7 @@
 # Issue #14：自主和解與互助同盟的第一輪實驗
 
+後續已加入上層政治聯合，見 [政治聯合實驗與本機證據](ISSUE_14_POLITICAL_UNION_EXPERIMENT.md)。下文保留第一輪結果與當時未完成範圍。
+
 追蹤議題：[PoC v0.2：同信仰聚落和解、結盟與政治聯合](https://github.com/chlangjou/world-of-god/issues/14)。
 基準：`feature/polity-command-v0.1`，`2c59219dcb5838b34fefc53f17c1f6d06450a3f2`（實作前已 fetch 核對）。
 功能分支：`codex/issue-14-cooperation`；不修改或合併 main。

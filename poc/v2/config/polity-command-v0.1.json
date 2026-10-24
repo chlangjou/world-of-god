@@ -29,6 +29,15 @@
     "allianceTrust": 38,
     "peaceDays": 14,
     "shipmentUnits": 1.5,
-    "shipmentEveryDays": 7
+    "shipmentEveryDays": 7,
+    "union": {
+      "enabled": true,
+      "allianceDays": 30,
+      "trust": 65,
+      "delivered": 1.5,
+      "contactDays": 20,
+      "recentContactDays": 7,
+      "maxReluctance": 0.8
+    }
   }
 }

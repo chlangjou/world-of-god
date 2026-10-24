@@ -21,6 +21,8 @@
     "check:playable": "node tools/build-single.cjs --check",
     "test:polity": "node --test tests/polity-command.test.cjs tests/polity-intervention-ui.test.cjs tests/diplomacy.test.cjs",
     "evaluate:diplomacy": "node tools/diplomacy-experiment.cjs",
+    "test:union": "node --test tests/political-union.test.cjs",
+    "evaluate:union": "node tools/political-union-experiment.cjs",
     "test:fast": "node --test tests/mobility-contact-fast.test.cjs tests/miracle-parameters.test.cjs tests/shrine-temple.test.cjs tests/victory.test.cjs tests/frontier-playable.test.cjs tests/oracle-direct-switch.test.cjs tests/multigod.test.cjs tests/oracle-miracle-pairing.test.cjs tests/layout.test.cjs"
   },
   "engines": {

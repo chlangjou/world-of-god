@@ -48,6 +48,12 @@ function normalize(profile){
     peaceTrust:clamp(d.peaceTrust??18,1,100),allianceTrust:clamp(d.allianceTrust??38,1,100),
     peaceDays:Math.round(clamp(d.peaceDays??14,1,180)),
     shipmentUnits:clamp(d.shipmentUnits??1.5,.1,10),shipmentEveryDays:Math.round(clamp(d.shipmentEveryDays??7,1,90))};
+  if(out.diplomacy&&d.union?.enabled===true)out.diplomacy.union={enabled:true,
+    allianceDays:Math.round(clamp(d.union.allianceDays??30,1,180)),
+    trust:clamp(d.union.trust??65,1,100),delivered:clamp(d.union.delivered??1.5,.1,100),
+    contactDays:Math.round(clamp(d.union.contactDays??20,1,180)),
+    recentContactDays:Math.round(clamp(d.union.recentContactDays??7,1,30)),
+    maxReluctance:clamp(d.union.maxReluctance??.8,0,1)};
   return out;
 }
 function init(s,profile){
@@ -55,6 +61,7 @@ function init(s,profile){
   if(!cfg.enabled)return;
   s.politics={...cfg,polities:[],disputes:[],claims:[],nextDisputeId:1};
   if(cfg.diplomacy)s.politics.diplomacy={...cfg.diplomacy,relations:[],shipments:[],nextShipmentId:1};
+  if(cfg.diplomacy?.union){s.politics.unions=[];s.politics.nextUnionId=1;}
 }
 const active=s=>!!s.politics?.enabled;
 const townOf=(s,p)=>s.settlements.find(t=>t.id===p.townId);
@@ -160,6 +167,7 @@ function beginReturn(s,polity){
 }
 function onDeath(s,p,emit,departure=false){
   if(!active(s))return;
+  for(const u of s.politics.unions||[])if(u.leaderId===p.id)vacateUnion(s,u,p,emit,departure);
   if(!departure)for(const c of s.politics.disputes.filter(c=>c.status==='clashing')){
     if(s.politics.polities.some(v=>[c.aId,c.bId].includes(v.id)&&v.militia.memberIds.includes(p.id))){
       const r=relation(s,c.aId,c.bId);if(r){r.battleDeaths=(r.battleDeaths||0)+1;r.grievance+=4;}
@@ -262,6 +270,7 @@ function startDispute(s,emit){
   const nodes=s.mobilityHotspots.filter(t=>t.kind==='stone');
   for(let i=0;i<polities.length;i++)for(let j=i+1;j<polities.length;j++){
     const a=polities[i],b=polities[j],ta=townOf(s,a),tb=townOf(s,b);
+    if(!offensePolicy(s,a,b).ok||!offensePolicy(s,b,a).ok)continue;
     if(relation(s,a.id,b.id)?.status!=='competition'&&relation(s,a.id,b.id))continue;
     if(!ta||!tb||!unoccupied(a)||!unoccupied(b))continue;
     if(ta.storage.stone>=cfg.resourceNeedStone||tb.storage.stone>=cfg.resourceNeedStone)continue;
@@ -281,6 +290,13 @@ function startDispute(s,emit){
       cfg.disputes.push({id,aId:a.id,bId:b.id,site:{x:site.x,y:site.y,kind:site.kind},
         startedAtHour:s.hour,status:'marching',trigger:'both stone reserves below '+cfg.resourceNeedStone,
         winnerId:null,resolvedAtHour:null});
+      const incident=cfg.disputes.at(-1);
+      for(const [side,p,other]of [['a',a,b],['b',b,a]]){
+        const u=unionOf(s,p.id);if(!u)continue;
+        incident[side+'UnionId']=u.id;incident[side+'CoordinatorId']=u.leaderId;
+        u.decisions.push({hour:s.hour,disputeId:id,representativeId:p.id,otherPolityId:other.id,
+          coordinatorId:u.leaderId,reason:'由共同領袖協調單一對外礦區行動；尊重所有成員既有和平協議'});
+      }
       emit(s,'conflict',ta.name+' 與 '+tb.name+' 因同一處石礦發生邊境爭端。',
         ['雙方現有石材都低於 '+cfg.resourceNeedStone,'民兵由真實成年居民組成並步行前往礦區',
          '非神明直接指揮，衝突需要雙方有人類領袖與可行軍道路']);
@@ -386,6 +402,79 @@ function syncMembership(s,emit){
       if(departed)onDeath(s,departed,emit,true);
     }
   }
+  for(const u of s.politics.unions||[])if(u.leaderId&&!unionMembers(s,u).some(p=>p.leaderId===u.leaderId)){
+    const departed=s.people.find(p=>p.id===u.leaderId);if(departed)vacateUnion(s,u,departed,emit,true);
+  }
+}
+function unionMembers(s,u){return s.politics.polities.filter(p=>u.memberPolityIds.includes(p.id));}
+function unionOf(s,polityId){return s.politics?.unions?.find(u=>u.memberPolityIds.includes(polityId))||null;}
+function reluctance(s,a,b){return ((hash(s.seed+'|ambition|'+a.leaderId)%100)+
+  (hash(s.seed+'|ambition|'+b.leaderId)%100))/200;}
+function offensePolicy(s,p,other){
+  const u=unionOf(s,p.id);if(!u)return {ok:true};
+  const enemyUnion=unionOf(s,other.id),others=enemyUnion?unionMembers(s,enemyUnion):[other];
+  if(u===enemyUnion)return {ok:false,reason:'同一政治聯合'};
+  if(!u.leaderId||!s.people.some(q=>q.id===u.leaderId&&q.alive))return {ok:false,reason:'共同指揮真空'};
+  const members=unionMembers(s,u);
+  if(members.some(a=>others.some(b=>{const r=relation(s,a.id,b.id);return r&&r.status!=='competition';})))
+    return {ok:false,reason:'共同對外政策尊重成員的和平或同盟'};
+  if(s.politics.disputes.some(c=>['marching','clashing'].includes(c.status)&&
+    members.some(a=>[c.aId,c.bId].includes(a.id))))return {ok:false,reason:'聯合已有對外行動'};
+  return {ok:true,unionId:u.id,coordinatorId:u.leaderId};
+}
+function withdrawUnion(s,u,emit,reason,onlyAgainst=[]){
+  for(const c of s.politics.disputes)if(['marching','clashing'].includes(c.status)&&
+    u.memberPolityIds.some(id=>[c.aId,c.bId].includes(id))&&
+    (!onlyAgainst.length||onlyAgainst.some(id=>[c.aId,c.bId].includes(id)))){
+    c.status='withdrawn';c.winnerId=null;c.resolvedAtHour=s.hour;c.reason=reason;
+    for(const id of [c.aId,c.bId]){const p=s.politics.polities.find(p=>p.id===id);if(p)beginReturn(s,p);}
+    emit(s,'conflict',u.name+' 協調撤回對外礦區行動。',[reason,'雙方實際部隊返回原村；沒有資源或戰果轉移']);
+  }
+}
+function vacateUnion(s,u,person,emit,departure){
+  u.leaderId=null;u.vacantUntilHour=s.hour+vacancyDays(s,u,person.id)*24;
+  u.history.push({type:'vacancy',hour:s.hour,personId:person.id,untilHour:u.vacantUntilHour});
+  withdrawUnion(s,u,emit,'union-command-vacancy');
+  emit(s,'politics',u.name+' 的共同領袖 '+person.name+(departure?' 離開職位':' 離世')+'，對外指揮暫停。',
+    ['空窗 '+Math.round((u.vacantUntilHour-s.hour)/24)+' 日','地方領袖、守備、行政、庫存與盟村運輸繼續依原規則運作']);
+}
+function electUnionLeader(s,members){return members.map(p=>leader(s,p)).filter(Boolean)
+  .sort((a,b)=>merit(b)-merit(a)||a.id.localeCompare(b.id))[0]||null;}
+function unionsDaily(s,emit){
+  const cfg=s.politics.diplomacy?.union;if(!cfg?.enabled)return;
+  for(const u of s.politics.unions){
+    if(!u.leaderId&&s.hour>=u.vacantUntilHour){
+      const elected=electUnionLeader(s,unionMembers(s,u));
+      if(elected){u.leaderId=elected.id;u.vacantUntilHour=null;
+        u.history.push({type:'succession',hour:s.hour,personId:elected.id});
+        emit(s,'politics',u.name+' 推舉 '+elected.name+' 接任共同領袖。',['由實際在世地方領袖協調；不合併各村行政與庫存']);
+      }else u.vacantUntilHour=s.hour+7*24;
+    }
+  }
+  // A bounded two-village union. Existing unions neither absorb nor overlap.
+  for(const r of s.politics.diplomacy.relations.filter(r=>r.status==='alliance')
+    .sort((a,b)=>b.trust-a.trust||a.aId.localeCompare(b.aId)||a.bId.localeCompare(b.bId))){
+    if(unionOf(s,r.aId)||unionOf(s,r.bId)||r.trust<cfg.trust||r.delivered<cfg.delivered||
+      r.contactDays<cfg.contactDays||s.hour-r.allianceAtHour<cfg.allianceDays*24)continue;
+    const a=s.politics.polities.find(p=>p.id===r.aId),b=s.politics.polities.find(p=>p.id===r.bId);
+    if(!a||!b||!leader(s,a)||!leader(s,b)||reluctance(s,a,b)>cfg.maxReluctance)continue;
+    if(s.politics.disputes.some(c=>['marching','clashing'].includes(c.status)&&
+      [c.aId,c.bId].some(id=>id===a.id||id===b.id)))continue;
+    const ta=townOf(s,a),tb=townOf(s,b);
+    const contacted=(s.contactLog||[]).some(e=>e.hour>s.hour-cfg.recentContactDays*24&&
+      ((e.aTownId===ta.id&&e.bTownId===tb.id)||(e.aTownId===tb.id&&e.bTownId===ta.id)));
+    if(!contacted)continue;
+    const elected=electUnionLeader(s,[a,b]);
+    const reason='同盟維持 '+Math.floor((s.hour-r.allianceAtHour)/24)+' 日；實際運抵 '+r.delivered+
+      '；接觸 '+r.contactDays+' 日；雙方領袖同意協調，地方自治保留';
+    const u={id:'union-'+s.politics.nextUnionId++,name:ta.name+'・'+tb.name+'聯合',
+      memberPolityIds:[a.id,b.id],memberTownIds:[ta.id,tb.id],leaderId:elected.id,
+      formedAtHour:s.hour,vacantUntilHour:null,reason,decisions:[],
+      history:[{type:'formed',hour:s.hour,personId:elected.id,reason}]};
+    s.politics.unions.push(u);
+    emit(s,'politics',u.name+' 成立，推舉 '+elected.name+' 為共同協調領袖。',
+      [reason,'各村領袖與庫存不合併；每次至多一支地方民兵代表聯合對外行動']);
+  }
 }
 function relation(s,a,b){return s.politics?.diplomacy?.relations.find(r=>
   (r.aId===a&&r.bId===b)||(r.aId===b&&r.bId===a));}
@@ -406,6 +495,10 @@ function transition(s,r,status,a,b,emit){
     [c.aId,c.bId].includes(a.id)&&[c.aId,c.bId].includes(b.id)){
     c.status='withdrawn';c.winnerId=null;c.resolvedAtHour=s.hour;c.reason='negotiated-peace';
     beginReturn(s,a);beginReturn(s,b);
+  }
+  for(const [p,other]of [[a,b],[b,a]]){
+    const u=unionOf(s,p.id),opponent=unionOf(s,other.id);
+    if(u)withdrawUnion(s,u,emit,'union-member-treaty',opponent?opponent.memberPolityIds:[other.id]);
   }
   emit(s,'diplomacy',townOf(s,a).name+' 與 '+townOf(s,b).name+(status==='peace'?' 達成和解。':' 建立互助同盟。'),
     [r.reason,'實際跨村接觸日數 '+r.contactDays+'；信任 '+r.trust.toFixed(1),
@@ -490,13 +583,13 @@ function diplomacyDaily(s,emit){
     const leaderSame=leader(s,a)?.religionId&&leader(s,a)?.religionId===leader(s,b)?.religionId;
     const benefit=['wood','stone','food'].some(k=>Math.abs(ta.storage[k]-tb.storage[k])>=5);
     // Preference is seed/person-derived and stable across replay and reload.
-    const reluctance=((hash(s.seed+'|ambition|'+a.leaderId)%100)+(hash(s.seed+'|ambition|'+b.leaderId)%100))/200;
+    const reserve=reluctance(s,a,b);
     r.reason=(same?'主要核心信仰相同':'主要核心信仰不同或不足')+'；'+
       (leaderSame?'領袖同教':'領袖信仰各自獨立')+'；'+(benefit?'有庫存互補':'互補有限')+
-      '；接觸 '+contacts.length+'；舊怨 '+r.grievance.toFixed(1)+'；領袖保留 '+reluctance.toFixed(2);
+      '；接觸 '+contacts.length+'；舊怨 '+r.grievance.toFixed(1)+'；領袖保留 '+reserve.toFixed(2);
     if(contacts.length){
       r.contactDays++;r.grievance=Math.max(0,r.grievance-.3);
-      r.trust=Math.min(100,r.trust+(1+(same?1.4:0)+(leaderSame?.2:0)+(benefit?.7:0))*(1-reluctance*.5)/(1+r.grievance/10));
+      r.trust=Math.min(100,r.trust+(1+(same?1.4:0)+(leaderSame?.2:0)+(benefit?.7:0))*(1-reserve*.5)/(1+r.grievance/10));
     }
     if(contacts.length&&leader(s,a)&&leader(s,b)){
       if(r.status==='competition'&&r.trust>=d.peaceTrust&&r.grievance<12&&r.contactDays>=5)
@@ -537,6 +630,7 @@ function daily(s,emit,die,notify){
     advanceUnit(s,polity.militia);
   }
   diplomacyDaily(s,emit);
+  unionsDaily(s,emit);
   resolveDisputes(s,emit,die,notify);
   if(day(s)>0&&day(s)%cfg.disputeEveryDays===0)startDispute(s,emit);
 }
@@ -552,6 +646,10 @@ function overview(s,townId){
     fortProgress:p.watchtower.progress,
     commandFactor:head?1:s.politics.vacantCommandFactor,
     defense:defense(s,p,townOf(s,p)),
+    union:unionOf(s,p.id)?(()=>{const u=unionOf(s,p.id),head=s.people.find(q=>q.id===u.leaderId&&q.alive);
+      return {id:u.id,name:u.name,memberTownIds:u.memberTownIds,leaderId:u.leaderId,
+        leaderName:head?.name||null,vacantDays:u.vacantUntilHour===null?0:Math.max(0,Math.ceil((u.vacantUntilHour-s.hour)/24)),
+        formedAtHour:u.formedAtHour,reason:u.reason};})():null,
     relations:(s.politics.diplomacy?.relations||[]).filter(r=>r.aId===p.id||r.bId===p.id).map(r=>({
       ...r,partnerTownId:s.politics.polities.find(v=>v.id===(r.aId===p.id?r.bId:r.aId))?.townId}))};
 }
@@ -564,12 +662,26 @@ function reconcile(s){
   s.politics.disputes ||= [];
   s.politics.claims ||= [];
   s.politics.nextDisputeId ||= 1;
+  if(cfg.diplomacy?.union){s.politics.unions ||= [];s.politics.nextUnionId ||= 1;}
 }
 function validate(s){
   if(!active(s))return [];
   const errors=[],cfg=s.politics;
   const seen=new Set(),soldiers=new Set();
   const d=cfg.diplomacy,carriers=new Set();
+  const unionIds=new Set(),unionMembersSeen=new Set();
+  for(const u of cfg.unions||[]){
+    if(unionIds.has(u.id))errors.push('政治聯合 ID 重複');unionIds.add(u.id);
+    if(!Array.isArray(u.memberPolityIds)||u.memberPolityIds.length!==2||new Set(u.memberPolityIds).size!==2){errors.push('政治聯合成員不正確');continue;}
+    const members=unionMembers(s,u);
+    if(members.length!==2||JSON.stringify(members.map(p=>p.townId).sort())!==JSON.stringify([...(u.memberTownIds||[])].sort()))
+      errors.push('政治聯合缺少原有地方政體或村落');
+    for(const id of u.memberPolityIds){if(unionMembersSeen.has(id))errors.push('地方政體重複加入聯合');unionMembersSeen.add(id);}
+    if(u.leaderId){if(!members.some(p=>p.leaderId===u.leaderId&&leader(s,p)))errors.push('共同領袖不是在世地方領袖');
+      if(u.vacantUntilHour!==null)errors.push('共同領袖與真空期限衝突');
+    }else if(!Number.isFinite(u.vacantUntilHour))errors.push('共同指揮真空缺少期限');
+    if(!Number.isFinite(u.formedAtHour)||!Array.isArray(u.decisions)||!Array.isArray(u.history))errors.push('政治聯合歷史不完整');
+  }
   if(d?.enabled){
     for(const r of d.relations||[]){
       if(!['competition','peace','alliance'].includes(r.status)||!Number.isFinite(r.trust)||r.trust<0||r.trust>100)
@@ -605,5 +717,5 @@ function validate(s){
   }
   return errors;
 }
-return {BASE,normalize,init,daily,onDeath,personDuty,construct,overview,validate,reconcile,defense,coreFaith,relation,syncMembership};
+return {BASE,normalize,init,daily,onDeath,personDuty,construct,overview,validate,reconcile,defense,coreFaith,relation,syncMembership,unionOf,offensePolicy};
 });

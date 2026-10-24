@@ -419,6 +419,12 @@
   }
   async function loadMineralExperiment(){
     const mode=new URLSearchParams(window.location?.search||'').get('mineralRights');
+    if(mode==='3'){
+      if(window.WOG_MINERAL_P2_PROFILE)return window.WOG_MINERAL_P2_PROFILE;
+      const response=await fetch('config/mineral-rights-p2-v0.1.json');
+      if(!response.ok)throw Error('P2 Mineral Rights Profile 無法載入');
+      return response.json();
+    }
     if(mode==='2'){
       if(window.WOG_MINERAL_P1_5_PROFILE)return window.WOG_MINERAL_P1_5_PROFILE;
       const response=await fetch('config/mineral-rights-p1-5-v0.1.json');
@@ -467,10 +473,10 @@
     return response.json();
   }
   function newWorld() {
-    // Explicit web opt-ins: ?mineralRights=1 (P1), ?mineralRights=2 (P1.5).
+    // Explicit web opt-ins: ?mineralRights=1 (P1), =2 (P1.5), =3 (P2).
     // Existing worlds without the query parameter remain unchanged.
     const mineMode=new URLSearchParams(window.location?.search||'').get('mineralRights');
-    const wantMineRights=mineMode==='1'||mineMode==='2';
+    const wantMineRights=['1','2','3'].includes(mineMode);
     if(wantMineRights&&(!activeMineralExperimentProfile||!activeMobilityProfile||!activePolityProfile))
       throw Error('礦權實驗需要完整的 Mobility / Polity / Mineral Rights Profiles');
     const overlay=wantMineRights?activeMineralExperimentProfile:null;
@@ -930,10 +936,16 @@
         ' · '+(c.status==='protected'?'真人駐守':c.status==='deploying'?'守衛行軍中':'尚未受保護')+
         ' · 儲量 '+format(c.currentAvailable,1)+' / 警戒 '+format(c.threshold,1)+
         ' · 控制 '+c.protectedDays+' 日'+
+        (c.truceUntilHour>state.hour?' · 停戰 '+Math.ceil((c.truceUntilHour-state.hour)/24)+' 日':'')+
+        (c.lastOutcome?' · 前次 '+(c.lastOutcome.kind==='transferred'?'礦權移轉':
+          c.lastOutcome.kind==='defended'?'守衛成功':'雙方撤軍'):'')+
         (c.accessRequests?.some(q=>q.status==='granted'&&q.untilHour>state.hour&&q.remainingUnits>0)?
           ' · 有限通行 '+c.accessRequests.filter(q=>q.status==='granted'&&q.untilHour>state.hour&&q.remainingUnits>0)
             .map(q=>format(q.remainingUnits,1)+'石/'+Math.ceil((q.untilHour-state.hour)/24)+'日').join('、'):'')+
         '</div>').join('')+
+      (polity.quarryDisputes||[]).slice(-1).map(c=>
+        '<div>礦權爭端 '+html(c.id)+' · '+html(c.status)+
+        (c.winnerId?' · '+html(c.winnerId):'')+'</div>').join('')+
       (polity.quarryChoices||[]).slice(-2).map(c=>
         '<div title="'+html(c.reason)+'">外村礦權：'+
           html(state.settlements.find(t=>t.id===c.ownerTownId)?.name||c.ownerTownId)+
@@ -1801,6 +1813,7 @@
     const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory,polity,minerals].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     const mineMode=new URLSearchParams(window.location?.search||'').get('mineralRights');
     say(failures.length?'Profile 載入失敗：'+failures.join('；'):
+      mineMode==='3'?'P2 礦權實驗就緒：真人通行、警告後抗命、有限交戰、撤軍與礦權移轉。':
       mineMode==='2'?'P1.5 礦權實驗已就緒：真人領袖決定避讓／協商／抗議；採石後仍需居民返村入庫。':
       mineMode==='1'?'P1 礦權共享與實際守衛已就緒：自然礦藏有限、緩慢恢復。':
       '宗教對決已就緒。AI 選存糧；選育兒 Oracle → 傳下神諭 → 開始。');

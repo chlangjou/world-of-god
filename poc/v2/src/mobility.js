@@ -197,6 +197,10 @@ function recordOreArrival(s,p,trip,h,distribute){
   const counts=s.counts;
   counts.quarryOreTripsDelivered=(counts.quarryOreTripsDelivered||0)+1;
   counts.quarryOreUnitsDelivered=(counts.quarryOreUnitsDelivered||0)+cargo.amount;
+  if(trip.permitId&&cargo.kind==='stone'){
+    counts.quarryPermittedTripsDelivered=(counts.quarryPermittedTripsDelivered||0)+1;
+    counts.quarryPermittedUnitsDelivered=(counts.quarryPermittedUnitsDelivered||0)+cargo.amount;
+  }
   if(trip.avoidedClaimId&&cargo.kind==='stone'){
     counts.quarryAlternativeTripsDelivered=(counts.quarryAlternativeTripsDelivered||0)+1;
     counts.quarryAlternativeUnitsDelivered=(counts.quarryAlternativeUnitsDelivered||0)+cargo.amount;
@@ -282,8 +286,14 @@ function plan(s,p,purpose='resource'){
       const stoneNeeded=newChoice&&(s.politics.quarryClaims||[]).some(q=>q.status==='protected')&&
         s.settlements.some(v=>v.id===p.settlementId&&
           v.storage.stone<(s.politics.mineralRights.safetyStone*1.5));
+      // A real P2 access pass influences a gatherer's own trip choice, never
+      // an instant shipment or a God-issued movement order.
+      const permitted=t.resourceNode==='stone'&&newChoice&&
+        s.politics?.mineralRights?.territorialEnabled&&
+        accessPass(s,guardedClaim(s,t,p),p);
       const nodeWeight=p.occupation==='gatherer'&&!mission?
-        (t.resourceNode==='stone'&&(!m.finiteMineralsEnabled||t.stone>=cutoff)?65+(stoneNeeded?16:0):
+        (t.resourceNode==='stone'&&(!m.finiteMineralsEnabled||t.stone>=cutoff)?
+          65+(stoneNeeded?16:0)+(permitted?40:0):
           t.resourceNode==='gold'&&(!m.finiteMineralsEnabled||t.gold>0)?75:0):0;
       const score=strength+nodeWeight-length*(mission?.14:.025)+jitter;
       if((mission?strength>0:strength+nodeWeight>=2)&&score>quality){
@@ -350,12 +360,20 @@ function gather(s,p,trip){
     const owner=protectedBy(s,t,p);
     if(owner){
       const contested=challengeChoice(s,owner,p);
-      s.counts.quarryBlockedArrivals=(s.counts.quarryBlockedArrivals||0)+1;
-      if(contested)s.counts.quarryActualChallenges=(s.counts.quarryActualChallenges||0)+1;
       const encounters=s.politics.quarryEncounters||(s.politics.quarryEncounters=[]);
+      const rights=s.politics.mineralRights;
+      // P2: the first actual barred arrival is a warning. Only a later
+      // witnessed entry by the same community can count as disobedience.
+      const prior=rights.territorialEnabled&&encounters.find(e=>e.claimId===owner.id&&
+        e.visitorTownId===p.settlementId&&e.outcome==='guard-warning'&&
+        e.hour<s.hour&&s.hour-e.hour<=rights.warningLookbackDays*24);
+      const resisted=contested&&(!rights.territorialEnabled||!!prior);
+      s.counts.quarryBlockedArrivals=(s.counts.quarryBlockedArrivals||0)+1;
+      if(resisted)s.counts.quarryActualChallenges=(s.counts.quarryActualChallenges||0)+1;
       encounters.push({hour:s.hour,visitorId:p.id,visitorTownId:p.settlementId,
         ownerTownId:owner.townId,site:{x:t.x,y:t.y},claimId:owner.id,
-        guardId:owner.guardId,outcome:contested?'challenge-resisted':'guard-warning'});
+        guardId:owner.guardId,outcome:resisted?'challenge-resisted':'guard-warning',
+        priorWarningHour:prior?.hour??null});
       if(encounters.length>100)encounters.shift();
       return; // human guard opposes this real arrival; no automatic army battle
     }
@@ -434,8 +452,9 @@ function step(s,p,distribute){
     p.x=h.x;p.y=h.y;
     recordOreArrival(s,p,trip,h,distribute);
     delete p.mobilityTrip;
-    const metric=trip.purpose==='mission'?'missionTripsCompleted':'resourceVisitsCompleted';
-    s.counts[metric]=(s.counts[metric]||0)+1;
+    const metric=trip.purpose==='mission'?'missionTripsCompleted':
+      trip.purpose==='quarry-retreat'?null:'resourceVisitsCompleted';
+    if(metric)s.counts[metric]=(s.counts[metric]||0)+1;
     p.activity='rest';p.activityReason='短期出訪後返回家戶';
   }else{
     p.activity='travel';p.activityReason=trip.phase==='out'?

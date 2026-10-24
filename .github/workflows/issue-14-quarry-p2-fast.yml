@@ -1,0 +1,50 @@
+name: Issue 14 quarry P2 bounded territorial dispute
+on:
+  push:
+    branches:
+      - codex/issue-14-quarry-p2-bounded-dispute
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-14-quarry-p2-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-14-quarry-p2-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  bounded:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Syntax checks
+        working-directory: poc/v2
+        run: |
+          node --check src/politics.js
+          node --check src/mobility.js
+          node --check src/app.js
+          node --check tools/build-single.cjs
+          node --check tools/quarry-p2-experiment.cjs
+          node --check tests/quarry-p2.test.cjs
+      - name: P0/P1/P1.5/P2 physical contracts
+        working-directory: poc/v2
+        run: timeout 60s npm run test:quarry-p2
+      - name: Mobility and politics regressions
+        working-directory: poc/v2
+        run: timeout 45s node --test tests/mobility-contact-fast.test.cjs tests/polity-command.test.cjs tests/diplomacy.test.cjs tests/layout.test.cjs
+      - name: Natural diagnostics (one seed, 30 days ONLY)
+        working-directory: poc/v2
+        run: timeout 30s node tools/quarry-p2-experiment.cjs --seed=valley-spring-01 --days=30 --stdout-only
+      - name: Smoke
+        working-directory: poc/v2
+        run: timeout 15s npm run smoke
+      - name: Offline playable matches sources
+        working-directory: poc/v2
+        run: timeout 15s npm run check:playable

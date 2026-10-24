@@ -50,5 +50,11 @@
         "reunionDays": 90
       }
     }
+  },
+  "peaceMilitia": {
+    "enabled": false,
+    "guardFraction": 0.5,
+    "mobilizeDays": 3,
+    "threatGraceDays": 7
   }
 }

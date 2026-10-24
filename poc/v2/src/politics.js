@@ -42,6 +42,13 @@ function normalize(profile){
   out.maxMarchDays=Math.round(clamp(out.maxMarchDays,1,60));
   out.marchCellsPerDay=Math.round(clamp(out.marchCellsPerDay,1,12));
   out.battleRounds=Math.round(clamp(out.battleRounds,2,7));
+  // An opt-in readiness model; default worlds retain their existing full guard.
+  const reserve=profile?.peaceMilitia;
+  if(reserve?.enabled===true)out.peaceMilitia={
+    enabled:true,guardFraction:clamp(reserve.guardFraction??.5,.1,1),
+    mobilizeDays:Math.round(clamp(reserve.mobilizeDays??3,1,30)),
+    threatGraceDays:Math.round(clamp(reserve.threatGraceDays??7,0,60))
+  };
   const d=profile?.diplomacy;
   if(d?.enabled===true)out.diplomacy={enabled:true,
     coreShare:clamp(d.coreShare??.4,.1,1),minCore:Math.round(clamp(d.minCore??3,1,100)),
@@ -72,6 +79,7 @@ function init(s,profile){
   s.politics={...cfg,polities:[],disputes:[],claims:[],nextDisputeId:1};
   if(cfg.diplomacy)s.politics.diplomacy={...cfg.diplomacy,relations:[],shipments:[],nextShipmentId:1};
   if(cfg.diplomacy?.union){s.politics.unions=[];s.politics.nextUnionId=1;}
+  if(cfg.peaceMilitia?.enabled){s.politics.mobilizations=[];s.politics.nextMobilizationId=1;}
 }
 const active=s=>!!s.politics?.enabled;
 const townOf=(s,p)=>s.settlements.find(t=>t.id===p.townId);
@@ -113,6 +121,27 @@ function ensurePolities(s,emit){
        '國家與軍隊由人類自主決定，神明不能直接下達軍令']);
   }
 }
+function pendingMobilization(s,p){
+  return (s.politics.mobilizations||[]).find(m=>m.status==='forming'&&
+    [m.aId,m.bId].includes(p.id))||null;
+}
+function actualMilitaryThreat(s,p){
+  if(pendingMobilization(s,p))return true;
+  return s.politics.disputes.some(c=>[c.aId,c.bId].includes(p.id)&&
+    (['marching','clashing'].includes(c.status)||
+      (Number.isFinite(c.resolvedAtHour)&&
+       s.hour-c.resolvedAtHour<s.politics.peaceMilitia.threatGraceDays*24)));
+}
+function militiaTarget(s,p){
+  const reserve=s.politics.peaceMilitia;
+  if(!reserve?.enabled)return s.politics.militiaLimit;
+  // Potentially hostile neighbors still exist. Standing down is a political
+  // choice after some actual treaty; an active threat always restores readiness.
+  const treaty=s.politics.diplomacy?.relations.some(r=>
+    (r.aId===p.id||r.bId===p.id)&&['peace','alliance'].includes(r.status));
+  if(!treaty||actualMilitaryThreat(s,p))return s.politics.militiaLimit;
+  return Math.max(1,Math.ceil(s.politics.militiaLimit*reserve.guardFraction));
+}
 function chooseMilitia(s,polity){
   const town=townOf(s,polity),unit=polity.militia;
   if(!town)return;
@@ -128,7 +157,7 @@ function chooseMilitia(s,polity){
     !offices.has(p.id)&&!courier(s,p.id));
   const selected=all.sort((a,b)=>
     Number(members.has(b.id))-Number(members.has(a.id))||
-    b.health-a.health||a.id.localeCompare(b.id)).slice(0,s.politics.militiaLimit);
+    b.health-a.health||a.id.localeCompare(b.id)).slice(0,militiaTarget(s,polity));
   unit.memberIds=selected.map(p=>p.id);
   unit.x=town.x;unit.y=town.y;
 }
@@ -275,6 +304,55 @@ function assignRoute(s,polity,site){
 function unoccupied(polity){
   return polity.leaderId&&polity.militia.stance==='defend'&&polity.militia.memberIds.length>0;
 }
+function launchDispute(s,a,b,site,emit){
+  const cfg=s.politics,ta=townOf(s,a),tb=townOf(s,b);
+  if(!ta||!tb||!unoccupied(a)||!unoccupied(b))return false;
+  if(ta.storage.stone>=cfg.resourceNeedStone||tb.storage.stone>=cfg.resourceNeedStone)return false;
+  if((cfg.disputes||[]).some(c=>[c.aId,c.bId].includes(a.id)&&
+    [c.aId,c.bId].includes(b.id)&&s.hour-c.startedAtHour<cfg.disputeCooldownDays*24))return false;
+  const routeA=route(s,ta,site),routeB=route(s,tb,site);
+  if(!routeA||!routeB||routeA.length>cfg.maxMarchDays*cfg.marchCellsPerDay+1||
+    routeB.length>cfg.maxMarchDays*cfg.marchCellsPerDay+1)return false;
+  if(!assignRoute(s,a,site)||!assignRoute(s,b,site))return false;
+  const id='conflict-'+cfg.nextDisputeId++;
+  cfg.disputes.push({id,aId:a.id,bId:b.id,site:{x:site.x,y:site.y,kind:site.kind},
+    startedAtHour:s.hour,status:'marching',trigger:'both stone reserves below '+cfg.resourceNeedStone,
+    winnerId:null,resolvedAtHour:null});
+  const incident=cfg.disputes.at(-1);
+  for(const [side,p,other]of [['a',a,b],['b',b,a]]){
+    const u=unionOf(s,p.id);if(!u)continue;
+    incident[side+'UnionId']=u.id;incident[side+'CoordinatorId']=u.leaderId;
+    u.decisions.push({hour:s.hour,disputeId:id,representativeId:p.id,otherPolityId:other.id,
+      coordinatorId:u.leaderId,reason:'由共同領袖協調單一對外礦區行動；尊重所有成員既有和平協議'});
+  }
+  emit(s,'conflict',ta.name+' 與 '+tb.name+' 因同一處石礦發生邊境爭端。',
+    ['雙方現有石材都低於 '+cfg.resourceNeedStone,'民兵由真實成年居民組成並步行前往礦區',
+      '非神明直接指揮，衝突需要雙方有人類領袖與可行軍道路']);
+  return true;
+}
+function processMobilizations(s,emit){
+  for(const m of (s.politics.mobilizations||[]).filter(m=>m.status==='forming')){
+    const a=s.politics.polities.find(p=>p.id===m.aId),b=s.politics.polities.find(p=>p.id===m.bId);
+    const ta=a&&townOf(s,a),tb=b&&townOf(s,b);
+    const relationNow=a&&b&&relation(s,a.id,b.id);
+    if(!a||!b||!ta||!tb||!unoccupied(a)||!unoccupied(b)||
+      (relationNow&&relationNow.status!=='competition')||
+      s.hour<(relationNow?.nonAggressionUntilHour||0)||
+      !offensePolicy(s,a,b).ok||!offensePolicy(s,b,a).ok){
+      m.status='cancelled';m.resolvedAtHour=s.hour;continue;
+    }
+    if(s.hour<m.readyAtHour)continue;
+    const node=s.tiles[m.site.y*s.width+m.site.x];
+    if(node?.resourceNode!=='stone'||!launchDispute(s,a,b,m.site,emit)){
+      m.status='cancelled';m.resolvedAtHour=s.hour;continue;
+    }
+    m.status='launched';m.resolvedAtHour=s.hour;
+  }
+  // Preserve active notices and a bounded recent log, not unlimited diplomacy history.
+  if(s.politics.mobilizations?.length>64)
+    s.politics.mobilizations=s.politics.mobilizations.filter(m=>
+      m.status==='forming'||s.hour-(m.resolvedAtHour||s.hour)<360*24).slice(-64);
+}
 function startDispute(s,emit){
   const cfg=s.politics,polities=cfg.polities;
   if(!s.mobility?.enabled||!Array.isArray(s.mobilityHotspots))return;
@@ -297,21 +375,21 @@ function startDispute(s,emit){
       if(!routeA||!routeB||
          routeA.length>cfg.maxMarchDays*cfg.marchCellsPerDay+1||
          routeB.length>cfg.maxMarchDays*cfg.marchCellsPerDay+1)continue;
-      if(!assignRoute(s,a,site)||!assignRoute(s,b,site))continue;
-      const id='conflict-'+cfg.nextDisputeId++;
-      cfg.disputes.push({id,aId:a.id,bId:b.id,site:{x:site.x,y:site.y,kind:site.kind},
-        startedAtHour:s.hour,status:'marching',trigger:'both stone reserves below '+cfg.resourceNeedStone,
-        winnerId:null,resolvedAtHour:null});
-      const incident=cfg.disputes.at(-1);
-      for(const [side,p,other]of [['a',a,b],['b',b,a]]){
-        const u=unionOf(s,p.id);if(!u)continue;
-        incident[side+'UnionId']=u.id;incident[side+'CoordinatorId']=u.leaderId;
-        u.decisions.push({hour:s.hour,disputeId:id,representativeId:p.id,otherPolityId:other.id,
-          coordinatorId:u.leaderId,reason:'由共同領袖協調單一對外礦區行動；尊重所有成員既有和平協議'});
+      if(cfg.peaceMilitia?.enabled&&
+        (a.militia.memberIds.length<cfg.militiaLimit||b.militia.memberIds.length<cfg.militiaLimit)){
+        if(!(cfg.mobilizations||[]).some(m=>m.status==='forming'&&
+          ([m.aId,m.bId].includes(a.id)||[m.aId,m.bId].includes(b.id)))){
+          cfg.mobilizations.push({id:'mobilization-'+cfg.nextMobilizationId++,
+            aId:a.id,bId:b.id,site:{x:site.x,y:site.y,kind:site.kind},status:'forming',
+            startedAtHour:s.hour,readyAtHour:s.hour+cfg.peaceMilitia.mobilizeDays*24,
+            resolvedAtHour:null});
+          emit(s,'politics',ta.name+' 與 '+tb.name+' 因石礦糾紛開始召集民兵。',
+            ['後備居民停止一般工作並集結 '+cfg.peaceMilitia.mobilizeDays+' 日',
+             '集結前不可對外行軍，和平協議可能使動員取消']);
+        }
+        return;
       }
-      emit(s,'conflict',ta.name+' 與 '+tb.name+' 因同一處石礦發生邊境爭端。',
-        ['雙方現有石材都低於 '+cfg.resourceNeedStone,'民兵由真實成年居民組成並步行前往礦區',
-         '非神明直接指揮，衝突需要雙方有人類領袖與可行軍道路']);
+      if(!launchDispute(s,a,b,site,emit))continue;
       return; // bounded: at most one new incident per decision day
     }
   }
@@ -768,6 +846,7 @@ function daily(s,emit,die,notify){
   }
   diplomacyDaily(s,emit);
   unionsDaily(s,emit);
+  processMobilizations(s,emit);
   resolveDisputes(s,emit,die,notify);
   if(day(s)>0&&day(s)%cfg.disputeEveryDays===0)startDispute(s,emit);
 }
@@ -779,6 +858,9 @@ function overview(s,townId){
     Math.max(0,Math.ceil((p.vacantUntilHour-s.hour)/24)):0;
   return {polityId:p.id,leaderId:head?.id||null,leaderName:head?.name||null,
     vacantDays:vacancy,militia:p.militia.memberIds.length,
+    militiaCapacity:s.politics.militiaLimit,
+    militiaReserveEnabled:!!s.politics.peaceMilitia?.enabled,
+    mobilizingDays:pendingMobilization(s,p)?Math.max(0,Math.ceil((pendingMobilization(s,p).readyAtHour-s.hour)/24)):null,
     stance:p.militia.stance,fort:p.watchtower.status,
     fortProgress:p.watchtower.progress,
     commandFactor:head?1:s.politics.vacantCommandFactor,
@@ -802,6 +884,7 @@ function reconcile(s){
   s.politics.claims ||= [];
   s.politics.nextDisputeId ||= 1;
   if(cfg.diplomacy?.union){s.politics.unions ||= [];s.politics.nextUnionId ||= 1;}
+  if(cfg.peaceMilitia?.enabled){s.politics.mobilizations ||= [];s.politics.nextMobilizationId ||= 1;}
 }
 function validate(s){
   if(!active(s))return [];
@@ -809,6 +892,12 @@ function validate(s){
   const seen=new Set(),soldiers=new Set();
   const d=cfg.diplomacy,carriers=new Set();
   const unionIds=new Set(),unionMembersSeen=new Set();
+  for(const m of cfg.mobilizations||[]){
+    if(!['forming','launched','cancelled'].includes(m.status))errors.push('民兵動員狀態不正確');
+    if(![m.aId,m.bId].every(id=>cfg.polities.some(p=>p.id===id)))errors.push('動員缺少既存政體');
+    if(!Number.isFinite(m.startedAtHour)||!Number.isFinite(m.readyAtHour)||m.readyAtHour<m.startedAtHour)
+      errors.push('民兵動員計時不正確');
+  }
   for(const u of cfg.unions||[]){
     if(unionIds.has(u.id))errors.push('政治聯合 ID 重複');unionIds.add(u.id);
     if(!Array.isArray(u.memberPolityIds)||u.memberPolityIds.length!==2||new Set(u.memberPolityIds).size!==2){errors.push('政治聯合成員不正確');continue;}

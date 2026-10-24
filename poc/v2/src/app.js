@@ -878,7 +878,10 @@
     diplomacyPage%=Math.max(1,diplomaticRelations.length);
     const politySummary=polity?'<div>政體：'+
       (polity.leaderName?'地方領袖 '+html(polity.leaderName):'地方繼承空窗 '+polity.vacantDays+' 日')+
-      ' · 民兵 '+polity.militia+' · '+(polity.stance==='march'?'向礦區行軍':polity.stance==='return'?'撤退中':'防守')+
+      ' · 民兵 '+polity.militia+(polity.militiaReserveEnabled?'/'+polity.militiaCapacity:'')+
+      (polity.mobilizingDays!==null?' · 集結剩 '+polity.mobilizingDays+' 日':
+        polity.militiaReserveEnabled&&polity.militia<polity.militiaCapacity?' · 和平後備':'' )+
+      ' · '+(polity.stance==='march'?'向礦區行軍':polity.stance==='return'?'撤退中':'防守')+
       ' · 瞭望塔 '+(polity.fort==='built'?'完成':polity.fort==='building'?'施工':'未建')+'</div>'+
       (polity.union?'<div title="'+html(polity.union.reason)+'">政治聯合：'+html(polity.union.name)+
         ' · '+(polity.union.leaderName?'共同領袖 '+html(polity.union.leaderName):'共同指揮空窗 '+polity.union.vacantDays+' 日')+

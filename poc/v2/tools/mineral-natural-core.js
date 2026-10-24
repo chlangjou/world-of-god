@@ -12,6 +12,9 @@ const SEEDS=['valley-spring-01','dry-stress','opponent-competition-replay'];
 const MODES=['legacy','finite-shared','finite-rights'];
 const SNAPSHOTS=[30,60,120,180];
 const round=x=>Math.round(x*1e4)/1e4;
+const fingerprint=str=>{let h=2166136261;for(let i=0;i<str.length;i++){
+  h^=str.charCodeAt(i);h=Math.imul(h,16777619);
+}return (h>>>0).toString(16).padStart(8,'0');};
 const total=(items,f)=>items.reduce((n,v)=>n+f(v),0);
 const snapshot=(s,day,metrics)=>{
   const rocks=(s.mobilityHotspots||[]).filter(q=>q.kind==='stone')
@@ -82,7 +85,7 @@ function run(W,s,mode,days=180){
   if(JSON.stringify(restored)!==saved)throw Error('restore mismatch '+s.seed+'/'+mode);
   W.advanceTicks(s,3);W.advanceTicks(restored,3);
   if(JSON.stringify(restored)!==JSON.stringify(s))throw Error('extra-day replay mismatch '+s.seed+'/'+mode);
-  return {seed:s.seed,mode,days,commonGenesis,metrics,snapshots:snaps,
+  return {seed:s.seed,mode,days,commonGenesisHash:fingerprint(commonGenesis),metrics,snapshots:snaps,
     validation:'validated daily; restore identity; deterministic extra 24h'};
 }
 return {SEEDS,MODES,SNAPSHOTS,run,snapshot};

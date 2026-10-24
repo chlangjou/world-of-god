@@ -2094,6 +2094,7 @@
       for (let x = Math.max(0, home.x - reach); x <= Math.min(s.width - 1, home.x + reach); x++) {
         const t = tile(s, x, y);
         if (t.terrain === 'river') continue;
+        if(kind==='stone'&&person&&MOBILITY.protectedBy(s,t,person))continue;
         const quantity = kind === 'food' ? t.forage : t[kind];
         const score = quantity - .13 * Math.hypot(x - home.x, y - home.y);
         if (score > strength) { strength = score; best = t; }

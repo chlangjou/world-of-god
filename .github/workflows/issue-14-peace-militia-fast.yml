@@ -1,0 +1,45 @@
+name: Issue 14 peaceful militia fast
+on:
+  push:
+    branches:
+      - codex/issue-14-peace-militia-playability
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-14-peace-militia-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-14-peace-militia-fast
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  bounded:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Syntax and profile checks
+        working-directory: poc/v2
+        run: |
+          node --check src/politics.js
+          node --check src/app.js
+          node --check tests/peace-militia.test.cjs
+          node --check tools/peace-militia-experiment.cjs
+      - name: Opt-in reserve causal contracts
+        working-directory: poc/v2
+        run: timeout 55s npm run test:peace-militia
+      - name: Original polity and diplomacy regressions
+        working-directory: poc/v2
+        run: timeout 55s node --test tests/polity-command.test.cjs tests/diplomacy.test.cjs tests/political-union.test.cjs tests/layout.test.cjs
+      - name: Base smoke
+        working-directory: poc/v2
+        run: timeout 25s npm run smoke
+      - name: Offline playable synchronization
+        working-directory: poc/v2
+        run: timeout 20s npm run check:playable

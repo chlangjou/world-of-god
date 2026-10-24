@@ -63,3 +63,13 @@ GitHub feature CI 只跑有限快速測試，使用 Node.js 24、整體 job \`ti
 - 戰鬥第一次接觸及首輪傷兵仍然**自動暫停**；玩家按繼續前可觀察／施法，重新播放預設切至 `0.1×`，也能自行選回較快速度。
 - 低速使 tick 間隔變長，但目前人類的真實座標仍為逐 tick 更新；連續移動補間動畫留待另外處理，不能假稱 0.1× 已經能看見流暢的人物連續動作。
 - `tests/polity-intervention-ui.test.cjs` 覆蓋 0.1× 按鈕選擇、真實推進速率、1×/16× 接戰保護與暫停時 Heal。
+
+## 2026-10-24 Review 後續：和平復員與再動員 P0
+
+**Opt-in 實驗，不是正式平衡。** [Issue #14 Review](https://github.com/chlangjou/world-of-god/issues/14)。既有民兵不論和平與否都常駐守備，且被排除一般工作。新增政治 Profile 的 \`peaceMilitia\`：預設 \`enabled:false\`；開啟後有實際和平／同盟、沒有進行中衝突及近期威脅時，常駐民兵由2名減為1名；釋放的真人回到既有工作，不新增資源或平衡 Buff。
+
+真正礦區爭議可能使後備民兵重新集結，預設延遲3日才可發起行軍；其間若和解、失去領袖或共同政策禁止進攻，動員取消。調整參數 \`guardFraction\`、\`mobilizeDays\`、\`threatGraceDays\` 可回退，停用後舊行為相容；不更動神權 Presence／40核心。
+
+\`npm run test:peace-militia\` 為短驗證；\`npm run evaluate:peace-militia\` 對三固定Seed跑配對120日真實核心，最多支援固定180日長跑，不放 CI。報表獨立量測 guard/ordinary work 人日、糧食累積產出、實際礦區行動、集結時間、每日世界有效、存讀與重播。重點是**工作轉移是否真的改善遊戲體驗**，不能因同 Seed 相同起點卻後續世界分岔，就主張純因果或自然軍事勝率已定。
+
+P1 政治主張暫不建立完整派系，先以真實領袖、單一明確訴求及受控協商情境確認遊戲收益；視 P0 結果再設最小 patch。

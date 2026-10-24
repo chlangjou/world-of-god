@@ -26,11 +26,11 @@ function routeLength(s,from,to){
       if(walk(nx,ny)&&distance[ny*s.width+nx]<0){distance[ny*s.width+nx]=d+1;queue.push([nx,ny]);}}
   }return null;
 }
-function contextFor(s,u){
+function contextFor(s,u,actorIds=u.memberPolityIds){
   // Predeclared ID order and physical feasibility only. No looking at ambition,
   // future outcomes or tuning the seed until a desired separation appears.
   const sorted=[...s.politics.polities].sort((a,b)=>a.id.localeCompare(b.id));
-  for(const actor of sorted.filter(p=>u.memberPolityIds.includes(p.id)))
+  for(const actor of sorted.filter(p=>u.memberPolityIds.includes(p.id)&&actorIds.includes(p.id)))
     for(const outside of sorted.filter(p=>!u.memberPolityIds.includes(p.id))){
       if(!actor.leaderId||!outside.leaderId||outside.militia.stance!=='defend'||!outside.militia.memberIds.length)continue;
       if(s.politics.disputes.some(c=>[c.aId,c.bId].includes(actor.id)&&[c.aId,c.bId].includes(outside.id)&&

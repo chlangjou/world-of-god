@@ -1,0 +1,5 @@
+{
+  "status": "experimental-opt-in-diplomacy-overlay",
+  "identity20Enabled": true,
+  "description": "Merge into politicsProfile.diplomacy only when explicitly testing. Reuse existing minCore/coreShare numeric settings for unique 20+ affiliation; report 40+ cohesion separately. Default playable remains legacy."
+}

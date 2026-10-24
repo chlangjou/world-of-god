@@ -1,5 +1,7 @@
 # Issue #14：預設門檻下的資源壓力與政策分歧
 
+後續依最新指令完成[宗教因果與政治聯合實際效果](ISSUE_14_RELIGION_CAUSALITY_AND_UNION_EFFECTS.md)，使用獨立新分支與自然／合法God／受控分類；下文保留本輪壓力情境結果。
+
 日期：2026-10-24。基準 `7bbf53e`；接續[退出／破約機制](ISSUE_14_UNION_FRACTURE_EXPERIMENT.md)。本輪僅新增本機情境 runner、控制器測試與證據，遊戲核心、Profile 數值與離線 playable 保持原樣。
 
 ## 實驗設計

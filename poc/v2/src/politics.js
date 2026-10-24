@@ -48,6 +48,7 @@ function normalize(profile){
     peaceTrust:clamp(d.peaceTrust??18,1,100),allianceTrust:clamp(d.allianceTrust??38,1,100),
     peaceDays:Math.round(clamp(d.peaceDays??14,1,180)),
     shipmentUnits:clamp(d.shipmentUnits??1.5,.1,10),shipmentEveryDays:Math.round(clamp(d.shipmentEveryDays??7,1,90))};
+  if(out.diplomacy&&d.identity20Enabled===true)out.diplomacy.identity20Enabled=true;
   if(out.diplomacy&&d.union?.enabled===true)out.diplomacy.union={enabled:true,
     allianceDays:Math.round(clamp(d.union.allianceDays??30,1,180)),
     trust:clamp(d.union.trust??65,1,100),delivered:clamp(d.union.delivered??1.5,.1,100),
@@ -607,9 +608,21 @@ function coreFaith(s,town){
   return {id:best&&best[1]>=cfg.minCore&&best[1]/Math.max(1,people.length)>=cfg.coreShare?best[0]:null,
     core:best?.[1]||0,population:people.length};
 }
+function identityFaith(s,town){
+  const cfg=s.politics.diplomacy,people=residents(s,town),counts={};
+  for(const p of people)if(p.religionId&&p.devotion>=20){
+    const f=counts[p.religionId]||={believers:0,core:0};f.believers++;f.core+=Number(p.devotion>=40);}
+  const ranked=Object.entries(counts).sort((a,b)=>b[1].believers-a[1].believers||a[0].localeCompare(b[0]));
+  const best=ranked[0],population=people.length;
+  return {id:best&&best[1].believers>=cfg.minCore&&best[1].believers/Math.max(1,population)>=cfg.coreShare&&
+    best[1].believers>(ranked[1]?.[1].believers||0)?best[0]:null,
+    believers:best?.[1].believers||0,core:best?.[1].core||0,population,
+    coreShare:(best?.[1].core||0)/Math.max(1,population)};
+}
 function transition(s,r,status,a,b,emit){
   r.status=status;r.changedAtHour=s.hour;r[status+'AtHour']=s.hour;
-  r.transitions||=[];r.transitions.push({status,hour:s.hour,reason:r.reason});
+  r.transitions||=[];r.transitions.push({status,hour:s.hour,reason:r.reason,
+    ...(r.faithAssessment?{faithAssessment:JSON.parse(JSON.stringify(r.faithAssessment))}:{})});
   // Stop actual running sorties on either side, not just their future decisions.
   for(const c of s.politics.disputes)if(['marching','clashing'].includes(c.status)&&
     [c.aId,c.bId].includes(a.id)&&[c.aId,c.bId].includes(b.id)){
@@ -699,12 +712,16 @@ function diplomacyDaily(s,emit){
     const contacts=(s.contactLog||[]).filter(e=>e.hour>r.lastEvaluatedHour&&e.hour<=s.hour&&
       ((e.aTownId===ta.id&&e.bTownId===tb.id)||(e.aTownId===tb.id&&e.bTownId===ta.id)));
     r.lastEvaluatedHour=s.hour;
-    const fa=coreFaith(s,ta),fb=coreFaith(s,tb),same=!!fa.id&&fa.id===fb.id;
+    const fa=d.identity20Enabled?identityFaith(s,ta):coreFaith(s,ta),fb=d.identity20Enabled?identityFaith(s,tb):coreFaith(s,tb),same=!!fa.id&&fa.id===fb.id;
+    if(d.identity20Enabled)r.faithAssessment={a:fa,b:fb,sameIdentity:same};
+    else delete r.faithAssessment;
     const leaderSame=leader(s,a)?.religionId&&leader(s,a)?.religionId===leader(s,b)?.religionId;
     const benefit=['wood','stone','food'].some(k=>Math.abs(ta.storage[k]-tb.storage[k])>=5);
     // Preference is seed/person-derived and stable across replay and reload.
     const reserve=reluctance(s,a,b);
-    r.reason=(same?'主要核心信仰相同':'主要核心信仰不同或不足')+'；'+
+    r.reason=(d.identity20Enabled?(same?'主要宗教認同相同':'主要宗教認同不同或不足')+
+      '（40+核心 '+fa.core+'/'+fa.population+'、'+fb.core+'/'+fb.population+'）':
+      same?'主要核心信仰相同':'主要核心信仰不同或不足')+'；'+
       (leaderSame?'領袖同教':'領袖信仰各自獨立')+'；'+(benefit?'有庫存互補':'互補有限')+
       '；接觸 '+contacts.length+'；舊怨 '+r.grievance.toFixed(1)+'；領袖保留 '+reserve.toFixed(2);
     if(contacts.length){
@@ -851,5 +868,5 @@ function validate(s){
   }
   return errors;
 }
-return {BASE,normalize,init,daily,onDeath,personDuty,construct,overview,validate,reconcile,defense,coreFaith,relation,syncMembership,unionOf,offensePolicy};
+return {BASE,normalize,init,daily,onDeath,personDuty,construct,overview,validate,reconcile,defense,coreFaith,identityFaith,relation,syncMembership,unionOf,offensePolicy};
 });

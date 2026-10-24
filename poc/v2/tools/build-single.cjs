@@ -22,6 +22,7 @@ const shrine=JSON.stringify(JSON.parse(read('config/shrine-temple-v0.1.json'))).
 const victory=JSON.stringify(JSON.parse(read('config/victory-dominance-v0.1.json'))).replace(/</g,'\\u003c');
 const polity=JSON.stringify(JSON.parse(read('config/polity-command-v0.1.json'))).replace(/</g,'\\u003c');
 const minerals=JSON.stringify(JSON.parse(read('config/mineral-rights-experiment-v0.1.json'))).replace(/</g,'\\u003c');
+const mineralP15=JSON.stringify(JSON.parse(read('config/mineral-rights-p1-5-v0.1.json'))).replace(/</g,'\\u003c');
 const scripts='<script>window.WOG_RELIGION_PROFILE='+religion+';</'+'script>'+ 
   '<script>window.WOG_AGRICULTURE_PROFILE='+profile+';</'+'script>'+
   '<script>window.WOG_MOBILITY_PROFILE='+mobility+';</'+'script>'+
@@ -33,6 +34,7 @@ const scripts='<script>window.WOG_RELIGION_PROFILE='+religion+';</'+'script>'+
   '<script>window.WOG_VICTORY_PROFILE='+victory+';</'+'script>'+ 
   '<script>window.WOG_POLITY_PROFILE='+polity+';</'+'script>'+
   '<script>window.WOG_MINERAL_RIGHTS_PROFILE='+minerals+';</'+'script>'+
+  '<script>window.WOG_MINERAL_P1_5_PROFILE='+mineralP15+';</'+'script>'+
   '<script>\n'+read('src/mobility.js')+'\n</'+'script>'+ 
   '<script>\n'+read('src/shrine-temple.js')+'\n</'+'script>'+ 
   '<script>\n'+read('src/victory.js')+'\n</'+'script>'+ 

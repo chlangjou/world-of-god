@@ -8,6 +8,7 @@ const Core=require('./mineral-natural-core.js');
 const Mobility=require('../config/mobility-contact-v0.1.json');
 const Experiment=require('../config/mineral-rights-experiment-v0.1.json');
 const Politics=require('../config/polity-command-v0.1.json');
+const P15=require('../config/mineral-rights-p1-5-v0.1.json');
 const Agriculture=require('../config/balance-agriculture-v0.1.json');
 const Opponent=require('../config/opponent-v0.2.json');
 const Religion=require('../config/religion-propagation-v0.1.json');
@@ -18,7 +19,8 @@ const Shrine=require('../config/shrine-temple-v0.1.json');
 function options(seed,mode){
   assert.ok(Core.SEEDS.includes(seed),'only reproducible named seeds');
   assert.ok(Core.MODES.includes(mode),'unknown mode');
-  const finite=mode!=='legacy',rights=mode==='finite-rights';
+  const finite=mode!=='legacy',rights=mode==='finite-rights'||mode==='finite-rights-p1-5';
+  const p15=mode==='finite-rights-p1-5';
   return {seed,balanceProfile:Agriculture,opponentProfile:Opponent,
     religionProfile:Religion,divineProfile:Divine,
     oracleStrategyProfile:Oracle,shrineProfile:Shrine,
@@ -29,7 +31,7 @@ function options(seed,mode){
       naturalGoldCapacity:Experiment.naturalGoldCapacity,
       naturalGoldRegenPerDay:Experiment.naturalGoldRegenPerDay
     }:{})},
-    politicsProfile:{...Politics,...(rights?{mineralRights:Experiment.mineralRights}:{})}
+    politicsProfile:{...Politics,...(rights?{mineralRights:p15?P15.mineralRights:Experiment.mineralRights}:{})}
   };
 }
 function execute({days=180,seeds=Core.SEEDS,modes=Core.MODES}={}){
@@ -54,7 +56,8 @@ function execute({days=180,seeds=Core.SEEDS,modes=Core.MODES}={}){
       naturalStoneRegenPerDay:Experiment.naturalStoneRegenPerDay,
       naturalGoldCapacity:Experiment.naturalGoldCapacity,
       naturalGoldRegenPerDay:Experiment.naturalGoldRegenPerDay,
-      mineralRights:Experiment.mineralRights},
+      mineralRights:Experiment.mineralRights,
+      mineralRightsP15:P15.mineralRights},
     results};
 }
 if(require.main===module){

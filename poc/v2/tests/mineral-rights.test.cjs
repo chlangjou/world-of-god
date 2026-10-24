@@ -73,8 +73,9 @@ test('opt-in natural stone/gold source: cap, atomic shared withdrawals, partial 
 });
 test('finite mode conserves material for different real workers and retains it over replay',()=>{
   const s=W.create(options('finite')),t=node(s),d=t.mineral;
-  const a=s.people.find(p=>p.alive&&p.stage==='adult');
-  const b=s.people.find(p=>p.alive&&p.stage==='adult'&&p.settlementId!==a.settlementId);
+  const a=s.people.find(p=>p.alive&&p.stage==='adult'&&p.settlementId);
+  const b=s.people.find(p=>p.alive&&p.stage==='adult'&&p.settlementId&&
+    p.settlementId!==a.settlementId);
   assert.ok(b,'two real towns exist');
   for(const person of [a,b]){
     const trip={purpose:'resource',path:[t.y*s.width+t.x]};

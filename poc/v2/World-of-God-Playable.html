@@ -1641,6 +1641,18 @@ function launchDispute(s,a,b,site,emit){
     startedAtHour:s.hour,status:'marching',trigger:'both stone reserves below '+cfg.resourceNeedStone,
     winnerId:null,resolvedAtHour:null});
   const incident=cfg.disputes.at(-1);
+  if(cfg.peaceMilitia?.enabled){
+    // A fully staffed neighboring force does not magically wait until a
+    // treaty-reduced neighbor can call its workers back from the fields.
+    const short= [a,b].filter(p=>p.militia.memberIds.length<cfg.militiaLimit);
+    if(short.length===1){
+      incident.readiness={understrengthPolityId:short[0].id,
+        readyPolityId:(short[0]===a?b:a).id,
+        availableAtContact:short[0].militia.memberIds.length,
+        authorizedStrength:cfg.militiaLimit,
+        reason:'對手保持常備兵力；本村因和平而復員，未及重新集結'};
+    }
+  }
   for(const [side,p,other]of [['a',a,b],['b',b,a]]){
     const u=unionOf(s,p.id);if(!u)continue;
     incident[side+'UnionId']=u.id;incident[side+'CoordinatorId']=u.leaderId;
@@ -1649,7 +1661,9 @@ function launchDispute(s,a,b,site,emit){
   }
   emit(s,'conflict',ta.name+' 與 '+tb.name+' 因同一處石礦發生邊境爭端。',
     ['雙方現有石材都低於 '+cfg.resourceNeedStone,'民兵由真實成年居民組成並步行前往礦區',
-      '非神明直接指揮，衝突需要雙方有人類領袖與可行軍道路']);
+      '非神明直接指揮，衝突需要雙方有人類領袖與可行軍道路',
+      ...(incident.readiness?[incident.readiness.reason+'（'+incident.readiness.availableAtContact+'/'+
+        incident.readiness.authorizedStrength+'）']:[])]);
   return true;
 }
 function processMobilizations(s,emit){
@@ -1698,7 +1712,8 @@ function startDispute(s,emit){
          routeA.length>cfg.maxMarchDays*cfg.marchCellsPerDay+1||
          routeB.length>cfg.maxMarchDays*cfg.marchCellsPerDay+1)continue;
       if(cfg.peaceMilitia?.enabled&&
-        (a.militia.memberIds.length<cfg.militiaLimit||b.militia.memberIds.length<cfg.militiaLimit)){
+        a.militia.memberIds.length<cfg.militiaLimit&&
+        b.militia.memberIds.length<cfg.militiaLimit){
         if(!(cfg.mobilizations||[]).some(m=>m.status==='forming'&&
           ([m.aId,m.bId].includes(a.id)||[m.aId,m.bId].includes(b.id)))){
           cfg.mobilizations.push({id:'mobilization-'+cfg.nextMobilizationId++,
@@ -2219,6 +2234,15 @@ function validate(s){
     if(![m.aId,m.bId].every(id=>cfg.polities.some(p=>p.id===id)))errors.push('動員缺少既存政體');
     if(!Number.isFinite(m.startedAtHour)||!Number.isFinite(m.readyAtHour)||m.readyAtHour<m.startedAtHour)
       errors.push('民兵動員計時不正確');
+  }
+  for(const c of cfg.disputes){
+    if(!c.readiness)continue;
+    const r=c.readiness;
+    if(!cfg.peaceMilitia?.enabled||r.availableAtContact<1||
+      r.availableAtContact>=r.authorizedStrength||
+      ![c.aId,c.bId].includes(r.understrengthPolityId)||
+      ![c.aId,c.bId].includes(r.readyPolityId)||
+      r.readyPolityId===r.understrengthPolityId)errors.push('民兵突發接戰 readiness 記錄錯誤');
   }
   for(const u of cfg.unions||[]){
     if(unionIds.has(u.id))errors.push('政治聯合 ID 重複');unionIds.add(u.id);
@@ -6931,12 +6955,14 @@ if(root)root.WOG_PLAYTEST=API;
     const side=p=>p?townName(p)+' '+p.militia.memberIds.length+' 人':'未知部隊';
     const title=c.status==='marching'?'正在向石礦進軍':
       c.status==='clashing'?'石礦交戰中':'石礦衝突已結束';
+    const risk=c.readiness?' · '+townName(state.politics.polities.find(p=>p.id===c.readiness.understrengthPolityId))+
+      ' 復員守軍 '+c.readiness.availableAtContact+'/'+c.readiness.authorizedStrength:'';
     const status=c.status==='clashing'?
       '第 '+(c.roundsCompleted||0)+' / '+(state.politics.battleRounds||3)+' 回合 · '+
       (paused?'模擬已暫停，可選擇神蹟後按繼續':'交戰中，可施放 Heal 介入'):
       c.status==='marching'?'雙方民兵正沿地圖行軍；接觸時將自動降至 1×':
       (c.winnerId?'勝方：'+townName(state.politics.polities.find(p=>p.id===c.winnerId)):'雙方撤退');
-    return {title,status,a,b,sideA:side(a),sideB:side(b)};
+    return {title,status:status+risk,a,b,sideA:side(a),sideB:side(b)};
   }
   function renderBattleStatus(){
     const element=$('battleFocusBtn'),c=visibleConflict();

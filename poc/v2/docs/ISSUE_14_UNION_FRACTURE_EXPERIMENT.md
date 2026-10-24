@@ -1,5 +1,7 @@
 # Issue #14：利益衝突、退出與破約
 
+後續新增[預設門檻資源／政策壓力情境](ISSUE_14_PRESSURE_SCENARIOS.md)：從自然聯合分支實驗，未調低退出或破約門檻；下文保留無干預對照結果。
+
 2026-10-24，接續 `d20c2d3` 的[兩村政治聯合](ISSUE_14_POLITICAL_UNION_EXPERIMENT.md)。沿用 `codex/issue-14-cooperation`，全部模擬在本機 Node24 執行。既有 CI workflow 和測試入口沒有修改。
 
 ## 已加入的因果鏈

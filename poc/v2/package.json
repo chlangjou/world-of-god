@@ -25,6 +25,8 @@
     "evaluate:union": "node tools/political-union-experiment.cjs",
     "test:fracture": "node --test tests/union-fracture.test.cjs",
     "evaluate:fracture": "node tools/union-fracture-experiment.cjs",
+    "test:pressure": "node --test tests/union-pressure-scenarios.test.cjs",
+    "evaluate:pressure": "node tools/union-pressure-scenarios.cjs",
     "test:fast": "node --test tests/mobility-contact-fast.test.cjs tests/miracle-parameters.test.cjs tests/shrine-temple.test.cjs tests/victory.test.cjs tests/frontier-playable.test.cjs tests/oracle-direct-switch.test.cjs tests/multigod.test.cjs tests/oracle-miracle-pairing.test.cjs tests/layout.test.cjs"
   },
   "engines": {

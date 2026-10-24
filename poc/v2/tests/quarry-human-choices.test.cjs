@@ -120,3 +120,57 @@ test('finite quarry physical warnings preserve material and are not counted as t
     s.politics.quarryEncounters.at(-1).outcome));
   good(s);
 });
+
+test('CONTROLLED only: an autonomous challenge order still requires a real path and ends in guard resistance, not war',()=>{
+  const s=world();days(s,48);
+  const {claim,tile}=quarry(s),w=s.width;
+  function legalPath(from,to){
+    const first=from.y*w+from.x,last=to.y*w+to.x,prev=new Int32Array(s.tiles.length);
+    prev.fill(-1);prev[first]=first;
+    const queue=[first];
+    for(let cur=0;cur<queue.length&&prev[last]<0;cur++){
+      const at=queue[cur],x=at%w,y=Math.floor(at/w);
+      for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nx=x+dx,ny=y+dy;
+        if(nx<0||ny<0||nx>=w||ny>=s.height)continue;
+        if(s.tiles[ny*w+nx].terrain==='river'&&ny%s.mobility.fordSpacing!==0)continue;
+        const next=ny*w+nx;
+        if(prev[next]>=0)continue;
+        prev[next]=at;queue.push(next);
+      }
+    }
+    if(prev[last]<0)return null;
+    const path=[];for(let at=last;;at=prev[at]){path.push(at);if(at===first)break;}
+    return path.reverse();
+  }
+  const cases=s.people.filter(p=>p.alive&&p.stage==='adult'&&p.health>=35&&
+    p.settlementId!==claim.townId&&M.protectedBy(s,tile,p)&&!p.mobilityTrip)
+    .map(p=>({p,home:s.households.find(h=>h.id===p.householdId)}))
+    .filter(x=>x.home).map(x=>({...x,path:legalPath(x.home,claim.site)}))
+    .filter(x=>x.path&&x.path.length-1<=s.mobility.maxTripCells)
+    .sort((a,b)=>a.path.length-b.path.length);
+  assert.ok(cases.length>0,'at least one actual foreign adult can physically reach this guarded quarry');
+  const {p,home,path}=cases[0];
+  let choice=s.politics.quarryChoices.find(q=>q.claimId===claim.id&&q.visitorTownId===p.settlementId);
+  assert.ok(choice,'an existing human leader has actually evaluated the guarded site');
+  // Controlled branch from real population, real terrain and real guard; the
+  // decision is forced ONLY in this test, never treated as a natural world rate.
+  choice.action='challenge';choice.decidedAtHour=s.hour;
+  const before=tile.stone,oldCount=s.counts.quarryActualChallenges||0;
+  const wars=s.politics.disputes.length;
+  p.mobilityTrip={purpose:'resource',path,index:0,phase:'out',siteTicks:0,
+    origin:{x:home.x,y:home.y},resourceKind:'stone',cargo:null,startedAtHour:s.hour};
+  p.x=home.x;p.y=home.y;
+  for(let i=0;i<20&&(s.counts.quarryActualChallenges||0)===oldCount;i++){
+    s.hour+=s.rules.tickHours;s.tick++;
+    M.step(s,p,()=>{throw Error('guarded no-cargo expedition must not credit stores');});
+  }
+  assert.equal(s.counts.quarryActualChallenges,oldCount+1);
+  const event=s.politics.quarryEncounters.at(-1);
+  assert.equal(event.outcome,'challenge-resisted');
+  assert.equal(event.visitorId,p.id);
+  assert.equal(event.guardId,claim.guardId);
+  assert.equal(tile.stone,before,'no material teleports past an actual guard');
+  assert.equal(s.politics.disputes.length,wars,'P1.5 challenge is not full territorial war');
+  good(s);
+});

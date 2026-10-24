@@ -319,6 +319,18 @@ function launchDispute(s,a,b,site,emit){
     startedAtHour:s.hour,status:'marching',trigger:'both stone reserves below '+cfg.resourceNeedStone,
     winnerId:null,resolvedAtHour:null});
   const incident=cfg.disputes.at(-1);
+  if(cfg.peaceMilitia?.enabled){
+    // A fully staffed neighboring force does not magically wait until a
+    // treaty-reduced neighbor can call its workers back from the fields.
+    const short= [a,b].filter(p=>p.militia.memberIds.length<cfg.militiaLimit);
+    if(short.length===1){
+      incident.readiness={understrengthPolityId:short[0].id,
+        readyPolityId:(short[0]===a?b:a).id,
+        availableAtContact:short[0].militia.memberIds.length,
+        authorizedStrength:cfg.militiaLimit,
+        reason:'對手保持常備兵力；本村因和平而復員，未及重新集結'};
+    }
+  }
   for(const [side,p,other]of [['a',a,b],['b',b,a]]){
     const u=unionOf(s,p.id);if(!u)continue;
     incident[side+'UnionId']=u.id;incident[side+'CoordinatorId']=u.leaderId;
@@ -327,7 +339,9 @@ function launchDispute(s,a,b,site,emit){
   }
   emit(s,'conflict',ta.name+' 與 '+tb.name+' 因同一處石礦發生邊境爭端。',
     ['雙方現有石材都低於 '+cfg.resourceNeedStone,'民兵由真實成年居民組成並步行前往礦區',
-      '非神明直接指揮，衝突需要雙方有人類領袖與可行軍道路']);
+      '非神明直接指揮，衝突需要雙方有人類領袖與可行軍道路',
+      ...(incident.readiness?[incident.readiness.reason+'（'+incident.readiness.availableAtContact+'/'+
+        incident.readiness.authorizedStrength+'）']:[])]);
   return true;
 }
 function processMobilizations(s,emit){
@@ -376,7 +390,8 @@ function startDispute(s,emit){
          routeA.length>cfg.maxMarchDays*cfg.marchCellsPerDay+1||
          routeB.length>cfg.maxMarchDays*cfg.marchCellsPerDay+1)continue;
       if(cfg.peaceMilitia?.enabled&&
-        (a.militia.memberIds.length<cfg.militiaLimit||b.militia.memberIds.length<cfg.militiaLimit)){
+        a.militia.memberIds.length<cfg.militiaLimit&&
+        b.militia.memberIds.length<cfg.militiaLimit){
         if(!(cfg.mobilizations||[]).some(m=>m.status==='forming'&&
           ([m.aId,m.bId].includes(a.id)||[m.aId,m.bId].includes(b.id)))){
           cfg.mobilizations.push({id:'mobilization-'+cfg.nextMobilizationId++,
@@ -897,6 +912,15 @@ function validate(s){
     if(![m.aId,m.bId].every(id=>cfg.polities.some(p=>p.id===id)))errors.push('動員缺少既存政體');
     if(!Number.isFinite(m.startedAtHour)||!Number.isFinite(m.readyAtHour)||m.readyAtHour<m.startedAtHour)
       errors.push('民兵動員計時不正確');
+  }
+  for(const c of cfg.disputes){
+    if(!c.readiness)continue;
+    const r=c.readiness;
+    if(!cfg.peaceMilitia?.enabled||r.availableAtContact<1||
+      r.availableAtContact>=r.authorizedStrength||
+      ![c.aId,c.bId].includes(r.understrengthPolityId)||
+      ![c.aId,c.bId].includes(r.readyPolityId)||
+      r.readyPolityId===r.understrengthPolityId)errors.push('民兵突發接戰 readiness 記錄錯誤');
   }
   for(const u of cfg.unions||[]){
     if(unionIds.has(u.id))errors.push('政治聯合 ID 重複');unionIds.add(u.id);

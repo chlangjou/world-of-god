@@ -459,7 +459,7 @@ function processMobilizations(s,emit){
     }
     if(s.hour<m.readyAtHour)continue;
     const node=s.tiles[m.site.y*s.width+m.site.x];
-    if(s.politics.mineralRights?.enabled||node?.resourceNode!=='stone'||
+    if(s.mobility?.finiteMineralsEnabled||node?.resourceNode!=='stone'||
        !launchDispute(s,a,b,m.site,emit)){
       m.status='cancelled';m.resolvedAtHour=s.hour;continue;
     }
@@ -474,7 +474,7 @@ function startDispute(s,emit){
   const cfg=s.politics,polities=cfg.polities;
   // A shared ore deposit and two low public stocks are not a casus belli.
   // P1 records real guard violations; full territorial war remains deferred.
-  if(cfg.mineralRights?.enabled)return;
+  if(s.mobility?.finiteMineralsEnabled)return;
   if(!s.mobility?.enabled||!Array.isArray(s.mobilityHotspots))return;
   const nodes=s.mobilityHotspots.filter(t=>t.kind==='stone');
   for(let i=0;i<polities.length;i++)for(let j=i+1;j<polities.length;j++){

@@ -3,13 +3,10 @@
   "stage": "P1.5",
   "seed": "valley-spring-01",
   "days": 180,
-  "runtime": "isolated V8 executing exact unchanged WoG v2 UMD modules; CLI Node24 runner committed",
-  "category": "paired natural worlds; no state injection or God casts",
-  "modes": [
-    "finite-rights",
-    "finite-rights-p1-5"
-  ],
-  "elapsedMs": 30720,
+  "baselineRef": "6a871ed659d4b4b492e8d36971539a03de910d9e",
+  "runtime": "isolated V8 executing World of God UMD, paired natural world; Node24 CI separate",
+  "category": "no God actions, no injected population, faith or materials",
+  "elapsedMs": 30832,
   "results": [
     {
       "seed": "valley-spring-01",
@@ -459,10 +456,10 @@
       "days": 180,
       "commonGenesisHash": "7ef71182",
       "metrics": {
-        "guardPersonDays": 197,
-        "sharedUnprotectedMineDays": 332,
+        "guardPersonDays": 149,
+        "sharedUnprotectedMineDays": 305,
         "firstDeclarationDay": 21,
-        "firstGuardedDay": 29,
+        "firstGuardedDay": 31,
         "firstDetourDay": 47
       },
       "snapshots": [
@@ -470,20 +467,20 @@
           "day": 30,
           "population": 51,
           "settlements": 5,
-          "publicStone": 31.3542,
-          "stoneMined": 73.4427,
-          "stoneRegenerated": 18.26,
-          "stoneAvailable": 172.8173,
-          "sharedMines": 2,
+          "publicStone": 24.9929,
+          "stoneMined": 53.9911,
+          "stoneRegenerated": 14.32,
+          "stoneAvailable": 188.3289,
+          "sharedMines": 1,
           "temporarilyExhaustedMines": 0,
           "declarations": 1,
-          "guardedClaims": 1,
-          "guardPersonDays": 1,
-          "sharedUnprotectedMineDays": 47,
+          "guardedClaims": 0,
+          "guardPersonDays": 0,
+          "sharedUnprotectedMineDays": 20,
           "firstDeclarationDay": 21,
-          "firstGuardedDay": 29,
+          "firstGuardedDay": null,
           "firstDetourDay": null,
-          "protectedDays": 1,
+          "protectedDays": 0,
           "quarryDetours": 0,
           "protectedArrivals": 0,
           "quarryNegotiations": 0,
@@ -494,14 +491,27 @@
           "safeChoices": 0,
           "challengeChoices": 0,
           "actualChallenges": 0,
-          "oreTripsDelivered": 34,
-          "oreUnitsDelivered": 45.6,
+          "oreTripsDelivered": 32,
+          "oreUnitsDelivered": 31.8,
           "alternativeOreTripsDelivered": 0,
           "alternativeOreUnitsDelivered": 0,
           "deliveries": [
             {
-              "hour": 464,
-              "personId": "p20",
+              "hour": 448,
+              "personId": "p47",
+              "townId": "n3",
+              "site": {
+                "x": 38,
+                "y": 32
+              },
+              "kind": "stone",
+              "amount": 1.5,
+              "avoidedClaimId": null,
+              "permitId": null
+            },
+            {
+              "hour": 456,
+              "personId": "p13",
               "townId": "s2",
               "site": {
                 "x": 10,
@@ -526,28 +536,41 @@
               "permitId": null
             },
             {
-              "hour": 480,
-              "personId": "p41",
-              "townId": "n2",
+              "hour": 496,
+              "personId": "p8",
+              "townId": "s1",
               "site": {
-                "x": 20,
-                "y": 9
+                "x": 32,
+                "y": 45
               },
-              "kind": "stone",
-              "amount": 1.5,
+              "kind": "gold",
+              "amount": 0.6,
               "avoidedClaimId": null,
               "permitId": null
             },
             {
               "hour": 496,
-              "personId": "p8",
-              "townId": "s1",
+              "personId": "p20",
+              "townId": "s2",
               "site": {
-                "x": 51,
-                "y": 48
+                "x": 29,
+                "y": 24
               },
-              "kind": "stone",
-              "amount": 1.5,
+              "kind": "gold",
+              "amount": 0.6,
+              "avoidedClaimId": null,
+              "permitId": null
+            },
+            {
+              "hour": 496,
+              "personId": "p41",
+              "townId": "n2",
+              "site": {
+                "x": 29,
+                "y": 24
+              },
+              "kind": "gold",
+              "amount": 0.6,
               "avoidedClaimId": null,
               "permitId": null
             },
@@ -569,24 +592,24 @@
               "personId": "p2",
               "townId": "s1",
               "site": {
-                "x": 51,
-                "y": 48
+                "x": 32,
+                "y": 45
               },
-              "kind": "stone",
-              "amount": 1.5,
+              "kind": "gold",
+              "amount": 0.6,
               "avoidedClaimId": null,
               "permitId": null
             },
             {
-              "hour": 576,
+              "hour": 592,
               "personId": "p14",
               "townId": "s2",
               "site": {
-                "x": 10,
-                "y": 13
+                "x": 29,
+                "y": 24
               },
-              "kind": "stone",
-              "amount": 1.5,
+              "kind": "gold",
+              "amount": 0.6,
               "avoidedClaimId": null,
               "permitId": null
             },
@@ -604,28 +627,15 @@
               "permitId": null
             },
             {
-              "hour": 608,
-              "personId": "p20",
-              "townId": "s2",
-              "site": {
-                "x": 10,
-                "y": 13
-              },
-              "kind": "stone",
-              "amount": 1.5,
-              "avoidedClaimId": null,
-              "permitId": null
-            },
-            {
-              "hour": 624,
+              "hour": 640,
               "personId": "p41",
               "townId": "n2",
               "site": {
-                "x": 20,
-                "y": 9
+                "x": 29,
+                "y": 24
               },
-              "kind": "stone",
-              "amount": 1.5,
+              "kind": "gold",
+              "amount": 0.6,
               "avoidedClaimId": null,
               "permitId": null
             },
@@ -634,80 +644,64 @@
               "personId": "p8",
               "townId": "s1",
               "site": {
-                "x": 51,
-                "y": 48
+                "x": 32,
+                "y": 45
               },
-              "kind": "stone",
-              "amount": 1.5,
-              "avoidedClaimId": null,
-              "permitId": null
-            },
-            {
-              "hour": 720,
-              "personId": "p14",
-              "townId": "s2",
-              "site": {
-                "x": 10,
-                "y": 13
-              },
-              "kind": "stone",
-              "amount": 1.5,
+              "kind": "gold",
+              "amount": 0.6,
               "avoidedClaimId": null,
               "permitId": null
             }
           ],
           "quarryChoiceEvidence": [],
           "conflicts": 0,
-          "resourceVisits": 55,
-          "crossTownMeetings": 556,
-          "foodFromLabor": 543.4139,
+          "resourceVisits": 53,
+          "crossTownMeetings": 650,
+          "foodFromLabor": 555.0942,
           "mines": [
             {
               "x": 38,
               "y": 32,
               "capacity": 38,
-              "available": 2.2623,
-              "extracted": 40.5377,
-              "regenerated": 4.8,
+              "available": 2.0539,
+              "extracted": 40.5861,
+              "regenerated": 4.64,
               "byTown": {
-                "n1": 7.5,
-                "n3": 12,
-                "s1": 21.0377
+                "n3": 13.5,
+                "n1": 3,
+                "s1": 24.0861
               }
             },
             {
               "x": 20,
               "y": 9,
               "capacity": 38,
-              "available": 28.275,
-              "extracted": 13.405,
+              "available": 34.275,
+              "extracted": 7.405,
               "regenerated": 3.68,
               "byTown": {
-                "s2": 7.405,
-                "n2": 6
+                "s2": 7.405
               }
             },
             {
               "x": 10,
               "y": 13,
               "capacity": 38,
-              "available": 30.7,
-              "extracted": 10.5,
-              "regenerated": 3.2,
+              "available": 38,
+              "extracted": 1.5,
+              "regenerated": 1.5,
               "byTown": {
-                "s2": 10.5
+                "s2": 1.5
               }
             },
             {
               "x": 51,
               "y": 48,
               "capacity": 38,
-              "available": 35.58,
-              "extracted": 4.5,
-              "regenerated": 2.08,
-              "byTown": {
-                "s1": 4.5
-              }
+              "available": 38,
+              "extracted": 0,
+              "regenerated": 0,
+              "byTown": {}
             },
             {
               "x": 16,
@@ -735,61 +729,35 @@
           "day": 60,
           "population": 51,
           "settlements": 5,
-          "publicStone": 44.9542,
-          "stoneMined": 89.9427,
-          "stoneRegenerated": 39.58,
-          "stoneAvailable": 177.6373,
+          "publicStone": 39.1091,
+          "stoneMined": 76.3864,
+          "stoneRegenerated": 32.9,
+          "stoneAvailable": 184.5136,
           "sharedMines": 3,
           "temporarilyExhaustedMines": 0,
           "declarations": 1,
           "guardedClaims": 1,
-          "guardPersonDays": 31,
-          "sharedUnprotectedMineDays": 96,
+          "guardPersonDays": 29,
+          "sharedUnprotectedMineDays": 65,
           "firstDeclarationDay": 21,
-          "firstGuardedDay": 29,
+          "firstGuardedDay": 31,
           "firstDetourDay": 47,
-          "protectedDays": 31,
+          "protectedDays": 29,
           "quarryDetours": 1,
-          "protectedArrivals": 0,
-          "quarryNegotiations": 1,
-          "accessRequests": 1,
+          "protectedArrivals": 1,
+          "quarryNegotiations": 2,
+          "accessRequests": 2,
           "accessGrants": 1,
-          "accessRejections": 0,
+          "accessRejections": 1,
           "permittedUnits": 0,
           "safeChoices": 8,
           "challengeChoices": 0,
           "actualChallenges": 0,
           "oreTripsDelivered": 51,
-          "oreUnitsDelivered": 67.5,
+          "oreUnitsDelivered": 56.7,
           "alternativeOreTripsDelivered": 1,
           "alternativeOreUnitsDelivered": 1.5,
           "deliveries": [
-            {
-              "hour": 864,
-              "personId": "p14",
-              "townId": "s2",
-              "site": {
-                "x": 10,
-                "y": 13
-              },
-              "kind": "stone",
-              "amount": 1.5,
-              "avoidedClaimId": null,
-              "permitId": null
-            },
-            {
-              "hour": 912,
-              "personId": "p41",
-              "townId": "n2",
-              "site": {
-                "x": 20,
-                "y": 9
-              },
-              "kind": "stone",
-              "amount": 1.5,
-              "avoidedClaimId": null,
-              "permitId": null
-            },
             {
               "hour": 960,
               "personId": "p35",
@@ -895,28 +863,54 @@
               "permitId": null
             },
             {
-              "hour": 1312,
+              "hour": 1296,
               "personId": "p14",
               "townId": "s2",
               "site": {
-                "x": 29,
-                "y": 24
+                "x": 10,
+                "y": 13
               },
-              "kind": "gold",
-              "amount": 0.6,
+              "kind": "stone",
+              "amount": 1.5,
               "avoidedClaimId": null,
               "permitId": null
             },
             {
-              "hour": 1312,
+              "hour": 1296,
               "personId": "p23",
               "townId": "s2",
               "site": {
-                "x": 29,
-                "y": 24
+                "x": 10,
+                "y": 13
               },
-              "kind": "gold",
-              "amount": 0.6,
+              "kind": "stone",
+              "amount": 1.5,
+              "avoidedClaimId": null,
+              "permitId": null
+            },
+            {
+              "hour": 1440,
+              "personId": "p14",
+              "townId": "s2",
+              "site": {
+                "x": 10,
+                "y": 13
+              },
+              "kind": "stone",
+              "amount": 1.5,
+              "avoidedClaimId": null,
+              "permitId": null
+            },
+            {
+              "hour": 1440,
+              "personId": "p23",
+              "townId": "s2",
+              "site": {
+                "x": 10,
+                "y": 13
+              },
+              "kind": "stone",
+              "amount": 1.5,
               "avoidedClaimId": null,
               "permitId": null
             }
@@ -925,19 +919,19 @@
             {
               "claimId": "quarry-right-1",
               "visitorTownId": "n1",
-              "ownerTownId": "n2",
+              "ownerTownId": "s2",
               "action": "avoid",
               "alternative": {
                 "x": 16,
                 "y": 50,
                 "routeCells": 25
               },
-              "contactEvidence": false
+              "contactEvidence": true
             },
             {
               "claimId": "quarry-right-1",
               "visitorTownId": "n3",
-              "ownerTownId": "n2",
+              "ownerTownId": "s2",
               "action": "avoid",
               "alternative": {
                 "x": 20,
@@ -949,52 +943,52 @@
             {
               "claimId": "quarry-right-1",
               "visitorTownId": "s1",
-              "ownerTownId": "n2",
+              "ownerTownId": "s2",
               "action": "permit",
               "alternative": null,
               "contactEvidence": true
             }
           ],
           "conflicts": 0,
-          "resourceVisits": 94,
-          "crossTownMeetings": 1317,
-          "foodFromLabor": 1603.6146,
+          "resourceVisits": 97,
+          "crossTownMeetings": 1266,
+          "foodFromLabor": 1593.6075,
           "mines": [
             {
               "x": 38,
               "y": 32,
               "capacity": 38,
-              "available": 7.0623,
-              "extracted": 40.5377,
-              "regenerated": 9.6,
+              "available": 5.4587,
+              "extracted": 41.9813,
+              "regenerated": 9.44,
               "byTown": {
-                "n1": 7.5,
-                "n3": 12,
-                "s1": 21.0377
+                "n3": 13.5,
+                "n1": 3,
+                "s1": 25.4813
               }
             },
             {
               "x": 20,
               "y": 9,
               "capacity": 38,
-              "available": 28.575,
-              "extracted": 17.905,
+              "available": 36.075,
+              "extracted": 10.405,
               "regenerated": 8.48,
               "byTown": {
                 "s2": 7.405,
-                "n2": 7.5,
-                "n3": 3
+                "n2": 1.5,
+                "n3": 1.5
               }
             },
             {
               "x": 10,
               "y": 13,
               "capacity": 38,
-              "available": 28,
-              "extracted": 18,
-              "regenerated": 8,
+              "available": 28.98,
+              "extracted": 15,
+              "regenerated": 5.98,
               "byTown": {
-                "s2": 15,
+                "s2": 12,
                 "n3": 3
               }
             },
@@ -1003,11 +997,9 @@
               "y": 48,
               "capacity": 38,
               "available": 38,
-              "extracted": 4.5,
-              "regenerated": 4.5,
-              "byTown": {
-                "s1": 4.5
-              }
+              "extracted": 0,
+              "regenerated": 0,
+              "byTown": {}
             },
             {
               "x": 16,
@@ -1037,45 +1029,45 @@
           "day": 120,
           "population": 51,
           "settlements": 5,
-          "publicStone": 72.5542,
-          "stoneMined": 124.4427,
-          "stoneRegenerated": 74.48,
-          "stoneAvailable": 178.0373,
+          "publicStone": 71.1366,
+          "stoneMined": 121.4207,
+          "stoneRegenerated": 67.8,
+          "stoneAvailable": 174.3793,
           "sharedMines": 3,
           "temporarilyExhaustedMines": 0,
           "declarations": 1,
           "guardedClaims": 1,
-          "guardPersonDays": 91,
-          "sharedUnprotectedMineDays": 216,
+          "guardPersonDays": 89,
+          "sharedUnprotectedMineDays": 185,
           "firstDeclarationDay": 21,
-          "firstGuardedDay": 29,
+          "firstGuardedDay": 31,
           "firstDetourDay": 47,
-          "protectedDays": 91,
+          "protectedDays": 89,
           "quarryDetours": 1,
-          "protectedArrivals": 0,
+          "protectedArrivals": 1,
           "quarryNegotiations": 4,
           "accessRequests": 4,
           "accessGrants": 3,
-          "accessRejections": 0,
+          "accessRejections": 1,
           "permittedUnits": 0,
           "safeChoices": 21,
           "challengeChoices": 0,
           "actualChallenges": 0,
-          "oreTripsDelivered": 105,
-          "oreUnitsDelivered": 120.6,
+          "oreTripsDelivered": 96,
+          "oreUnitsDelivered": 107.1,
           "alternativeOreTripsDelivered": 1,
           "alternativeOreUnitsDelivered": 1.5,
           "deliveries": [
             {
-              "hour": 2368,
-              "personId": "p2",
-              "townId": "s1",
+              "hour": 2352,
+              "personId": "p41",
+              "townId": "n2",
               "site": {
-                "x": 32,
-                "y": 45
+                "x": 20,
+                "y": 9
               },
-              "kind": "gold",
-              "amount": 0.6,
+              "kind": "stone",
+              "amount": 1.5,
               "avoidedClaimId": null,
               "permitId": null
             },
@@ -1086,19 +1078,6 @@
               "site": {
                 "x": 32,
                 "y": 45
-              },
-              "kind": "gold",
-              "amount": 0.6,
-              "avoidedClaimId": null,
-              "permitId": null
-            },
-            {
-              "hour": 2416,
-              "personId": "p20",
-              "townId": "s2",
-              "site": {
-                "x": 29,
-                "y": 24
               },
               "kind": "gold",
               "amount": 0.6,
@@ -1128,6 +1107,19 @@
               },
               "kind": "stone",
               "amount": 1.5,
+              "avoidedClaimId": null,
+              "permitId": null
+            },
+            {
+              "hour": 2440,
+              "personId": "p2",
+              "townId": "s1",
+              "site": {
+                "x": 32,
+                "y": 45
+              },
+              "kind": "gold",
+              "amount": 0.6,
               "avoidedClaimId": null,
               "permitId": null
             },
@@ -1227,7 +1219,7 @@
             {
               "claimId": "quarry-right-1",
               "visitorTownId": "n1",
-              "ownerTownId": "n2",
+              "ownerTownId": "s2",
               "action": "avoid",
               "alternative": {
                 "x": 16,
@@ -1239,7 +1231,7 @@
             {
               "claimId": "quarry-right-1",
               "visitorTownId": "n3",
-              "ownerTownId": "n2",
+              "ownerTownId": "s2",
               "action": "avoid",
               "alternative": {
                 "x": 20,
@@ -1251,52 +1243,52 @@
             {
               "claimId": "quarry-right-1",
               "visitorTownId": "s1",
-              "ownerTownId": "n2",
-              "action": "negotiate",
+              "ownerTownId": "s2",
+              "action": "permit",
               "alternative": null,
               "contactEvidence": true
             }
           ],
           "conflicts": 0,
           "resourceVisits": 201,
-          "crossTownMeetings": 3451,
-          "foodFromLabor": 3551.915,
+          "crossTownMeetings": 3415,
+          "foodFromLabor": 3975.8445,
           "mines": [
             {
               "x": 38,
               "y": 32,
               "capacity": 38,
-              "available": 16.6623,
-              "extracted": 40.5377,
-              "regenerated": 19.2,
+              "available": 9.0243,
+              "extracted": 48.0157,
+              "regenerated": 19.04,
               "byTown": {
-                "n1": 7.5,
-                "n3": 12,
-                "s1": 21.0377
+                "n3": 13.5,
+                "n1": 3,
+                "s1": 31.5157
               }
             },
             {
               "x": 20,
               "y": 9,
               "capacity": 38,
-              "available": 23.175,
-              "extracted": 32.905,
+              "available": 26.175,
+              "extracted": 29.905,
               "regenerated": 18.08,
               "byTown": {
                 "s2": 7.405,
-                "n2": 10.5,
-                "n3": 15
+                "n2": 9,
+                "n3": 13.5
               }
             },
             {
               "x": 10,
               "y": 13,
               "capacity": 38,
-              "available": 25.6,
-              "extracted": 30,
-              "regenerated": 17.6,
+              "available": 26.58,
+              "extracted": 27,
+              "regenerated": 15.58,
               "byTown": {
-                "s2": 18,
+                "s2": 15,
                 "n3": 12
               }
             },
@@ -1305,11 +1297,9 @@
               "y": 48,
               "capacity": 38,
               "available": 38,
-              "extracted": 4.5,
-              "regenerated": 4.5,
-              "byTown": {
-                "s1": 4.5
-              }
+              "extracted": 0,
+              "regenerated": 0,
+              "byTown": {}
             },
             {
               "x": 16,
@@ -1339,34 +1329,34 @@
           "day": 180,
           "population": 51,
           "settlements": 5,
-          "publicStone": 95.3736,
-          "stoneMined": 154.4669,
-          "stoneRegenerated": 118.18,
-          "stoneAvailable": 191.7131,
-          "sharedMines": 4,
+          "publicStone": 92.9366,
+          "stoneMined": 152.9207,
+          "stoneRegenerated": 110,
+          "stoneAvailable": 185.0793,
+          "sharedMines": 3,
           "temporarilyExhaustedMines": 0,
-          "declarations": 2,
-          "guardedClaims": 2,
-          "guardPersonDays": 197,
-          "sharedUnprotectedMineDays": 332,
+          "declarations": 1,
+          "guardedClaims": 1,
+          "guardPersonDays": 149,
+          "sharedUnprotectedMineDays": 305,
           "firstDeclarationDay": 21,
-          "firstGuardedDay": 29,
+          "firstGuardedDay": 31,
           "firstDetourDay": 47,
-          "protectedDays": 197,
-          "quarryDetours": 12,
-          "protectedArrivals": 0,
+          "protectedDays": 149,
+          "quarryDetours": 9,
+          "protectedArrivals": 1,
           "quarryNegotiations": 6,
           "accessRequests": 6,
           "accessGrants": 5,
-          "accessRejections": 0,
+          "accessRejections": 1,
           "permittedUnits": 0,
-          "safeChoices": 35,
+          "safeChoices": 29,
           "challengeChoices": 0,
           "actualChallenges": 0,
-          "oreTripsDelivered": 160,
-          "oreUnitsDelivered": 169.8,
-          "alternativeOreTripsDelivered": 12,
-          "alternativeOreUnitsDelivered": 18,
+          "oreTripsDelivered": 150,
+          "oreUnitsDelivered": 156.6,
+          "alternativeOreTripsDelivered": 9,
+          "alternativeOreUnitsDelivered": 13.5,
           "deliveries": [
             {
               "hour": 3952,
@@ -1378,7 +1368,7 @@
               },
               "kind": "stone",
               "amount": 1.5,
-              "avoidedClaimId": "quarry-right-2",
+              "avoidedClaimId": null,
               "permitId": null
             },
             {
@@ -1430,7 +1420,7 @@
               },
               "kind": "stone",
               "amount": 1.5,
-              "avoidedClaimId": "quarry-right-2",
+              "avoidedClaimId": null,
               "permitId": null
             },
             {
@@ -1529,7 +1519,7 @@
             {
               "claimId": "quarry-right-1",
               "visitorTownId": "n1",
-              "ownerTownId": "n2",
+              "ownerTownId": "s2",
               "action": "avoid",
               "alternative": {
                 "x": 16,
@@ -1541,7 +1531,7 @@
             {
               "claimId": "quarry-right-1",
               "visitorTownId": "n3",
-              "ownerTownId": "n2",
+              "ownerTownId": "s2",
               "action": "avoid",
               "alternative": {
                 "x": 20,
@@ -1553,40 +1543,28 @@
             {
               "claimId": "quarry-right-1",
               "visitorTownId": "s1",
-              "ownerTownId": "n2",
-              "action": "negotiate",
-              "alternative": null,
-              "contactEvidence": true
-            },
-            {
-              "claimId": "quarry-right-2",
-              "visitorTownId": "n2",
               "ownerTownId": "s2",
-              "action": "avoid",
-              "alternative": {
-                "x": 48,
-                "y": 14,
-                "routeCells": 26
-              },
+              "action": "permit",
+              "alternative": null,
               "contactEvidence": true
             }
           ],
           "conflicts": 0,
-          "resourceVisits": 286,
-          "crossTownMeetings": 5098,
-          "foodFromLabor": 4114.5774,
+          "resourceVisits": 291,
+          "crossTownMeetings": 5190,
+          "foodFromLabor": 4538.2952,
           "mines": [
             {
               "x": 38,
               "y": 32,
               "capacity": 38,
-              "available": 24.7381,
-              "extracted": 42.0619,
-              "regenerated": 28.8,
+              "available": 18.6243,
+              "extracted": 48.0157,
+              "regenerated": 28.64,
               "byTown": {
-                "n1": 7.5,
-                "n3": 12,
-                "s1": 22.5619
+                "n3": 13.5,
+                "n1": 3,
+                "s1": 31.5157
               }
             },
             {
@@ -1598,21 +1576,21 @@
               "regenerated": 27.68,
               "byTown": {
                 "s2": 7.405,
-                "n2": 10.5,
+                "n2": 9,
                 "n3": 16.5,
-                "n1": 3
+                "n1": 4.5
               }
             },
             {
               "x": 10,
               "y": 13,
               "capacity": 38,
-              "available": 24.7,
-              "extracted": 40.5,
-              "regenerated": 27.2,
+              "available": 24.18,
+              "extracted": 39,
+              "regenerated": 25.18,
               "byTown": {
-                "s2": 24,
-                "n3": 16.5
+                "s2": 21,
+                "n3": 18
               }
             },
             {
@@ -1620,11 +1598,9 @@
               "y": 48,
               "capacity": 38,
               "available": 38,
-              "extracted": 4.5,
-              "regenerated": 4.5,
-              "byTown": {
-                "s1": 4.5
-              }
+              "extracted": 0,
+              "regenerated": 0,
+              "byTown": {}
             },
             {
               "x": 16,
@@ -1642,11 +1618,10 @@
               "y": 14,
               "capacity": 38,
               "available": 38,
-              "extracted": 21,
-              "regenerated": 21,
+              "extracted": 19.5,
+              "regenerated": 19.5,
               "byTown": {
-                "n2": 19.5,
-                "n3": 1.5
+                "n2": 19.5
               }
             }
           ]

@@ -33,6 +33,7 @@ jobs:
           node --check src/app.js
           node --check tests/quarry-human-choices.test.cjs
           node --check tools/mineral-natural-experiment.cjs
+          node --check tools/quarry-p1-5-experiment.cjs
       - name: P0 P1 and P1.5 causal contracts
         working-directory: poc/v2
         run: timeout 75s node --test tests/mineral-rights.test.cjs tests/quarry-human-choices.test.cjs

@@ -1,0 +1,597 @@
+{
+  "issue": 14,
+  "date": "2026-10-24",
+  "category": "controlled real-resource escrow after day83 natural union, not natural fracture rate",
+  "controlledInput": "temporary original-village stone escrow (all released) plus agreed policy option only; actual courier path and real alive leaders",
+  "from": {
+    "day": 83,
+    "unionId": "union-1",
+    "donor": "s1",
+    "receiver": "n1",
+    "fromNaturalRealShipmentId": "aid-1"
+  },
+  "arms": [
+    {
+      "seed": "valley-spring-01",
+      "enabled": false,
+      "sourceDay": 83,
+      "matchedPeople": true,
+      "snapshots": [
+        {
+          "day": 1,
+          "worldDay": 84,
+          "donorStone": 12.591945193447174,
+          "receiverStone": 2.2,
+          "escrow": {
+            "donor": 0,
+            "receiver": 7.5
+          },
+          "interest": 0,
+          "burden": null,
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 0
+        },
+        {
+          "day": 6,
+          "worldDay": 89,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 15.018173053991053,
+            "receiver": 8.4
+          },
+          "interest": 0,
+          "burden": null,
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 7,
+          "worldDay": 90,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 15.018173053991053,
+            "receiver": 11.100000000000001
+          },
+          "interest": 2,
+          "burden": "stone",
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 14,
+          "worldDay": 97,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 16.518173053991053,
+            "receiver": 13.5
+          },
+          "interest": 9,
+          "burden": "stone",
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 21,
+          "worldDay": 104,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 18.018173053991053,
+            "receiver": 15.899999999999999
+          },
+          "interest": 16,
+          "burden": "stone",
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 28,
+          "worldDay": 111,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 21.018173053991053,
+            "receiver": 17.099999999999998
+          },
+          "interest": 23,
+          "burden": "stone",
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 33,
+          "worldDay": 116,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 24.54810987895355,
+            "receiver": 18.299999999999997
+          },
+          "interest": 28,
+          "burden": "stone",
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": "polity-s1",
+          "newDeliveries": 1
+        },
+        {
+          "day": 34,
+          "worldDay": 117,
+          "donorStone": 24.54810987895355,
+          "receiverStone": 22.299999999999997,
+          "escrow": {
+            "donor": 0,
+            "receiver": 0
+          },
+          "interest": 29,
+          "burden": "stone",
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": "polity-s1",
+          "newDeliveries": 1
+        },
+        {
+          "day": 35,
+          "worldDay": 118,
+          "donorStone": 26.04810987895355,
+          "receiverStone": 1,
+          "escrow": {
+            "donor": 0,
+            "receiver": 21.299999999999997
+          },
+          "interest": 27,
+          "burden": null,
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": "polity-s1",
+          "newDeliveries": 1
+        },
+        {
+          "day": 36,
+          "worldDay": 119,
+          "donorStone": 24.54810987895355,
+          "receiverStone": 1,
+          "escrow": {
+            "donor": 0,
+            "receiver": 21.299999999999997
+          },
+          "interest": 25,
+          "burden": null,
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": "polity-s1",
+          "newDeliveries": 1
+        },
+        {
+          "day": 39,
+          "worldDay": 122,
+          "donorStone": 24.54810987895355,
+          "receiverStone": 22.299999999999997,
+          "escrow": {
+            "donor": 0,
+            "receiver": 0
+          },
+          "interest": 19,
+          "burden": null,
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": "polity-s1",
+          "newDeliveries": 1
+        },
+        {
+          "day": 45,
+          "worldDay": 128,
+          "donorStone": 24.54810987895355,
+          "receiverStone": 25.299999999999997,
+          "escrow": {
+            "donor": 0,
+            "receiver": 0
+          },
+          "interest": 7,
+          "burden": null,
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 2
+        }
+      ],
+      "events": [],
+      "summary": {
+        "agenda": "disabled",
+        "proposerId": null,
+        "deciderId": null,
+        "autonomyUntilHour": null,
+        "unionSurvived": true,
+        "finalNotice": null,
+        "realSourceToRecipientShipments": [
+          {
+            "id": "aid-5",
+            "status": "complete",
+            "delivered": true,
+            "startedAtHour": 2016,
+            "deliveredAtHour": 2136
+          },
+          {
+            "id": "aid-11",
+            "status": "returning",
+            "delivered": true,
+            "startedAtHour": 2856,
+            "deliveredAtHour": 2976
+          }
+        ],
+        "cargoDeliveryAfterFirstShock": 1
+      },
+      "validation": "actual natural coalition and actual courier; escrow ledger zero; daily world validate; save/replay"
+    },
+    {
+      "seed": "valley-spring-01",
+      "enabled": true,
+      "sourceDay": 83,
+      "matchedPeople": true,
+      "snapshots": [
+        {
+          "day": 1,
+          "worldDay": 84,
+          "donorStone": 12.591945193447174,
+          "receiverStone": 2.2,
+          "escrow": {
+            "donor": 0,
+            "receiver": 7.5
+          },
+          "interest": 0,
+          "burden": null,
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 0
+        },
+        {
+          "day": 6,
+          "worldDay": 89,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 15.018173053991053,
+            "receiver": 8.4
+          },
+          "interest": 0,
+          "burden": null,
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 7,
+          "worldDay": 90,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 15.018173053991053,
+            "receiver": 11.100000000000001
+          },
+          "interest": 2,
+          "burden": "stone",
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 14,
+          "worldDay": 97,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 16.518173053991053,
+            "receiver": 13.5
+          },
+          "interest": 9,
+          "burden": "stone",
+          "agenda": null,
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 21,
+          "worldDay": 104,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 18.018173053991053,
+            "receiver": 15.899999999999999
+          },
+          "interest": 16,
+          "burden": "stone",
+          "agenda": {
+            "status": "open",
+            "proposerId": "p5",
+            "issue": "local-export-autonomy",
+            "resource": "stone",
+            "openedAtHour": 2496,
+            "closedAtHour": null
+          },
+          "exportVeto": null,
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 28,
+          "worldDay": 111,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 21.018173053991053,
+            "receiver": 17.099999999999998
+          },
+          "interest": 12,
+          "burden": "stone",
+          "agenda": {
+            "status": "granted",
+            "proposerId": "p5",
+            "issue": "local-export-autonomy",
+            "resource": "stone",
+            "openedAtHour": 2496,
+            "closedAtHour": 2664
+          },
+          "exportVeto": {
+            "resource": "stone",
+            "untilHour": 3384,
+            "agreedAtHour": 2664,
+            "deciderId": "p32"
+          },
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 33,
+          "worldDay": 116,
+          "donorStone": 0,
+          "receiverStone": 4,
+          "escrow": {
+            "donor": 24.54810987895355,
+            "receiver": 18.299999999999997
+          },
+          "interest": 2,
+          "burden": null,
+          "agenda": {
+            "status": "granted",
+            "proposerId": "p5",
+            "issue": "local-export-autonomy",
+            "resource": "stone",
+            "openedAtHour": 2496,
+            "closedAtHour": 2664
+          },
+          "exportVeto": {
+            "resource": "stone",
+            "untilHour": 3384,
+            "agreedAtHour": 2664,
+            "deciderId": "p32"
+          },
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 34,
+          "worldDay": 117,
+          "donorStone": 24.54810987895355,
+          "receiverStone": 22.299999999999997,
+          "escrow": {
+            "donor": 0,
+            "receiver": 0
+          },
+          "interest": 0,
+          "burden": null,
+          "agenda": {
+            "status": "granted",
+            "proposerId": "p5",
+            "issue": "local-export-autonomy",
+            "resource": "stone",
+            "openedAtHour": 2496,
+            "closedAtHour": 2664
+          },
+          "exportVeto": {
+            "resource": "stone",
+            "untilHour": 3384,
+            "agreedAtHour": 2664,
+            "deciderId": "p32"
+          },
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 35,
+          "worldDay": 118,
+          "donorStone": 26.04810987895355,
+          "receiverStone": 1,
+          "escrow": {
+            "donor": 0,
+            "receiver": 21.299999999999997
+          },
+          "interest": 0,
+          "burden": null,
+          "agenda": {
+            "status": "granted",
+            "proposerId": "p5",
+            "issue": "local-export-autonomy",
+            "resource": "stone",
+            "openedAtHour": 2496,
+            "closedAtHour": 2664
+          },
+          "exportVeto": {
+            "resource": "stone",
+            "untilHour": 3384,
+            "agreedAtHour": 2664,
+            "deciderId": "p32"
+          },
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 36,
+          "worldDay": 119,
+          "donorStone": 26.04810987895355,
+          "receiverStone": 1,
+          "escrow": {
+            "donor": 0,
+            "receiver": 21.299999999999997
+          },
+          "interest": 0,
+          "burden": null,
+          "agenda": {
+            "status": "granted",
+            "proposerId": "p5",
+            "issue": "local-export-autonomy",
+            "resource": "stone",
+            "openedAtHour": 2496,
+            "closedAtHour": 2664
+          },
+          "exportVeto": {
+            "resource": "stone",
+            "untilHour": 3384,
+            "agreedAtHour": 2664,
+            "deciderId": "p32"
+          },
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 39,
+          "worldDay": 122,
+          "donorStone": 26.04810987895355,
+          "receiverStone": 22.299999999999997,
+          "escrow": {
+            "donor": 0,
+            "receiver": 0
+          },
+          "interest": 0,
+          "burden": null,
+          "agenda": {
+            "status": "granted",
+            "proposerId": "p5",
+            "issue": "local-export-autonomy",
+            "resource": "stone",
+            "openedAtHour": 2496,
+            "closedAtHour": 2664
+          },
+          "exportVeto": {
+            "resource": "stone",
+            "untilHour": 3384,
+            "agreedAtHour": 2664,
+            "deciderId": "p32"
+          },
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        },
+        {
+          "day": 45,
+          "worldDay": 128,
+          "donorStone": 26.04810987895355,
+          "receiverStone": 23.799999999999997,
+          "escrow": {
+            "donor": 0,
+            "receiver": 0
+          },
+          "interest": 0,
+          "burden": null,
+          "agenda": {
+            "status": "granted",
+            "proposerId": "p5",
+            "issue": "local-export-autonomy",
+            "resource": "stone",
+            "openedAtHour": 2496,
+            "closedAtHour": 2664
+          },
+          "exportVeto": {
+            "resource": "stone",
+            "untilHour": 3384,
+            "agreedAtHour": 2664,
+            "deciderId": "p32"
+          },
+          "unionActive": true,
+          "notice": null,
+          "newDeliveries": 1
+        }
+      ],
+      "events": [
+        {
+          "hour": 2496,
+          "type": "open",
+          "leaderId": "p5",
+          "central": "p32"
+        },
+        {
+          "hour": 2664,
+          "type": "granted",
+          "leaderId": "p5",
+          "central": "p32"
+        }
+      ],
+      "summary": {
+        "agenda": "granted",
+        "proposerId": "p5",
+        "deciderId": "p32",
+        "autonomyUntilHour": 3384,
+        "unionSurvived": true,
+        "finalNotice": null,
+        "realSourceToRecipientShipments": [
+          {
+            "id": "aid-5",
+            "status": "complete",
+            "delivered": true,
+            "startedAtHour": 2016,
+            "deliveredAtHour": 2136
+          }
+        ],
+        "cargoDeliveryAfterFirstShock": 0
+      },
+      "validation": "actual natural coalition and actual courier; escrow ledger zero; daily world validate; save/replay"
+    }
+  ],
+  "limitations": [
+    "one seed, one union, one resource: stone",
+    "central concession is an export veto, not full constitutional autonomy",
+    "no new characters, no assumed resident popular support, no direct God signing agreements",
+    "baseline exit notice later retracts after pressure clears; do not claim no-agenda necessarily splits",
+    "positive gameplay effect still requires human inspection and frequency test"
+  ]
+}

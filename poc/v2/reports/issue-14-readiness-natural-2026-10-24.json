@@ -1,0 +1,45 @@
+{
+  "issue": 14,
+  "date": "2026-10-24",
+  "type": "natural; matched same initial world 120 days",
+  "scenario": "peace militia reserve with real 2-vs-1 asymmetric mine readiness",
+  "disclaimer": "readiness risk requires a fully ready rival; this is not simulated home siege or surprise raid; no per-seed natural incidence rate measured",
+  "seeds": [
+    {
+      "seed": "valley-spring-01",
+      "hashMatch": true,
+      "foodBaseline": 3850.7237180057673,
+      "foodReserve": 3891.9159740983428,
+      "increasePct": 1.069727643662488,
+      "originalConflicts": 1,
+      "policyConflicts": 1,
+      "originalGuardShifts": 1096,
+      "reserveGuardShifts": 634,
+      "ordinaryWorkIncrease": 385
+    },
+    {
+      "seed": "dry-stress",
+      "hashMatch": true,
+      "foodBaseline": 3691.4844372573757,
+      "foodReserve": 3983.528798967657,
+      "increasePct": 7.911298738327033,
+      "originalConflicts": 1,
+      "policyConflicts": 1,
+      "originalGuardShifts": 1084,
+      "reserveGuardShifts": 631,
+      "ordinaryWorkIncrease": 412
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "hashMatch": true,
+      "foodBaseline": 3548.2125641388307,
+      "foodReserve": 4329.6843753839,
+      "increasePct": 22.024379800220252,
+      "originalConflicts": 4,
+      "policyConflicts": 4,
+      "originalGuardShifts": 941,
+      "reserveGuardShifts": 617,
+      "ordinaryWorkIncrease": 273
+    }
+  ]
+}

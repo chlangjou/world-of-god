@@ -1,0 +1,30 @@
+{
+  "profileId": "mineral-rights-p1-5-v0.1",
+  "status": "opt-in-overrides-only",
+  "description": "P1.5 opt-in human policy layered on finite shared natural ores and P1 guard protection; no automatic territorial war",
+  "finiteMineralsEnabled": true,
+  "naturalStoneCapacity": 38,
+  "naturalStoneRegenPerDay": 0.16,
+  "naturalGoldCapacity": 18,
+  "naturalGoldRegenPerDay": 0.08,
+  "mineralRights": {
+    "enabled": true,
+    "safetyStone": 8,
+    "stonePerResident": 0.2,
+    "warningMultiplier": 2,
+    "decisionDays": 7,
+    "declarationChance": 0.75,
+    "maxClaimsPerPolity": 1,
+    "maxGuardRoute": 90,
+    "choicesEnabled": true,
+    "reviewDays": 7,
+    "contactWindowDays": 30,
+    "negotiationDays": 7,
+    "trustForAccess": 18,
+    "permitDays": 20,
+    "permitUnits": 3,
+    "minViableOre": 0.4,
+    "maxExtraTravelCells": 14,
+    "challengeChance": 0.45
+  }
+}

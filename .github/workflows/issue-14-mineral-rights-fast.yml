@@ -1,0 +1,48 @@
+name: Issue 14 finite ore and quarry rights fast
+on:
+  push:
+    branches:
+      - codex/issue-14-shared-quarry-rights-p0-p1
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-14-mineral-rights-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-14-mineral-rights-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  fast-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Syntax checks
+        working-directory: poc/v2
+        run: |
+          node --check src/mobility.js
+          node --check src/politics.js
+          node --check src/sim.js
+          node --check src/app.js
+          node --check tools/mineral-natural-core.js
+          node --check tools/mineral-natural-experiment.cjs
+          node --check tests/mineral-rights.test.cjs
+      - name: New mineral conservation and guard contracts
+        working-directory: poc/v2
+        run: timeout 60s node --test tests/mineral-rights.test.cjs
+      - name: Existing mobility and polity regressions
+        working-directory: poc/v2
+        run: timeout 60s node --test tests/mobility-contact-fast.test.cjs tests/polity-command.test.cjs tests/diplomacy.test.cjs tests/layout.test.cjs
+      - name: Existing smoke
+        working-directory: poc/v2
+        run: timeout 20s npm run smoke
+      - name: Offline playable matches source
+        working-directory: poc/v2
+        run: timeout 20s npm run check:playable

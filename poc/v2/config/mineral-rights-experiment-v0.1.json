@@ -1,0 +1,20 @@
+{
+  "profileId": "mineral-rights-experiment-v0.1",
+  "status": "opt-in-only",
+  "description": "Overlay for natural finite shared ore and local rights; no Stone Genesis or territorial-war expansion",
+  "finiteMineralsEnabled": true,
+  "naturalStoneCapacity": 38,
+  "naturalStoneRegenPerDay": 0.16,
+  "naturalGoldCapacity": 18,
+  "naturalGoldRegenPerDay": 0.08,
+  "mineralRights": {
+    "enabled": true,
+    "safetyStone": 8,
+    "stonePerResident": 0.2,
+    "warningMultiplier": 2,
+    "decisionDays": 7,
+    "declarationChance": 0.75,
+    "maxClaimsPerPolity": 1,
+    "maxGuardRoute": 90
+  }
+}

@@ -9,6 +9,8 @@ if(typeof module==='object'&&module.exports)module.exports=api;
 if(root)root.WoGPolitics=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
+const MOBILITY=(typeof module==='object'&&module.exports)?
+  require('./mobility.js'):globalThis.WoGMobility;
 const BASE=Object.freeze({
   profileId:'polity-command-v0.1',enabled:false,
   successionMinDays:90,successionMaxDays:180,vacantCommandFactor:.5,
@@ -42,6 +44,17 @@ function normalize(profile){
   out.maxMarchDays=Math.round(clamp(out.maxMarchDays,1,60));
   out.marchCellsPerDay=Math.round(clamp(out.marchCellsPerDay,1,12));
   out.battleRounds=Math.round(clamp(out.battleRounds,2,7));
+  // Natural mines have guaranteed recovery value, not a per-mine ROI check.
+  const rights=profile?.mineralRights;
+  if(rights?.enabled===true)out.mineralRights={
+    enabled:true,safetyStone:clamp(rights.safetyStone??8,1,500),
+    stonePerResident:clamp(rights.stonePerResident??.2,0,10),
+    warningMultiplier:clamp(rights.warningMultiplier??2,1,5),
+    decisionDays:Math.round(clamp(rights.decisionDays??7,1,30)),
+    declarationChance:clamp(rights.declarationChance??.75,0,1),
+    maxClaimsPerPolity:Math.round(clamp(rights.maxClaimsPerPolity??1,1,6)),
+    maxGuardRoute:Math.round(clamp(rights.maxGuardRoute??90,5,200))
+  };
   // An opt-in readiness model; default worlds retain their existing full guard.
   const reserve=profile?.peaceMilitia;
   if(reserve?.enabled===true)out.peaceMilitia={
@@ -89,6 +102,7 @@ function init(s,profile){
   if(cfg.diplomacy)s.politics.diplomacy={...cfg.diplomacy,relations:[],shipments:[],nextShipmentId:1};
   if(cfg.diplomacy?.union){s.politics.unions=[];s.politics.nextUnionId=1;}
   if(cfg.peaceMilitia?.enabled){s.politics.mobilizations=[];s.politics.nextMobilizationId=1;}
+  if(cfg.mineralRights?.enabled){s.politics.quarryClaims=[];s.politics.nextQuarryClaimId=1;s.politics.quarryEncounters=[];}
 }
 const active=s=>!!s.politics?.enabled;
 const townOf=(s,p)=>s.settlements.find(t=>t.id===p.townId);
@@ -163,7 +177,8 @@ function chooseMilitia(s,polity){
   const offices=new Set([s.religion,...[s.opponentReligion,...(s.additionalReligions||[])].filter(Boolean)]
     .flatMap(f=>[...(f.priests||[]),...(f.saints||[])]));
   const all=eligible(s,town).filter(p=>p.id!==polity.leaderId&&!p.mobilityTrip&&
-    !offices.has(p.id)&&!courier(s,p.id));
+    !offices.has(p.id)&&!courier(s,p.id)&&
+    !(s.politics.quarryClaims||[]).some(c=>c.guardId===p.id));
   const selected=all.sort((a,b)=>
     Number(members.has(b.id))-Number(members.has(a.id))||
     b.health-a.health||a.id.localeCompare(b.id)).slice(0,militiaTarget(s,polity));
@@ -216,6 +231,11 @@ function beginReturn(s,polity){
 function onDeath(s,p,emit,departure=false){
   if(!active(s))return;
   for(const u of s.politics.unions||[])if(unionActive(u)&&u.leaderId===p.id)vacateUnion(s,u,p,emit,departure);
+  for(const c of s.politics.quarryClaims||[])if(c.guardId===p.id){
+    c.guardId=null;c.guard=null;c.status='declared';c.protectedUntilHour=s.hour;
+    emit(s,'politics','礦區守衛離任，排他保護暫停。',
+      ['真人守衛 '+p.id+' 不再駐守；保護權不會無人自動持續']);
+  }
   if(!departure)for(const c of s.politics.disputes.filter(c=>c.status==='clashing')){
     if(s.politics.polities.some(v=>[c.aId,c.bId].includes(v.id)&&v.militia.memberIds.includes(p.id))){
       const r=relation(s,c.aId,c.bId);if(r){r.battleDeaths=(r.battleDeaths||0)+1;r.grievance+=4;}
@@ -253,6 +273,14 @@ function personDuty(s,p){
   if(shipment){const at=shipment.path[shipment.pathIndex];p.x=at.x;p.y=at.y;
     p.activity='transport';p.activityReason=shipment.status==='outbound'?'依人類盟約運送 '+shipment.resource+' '+shipment.amount+'；抵達才入庫':
       shipment.delivered?'物資已送達，沿原路返村':'攜帶撤回的 '+shipment.resource+' '+shipment.amount+' 返回來源村';return true;}
+  const mine=(s.politics.quarryClaims||[]).find(c=>c.guardId===p.id&&c.guard);
+  if(mine){
+    p.x=mine.guard.x;p.y=mine.guard.y;
+    p.activity=mine.status==='protected'?'quarry_guard':'march';
+    p.activityReason=mine.status==='protected'?
+      '真人守衛礦場並放棄普通工作':'沿真實路線向礦場行軍';
+    return true;
+  }
   const polity=s.politics.polities.find(v=>v.militia.memberIds.includes(p.id));
   if(!polity)return false;
   const unit=polity.militia;p.x=unit.x;p.y=unit.y;
@@ -313,6 +341,71 @@ function assignRoute(s,polity,site){
 function unoccupied(polity){
   return polity.leaderId&&polity.militia.stance==='defend'&&polity.militia.memberIds.length>0;
 }
+function mineralRightsDaily(s,emit){
+  const cfg=s.politics,opts=cfg.mineralRights;
+  if(!opts?.enabled||!s.mobility?.finiteMineralsEnabled)return;
+  const claims=cfg.quarryClaims||(cfg.quarryClaims=[]);
+  for(const c of claims){
+    const polity=cfg.polities.find(v=>v.id===c.polityId),town=polity&&townOf(s,polity);
+    if(!town)continue;
+    if(c.guardId&&!s.people.some(q=>q.id===c.guardId&&q.alive)){
+      c.guardId=null;c.guard=null;c.status='declared';c.protectedUntilHour=s.hour;
+    }
+    if(!c.guardId){
+      const path=route(s,town,c.site);
+      if(!path||path.length>opts.maxGuardRoute)continue;
+      const offices=new Set([s.religion,s.opponentReligion,...(s.additionalReligions||[])]
+        .filter(Boolean).flatMap(f=>[...(f.priests||[]),...(f.saints||[])]));
+      const used=new Set(claims.map(x=>x.guardId).filter(Boolean));
+      const guard=eligible(s,town).filter(q=>q.id!==polity.leaderId&&!q.mobilityTrip&&
+        !courier(s,q.id)&&!polity.militia.memberIds.includes(q.id)&&
+        !used.has(q.id)&&!offices.has(q.id)).sort((a,b)=>b.health-a.health||a.id.localeCompare(b.id))[0];
+      if(!guard)continue;
+      c.guardId=guard.id;c.guard={path,index:0,x:town.x,y:town.y};c.status='deploying';
+      emit(s,'politics',town.name+' 派遣 '+guard.name+' 真正前往礦場守衛。',
+        ['居民真實離開生產；守衛必須沿可通行路線抵達']);
+    }
+    if(c.status==='deploying'){
+      const g=c.guard;
+      g.index=Math.min(g.path.length-1,g.index+cfg.marchCellsPerDay);
+      g.x=g.path[g.index].x;g.y=g.path[g.index].y;
+      if(g.index===g.path.length-1){
+        c.status='protected';c.protectedSinceHour=s.hour;
+        emit(s,'politics',town.name+' 的守衛抵達礦場，排他保護開始生效。',
+          ['礦點局部控制由真人守衛維繫；沒有立刻宣戰']);
+      }
+    }else if(c.status==='protected')c.protectedDays=(c.protectedDays||0)+1;
+  }
+  const d=day(s);
+  if(d===0||d%opts.decisionDays!==0)return;
+  const sites=(s.mobilityHotspots||[]).filter(h=>h.kind==='stone'&&
+    s.tiles[h.y*s.width+h.x]?.mineral?.origin==='natural');
+  for(const polity of cfg.polities){
+    const town=townOf(s,polity),chief=leader(s,polity);
+    if(!town||!chief||claims.filter(c=>c.polityId===polity.id).length>=opts.maxClaimsPerPolity)continue;
+    const safety=opts.safetyStone+residents(s,town).length*opts.stonePerResident;
+    const choices=sites.filter(site=>!claims.some(c=>c.site.x===site.x&&c.site.y===site.y))
+      .sort((a,b)=>distance(a,town)-distance(b,town)||a.x-b.x||a.y-b.y);
+    for(const site of choices){
+      const mineral=s.tiles[site.y*s.width+site.x].mineral;
+      if(mineral.available>opts.warningMultiplier*safety)continue;
+      const path=route(s,town,site);
+      if(!path||path.length>opts.maxGuardRoute)continue;
+      const roll=hash(s.seed+'|quarry-right|'+chief.id+'|'+d+'|'+site.x+'|'+site.y)/4294967296;
+      if(roll>=opts.declarationChance)continue;
+      const c={id:'quarry-right-'+cfg.nextQuarryClaimId++,site:{x:site.x,y:site.y},
+        polityId:polity.id,townId:town.id,leaderId:chief.id,
+        declaredAtHour:s.hour,availableAtDeclaration:mineral.available,
+        safetyStone:safety,threshold:opts.warningMultiplier*safety,
+        status:'declared',guardId:null,guard:null,protectedDays:0};
+      claims.push(c);
+      emit(s,'politics',town.name+' 領袖 '+chief.name+' 宣告礦區排他權利主張。',
+        ['實存 '+mineral.available.toFixed(1)+' ≤ 安全下限 '+safety.toFixed(1)+
+         ' × '+opts.warningMultiplier,'僅主張、非立即占領或開戰；需要真人守衛']);
+      break;
+    }
+  }
+}
 function launchDispute(s,a,b,site,emit){
   const cfg=s.politics,ta=townOf(s,a),tb=townOf(s,b);
   if(!ta||!tb||!unoccupied(a)||!unoccupied(b))return false;
@@ -366,7 +459,8 @@ function processMobilizations(s,emit){
     }
     if(s.hour<m.readyAtHour)continue;
     const node=s.tiles[m.site.y*s.width+m.site.x];
-    if(node?.resourceNode!=='stone'||!launchDispute(s,a,b,m.site,emit)){
+    if(s.politics.mineralRights?.enabled||node?.resourceNode!=='stone'||
+       !launchDispute(s,a,b,m.site,emit)){
       m.status='cancelled';m.resolvedAtHour=s.hour;continue;
     }
     m.status='launched';m.resolvedAtHour=s.hour;
@@ -378,6 +472,9 @@ function processMobilizations(s,emit){
 }
 function startDispute(s,emit){
   const cfg=s.politics,polities=cfg.polities;
+  // A shared ore deposit and two low public stocks are not a casus belli.
+  // P1 records real guard violations; full territorial war remains deferred.
+  if(cfg.mineralRights?.enabled)return;
   if(!s.mobility?.enabled||!Array.isArray(s.mobilityHotspots))return;
   const nodes=s.mobilityHotspots.filter(t=>t.kind==='stone');
   for(let i=0;i<polities.length;i++)for(let j=i+1;j<polities.length;j++){
@@ -496,9 +593,9 @@ function resolveDisputes(s,emit,die,notify){
     for(const force of [a,b])beginReturn(s,force);
     c.status='resolved';c.winnerId=winner.id;c.resolvedAtHour=s.hour;
     const node=s.tiles[c.site.y*s.width+c.site.x];
-    const amount=Math.min(cfg.claimStoneUnits,Math.max(0,node?.stone||0));
+    const amount=MOBILITY.extract(s,node,'stone',cfg.claimStoneUnits,winner.townId,true);
     const home=townOf(s,winner);
-    if(amount>0&&home){node.stone-=amount;home.storage.stone+=amount;}
+    if(amount>0&&home)home.storage.stone+=amount;
     cfg.claims.push({site:c.site,polityId:winner.id,hour:s.hour,stoneGathered:amount});
     emit(s,'conflict',townOf(s,winner).name+' 在石礦衝突中取得優勢，雙方部隊撤回。',
       ['實際交戰 '+c.roundsCompleted+' 日，連續傷害與 Healing 會影響最終戰力',
@@ -944,6 +1041,7 @@ function daily(s,emit,die,notify){
   }
   diplomacyDaily(s,emit);
   unionsDaily(s,emit,notify);
+  mineralRightsDaily(s,emit);
   processMobilizations(s,emit);
   resolveDisputes(s,emit,die,notify);
   if(day(s)>0&&day(s)%cfg.disputeEveryDays===0)startDispute(s,emit);
@@ -960,6 +1058,10 @@ function overview(s,townId){
     militiaReserveEnabled:!!s.politics.peaceMilitia?.enabled,
     mobilizingDays:pendingMobilization(s,p)?Math.max(0,Math.ceil((pendingMobilization(s,p).readyAtHour-s.hour)/24)):null,
     stance:p.militia.stance,fort:p.watchtower.status,
+    quarryClaims:(s.politics.quarryClaims||[]).filter(c=>c.polityId===p.id).map(c=>({
+      site:c.site,status:c.status,guardId:c.guardId,threshold:c.threshold,
+      currentAvailable:s.tiles[c.site.y*s.width+c.site.x]?.mineral?.available,
+      protectedDays:c.protectedDays})),
     fortProgress:p.watchtower.progress,
     commandFactor:head?1:s.politics.vacantCommandFactor,
     defense:defense(s,p,townOf(s,p)),
@@ -984,13 +1086,32 @@ function reconcile(s){
   s.politics.nextDisputeId ||= 1;
   if(cfg.diplomacy?.union){s.politics.unions ||= [];s.politics.nextUnionId ||= 1;}
   if(cfg.peaceMilitia?.enabled){s.politics.mobilizations ||= [];s.politics.nextMobilizationId ||= 1;}
+  if(cfg.mineralRights?.enabled){s.politics.quarryClaims ||= [];s.politics.nextQuarryClaimId ||= 1;s.politics.quarryEncounters ||= [];}
 }
 function validate(s){
   if(!active(s))return [];
   const errors=[],cfg=s.politics;
   const seen=new Set(),soldiers=new Set();
   const d=cfg.diplomacy,carriers=new Set();
-  const unionIds=new Set(),unionMembersSeen=new Set();
+  const unionIds=new Set(),unionMembersSeen=new Set(),guards=new Set(),sites=new Set();
+  for(const c of cfg.quarryClaims||[]){
+    const key=c.site?.x+','+c.site?.y;
+    if(sites.has(key))errors.push('礦權重複');sites.add(key);
+    const mineral=s.tiles[c.site?.y*s.width+c.site?.x];
+    if(mineral?.resourceNode!=='stone'||!mineral?.mineral||
+       !cfg.polities.some(q=>q.id===c.polityId&&q.townId===c.townId))
+      errors.push('礦權缺少天然礦或在世聚落');
+    if(!['declared','deploying','protected'].includes(c.status))errors.push('礦權狀態不正確');
+    if(c.guardId){
+      if(guards.has(c.guardId))errors.push('重複派遣礦區守衛');guards.add(c.guardId);
+      const person=s.people.find(q=>q.id===c.guardId&&q.alive);
+      if(!person||person.settlementId!==c.townId)errors.push('守衛不是本地在世居民');
+      if(!c.guard||!Array.isArray(c.guard.path)||c.guard.index<0||
+        c.guard.index>=c.guard.path.length)errors.push('守衛缺少真實路線');
+      if(c.status==='protected'&&(!c.guard||distance(c.guard,c.site)>1e-6))
+        errors.push('不在礦區的守衛不能宣稱排他控制');
+    }else if(c.status!=='declared')errors.push('排他礦權沒有真人守衛');
+  }
   for(const m of cfg.mobilizations||[]){
     if(!['forming','launched','cancelled'].includes(m.status))errors.push('民兵動員狀態不正確');
     if(![m.aId,m.bId].every(id=>cfg.polities.some(p=>p.id===id)))errors.push('動員缺少既存政體');
@@ -1068,11 +1189,12 @@ function validate(s){
       if(soldiers.has(id))errors.push('同一居民加入不同軍隊');
       soldiers.add(id);
       if(carriers.has(id))errors.push('運輸居民同時參軍');
+      if(guards.has(id))errors.push('礦區守衛同時參軍');
       if(!residents(s,town).some(q=>q.id===id))errors.push('民兵不是在世本地居民');
       if(id===p.leaderId)errors.push('地方領袖重複占用民兵職位');
     }
   }
   return errors;
 }
-return {BASE,normalize,init,daily,onDeath,personDuty,construct,overview,validate,reconcile,defense,coreFaith,identityFaith,relation,syncMembership,unionOf,offensePolicy};
+return {BASE,normalize,init,daily,onDeath,personDuty,construct,overview,validate,reconcile,defense,coreFaith,identityFaith,relation,syncMembership,unionOf,offensePolicy,mineralRightsDaily};
 });

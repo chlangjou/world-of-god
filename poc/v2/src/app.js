@@ -1749,6 +1749,7 @@
     requestAnimationFrame(animate);
   }
   // Keep the layer chooser outside the simulation kernel and outside saves.
+  $('mapLayersPanel').hidden=true; // also deterministic in bare DOM/test environments
   $('mapLayersButton').onclick=()=>{
     $('mapLayersPanel').hidden=!$('mapLayersPanel').hidden;
     syncMapLayerControls();

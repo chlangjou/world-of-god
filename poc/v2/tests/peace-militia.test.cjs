@@ -27,36 +27,19 @@ test('a real local adult leaves full-time guarding when peace is agreed',()=>{
  assert.notEqual(s.people.find(z=>z.id===id).activity,'guard');
  assert.deepEqual(W.validate(s).errors,[]);
 });
-test('natural remobilization is delayed, real and replay-valid',()=>{
+test('natural prepared rival no longer waits for demobilized counterpart',()=>{
  const s=W.create(E.options('opponent-competition-replay',true));
  for(let day=1;day<=90;day++){
-  W.advanceTicks(s,3);assert.deepEqual(W.validate(s).errors,[]);
-  for(const m of s.politics.mobilizations||[]){
-   assert.equal(m.readyAtHour-m.startedAtHour,3*24);
-   if(m.status==='launched'){
-    assert.ok(m.resolvedAtHour>=m.readyAtHour);
-    assert.ok(s.politics.disputes.some(c=>c.startedAtHour===m.resolvedAtHour&&
-      [c.aId,c.bId].includes(m.aId)&&[c.aId,c.bId].includes(m.bId)));
-   }
-  }
+   W.advanceTicks(s,3);
+   assert.deepEqual(W.validate(s).errors,[]);
  }
- assert.ok(s.politics.mobilizations.some(m=>m.status==='launched'));
- const restored=W.restore(JSON.stringify(s));assert.deepEqual(restored,s);
- W.advanceTicks(s,3);W.advanceTicks(restored,3);assert.deepEqual(restored,s);
-});
-test('peace in the middle of mustering cancels pending attack',()=>{
- const s=W.create(E.options('opponent-competition-replay',true));
- let pending;
- for(let d=0;d<90&&!pending;d++){
-  W.advanceTicks(s,3);pending=s.politics.mobilizations?.find(m=>m.status==='forming');
- }
- assert.ok(pending);
- const count=s.politics.disputes.length,r=P.relation(s,pending.aId,pending.bId);
- assert.ok(r);r.status='peace'; // explicit controlled agreement
- W.advanceTicks(s,3);
- assert.equal(pending.status,'cancelled');
- assert.equal(s.politics.disputes.length,count);
- assert.deepEqual(W.validate(s).errors,[]);
+ const hurried=s.politics.disputes.filter(c=>c.readiness);
+ assert.ok(hurried.length>0,'actual natural readiness mismatch should be observable');
+ assert.ok(hurried.every(c=>c.readiness.availableAtContact<c.readiness.authorizedStrength));
+ const restored=W.restore(JSON.stringify(s));
+ assert.deepEqual(restored,s);
+ W.advanceTicks(s,3);W.advanceTicks(restored,3);
+ assert.deepEqual(restored,s);
 });
 test('opt-in worlds preserve actual population and map at genesis',()=>{
  const a=W.create(E.options('valley-spring-01',false));

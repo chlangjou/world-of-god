@@ -605,12 +605,14 @@
     const side=p=>p?townName(p)+' '+p.militia.memberIds.length+' 人':'未知部隊';
     const title=c.status==='marching'?'正在向石礦進軍':
       c.status==='clashing'?'石礦交戰中':'石礦衝突已結束';
+    const risk=c.readiness?' · '+townName(state.politics.polities.find(p=>p.id===c.readiness.understrengthPolityId))+
+      ' 復員守軍 '+c.readiness.availableAtContact+'/'+c.readiness.authorizedStrength:'';
     const status=c.status==='clashing'?
       '第 '+(c.roundsCompleted||0)+' / '+(state.politics.battleRounds||3)+' 回合 · '+
       (paused?'模擬已暫停，可選擇神蹟後按繼續':'交戰中，可施放 Heal 介入'):
       c.status==='marching'?'雙方民兵正沿地圖行軍；接觸時將自動降至 1×':
       (c.winnerId?'勝方：'+townName(state.politics.polities.find(p=>p.id===c.winnerId)):'雙方撤退');
-    return {title,status,a,b,sideA:side(a),sideB:side(b)};
+    return {title,status:status+risk,a,b,sideA:side(a),sideB:side(b)};
   }
   function renderBattleStatus(){
     const element=$('battleFocusBtn'),c=visibleConflict();

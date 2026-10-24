@@ -114,6 +114,7 @@ test('guard rights are declared by a living leader; actual travel precedes prote
   assert.ok(protectedAt>mine.declaredAtHour,'declaration is not instant occupation');
   const guard=s.people.find(p=>p.id===mine.guardId);
   assert.ok(guard.alive);
+  W.advanceTicks(s,1); // next worker phase after daily status transition
   assert.equal(guard.activity,'quarry_guard');
   assert.ok(!s.politics.polities.some(p=>p.militia.memberIds.includes(guard.id)));
   const stranger=s.people.find(p=>p.alive&&p.settlementId!==mine.townId);

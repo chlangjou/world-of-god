@@ -42,12 +42,19 @@ function normalize(profile){
   out.maxMarchDays=Math.round(clamp(out.maxMarchDays,1,60));
   out.marchCellsPerDay=Math.round(clamp(out.marchCellsPerDay,1,12));
   out.battleRounds=Math.round(clamp(out.battleRounds,2,7));
+  const d=profile?.diplomacy;
+  if(d?.enabled===true)out.diplomacy={enabled:true,
+    coreShare:clamp(d.coreShare??.4,.1,1),minCore:Math.round(clamp(d.minCore??3,1,100)),
+    peaceTrust:clamp(d.peaceTrust??18,1,100),allianceTrust:clamp(d.allianceTrust??38,1,100),
+    peaceDays:Math.round(clamp(d.peaceDays??14,1,180)),
+    shipmentUnits:clamp(d.shipmentUnits??1.5,.1,10),shipmentEveryDays:Math.round(clamp(d.shipmentEveryDays??7,1,90))};
   return out;
 }
 function init(s,profile){
   const cfg=normalize(profile);
   if(!cfg.enabled)return;
   s.politics={...cfg,polities:[],disputes:[],claims:[],nextDisputeId:1};
+  if(cfg.diplomacy)s.politics.diplomacy={...cfg.diplomacy,relations:[],shipments:[],nextShipmentId:1};
 }
 const active=s=>!!s.politics?.enabled;
 const townOf=(s,p)=>s.settlements.find(t=>t.id===p.townId);
@@ -65,7 +72,7 @@ function merit(p){
     clamp(p.age||0,18,55)/120;
 }
 function pickLeader(s,town){
-  return eligible(s,town).sort((a,b)=>merit(b)-merit(a)||a.id.localeCompare(b.id))[0]||null;
+  return eligible(s,town).filter(p=>!courier(s,p.id)).sort((a,b)=>merit(b)-merit(a)||a.id.localeCompare(b.id))[0]||null;
 }
 function byTown(s,townId){
   return s.politics?.polities.find(p=>p.townId===townId)||null;
@@ -101,7 +108,7 @@ function chooseMilitia(s,polity){
   const offices=new Set([s.religion,...[s.opponentReligion,...(s.additionalReligions||[])].filter(Boolean)]
     .flatMap(f=>[...(f.priests||[]),...(f.saints||[])]));
   const all=eligible(s,town).filter(p=>p.id!==polity.leaderId&&!p.mobilityTrip&&
-    !offices.has(p.id));
+    !offices.has(p.id)&&!courier(s,p.id));
   const selected=all.sort((a,b)=>
     Number(members.has(b.id))-Number(members.has(a.id))||
     b.health-a.health||a.id.localeCompare(b.id)).slice(0,s.politics.militiaLimit);
@@ -151,8 +158,17 @@ function beginReturn(s,polity){
   if(!path){unit.stance='defend';unit.x=town.x;unit.y=town.y;unit.path=[];unit.pathIndex=0;return;}
   unit.stance='return';unit.path=path;unit.pathIndex=0;
 }
-function onDeath(s,p,emit){
+function onDeath(s,p,emit,departure=false){
   if(!active(s))return;
+  if(!departure)for(const c of s.politics.disputes.filter(c=>c.status==='clashing')){
+    if(s.politics.polities.some(v=>[c.aId,c.bId].includes(v.id)&&v.militia.memberIds.includes(p.id))){
+      const r=relation(s,c.aId,c.bId);if(r){r.battleDeaths=(r.battleDeaths||0)+1;r.grievance+=4;}
+    }
+  }
+  for(const q of s.politics.diplomacy?.shipments||[])if(!departure&&q.carrierId===p.id&&['outbound','returning'].includes(q.status)){
+    q.status='lost';q.lost=q.delivered?0:q.amount;q.finishedAtHour=s.hour;
+    emit(s,'diplomacy','合作運輸居民死亡，運送中物資未加入收貨村。',['運輸 '+q.id+'；遺失 '+q.lost]);
+  }
   for(const polity of s.politics.polities){
     polity.militia.memberIds=polity.militia.memberIds.filter(id=>id!==p.id);
     if(polity.leaderId!==p.id)continue;
@@ -160,7 +176,7 @@ function onDeath(s,p,emit){
     polity.leaderId=null;polity.vacantUntilHour=s.hour+duration*24;
     if(['march','clash'].includes(polity.militia.stance))beginReturn(s,polity);
     const town=townOf(s,polity);
-    emit(s,'politics',(town?.name||polity.id)+' 的領袖 '+p.name+' 離世，進入指揮真空。',
+    emit(s,'politics',(town?.name||polity.id)+' 的領袖 '+p.name+(departure?' 離開原聚落':' 離世')+'，進入指揮真空。',
       ['空窗 '+duration+' 日；禁止新攻勢，已有攻勢轉為撤退',
        '指揮型防禦加成乘 '+s.politics.vacantCommandFactor+
         '；城牆等實體防禦不會憑空損毀']);
@@ -177,6 +193,9 @@ function onDeath(s,p,emit){
 }
 function personDuty(s,p){
   if(!active(s))return false;
+  const shipment=courier(s,p.id);
+  if(shipment){const at=shipment.path[shipment.pathIndex];p.x=at.x;p.y=at.y;
+    p.activity='transport';p.activityReason='依人類盟約運送 '+shipment.resource+' '+shipment.amount+'；抵達才入庫';return true;}
   const polity=s.politics.polities.find(v=>v.militia.memberIds.includes(p.id));
   if(!polity)return false;
   const unit=polity.militia;p.x=unit.x;p.y=unit.y;
@@ -187,13 +206,13 @@ function personDuty(s,p){
   return true;
 }
 function construct(s,p,emit){
-  if(!active(s)||s.tick%3!==1||p.stage!=='adult'||p.health<35||p.mobilityTrip)return false;
+  if(!active(s)||s.tick%3!==1||p.stage!=='adult'||p.health<35||p.mobilityTrip||courier(s,p.id))return false;
   const polity=s.politics.polities.find(v=>v.watchtower.status==='building'&&
     residents(s,townOf(s,v)).some(q=>q.id===p.id));
   if(!polity||polity.militia.memberIds.includes(p.id))return false;
   const town=townOf(s,polity);
   const workers=eligible(s,town).filter(q=>!polity.militia.memberIds.includes(q.id)&&
-    !q.mobilityTrip).sort((a,b)=>(b.proficiency?.build||0)-(a.proficiency?.build||0)||
+    !q.mobilityTrip&&!courier(s,q.id)).sort((a,b)=>(b.proficiency?.build||0)-(a.proficiency?.build||0)||
       a.id.localeCompare(b.id));
   if(workers[0]?.id!==p.id)return false;
   const fort=polity.watchtower;
@@ -243,6 +262,7 @@ function startDispute(s,emit){
   const nodes=s.mobilityHotspots.filter(t=>t.kind==='stone');
   for(let i=0;i<polities.length;i++)for(let j=i+1;j<polities.length;j++){
     const a=polities[i],b=polities[j],ta=townOf(s,a),tb=townOf(s,b);
+    if(relation(s,a.id,b.id)?.status!=='competition'&&relation(s,a.id,b.id))continue;
     if(!ta||!tb||!unoccupied(a)||!unoccupied(b))continue;
     if(ta.storage.stone>=cfg.resourceNeedStone||tb.storage.stone>=cfg.resourceNeedStone)continue;
     if(cfg.disputes.some(c=>[c.aId,c.bId].includes(a.id)&&[c.aId,c.bId].includes(b.id)&&
@@ -356,6 +376,137 @@ function resolveDisputes(s,emit,die,notify){
        '獲取石材 '+amount+'，從地圖現有石材庫存扣除，非憑空生成']);
   }
 }
+function syncMembership(s,emit){
+  if(!active(s))return;
+  for(const p of s.politics.polities){
+    const local=new Set(residents(s,townOf(s,p)).map(q=>q.id));
+    p.militia.memberIds=p.militia.memberIds.filter(id=>local.has(id));
+    if(p.leaderId&&!local.has(p.leaderId)){
+      const departed=s.people.find(q=>q.id===p.leaderId);
+      if(departed)onDeath(s,departed,emit,true);
+    }
+  }
+}
+function relation(s,a,b){return s.politics?.diplomacy?.relations.find(r=>
+  (r.aId===a&&r.bId===b)||(r.aId===b&&r.bId===a));}
+function courier(s,id){return s.politics?.diplomacy?.shipments.find(q=>q.carrierId===id&&
+  ['outbound','returning'].includes(q.status));}
+function coreFaith(s,town){
+  const cfg=s.politics.diplomacy,people=residents(s,town),counts={};
+  for(const p of people)if(p.religionId&&p.devotion>=40)counts[p.religionId]=(counts[p.religionId]||0)+1;
+  const best=Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0];
+  return {id:best&&best[1]>=cfg.minCore&&best[1]/Math.max(1,people.length)>=cfg.coreShare?best[0]:null,
+    core:best?.[1]||0,population:people.length};
+}
+function transition(s,r,status,a,b,emit){
+  r.status=status;r.changedAtHour=s.hour;r[status+'AtHour']=s.hour;
+  r.transitions||=[];r.transitions.push({status,hour:s.hour,reason:r.reason});
+  // Stop actual running sorties on either side, not just their future decisions.
+  for(const c of s.politics.disputes)if(['marching','clashing'].includes(c.status)&&
+    [c.aId,c.bId].includes(a.id)&&[c.aId,c.bId].includes(b.id)){
+    c.status='withdrawn';c.winnerId=null;c.resolvedAtHour=s.hour;c.reason='negotiated-peace';
+    beginReturn(s,a);beginReturn(s,b);
+  }
+  emit(s,'diplomacy',townOf(s,a).name+' 與 '+townOf(s,b).name+(status==='peace'?' 達成和解。':' 建立互助同盟。'),
+    [r.reason,'實際跨村接觸日數 '+r.contactDays+'；信任 '+r.trust.toFixed(1),
+      '地方領袖、庫存、宗教與防禦工事仍各自保留']);
+}
+function transportDaily(s,emit){
+  const d=s.politics.diplomacy;
+  for(const q of d.shipments){
+    if(!['outbound','returning'].includes(q.status))continue;
+    const person=s.people.find(p=>p.id===q.carrierId&&p.alive);
+    if(!person)continue; // onDeath accounts for lost cargo.
+    q.pathIndex=Math.min(q.path.length-1,q.pathIndex+s.politics.marchCellsPerDay);
+    const at=q.path[q.pathIndex];person.x=at.x;person.y=at.y;
+    if(q.pathIndex!==q.path.length-1)continue;
+    if(q.status==='outbound'){
+      const recipient=s.settlements.find(t=>t.id===q.toTownId);
+      if(!recipient){q.path=q.path.slice().reverse();q.pathIndex=0;q.status='returning';continue;}
+      recipient.storage[q.resource]+=q.amount;q.delivered=true;q.deliveredAtHour=s.hour;
+      const r=relation(s,q.aId,q.bId);if(r)r.delivered+=q.amount;
+      emit(s,'diplomacy',recipient.name+' 收到盟村運來的 '+q.resource+' '+q.amount+'。',
+        ['運輸居民 '+person.name+' 已沿可行路線抵達','出發時已從來源村扣庫存；不是新生資源']);
+      q.path=q.path.slice().reverse();q.pathIndex=0;q.status='returning';
+    }else{
+      // Failed destination returns cargo to the original owner if it still exists.
+      if(!q.delivered){const origin=s.settlements.find(t=>t.id===q.fromTownId);
+        if(origin){origin.storage[q.resource]+=q.amount;q.refunded=true;}else q.lost=q.amount;}
+      q.status='complete';q.finishedAtHour=s.hour;
+    }
+  }
+}
+function sendAid(s,r,a,b,emit){
+  const d=s.politics.diplomacy;
+  if(s.hour-(r.lastShipmentHour??-1e9)<d.shipmentEveryDays*24)return;
+  for(const [donor,receiver]of [[a,b],[b,a]]){
+    const from=townOf(s,donor),to=townOf(s,receiver);
+    if(!leader(s,donor)||!leader(s,receiver))continue;
+    const soldiers=new Set(s.politics.polities.flatMap(p=>p.militia.memberIds));
+    const offices=new Set([s.religion,s.opponentReligion,...(s.additionalReligions||[])].filter(Boolean)
+      .flatMap(f=>[...(f.priests||[]),...(f.saints||[])]));
+    const carrier=eligible(s,from).filter(p=>p.id!==donor.leaderId&&!soldiers.has(p.id)&&
+      !offices.has(p.id)&&!p.mobilityTrip&&!courier(s,p.id)).sort((x,y)=>x.id.localeCompare(y.id))[0];
+    if(!carrier)continue;
+    // Food reserve uses real residents' daily needs; materials retain a local buffer.
+    for(const resource of ['stone','wood','food']){
+      const reserve=resource==='food'?residents(s,from).length*s.rules.foodNeedAdult*7:5;
+      const needed=resource==='food'?residents(s,to).length*s.rules.foodNeedAdult*3:3;
+      if(from.storage[resource]<reserve+d.shipmentUnits||to.storage[resource]>=needed)continue;
+      const path=route(s,carrier,to);
+      if(!path||path.length<2||path.length-1>s.politics.maxMarchDays*s.politics.marchCellsPerDay)continue;
+      // Reserve one real resident's work time, and reserve real cargo immediately.
+      const amount=d.shipmentUnits;from.storage[resource]-=amount;
+      const q={id:'aid-'+d.nextShipmentId++,aId:a.id,bId:b.id,fromTownId:from.id,toTownId:to.id,
+        carrierId:carrier.id,resource,amount,path,pathIndex:0,status:'outbound',
+        startedAtHour:s.hour,delivered:false,lost:0};
+      d.shipments.push(q);r.lastShipmentHour=s.hour;
+      carrier.activity='transport';carrier.activityReason='依盟約攜帶實際物資前往盟村';
+      emit(s,'diplomacy',from.name+' 派 '+carrier.name+' 運送物資支援 '+to.name+'。',
+        ['來源庫存已扣除 '+resource+' '+amount,'沿實際非河水格／渡口運輸；抵達前不加入收貨庫存']);
+      return;
+    }
+  }
+}
+function diplomacyDaily(s,emit){
+  const d=s.politics.diplomacy;if(!d?.enabled)return;
+  transportDaily(s,emit);
+  const polities=s.politics.polities;
+  for(let i=0;i<polities.length;i++)for(let j=i+1;j<polities.length;j++){
+    const a=polities[i],b=polities[j],ta=townOf(s,a),tb=townOf(s,b);
+    if(!ta||!tb||distance(ta,tb)>s.politics.maxClaimDistance*2)continue;
+    let r=relation(s,a.id,b.id);
+    if(!r){r={aId:a.id,bId:b.id,status:'competition',trust:0,contactDays:0,delivered:0,
+      grievance:0,seenDisputes:[],lastEvaluatedHour:s.hour-24,changedAtHour:s.hour,reason:'尚無跨村協議'};d.relations.push(r);}
+    for(const c of s.politics.disputes)if([c.aId,c.bId].includes(a.id)&&[c.aId,c.bId].includes(b.id)){
+      if(!r.seenDisputes.includes(c.id)){r.seenDisputes.push(c.id);r.grievance+=8;r.trust=Math.max(0,r.trust-4);}
+      r.seenRounds||={};const rounds=c.roundsCompleted||0;
+      r.grievance+=Math.max(0,rounds-(r.seenRounds[c.id]||0))*1.5;r.seenRounds[c.id]=rounds;
+    }
+    const contacts=(s.contactLog||[]).filter(e=>e.hour>r.lastEvaluatedHour&&e.hour<=s.hour&&
+      ((e.aTownId===ta.id&&e.bTownId===tb.id)||(e.aTownId===tb.id&&e.bTownId===ta.id)));
+    r.lastEvaluatedHour=s.hour;
+    const fa=coreFaith(s,ta),fb=coreFaith(s,tb),same=!!fa.id&&fa.id===fb.id;
+    const leaderSame=leader(s,a)?.religionId&&leader(s,a)?.religionId===leader(s,b)?.religionId;
+    const benefit=['wood','stone','food'].some(k=>Math.abs(ta.storage[k]-tb.storage[k])>=5);
+    // Preference is seed/person-derived and stable across replay and reload.
+    const reluctance=((hash(s.seed+'|ambition|'+a.leaderId)%100)+(hash(s.seed+'|ambition|'+b.leaderId)%100))/200;
+    r.reason=(same?'主要核心信仰相同':'主要核心信仰不同或不足')+'；'+
+      (leaderSame?'領袖同教':'領袖信仰各自獨立')+'；'+(benefit?'有庫存互補':'互補有限')+
+      '；接觸 '+contacts.length+'；舊怨 '+r.grievance.toFixed(1)+'；領袖保留 '+reluctance.toFixed(2);
+    if(contacts.length){
+      r.contactDays++;r.grievance=Math.max(0,r.grievance-.3);
+      r.trust=Math.min(100,r.trust+(1+(same?1.4:0)+(leaderSame?.2:0)+(benefit?.7:0))*(1-reluctance*.5)/(1+r.grievance/10));
+    }
+    if(contacts.length&&leader(s,a)&&leader(s,b)){
+      if(r.status==='competition'&&r.trust>=d.peaceTrust&&r.grievance<12&&r.contactDays>=5)
+        transition(s,r,'peace',a,b,emit);
+      else if(r.status==='peace'&&r.trust>=d.allianceTrust&&s.hour-r.peaceAtHour>=d.peaceDays*24&&benefit)
+        transition(s,r,'alliance',a,b,emit);
+    }
+    if(r.status==='alliance')sendAid(s,r,a,b,emit);
+  }
+}
 function daily(s,emit,die,notify){
   if(!active(s))return;
   ensurePolities(s,emit);
@@ -385,6 +536,7 @@ function daily(s,emit,die,notify){
     }
     advanceUnit(s,polity.militia);
   }
+  diplomacyDaily(s,emit);
   resolveDisputes(s,emit,die,notify);
   if(day(s)>0&&day(s)%cfg.disputeEveryDays===0)startDispute(s,emit);
 }
@@ -399,11 +551,14 @@ function overview(s,townId){
     stance:p.militia.stance,fort:p.watchtower.status,
     fortProgress:p.watchtower.progress,
     commandFactor:head?1:s.politics.vacantCommandFactor,
-    defense:defense(s,p,townOf(s,p))};
+    defense:defense(s,p,townOf(s,p)),
+    relations:(s.politics.diplomacy?.relations||[]).filter(r=>r.aId===p.id||r.bId===p.id).map(r=>({
+      ...r,partnerTownId:s.politics.polities.find(v=>v.id===(r.aId===p.id?r.bId:r.aId))?.townId}))};
 }
 function reconcile(s){
   if(!s.politics)return;
   const cfg=normalize(s.politics);
+  if(cfg.diplomacy)cfg.diplomacy={...s.politics.diplomacy,...cfg.diplomacy};
   Object.assign(s.politics,cfg);
   s.politics.polities ||= [];
   s.politics.disputes ||= [];
@@ -414,6 +569,22 @@ function validate(s){
   if(!active(s))return [];
   const errors=[],cfg=s.politics;
   const seen=new Set(),soldiers=new Set();
+  const d=cfg.diplomacy,carriers=new Set();
+  if(d?.enabled){
+    for(const r of d.relations||[]){
+      if(!['competition','peace','alliance'].includes(r.status)||!Number.isFinite(r.trust)||r.trust<0||r.trust>100)
+        errors.push('外交關係狀態不正確');
+      if(r.aId===r.bId||![r.aId,r.bId].every(id=>cfg.polities.some(p=>p.id===id)))errors.push('外交缺少地方政體');
+    }
+    for(const q of d.shipments||[]){
+      if(!['wood','stone','food'].includes(q.resource)||!Number.isFinite(q.amount)||q.amount<=0)errors.push('盟約貨物不正確');
+      if(!['outbound','returning'].includes(q.status))continue;
+      if(carriers.has(q.carrierId))errors.push('運輸居民重複值勤');carriers.add(q.carrierId);
+      if(!s.people.some(p=>p.id===q.carrierId&&p.alive))errors.push('運輸缺少在世居民');
+      if(!Array.isArray(q.path)||!q.path.length||q.pathIndex<0||q.pathIndex>=q.path.length||
+        q.path.some(at=>!walkable(s,at.x,at.y)))errors.push('運輸路徑不正確');
+    }
+  }
   for(const p of cfg.polities){
     if(seen.has(p.townId))errors.push('政體重複控制同一聚落');
     seen.add(p.townId);
@@ -427,11 +598,12 @@ function validate(s){
     for(const id of p.militia.memberIds){
       if(soldiers.has(id))errors.push('同一居民加入不同軍隊');
       soldiers.add(id);
+      if(carriers.has(id))errors.push('運輸居民同時參軍');
       if(!residents(s,town).some(q=>q.id===id))errors.push('民兵不是在世本地居民');
       if(id===p.leaderId)errors.push('地方領袖重複占用民兵職位');
     }
   }
   return errors;
 }
-return {BASE,normalize,init,daily,onDeath,personDuty,construct,overview,validate,reconcile,defense};
+return {BASE,normalize,init,daily,onDeath,personDuty,construct,overview,validate,reconcile,defense,coreFaith,relation,syncMembership};
 });

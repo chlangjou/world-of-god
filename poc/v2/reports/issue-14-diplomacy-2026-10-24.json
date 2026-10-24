@@ -1,0 +1,4705 @@
+{
+  "issue": 14,
+  "baseCommit": "2c59219dcb5838b34fefc53f17c1f6d06450a3f2",
+  "node": "v24.12.0",
+  "days": 180,
+  "elapsedMs": 20184.045,
+  "profile": {
+    "profileId": "polity-command-v0.1",
+    "status": "experimental-runtime-profile",
+    "enabled": true,
+    "description": "Opt-in human command: real residents form militia, leaders control offense and works, death produces 90-180d command vacancy, actual watchtower materials, physical quarry skirmishes.",
+    "successionMinDays": 90,
+    "successionMaxDays": 180,
+    "vacantCommandFactor": 0.5,
+    "militiaLimit": 2,
+    "minReserveFood": 8,
+    "watchtowerWood": 3,
+    "watchtowerStone": 1,
+    "watchtowerWork": 5,
+    "watchtowerDefense": 2,
+    "commandDefense": 2,
+    "resourceNeedStone": 10,
+    "disputeEveryDays": 14,
+    "disputeCooldownDays": 120,
+    "maxClaimDistance": 25,
+    "maxMarchDays": 18,
+    "marchCellsPerDay": 4,
+    "claimStoneUnits": 1.5,
+    "battleRounds": 3,
+    "diplomacy": {
+      "enabled": true,
+      "coreShare": 0.4,
+      "minCore": 3,
+      "peaceTrust": 18,
+      "allianceTrust": 38,
+      "peaceDays": 14,
+      "shipmentUnits": 1.5,
+      "shipmentEveryDays": 7
+    }
+  },
+  "results": [
+    {
+      "seed": "valley-spring-01",
+      "enabled": false,
+      "days": 180,
+      "elapsedMs": 3234.0256999999997,
+      "genesis": [
+        {
+          "id": "p1",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 70
+        },
+        {
+          "id": "p2",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p3",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p4",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p5",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p6",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p7",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p8",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p9",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p10",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p11",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p12",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p13",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p14",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p15",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p16",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p17",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p18",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p19",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p20",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p21",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p22",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p23",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p24",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p25",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p26",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p27",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p28",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p29",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p30",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p31",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p32",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p33",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p34",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p35",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p36",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p37",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p38",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p39",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p40",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p41",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p42",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p43",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p44",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p45",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p46",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p47",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p48",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p49",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p50",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p51",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        }
+      ],
+      "endpoint": {
+        "day": 180,
+        "alive": 51,
+        "disputes": 2,
+        "relations": []
+      },
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "resolved",
+          "startDay": 14,
+          "reason": null
+        },
+        {
+          "id": "conflict-2",
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "resolved",
+          "startDay": 28,
+          "reason": null
+        }
+      ],
+      "relations": [],
+      "shipments": [],
+      "maxCargo": 0,
+      "politicalEvents": [],
+      "validation": "daily valid; roundtrip and next-day deterministic replay passed"
+    },
+    {
+      "seed": "valley-spring-01",
+      "enabled": true,
+      "days": 180,
+      "elapsedMs": 3424.8263,
+      "genesis": [
+        {
+          "id": "p1",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 70
+        },
+        {
+          "id": "p2",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p3",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p4",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p5",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p6",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p7",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p8",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p9",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p10",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p11",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p12",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p13",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p14",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p15",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p16",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p17",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p18",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p19",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p20",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p21",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p22",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p23",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p24",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p25",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p26",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p27",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p28",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p29",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p30",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p31",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p32",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p33",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p34",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p35",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p36",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p37",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p38",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p39",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p40",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p41",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p42",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p43",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p44",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p45",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p46",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p47",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p48",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p49",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p50",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p51",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        }
+      ],
+      "endpoint": {
+        "day": 180,
+        "alive": 51,
+        "disputes": 1,
+        "relations": [
+          {
+            "aId": "polity-n1",
+            "bId": "polity-n2",
+            "status": "competition",
+            "trust": 0,
+            "contactDays": 0,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 24,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.15"
+          },
+          {
+            "aId": "polity-n1",
+            "bId": "polity-n3",
+            "status": "alliance",
+            "trust": 98.92764886660186,
+            "contactDays": 83,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [
+              "conflict-1"
+            ],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1752,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.34",
+            "seenRounds": {
+              "conflict-1": 3
+            },
+            "peaceAtHour": 744,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 744,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 9.2；領袖保留 0.34"
+              },
+              {
+                "status": "alliance",
+                "hour": 1752,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 2.6；領袖保留 0.34"
+              }
+            ],
+            "allianceAtHour": 1752
+          },
+          {
+            "aId": "polity-n2",
+            "bId": "polity-n3",
+            "status": "alliance",
+            "trust": 100,
+            "contactDays": 112,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1728,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.41",
+            "peaceAtHour": 576,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 576,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.41"
+              },
+              {
+                "status": "alliance",
+                "hour": 1728,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.41"
+              }
+            ],
+            "allianceAtHour": 1728
+          },
+          {
+            "aId": "polity-n1",
+            "bId": "polity-s2",
+            "status": "competition",
+            "trust": 10.165999999999999,
+            "contactDays": 8,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 168,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.51"
+          },
+          {
+            "aId": "polity-n2",
+            "bId": "polity-s2",
+            "status": "alliance",
+            "trust": 100,
+            "contactDays": 129,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1320,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.57",
+            "peaceAtHour": 600,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 600,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.57"
+              },
+              {
+                "status": "alliance",
+                "hour": 1320,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.57"
+              }
+            ],
+            "allianceAtHour": 1320
+          },
+          {
+            "aId": "polity-n3",
+            "bId": "polity-s2",
+            "status": "alliance",
+            "trust": 100,
+            "contactDays": 133,
+            "delivered": 3,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1368,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.77",
+            "peaceAtHour": 648,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 648,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 5；舊怨 0.0；領袖保留 0.77"
+              },
+              {
+                "status": "alliance",
+                "hour": 1368,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 16；舊怨 0.0；領袖保留 0.77"
+              }
+            ],
+            "allianceAtHour": 1368,
+            "lastShipmentHour": 1704
+          },
+          {
+            "aId": "polity-n1",
+            "bId": "polity-s1",
+            "status": "alliance",
+            "trust": 100,
+            "contactDays": 100,
+            "delivered": 1.5,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1272,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.16",
+            "peaceAtHour": 576,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 576,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 24；舊怨 0.0；領袖保留 0.16"
+              },
+              {
+                "status": "alliance",
+                "hour": 1272,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.16"
+              }
+            ],
+            "allianceAtHour": 1272,
+            "lastShipmentHour": 1296
+          },
+          {
+            "aId": "polity-n2",
+            "bId": "polity-s1",
+            "status": "competition",
+            "trust": 15.045,
+            "contactDays": 10,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 264,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.23"
+          },
+          {
+            "aId": "polity-n3",
+            "bId": "polity-s1",
+            "status": "alliance",
+            "trust": 100,
+            "contactDays": 120,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 984,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 13；舊怨 0.0；領袖保留 0.42",
+            "peaceAtHour": 600,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 600,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.42"
+              },
+              {
+                "status": "alliance",
+                "hour": 984,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 20；舊怨 0.0；領袖保留 0.42"
+              }
+            ],
+            "allianceAtHour": 984
+          },
+          {
+            "aId": "polity-s2",
+            "bId": "polity-s1",
+            "status": "competition",
+            "trust": 4.811,
+            "contactDays": 4,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 264,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.58"
+          }
+        ]
+      },
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "resolved",
+          "startDay": 14,
+          "reason": null
+        }
+      ],
+      "relations": [
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "competition",
+          "trust": 0,
+          "contactDays": 0,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 24,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.15"
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 98.92764886660186,
+          "contactDays": 83,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-1"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1752,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.34",
+          "seenRounds": {
+            "conflict-1": 3
+          },
+          "peaceAtHour": 744,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 744,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 9.2；領袖保留 0.34"
+            },
+            {
+              "status": "alliance",
+              "hour": 1752,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 2.6；領袖保留 0.34"
+            }
+          ],
+          "allianceAtHour": 1752
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 112,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1728,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.41",
+          "peaceAtHour": 576,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 576,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.41"
+            },
+            {
+              "status": "alliance",
+              "hour": 1728,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.41"
+            }
+          ],
+          "allianceAtHour": 1728
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s2",
+          "status": "competition",
+          "trust": 10.165999999999999,
+          "contactDays": 8,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 168,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.51"
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 129,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1320,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.57",
+          "peaceAtHour": 600,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 600,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.57"
+            },
+            {
+              "status": "alliance",
+              "hour": 1320,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.57"
+            }
+          ],
+          "allianceAtHour": 1320
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 133,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1368,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.77",
+          "peaceAtHour": 648,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 648,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 5；舊怨 0.0；領袖保留 0.77"
+            },
+            {
+              "status": "alliance",
+              "hour": 1368,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 16；舊怨 0.0；領袖保留 0.77"
+            }
+          ],
+          "allianceAtHour": 1368,
+          "lastShipmentHour": 1704
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 100,
+          "delivered": 1.5,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1272,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.16",
+          "peaceAtHour": 576,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 576,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 24；舊怨 0.0；領袖保留 0.16"
+            },
+            {
+              "status": "alliance",
+              "hour": 1272,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.16"
+            }
+          ],
+          "allianceAtHour": 1272,
+          "lastShipmentHour": 1296
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 15.045,
+          "contactDays": 10,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 264,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.23"
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 120,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 984,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 13；舊怨 0.0；領袖保留 0.42",
+          "peaceAtHour": 600,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 600,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.42"
+            },
+            {
+              "status": "alliance",
+              "hour": 984,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 20；舊怨 0.0；領袖保留 0.42"
+            }
+          ],
+          "allianceAtHour": 984
+        },
+        {
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 4.811,
+          "contactDays": 4,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 264,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.58"
+        }
+      ],
+      "shipments": [
+        {
+          "id": "aid-1",
+          "from": "s1",
+          "to": "n1",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 54,
+          "arrivedDay": 59,
+          "lost": 0
+        },
+        {
+          "id": "aid-2",
+          "from": "n3",
+          "to": "s2",
+          "carrierId": "p49",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 57,
+          "arrivedDay": 62,
+          "lost": 0
+        },
+        {
+          "id": "aid-3",
+          "from": "n3",
+          "to": "s2",
+          "carrierId": "p50",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 71,
+          "arrivedDay": 76,
+          "lost": 0
+        }
+      ],
+      "maxCargo": 3,
+      "politicalEvents": [
+        {
+          "id": 32,
+          "hour": 576,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 初穗聚落 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 24；舊怨 0.0；領袖保留 0.16",
+            "實際跨村接觸日數 12；信任 18.8",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 33,
+          "hour": 576,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 谷地原生村 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.41",
+            "實際跨村接觸日數 16；信任 18.3",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 36,
+          "hour": 600,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 新拓聚落 2 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.57",
+            "實際跨村接觸日數 15；信任 18.2",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 37,
+          "hour": 600,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 初穗聚落 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.42",
+            "實際跨村接觸日數 14；信任 18.8",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 38,
+          "hour": 648,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 新拓聚落 2 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 5；舊怨 0.0；領袖保留 0.77",
+            "實際跨村接觸日數 18；信任 18.9",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 40,
+          "hour": 744,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 谷地原生村 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 9.2；領袖保留 0.34",
+            "實際跨村接觸日數 21；信任 18.4",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 49,
+          "hour": 984,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 初穗聚落 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 20；舊怨 0.0；領袖保留 0.42",
+            "實際跨村接觸日數 29；信任 38.9",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 59,
+          "hour": 1272,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 初穗聚落 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.16",
+            "實際跨村接觸日數 25；信任 39.1",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 61,
+          "hour": 1296,
+          "kind": "diplomacy",
+          "text": "初穗聚落 派 木川 運送物資支援 河岸原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 65,
+          "hour": 1320,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 新拓聚落 2 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.57",
+            "實際跨村接觸日數 32；信任 38.8",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 69,
+          "hour": 1368,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 新拓聚落 2 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 16；舊怨 0.0；領袖保留 0.77",
+            "實際跨村接觸日數 37；信任 38.8",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 70,
+          "hour": 1368,
+          "kind": "diplomacy",
+          "text": "谷地原生村 派 稻香 運送物資支援 新拓聚落 2。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 71,
+          "hour": 1416,
+          "kind": "diplomacy",
+          "text": "河岸原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 木川 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 72,
+          "hour": 1488,
+          "kind": "diplomacy",
+          "text": "新拓聚落 2 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 稻香 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 73,
+          "hour": 1704,
+          "kind": "diplomacy",
+          "text": "谷地原生村 派 晨露 運送物資支援 新拓聚落 2。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 75,
+          "hour": 1728,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 谷地原生村 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 3；舊怨 0.0；領袖保留 0.41",
+            "實際跨村接觸日數 32；信任 39.1",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 78,
+          "hour": 1752,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 谷地原生村 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 2.6；領袖保留 0.34",
+            "實際跨村接觸日數 43；信任 38.8",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 79,
+          "hour": 1824,
+          "kind": "diplomacy",
+          "text": "新拓聚落 2 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 晨露 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        }
+      ],
+      "validation": "daily valid; roundtrip and next-day deterministic replay passed"
+    },
+    {
+      "seed": "dry-stress",
+      "enabled": false,
+      "days": 180,
+      "elapsedMs": 3380.509399999999,
+      "genesis": [
+        {
+          "id": "p1",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 70
+        },
+        {
+          "id": "p2",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p3",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p4",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p5",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p6",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p7",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p8",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p9",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p10",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p11",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p12",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p13",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p14",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p15",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p16",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p17",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p18",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p19",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p20",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p21",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p22",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p23",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p24",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p25",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p26",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p27",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p28",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p29",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p30",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p31",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p32",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p33",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p34",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p35",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p36",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p37",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p38",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p39",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p40",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p41",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p42",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p43",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p44",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p45",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p46",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p47",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p48",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p49",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p50",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p51",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        }
+      ],
+      "endpoint": {
+        "day": 180,
+        "alive": 51,
+        "disputes": 8,
+        "relations": []
+      },
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "resolved",
+          "startDay": 14,
+          "reason": null
+        },
+        {
+          "id": "conflict-2",
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "resolved",
+          "startDay": 28,
+          "reason": null
+        },
+        {
+          "id": "conflict-3",
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "resolved",
+          "startDay": 42,
+          "reason": null
+        },
+        {
+          "id": "conflict-4",
+          "aId": "polity-n1",
+          "bId": "polity-s2",
+          "status": "resolved",
+          "startDay": 56,
+          "reason": null
+        },
+        {
+          "id": "conflict-5",
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "resolved",
+          "startDay": 70,
+          "reason": null
+        },
+        {
+          "id": "conflict-6",
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "resolved",
+          "startDay": 98,
+          "reason": null
+        },
+        {
+          "id": "conflict-7",
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "resolved",
+          "startDay": 140,
+          "reason": null
+        },
+        {
+          "id": "conflict-8",
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "resolved",
+          "startDay": 168,
+          "reason": null
+        }
+      ],
+      "relations": [],
+      "shipments": [],
+      "maxCargo": 0,
+      "politicalEvents": [],
+      "validation": "daily valid; roundtrip and next-day deterministic replay passed"
+    },
+    {
+      "seed": "dry-stress",
+      "enabled": true,
+      "days": 180,
+      "elapsedMs": 3555.6772999999994,
+      "genesis": [
+        {
+          "id": "p1",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 70
+        },
+        {
+          "id": "p2",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p3",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p4",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p5",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p6",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p7",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p8",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p9",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p10",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p11",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p12",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p13",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p14",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p15",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p16",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p17",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p18",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p19",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p20",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p21",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p22",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p23",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p24",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p25",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p26",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p27",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p28",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p29",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p30",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p31",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p32",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p33",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p34",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p35",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p36",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p37",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p38",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p39",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p40",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p41",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p42",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p43",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p44",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p45",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p46",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p47",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p48",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p49",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p50",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p51",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        }
+      ],
+      "endpoint": {
+        "day": 180,
+        "alive": 51,
+        "disputes": 1,
+        "relations": [
+          {
+            "aId": "polity-n1",
+            "bId": "polity-n2",
+            "status": "peace",
+            "trust": 35.38156370519932,
+            "contactDays": 36,
+            "delivered": 0,
+            "grievance": 3.4999999999999964,
+            "seenDisputes": [
+              "conflict-1"
+            ],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1896,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 3.8；領袖保留 0.08",
+            "seenRounds": {
+              "conflict-1": 3
+            },
+            "peaceAtHour": 1896,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 1896,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 8.6；領袖保留 0.08"
+              }
+            ]
+          },
+          {
+            "aId": "polity-n1",
+            "bId": "polity-n3",
+            "status": "alliance",
+            "trust": 100,
+            "contactDays": 132,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 960,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 14；舊怨 0.0；領袖保留 0.41",
+            "peaceAtHour": 552,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 552,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.41"
+              },
+              {
+                "status": "alliance",
+                "hour": 960,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.41"
+              }
+            ],
+            "allianceAtHour": 960
+          },
+          {
+            "aId": "polity-n2",
+            "bId": "polity-n3",
+            "status": "alliance",
+            "trust": 77.80849999999991,
+            "contactDays": 70,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 3864,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.35",
+            "peaceAtHour": 888,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 888,
+                "reason": "主要核心信仰不同或不足；領袖同教；互補有限；接觸 1；舊怨 0.0；領袖保留 0.35"
+              },
+              {
+                "status": "alliance",
+                "hour": 3864,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.35"
+              }
+            ],
+            "allianceAtHour": 3864
+          },
+          {
+            "aId": "polity-n1",
+            "bId": "polity-s2",
+            "status": "alliance",
+            "trust": 96.47925000000005,
+            "contactDays": 69,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1848,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.35",
+            "peaceAtHour": 984,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 984,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.35"
+              },
+              {
+                "status": "alliance",
+                "hour": 1848,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.35"
+              }
+            ],
+            "allianceAtHour": 1848
+          },
+          {
+            "aId": "polity-n2",
+            "bId": "polity-s2",
+            "status": "alliance",
+            "trust": 93.68974999999996,
+            "contactDays": 61,
+            "delivered": 3,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1872,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.29",
+            "peaceAtHour": 696,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 696,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.29"
+              },
+              {
+                "status": "alliance",
+                "hour": 1872,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.29"
+              }
+            ],
+            "allianceAtHour": 1872,
+            "lastShipmentHour": 3216
+          },
+          {
+            "aId": "polity-n3",
+            "bId": "polity-s2",
+            "status": "alliance",
+            "trust": 100,
+            "contactDays": 141,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1320,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.63",
+            "peaceAtHour": 624,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 624,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.63"
+              },
+              {
+                "status": "alliance",
+                "hour": 1320,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 18；舊怨 0.0；領袖保留 0.63"
+              }
+            ],
+            "allianceAtHour": 1320
+          },
+          {
+            "aId": "polity-n1",
+            "bId": "polity-s1",
+            "status": "alliance",
+            "trust": 100,
+            "contactDays": 103,
+            "delivered": 3,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1368,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 5；舊怨 0.0；領袖保留 0.23",
+            "peaceAtHour": 840,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 840,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.23"
+              },
+              {
+                "status": "alliance",
+                "hour": 1368,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.23"
+              }
+            ],
+            "allianceAtHour": 1368,
+            "lastShipmentHour": 1632
+          },
+          {
+            "aId": "polity-n2",
+            "bId": "polity-s1",
+            "status": "alliance",
+            "trust": 51.28250000000004,
+            "contactDays": 32,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 4032,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17",
+            "peaceAtHour": 1728,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 1728,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17"
+              },
+              {
+                "status": "alliance",
+                "hour": 4032,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17"
+              }
+            ],
+            "allianceAtHour": 4032
+          },
+          {
+            "aId": "polity-n3",
+            "bId": "polity-s1",
+            "status": "alliance",
+            "trust": 100,
+            "contactDays": 108,
+            "delivered": 6,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1176,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.51",
+            "peaceAtHour": 648,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 648,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.51"
+              },
+              {
+                "status": "alliance",
+                "hour": 1176,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 19；舊怨 0.0；領袖保留 0.51"
+              }
+            ],
+            "allianceAtHour": 1176,
+            "lastShipmentHour": 1704
+          },
+          {
+            "aId": "polity-s2",
+            "bId": "polity-s1",
+            "status": "alliance",
+            "trust": 65.02250000000005,
+            "contactDays": 51,
+            "delivered": 3,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 2616,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.45",
+            "peaceAtHour": 1488,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 1488,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 0.0；領袖保留 0.45"
+              },
+              {
+                "status": "alliance",
+                "hour": 2616,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 0.0；領袖保留 0.45"
+              }
+            ],
+            "allianceAtHour": 2616,
+            "lastShipmentHour": 2784
+          }
+        ]
+      },
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "resolved",
+          "startDay": 14,
+          "reason": null
+        }
+      ],
+      "relations": [
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "peace",
+          "trust": 35.38156370519932,
+          "contactDays": 36,
+          "delivered": 0,
+          "grievance": 3.4999999999999964,
+          "seenDisputes": [
+            "conflict-1"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1896,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 3.8；領袖保留 0.08",
+          "seenRounds": {
+            "conflict-1": 3
+          },
+          "peaceAtHour": 1896,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1896,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 8.6；領袖保留 0.08"
+            }
+          ]
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 132,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 960,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 14；舊怨 0.0；領袖保留 0.41",
+          "peaceAtHour": 552,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 552,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.41"
+            },
+            {
+              "status": "alliance",
+              "hour": 960,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.41"
+            }
+          ],
+          "allianceAtHour": 960
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 77.80849999999991,
+          "contactDays": 70,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 3864,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.35",
+          "peaceAtHour": 888,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 888,
+              "reason": "主要核心信仰不同或不足；領袖同教；互補有限；接觸 1；舊怨 0.0；領袖保留 0.35"
+            },
+            {
+              "status": "alliance",
+              "hour": 3864,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.35"
+            }
+          ],
+          "allianceAtHour": 3864
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 96.47925000000005,
+          "contactDays": 69,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1848,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.35",
+          "peaceAtHour": 984,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 984,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.35"
+            },
+            {
+              "status": "alliance",
+              "hour": 1848,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.35"
+            }
+          ],
+          "allianceAtHour": 1848
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 93.68974999999996,
+          "contactDays": 61,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1872,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.29",
+          "peaceAtHour": 696,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 696,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.29"
+            },
+            {
+              "status": "alliance",
+              "hour": 1872,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.29"
+            }
+          ],
+          "allianceAtHour": 1872,
+          "lastShipmentHour": 3216
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 141,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1320,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.63",
+          "peaceAtHour": 624,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 624,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.63"
+            },
+            {
+              "status": "alliance",
+              "hour": 1320,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 18；舊怨 0.0；領袖保留 0.63"
+            }
+          ],
+          "allianceAtHour": 1320
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 103,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1368,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 5；舊怨 0.0；領袖保留 0.23",
+          "peaceAtHour": 840,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 840,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.23"
+            },
+            {
+              "status": "alliance",
+              "hour": 1368,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.23"
+            }
+          ],
+          "allianceAtHour": 1368,
+          "lastShipmentHour": 1632
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 51.28250000000004,
+          "contactDays": 32,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 4032,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17",
+          "peaceAtHour": 1728,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1728,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17"
+            },
+            {
+              "status": "alliance",
+              "hour": 4032,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17"
+            }
+          ],
+          "allianceAtHour": 4032
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 108,
+          "delivered": 6,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1176,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.51",
+          "peaceAtHour": 648,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 648,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.51"
+            },
+            {
+              "status": "alliance",
+              "hour": 1176,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 19；舊怨 0.0；領袖保留 0.51"
+            }
+          ],
+          "allianceAtHour": 1176,
+          "lastShipmentHour": 1704
+        },
+        {
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 65.02250000000005,
+          "contactDays": 51,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 2616,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.45",
+          "peaceAtHour": 1488,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1488,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 0.0；領袖保留 0.45"
+            },
+            {
+              "status": "alliance",
+              "hour": 2616,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 0.0；領袖保留 0.45"
+            }
+          ],
+          "allianceAtHour": 2616,
+          "lastShipmentHour": 2784
+        }
+      ],
+      "shipments": [
+        {
+          "id": "aid-1",
+          "from": "s1",
+          "to": "n3",
+          "carrierId": "p4",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 49,
+          "arrivedDay": 56,
+          "lost": 0
+        },
+        {
+          "id": "aid-2",
+          "from": "s1",
+          "to": "n3",
+          "carrierId": "p7",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 56,
+          "arrivedDay": 62,
+          "lost": 0
+        },
+        {
+          "id": "aid-3",
+          "from": "s1",
+          "to": "n1",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 59,
+          "arrivedDay": 64,
+          "lost": 0
+        },
+        {
+          "id": "aid-4",
+          "from": "s1",
+          "to": "n3",
+          "carrierId": "p4",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 63,
+          "arrivedDay": 70,
+          "lost": 0
+        },
+        {
+          "id": "aid-5",
+          "from": "s1",
+          "to": "n1",
+          "carrierId": "p7",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 68,
+          "arrivedDay": 73,
+          "lost": 0
+        },
+        {
+          "id": "aid-6",
+          "from": "s1",
+          "to": "n3",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 71,
+          "arrivedDay": 77,
+          "lost": 0
+        },
+        {
+          "id": "aid-7",
+          "from": "s1",
+          "to": "s2",
+          "carrierId": "p7",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 109,
+          "arrivedDay": 120,
+          "lost": 0
+        },
+        {
+          "id": "aid-8",
+          "from": "s1",
+          "to": "s2",
+          "carrierId": "p2",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 116,
+          "arrivedDay": 127,
+          "lost": 0
+        },
+        {
+          "id": "aid-9",
+          "from": "s2",
+          "to": "n2",
+          "carrierId": "p17",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 127,
+          "arrivedDay": 135,
+          "lost": 0
+        },
+        {
+          "id": "aid-10",
+          "from": "s2",
+          "to": "n2",
+          "carrierId": "p19",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 134,
+          "arrivedDay": 143,
+          "lost": 0
+        }
+      ],
+      "maxCargo": 3,
+      "politicalEvents": [
+        {
+          "id": 25,
+          "hour": 552,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 谷地原生村 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.41",
+            "實際跨村接觸日數 14；信任 18.9",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 29,
+          "hour": 624,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 新拓聚落 2 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.63",
+            "實際跨村接觸日數 15；信任 19.0",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 33,
+          "hour": 648,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 初穗聚落 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.51",
+            "實際跨村接觸日數 14；信任 18.5",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 37,
+          "hour": 696,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 新拓聚落 2 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.29",
+            "實際跨村接觸日數 13；信任 18.8",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 40,
+          "hour": 840,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 初穗聚落 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.23",
+            "實際跨村接觸日數 12；信任 18.0",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 47,
+          "hour": 888,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 谷地原生村 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；互補有限；接觸 1；舊怨 0.0；領袖保留 0.35",
+            "實際跨村接觸日數 18；信任 18.4",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 49,
+          "hour": 960,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 谷地原生村 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.41",
+            "實際跨村接觸日數 29；信任 39.1",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 50,
+          "hour": 984,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 新拓聚落 2 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.35",
+            "實際跨村接觸日數 13；信任 18.2",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 52,
+          "hour": 1176,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 初穗聚落 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 19；舊怨 0.0；領袖保留 0.51",
+            "實際跨村接觸日數 28；信任 38.3",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 53,
+          "hour": 1176,
+          "kind": "diplomacy",
+          "text": "初穗聚落 派 阿岑 運送物資支援 谷地原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 62,
+          "hour": 1320,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 新拓聚落 2 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 18；舊怨 0.0；領袖保留 0.63",
+            "實際跨村接觸日數 32；信任 38.8",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 63,
+          "hour": 1344,
+          "kind": "diplomacy",
+          "text": "谷地原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 阿岑 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 64,
+          "hour": 1344,
+          "kind": "diplomacy",
+          "text": "初穗聚落 派 雲舒 運送物資支援 谷地原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 68,
+          "hour": 1368,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 初穗聚落 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 4；舊怨 0.0；領袖保留 0.23",
+            "實際跨村接觸日數 25；信任 39.1",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 69,
+          "hour": 1416,
+          "kind": "diplomacy",
+          "text": "初穗聚落 派 木川 運送物資支援 河岸原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 72,
+          "hour": 1488,
+          "kind": "diplomacy",
+          "text": "谷地原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 雲舒 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 73,
+          "hour": 1488,
+          "kind": "diplomacy",
+          "text": "新拓聚落 2 與 初穗聚落 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 0.0；領袖保留 0.45",
+            "實際跨村接觸日數 16；信任 18.9",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 74,
+          "hour": 1512,
+          "kind": "diplomacy",
+          "text": "初穗聚落 派 阿岑 運送物資支援 谷地原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 75,
+          "hour": 1536,
+          "kind": "diplomacy",
+          "text": "河岸原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 木川 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 76,
+          "hour": 1632,
+          "kind": "diplomacy",
+          "text": "初穗聚落 派 雲舒 運送物資支援 河岸原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 77,
+          "hour": 1680,
+          "kind": "diplomacy",
+          "text": "谷地原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 阿岑 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 78,
+          "hour": 1704,
+          "kind": "diplomacy",
+          "text": "初穗聚落 派 木川 運送物資支援 谷地原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 80,
+          "hour": 1728,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 初穗聚落 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17",
+            "實際跨村接觸日數 11；信任 18.2",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 84,
+          "hour": 1752,
+          "kind": "diplomacy",
+          "text": "河岸原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 雲舒 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 85,
+          "hour": 1848,
+          "kind": "diplomacy",
+          "text": "谷地原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 木川 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 86,
+          "hour": 1848,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 新拓聚落 2 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.35",
+            "實際跨村接觸日數 28；信任 39.2",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 88,
+          "hour": 1872,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 新拓聚落 2 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.29",
+            "實際跨村接觸日數 27；信任 39.1",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 89,
+          "hour": 1896,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 北林原生村 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 1；舊怨 8.6；領袖保留 0.08",
+            "實際跨村接觸日數 20；信任 18.7",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 97,
+          "hour": 2616,
+          "kind": "diplomacy",
+          "text": "新拓聚落 2 與 初穗聚落 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 0.0；領袖保留 0.45",
+            "實際跨村接觸日數 31；信任 38.7",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 98,
+          "hour": 2616,
+          "kind": "diplomacy",
+          "text": "初穗聚落 派 雲舒 運送物資支援 新拓聚落 2。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 99,
+          "hour": 2784,
+          "kind": "diplomacy",
+          "text": "初穗聚落 派 木川 運送物資支援 新拓聚落 2。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 100,
+          "hour": 2880,
+          "kind": "diplomacy",
+          "text": "新拓聚落 2 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 雲舒 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 103,
+          "hour": 3048,
+          "kind": "diplomacy",
+          "text": "新拓聚落 2 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 木川 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 104,
+          "hour": 3048,
+          "kind": "diplomacy",
+          "text": "新拓聚落 2 派 芷晴 運送物資支援 北林原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 106,
+          "hour": 3216,
+          "kind": "diplomacy",
+          "text": "新拓聚落 2 派 長空 運送物資支援 北林原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 107,
+          "hour": 3240,
+          "kind": "diplomacy",
+          "text": "北林原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 芷晴 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 110,
+          "hour": 3432,
+          "kind": "diplomacy",
+          "text": "北林原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 長空 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 117,
+          "hour": 3864,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 谷地原生村 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.35",
+            "實際跨村接觸日數 57；信任 57.5",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 119,
+          "hour": 4032,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 初穗聚落 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.17",
+            "實際跨村接觸日數 24；信任 38.9",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        }
+      ],
+      "validation": "daily valid; roundtrip and next-day deterministic replay passed"
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "enabled": false,
+      "days": 180,
+      "elapsedMs": 3214.053099999999,
+      "genesis": [
+        {
+          "id": "p1",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 70
+        },
+        {
+          "id": "p2",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p3",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p4",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p5",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p6",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p7",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p8",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p9",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p10",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p11",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p12",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p13",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p14",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p15",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p16",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p17",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p18",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p19",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p20",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p21",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p22",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p23",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p24",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p25",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p26",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p27",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p28",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p29",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p30",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p31",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p32",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p33",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p34",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p35",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p36",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p37",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p38",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p39",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p40",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p41",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p42",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p43",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p44",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p45",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p46",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p47",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p48",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p49",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p50",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p51",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        }
+      ],
+      "endpoint": {
+        "day": 180,
+        "alive": 51,
+        "disputes": 5,
+        "relations": []
+      },
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "resolved",
+          "startDay": 14,
+          "reason": null
+        },
+        {
+          "id": "conflict-2",
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "resolved",
+          "startDay": 28,
+          "reason": null
+        },
+        {
+          "id": "conflict-3",
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "resolved",
+          "startDay": 42,
+          "reason": null
+        },
+        {
+          "id": "conflict-4",
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "resolved",
+          "startDay": 56,
+          "reason": null
+        },
+        {
+          "id": "conflict-5",
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "resolved",
+          "startDay": 70,
+          "reason": null
+        }
+      ],
+      "relations": [],
+      "shipments": [],
+      "maxCargo": 0,
+      "politicalEvents": [],
+      "validation": "daily valid; roundtrip and next-day deterministic replay passed"
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "enabled": true,
+      "days": 180,
+      "elapsedMs": 3372.4206999999988,
+      "genesis": [
+        {
+          "id": "p1",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 70
+        },
+        {
+          "id": "p2",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p3",
+          "householdId": "h1",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p4",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p5",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p6",
+          "householdId": "h2",
+          "religionId": "r1",
+          "devotion": 21
+        },
+        {
+          "id": "p7",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 46
+        },
+        {
+          "id": "p8",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 31
+        },
+        {
+          "id": "p9",
+          "householdId": "h3",
+          "religionId": "r1",
+          "devotion": 33
+        },
+        {
+          "id": "p10",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p11",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p12",
+          "householdId": "h4",
+          "religionId": "r1",
+          "devotion": 23
+        },
+        {
+          "id": "p13",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p14",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p15",
+          "householdId": "h5",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p16",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p17",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p18",
+          "householdId": "h6",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p19",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p20",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p21",
+          "householdId": "h7",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p22",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 53
+        },
+        {
+          "id": "p23",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p24",
+          "householdId": "h8",
+          "religionId": "r2",
+          "devotion": 29
+        },
+        {
+          "id": "p25",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p26",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p27",
+          "householdId": "h9",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p28",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p29",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p30",
+          "householdId": "h10",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p31",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p32",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p33",
+          "householdId": "h11",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p34",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p35",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p36",
+          "householdId": "h12",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p37",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p38",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p39",
+          "householdId": "h13",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p40",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p41",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p42",
+          "householdId": "h14",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p43",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p44",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p45",
+          "householdId": "h15",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p46",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p47",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p48",
+          "householdId": "h16",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p49",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p50",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        },
+        {
+          "id": "p51",
+          "householdId": "h17",
+          "religionId": null,
+          "devotion": 10
+        }
+      ],
+      "endpoint": {
+        "day": 180,
+        "alive": 51,
+        "disputes": 4,
+        "relations": [
+          {
+            "aId": "polity-n1",
+            "bId": "polity-n2",
+            "status": "alliance",
+            "trust": 43.183170497636695,
+            "contactDays": 53,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [
+              "conflict-1"
+            ],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 2352,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.59",
+            "seenRounds": {
+              "conflict-1": 3
+            },
+            "peaceAtHour": 1536,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 1536,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 5.9；領袖保留 0.59"
+              },
+              {
+                "status": "alliance",
+                "hour": 2352,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.59"
+              }
+            ],
+            "allianceAtHour": 2352
+          },
+          {
+            "aId": "polity-n1",
+            "bId": "polity-n3",
+            "status": "alliance",
+            "trust": 88.7750000000001,
+            "contactDays": 88,
+            "delivered": 1.5,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1368,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.66",
+            "peaceAtHour": 672,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 672,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.66"
+              },
+              {
+                "status": "alliance",
+                "hour": 1368,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.66"
+              }
+            ],
+            "allianceAtHour": 1368,
+            "lastShipmentHour": 1368
+          },
+          {
+            "aId": "polity-n2",
+            "bId": "polity-n3",
+            "status": "alliance",
+            "trust": 100,
+            "contactDays": 97,
+            "delivered": 3,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 1464,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.67",
+            "peaceAtHour": 768,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 768,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；互補有限；接觸 9；舊怨 0.0；領袖保留 0.67"
+              },
+              {
+                "status": "alliance",
+                "hour": 1464,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.67"
+              }
+            ],
+            "allianceAtHour": 1464,
+            "lastShipmentHour": 1800
+          },
+          {
+            "aId": "polity-n1",
+            "bId": "polity-s2",
+            "status": "competition",
+            "trust": 4.199,
+            "contactDays": 4,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 192,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.77"
+          },
+          {
+            "aId": "polity-n2",
+            "bId": "polity-s2",
+            "status": "alliance",
+            "trust": 51.10534050826703,
+            "contactDays": 63,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [
+              "conflict-3"
+            ],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 3384,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.78",
+            "seenRounds": {
+              "conflict-3": 3
+            },
+            "peaceAtHour": 1776,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 1776,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 8；舊怨 7.7；領袖保留 0.78"
+              },
+              {
+                "status": "alliance",
+                "hour": 3384,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 9；舊怨 0.8；領袖保留 0.78"
+              }
+            ],
+            "allianceAtHour": 3384
+          },
+          {
+            "aId": "polity-n3",
+            "bId": "polity-s2",
+            "status": "alliance",
+            "trust": 45.09105037233417,
+            "contactDays": 59,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [
+              "conflict-4"
+            ],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 4080,
+            "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.84",
+            "seenRounds": {
+              "conflict-4": 3
+            },
+            "peaceAtHour": 2352,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 2352,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 9；舊怨 7.4；領袖保留 0.84"
+              },
+              {
+                "status": "alliance",
+                "hour": 4080,
+                "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 3；舊怨 0.2；領袖保留 0.84"
+              }
+            ],
+            "allianceAtHour": 4080
+          },
+          {
+            "aId": "polity-n1",
+            "bId": "polity-s1",
+            "status": "competition",
+            "trust": 10.06460491525529,
+            "contactDays": 16,
+            "delivered": 0,
+            "grievance": 7.699999999999992,
+            "seenDisputes": [
+              "conflict-2"
+            ],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 336,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 7.7；領袖保留 0.51",
+            "seenRounds": {
+              "conflict-2": 3
+            }
+          },
+          {
+            "aId": "polity-n2",
+            "bId": "polity-s1",
+            "status": "competition",
+            "trust": 0,
+            "contactDays": 0,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 336,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.52"
+          },
+          {
+            "aId": "polity-n3",
+            "bId": "polity-s1",
+            "status": "alliance",
+            "trust": 84.71099999999997,
+            "contactDays": 79,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 2616,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.59",
+            "peaceAtHour": 1536,
+            "transitions": [
+              {
+                "status": "peace",
+                "hour": 1536,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 17；舊怨 0.0；領袖保留 0.84"
+              },
+              {
+                "status": "alliance",
+                "hour": 2616,
+                "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.84"
+              }
+            ],
+            "allianceAtHour": 2616
+          },
+          {
+            "aId": "polity-s2",
+            "bId": "polity-s1",
+            "status": "competition",
+            "trust": 0,
+            "contactDays": 0,
+            "delivered": 0,
+            "grievance": 0,
+            "seenDisputes": [],
+            "lastEvaluatedHour": 4320,
+            "changedAtHour": 336,
+            "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.69"
+          }
+        ]
+      },
+      "conflicts": [
+        {
+          "id": "conflict-1",
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "resolved",
+          "startDay": 14,
+          "reason": null
+        },
+        {
+          "id": "conflict-2",
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "status": "resolved",
+          "startDay": 28,
+          "reason": null
+        },
+        {
+          "id": "conflict-3",
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "resolved",
+          "startDay": 42,
+          "reason": null
+        },
+        {
+          "id": "conflict-4",
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "resolved",
+          "startDay": 56,
+          "reason": null
+        }
+      ],
+      "relations": [
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n2",
+          "status": "alliance",
+          "trust": 43.183170497636695,
+          "contactDays": 53,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-1"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 2352,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.59",
+          "seenRounds": {
+            "conflict-1": 3
+          },
+          "peaceAtHour": 1536,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1536,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 5.9；領袖保留 0.59"
+            },
+            {
+              "status": "alliance",
+              "hour": 2352,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.59"
+            }
+          ],
+          "allianceAtHour": 2352
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 88.7750000000001,
+          "contactDays": 88,
+          "delivered": 1.5,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1368,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.66",
+          "peaceAtHour": 672,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 672,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.66"
+            },
+            {
+              "status": "alliance",
+              "hour": 1368,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.66"
+            }
+          ],
+          "allianceAtHour": 1368,
+          "lastShipmentHour": 1368
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-n3",
+          "status": "alliance",
+          "trust": 100,
+          "contactDays": 97,
+          "delivered": 3,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 1464,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.67",
+          "peaceAtHour": 768,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 768,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；互補有限；接觸 9；舊怨 0.0；領袖保留 0.67"
+            },
+            {
+              "status": "alliance",
+              "hour": 1464,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.67"
+            }
+          ],
+          "allianceAtHour": 1464,
+          "lastShipmentHour": 1800
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s2",
+          "status": "competition",
+          "trust": 4.199,
+          "contactDays": 4,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 192,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.77"
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 51.10534050826703,
+          "contactDays": 63,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-3"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 3384,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.78",
+          "seenRounds": {
+            "conflict-3": 3
+          },
+          "peaceAtHour": 1776,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1776,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 8；舊怨 7.7；領袖保留 0.78"
+            },
+            {
+              "status": "alliance",
+              "hour": 3384,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 9；舊怨 0.8；領袖保留 0.78"
+            }
+          ],
+          "allianceAtHour": 3384
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s2",
+          "status": "alliance",
+          "trust": 45.09105037233417,
+          "contactDays": 59,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [
+            "conflict-4"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 4080,
+          "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.84",
+          "seenRounds": {
+            "conflict-4": 3
+          },
+          "peaceAtHour": 2352,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 2352,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 9；舊怨 7.4；領袖保留 0.84"
+            },
+            {
+              "status": "alliance",
+              "hour": 4080,
+              "reason": "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 3；舊怨 0.2；領袖保留 0.84"
+            }
+          ],
+          "allianceAtHour": 4080
+        },
+        {
+          "aId": "polity-n1",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 10.06460491525529,
+          "contactDays": 16,
+          "delivered": 0,
+          "grievance": 7.699999999999992,
+          "seenDisputes": [
+            "conflict-2"
+          ],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 336,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 7.7；領袖保留 0.51",
+          "seenRounds": {
+            "conflict-2": 3
+          }
+        },
+        {
+          "aId": "polity-n2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 0,
+          "contactDays": 0,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 336,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.52"
+        },
+        {
+          "aId": "polity-n3",
+          "bId": "polity-s1",
+          "status": "alliance",
+          "trust": 84.71099999999997,
+          "contactDays": 79,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 2616,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.59",
+          "peaceAtHour": 1536,
+          "transitions": [
+            {
+              "status": "peace",
+              "hour": 1536,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 17；舊怨 0.0；領袖保留 0.84"
+            },
+            {
+              "status": "alliance",
+              "hour": 2616,
+              "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.84"
+            }
+          ],
+          "allianceAtHour": 2616
+        },
+        {
+          "aId": "polity-s2",
+          "bId": "polity-s1",
+          "status": "competition",
+          "trust": 0,
+          "contactDays": 0,
+          "delivered": 0,
+          "grievance": 0,
+          "seenDisputes": [],
+          "lastEvaluatedHour": 4320,
+          "changedAtHour": 336,
+          "reason": "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 0；舊怨 0.0；領袖保留 0.69"
+        }
+      ],
+      "shipments": [
+        {
+          "id": "aid-1",
+          "from": "n1",
+          "to": "n3",
+          "carrierId": "p26",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 57,
+          "arrivedDay": 63,
+          "lost": 0
+        },
+        {
+          "id": "aid-2",
+          "from": "n3",
+          "to": "n2",
+          "carrierId": "p43",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 67,
+          "arrivedDay": 71,
+          "lost": 0
+        },
+        {
+          "id": "aid-3",
+          "from": "n3",
+          "to": "n2",
+          "carrierId": "p43",
+          "resource": "stone",
+          "amount": 1.5,
+          "status": "complete",
+          "startDay": 75,
+          "arrivedDay": 79,
+          "lost": 0
+        }
+      ],
+      "maxCargo": 1.5,
+      "politicalEvents": [
+        {
+          "id": 30,
+          "hour": 672,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 谷地原生村 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 7；舊怨 0.0；領袖保留 0.66",
+            "實際跨村接觸日數 18；信任 19.1",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 37,
+          "hour": 768,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 谷地原生村 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；互補有限；接觸 9；舊怨 0.0；領袖保留 0.67",
+            "實際跨村接觸日數 19；信任 18.2",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 58,
+          "hour": 1368,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 谷地原生村 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 9；舊怨 0.0；領袖保留 0.66",
+            "實際跨村接觸日數 37；信任 38.4",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 59,
+          "hour": 1368,
+          "kind": "diplomacy",
+          "text": "河岸原生村 派 嵐風 運送物資支援 谷地原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 61,
+          "hour": 1464,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 谷地原生村 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 6；舊怨 0.0；領袖保留 0.67",
+            "實際跨村接觸日數 38；信任 39.0",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 63,
+          "hour": 1512,
+          "kind": "diplomacy",
+          "text": "谷地原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 嵐風 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 64,
+          "hour": 1536,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 北林原生村 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 2；舊怨 5.9；領袖保留 0.59",
+            "實際跨村接觸日數 29；信任 18.7",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 65,
+          "hour": 1536,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 初穗聚落 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 17；舊怨 0.0；領袖保留 0.84",
+            "實際跨村接觸日數 19；信任 18.7",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 67,
+          "hour": 1608,
+          "kind": "diplomacy",
+          "text": "谷地原生村 派 林羽 運送物資支援 北林原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 70,
+          "hour": 1704,
+          "kind": "diplomacy",
+          "text": "北林原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 林羽 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 74,
+          "hour": 1776,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 新拓聚落 2 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 8；舊怨 7.7；領袖保留 0.78",
+            "實際跨村接觸日數 29；信任 18.5",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 78,
+          "hour": 1800,
+          "kind": "diplomacy",
+          "text": "谷地原生村 派 林羽 運送物資支援 北林原生村。",
+          "reasons": [
+            "來源庫存已扣除 stone 1.5",
+            "沿實際非河水格／渡口運輸；抵達前不加入收貨庫存"
+          ],
+          "entities": []
+        },
+        {
+          "id": 81,
+          "hour": 1896,
+          "kind": "diplomacy",
+          "text": "北林原生村 收到盟村運來的 stone 1.5。",
+          "reasons": [
+            "運輸居民 林羽 已沿可行路線抵達",
+            "出發時已從來源村扣庫存；不是新生資源"
+          ],
+          "entities": []
+        },
+        {
+          "id": 90,
+          "hour": 2352,
+          "kind": "diplomacy",
+          "text": "河岸原生村 與 北林原生村 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 1；舊怨 0.0；領袖保留 0.59",
+            "實際跨村接觸日數 49；信任 38.2",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 91,
+          "hour": 2352,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 新拓聚落 2 達成和解。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 9；舊怨 7.4；領袖保留 0.84",
+            "實際跨村接觸日數 29；信任 18.3",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 95,
+          "hour": 2616,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 初穗聚落 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖信仰各自獨立；有庫存互補；接觸 12；舊怨 0.0；領袖保留 0.84",
+            "實際跨村接觸日數 39；信任 38.3",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 104,
+          "hour": 3384,
+          "kind": "diplomacy",
+          "text": "北林原生村 與 新拓聚落 2 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 9；舊怨 0.8；領袖保留 0.78",
+            "實際跨村接觸日數 52；信任 38.3",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        },
+        {
+          "id": 108,
+          "hour": 4080,
+          "kind": "diplomacy",
+          "text": "谷地原生村 與 新拓聚落 2 建立互助同盟。",
+          "reasons": [
+            "主要核心信仰不同或不足；領袖同教；有庫存互補；接觸 3；舊怨 0.2；領袖保留 0.84",
+            "實際跨村接觸日數 53；信任 38.5",
+            "地方領袖、庫存、宗教與防禦工事仍各自保留"
+          ],
+          "entities": []
+        }
+      ],
+      "validation": "daily valid; roundtrip and next-day deterministic replay passed"
+    }
+  ]
+}

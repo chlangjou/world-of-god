@@ -584,6 +584,7 @@
     $('rainBtn').classList.toggle('secondary',!!armedMiracle);
   }
   const polityColors=['#75b7e0','#f1b46f','#a4ce90','#d9a1e8','#e78c80','#d7cc76'];
+  let diplomacyPage=0;
   function polityColor(polity){
     const i=(state.politics?.polities||[]).indexOf(polity);
     return polityColors[Math.max(0,i)%polityColors.length];
@@ -871,10 +872,18 @@
         '木材 '+format(town.storage.wood)+' / '+format(granaryRules?.woodRequired??6)+
         ' · 石材 '+format(town.storage.stone)+' / '+format(granaryRules?.stoneRequired??4));
     const polity=town?S.politicsOverview(state,town.id):null;
+    const diplomaticRelations=(polity?.relations||[]).filter(r=>r.status!=='competition');
+    diplomacyPage%=Math.max(1,diplomaticRelations.length);
     const politySummary=polity?'<div>政體：'+
       (polity.leaderName?'領袖 '+html(polity.leaderName):'繼承空窗 '+polity.vacantDays+' 日')+
       ' · 民兵 '+polity.militia+' · '+(polity.stance==='march'?'向礦區行軍':polity.stance==='return'?'撤退中':'防守')+
-      ' · 瞭望塔 '+(polity.fort==='built'?'完成':polity.fort==='building'?'施工':'未建')+'</div>':'';
+      ' · 瞭望塔 '+(polity.fort==='built'?'完成':polity.fort==='building'?'施工':'未建')+'</div>'+
+      diplomaticRelations.slice(diplomacyPage,diplomacyPage+1).map(r=>'<div>外交：'+
+        html(state.settlements.find(t=>t.id===r.partnerTownId)?.name||r.partnerTownId)+' · '+
+        (r.status==='alliance'?'互助同盟':'和平協議')+' · 已運抵 '+format(r.delivered,1)+
+        '<br>'+html(r.reason)+'</div>').join('')+
+      (diplomaticRelations.length>1?'<button id="diplomacyNext" class="secondary">外交 '+
+        (diplomacyPage+1)+' / '+diplomaticRelations.length+' · 下一個</button>':''):'';
     $('townPanel').innerHTML=town?'<div class="religion-local">'+
       '<b>'+html(town.name)+'</b> · '+(town.native?'原生聚落':'居民聚落')+
       '<div>己方：核心 '+localReligion.followers+'／信眾 '+localReligion.believers+
@@ -912,6 +921,7 @@
           '</div>').join(''):'<div>目前沒有從此地遷出的待建村家戶。</div>')+
       '</div>':'';
     $('townPanel').innerHTML+=frontierSummary;
+    if(diplomaticRelations.length>1)$('diplomacyNext').onclick=()=>{diplomacyPage++;render();};
     const filteredHomes=town?state.households.filter(h=>town.householdIds.includes(h.id)):state.households;
     const housePageSize=2;
     const housePages=Math.max(1,Math.ceil(filteredHomes.length/housePageSize));
@@ -1079,6 +1089,25 @@
       c.restore();
     }
     for(const t of state.settlements){c.save();c.strokeStyle=t.id===selectedTownId?'#f4d69f':t.native?'#98cbb7':'#bed9b4';c.lineWidth=t.id===selectedTownId?2:1.4;c.setLineDash([8,7]);c.beginPath();c.arc(t.x*size,t.y*size,state.rules.settlementClusterDistance*size,0,2*Math.PI);c.stroke();c.setLineDash([]);c.font='bold 14px system-ui';c.textAlign='center';c.fillStyle='#faeed3';c.shadowColor='#0d1e18';c.shadowBlur=7;c.fillText(t.name,(t.x+1)*size,(t.y-5)*size);c.restore();}
+    // Political links are visible independently of the history feed and religion.
+    for(const r of state.politics?.diplomacy?.relations||[]){
+      if(r.status==='competition')continue;
+      const a=state.politics.polities.find(p=>p.id===r.aId),b=state.politics.polities.find(p=>p.id===r.bId);
+      const ta=state.settlements.find(t=>t.id===a?.townId),tb=state.settlements.find(t=>t.id===b?.townId);
+      if(!ta||!tb)continue;
+      c.save();c.strokeStyle=r.status==='alliance'?'#eed383':'#a4d9ce';c.fillStyle=c.strokeStyle;
+      c.lineWidth=r.status==='alliance'?3:1.5;c.setLineDash(r.status==='alliance'?[]:[5,5]);
+      c.beginPath();c.moveTo(ta.x*size,ta.y*size);c.lineTo(tb.x*size,tb.y*size);c.stroke();
+      c.font='bold 12px system-ui';c.textAlign='center';
+      c.fillText(r.status==='alliance'?'⚑ 互助同盟':'和平協議',(ta.x+tb.x)*size/2,(ta.y+tb.y)*size/2-8);
+      for(const t of [ta,tb])c.fillText(r.status==='alliance'?'⚑':'☮',t.x*size,(t.y-3)*size);
+      c.restore();
+    }
+    for(const q of state.politics?.diplomacy?.shipments||[]){
+      if(!['outbound','returning'].includes(q.status))continue;
+      const at=q.path[q.pathIndex];c.save();c.fillStyle='#ffdd82';c.font='bold 11px system-ui';
+      c.fillText(q.status==='outbound'?'▣ 運送':'▣ 返村',at.x*size,at.y*size-8);c.restore();
+    }
     // Human-built towers use a different silhouette from religious temples.
     for(const polity of state.politics?.polities||[]){
       const town=state.settlements.find(t=>t.id===polity.townId);

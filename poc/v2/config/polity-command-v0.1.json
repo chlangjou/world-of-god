@@ -20,5 +20,15 @@
   "maxMarchDays": 18,
   "marchCellsPerDay": 4,
   "claimStoneUnits": 1.5,
-  "battleRounds": 3
+  "battleRounds": 3,
+  "diplomacy": {
+    "enabled": true,
+    "coreShare": 0.4,
+    "minCore": 3,
+    "peaceTrust": 18,
+    "allianceTrust": 38,
+    "peaceDays": 14,
+    "shipmentUnits": 1.5,
+    "shipmentEveryDays": 7
+  }
 }

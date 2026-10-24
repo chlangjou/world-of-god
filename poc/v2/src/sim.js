@@ -3681,7 +3681,9 @@
       resetReadyMiracleChains(s);expireStatuses(s);
       processOracles(s);processScheduledBirths(s);updateWorld(s);updatePeople(s);
       if(s.tick%3===0) daily(s);
-      if(s.hour>0 && s.hour%(s.rules.daysPerMonth*24)===0) demographic(s);
+      if(s.hour>0 && s.hour%(s.rules.daysPerMonth*24)===0){
+        demographic(s);POLITICS.syncMembership(s,log);
+      }
       const victory=VICTORY.update(s,faithfulWeight);
       if(victory)log(s,'victory',victory.name+' 達成全球宗教主導勝利。',
         ['以在世人口的加權 Devotion 計算；勝利不會中止沙盒世界'],

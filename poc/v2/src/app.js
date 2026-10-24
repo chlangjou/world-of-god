@@ -3,7 +3,7 @@
   const S = window.WoG2, Playtest = window.WOG_PLAYTEST;
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
-  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, activePolityProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
+  let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeMineralExperimentProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, activePolityProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let lastMiraclePreview=null, lastCastVisual=null;
@@ -417,6 +417,12 @@
     if(!response.ok)throw new Error('Mobility Contact Profile 無法載入');
     return response.json();
   }
+  async function loadMineralExperiment(){
+    if(window.WOG_MINERAL_RIGHTS_PROFILE)return window.WOG_MINERAL_RIGHTS_PROFILE;
+    const response=await fetch('config/mineral-rights-experiment-v0.1.json');
+    if(!response.ok)throw Error('Mineral Rights Profile 無法載入');
+    return response.json();
+  }
   async function loadShrine(){
     if(window.WOG_SHRINE_PROFILE)return window.WOG_SHRINE_PROFILE;
     const response=await fetch('config/shrine-temple-v0.1.json');
@@ -454,6 +460,11 @@
     return response.json();
   }
   function newWorld() {
+    // Explicit opt-in in a browser: ?mineralRights=1. Existing worlds unchanged.
+    const wantMineRights=new URLSearchParams(window.location?.search||'').get('mineralRights')==='1';
+    if(wantMineRights&&(!activeMineralExperimentProfile||!activeMobilityProfile||!activePolityProfile))
+      throw Error('礦權實驗需要完整的 Mobility / Polity / Mineral Rights Profiles');
+    const overlay=wantMineRights?activeMineralExperimentProfile:null;
     const scenario=$('playtestScenario').value;
     const selected=scenario==='duel'?'duel':'native';
     if(selected==='duel'||scenario==='native3'||scenario==='native4')
@@ -464,9 +475,14 @@
       oracleStrategyProfile:activeOracleStrategyProfile,
       opponentProfile:activeOpponentProfile||S.OPPONENT_DEFAULTS,
       balanceProfile:activeProfile,religionProfile:activeReligionProfile,
-       mobilityProfile:activeMobilityProfile,
+       mobilityProfile:overlay?{...activeMobilityProfile,
+         finiteMineralsEnabled:true,naturalStoneCapacity:overlay.naturalStoneCapacity,
+         naturalStoneRegenPerDay:overlay.naturalStoneRegenPerDay,
+         naturalGoldCapacity:overlay.naturalGoldCapacity,
+         naturalGoldRegenPerDay:overlay.naturalGoldRegenPerDay}:activeMobilityProfile,
       divineProfile:activeDivineProfile,shrineProfile:activeShrineProfile,victoryProfile:activeVictoryProfile,
-      politicsProfile:activePolityProfile,
+      politicsProfile:overlay?{...activePolityProfile,
+        mineralRights:overlay.mineralRights}:activePolityProfile,
       opponentMode:$('opponentMode').value,
       godCount:scenario==='native4'?4:scenario==='native3'?3:2,
       difficulty:$('aiDifficulty').value||'standard'
@@ -700,6 +716,9 @@
       `已定位 ${needTitles[located.prayer.type]||'需求'} · ${located.location.locationName} (${format(located.location.center.x)}, ${format(located.location.center.y)})`:
       state.agriculture?(state.nativeWorld?'原住民已在此生活 · Agriculture v0.1':'Agriculture v0.1 · 河流、季節與實際農作物'):
         'Original · 原始平衡對照';
+    if(state.mobility?.finiteMineralsEnabled)
+      $('mapStatus').textContent+=' · 天然礦藏有限、慢速再生'+
+        (state.politics?.mineralRights?.enabled?' / 排他礦權 PoC':'');
     $('mapTip').hidden=!armedMiracle;
     $('simHint').textContent=armedMiracle?('已選擇'+(powerMeta('miracle',armedMiracle)?.label||'神蹟')+'：點擊地圖施展（Esc 取消）'):
       (playtestHint()?playtestHint():
@@ -1740,10 +1759,11 @@
   $('aiDifficulty').disabled=true;$('resetBtn').disabled=true;
   showDivineKind('miracle');showInspector('needs');
   requestAnimationFrame(animate);
-  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest(),loadShrine(),loadVictory(),loadPolity()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory,polity])=>{
+  Promise.allSettled([loadAgriculture(),loadReligion(),loadMobility(),loadDivine(),loadOpponent(),loadOracleStrategy(),loadPlaytest(),loadShrine(),loadVictory(),loadPolity(),loadMineralExperiment()]).then(([agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory,polity,minerals])=>{
     activeProfile=agriculture.status==='fulfilled'?agriculture.value:null;
     activeReligionProfile=religion.status==='fulfilled'?religion.value:null;
     activeMobilityProfile=mobility.status==='fulfilled'?mobility.value:null;
+    activeMineralExperimentProfile=minerals.status==='fulfilled'?minerals.value:null;
     activeDivineProfile=divine.status==='fulfilled'?divine.value:null;
     activeOpponentProfile=opponent.status==='fulfilled'?opponent.value:S.OPPONENT_DEFAULTS;
     activeOracleStrategyProfile=oracleStrategy.status==='fulfilled'?oracleStrategy.value:null;
@@ -1758,7 +1778,7 @@
     // Explicitly opt new browser worlds into the AI mode after profiles load.
     $('opponentMode').value='ai';
     newWorld();
-    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory,polity].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    const failures=[agriculture,religion,mobility,divine,opponent,oracleStrategy,playtest,shrine,victory,polity,minerals].filter(x=>x.status==='rejected').map(x=>x.reason.message);
     say(failures.length?'Profile 載入失敗：'+failures.join('；'):
       '宗教對決已就緒。AI 選存糧；選育兒 Oracle → 傳下神諭 → 開始。');
   }).catch(err=>{

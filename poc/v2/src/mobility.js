@@ -164,6 +164,14 @@ function validate(s){
   }
   return errors;
 }
+// Local ownership applies only around a mine with a real, living on-site guard.
+function protectedBy(s,t,p){
+  if(!s.politics?.mineralRights?.enabled||!t||!p)return null;
+  return (s.politics.quarryClaims||[]).find(c=>c.status==='protected'&&
+    c.townId!==p.settlementId&&c.guardId&&
+    s.people.some(q=>q.id===c.guardId&&q.alive)&&
+    Math.hypot(t.x-c.site.x,t.y-c.site.y)<=2)||null;
+}
 function activeSpread(s,p){
   const faith=[s.religion,s.opponentReligion,...(s.additionalReligions||[])].find(f=>f&&f.id===p.religionId);
   if(!faith||!faith.priests.includes(p.id))return null;
@@ -212,11 +220,14 @@ function plan(s,p,purpose='resource'){
   const start=sy*s.width+sx,prev=new Int32Array(s.tiles.length),
     steps=new Int16Array(s.tiles.length),queue=[start];
   prev.fill(-1);steps.fill(-1);steps[start]=0;
-  let best=-1,quality=-Infinity;
+  let best=-1,quality=-Infinity,blockedSteps=Infinity;
   for(let cursor=0;cursor<queue.length;cursor++){
     const idx=queue[cursor],length=steps[idx],x=idx%s.width,y=Math.floor(idx/s.width);
     if(length>=m.minTripCells&&cell(s,x,y).terrain!=='river'){
       const t=cell(s,x,y);
+      if(!mission&&protectedBy(s,t,p)){
+        blockedSteps=Math.min(blockedSteps,length);
+      }else{
       let strength=mission?(possible.some(q=>distance(t,q)<=2)?40:0):available(t,p);
       for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0]]){
         const nx=x+dx,ny=y+dy;
@@ -230,6 +241,7 @@ function plan(s,p,purpose='resource'){
       const score=strength+nodeWeight-length*(mission?.14:.025)+jitter;
       if((mission?strength>0:strength+nodeWeight>=2)&&score>quality){
         quality=score;best=idx;
+      }
       }
     }
     if(length>=limit)continue;
@@ -246,8 +258,12 @@ function plan(s,p,purpose='resource'){
   for(let idx=best;idx!==start;idx=prev[idx]){if(idx<0)return null;path.push(idx);}
   path.push(start);path.reverse();
   const site=s.tiles[best];
+  const availableNode=site.resourceNode&&
+    (!m.finiteMineralsEnabled||(site[site.resourceNode]||0)>0);
+  if(!mission&&availableNode&&blockedSteps<path.length-1)
+    s.counts.quarryDetours=(s.counts.quarryDetours||0)+1;
   return {path,index:0,phase:'out',siteTicks:0,purpose,
-    resourceKind:mission?null:site.resourceNode||null,
+    resourceKind:mission?null:availableNode?site.resourceNode:null,
     origin:{x:h.x,y:h.y},cargo:null,startedAtHour:s.hour};
 }
 function begin(s,p){
@@ -278,6 +294,15 @@ function gather(s,p,trip){
   if(trip.purpose==='mission'){p.lastPreachHour=s.hour;return;}
   const t=s.tiles[trip.path[trip.path.length-1]];
   if(t.resourceNode==='stone'||t.resourceNode==='gold'){
+    const owner=protectedBy(s,t,p);
+    if(owner){
+      s.counts.quarryBlockedArrivals=(s.counts.quarryBlockedArrivals||0)+1;
+      const encounters=s.politics.quarryEncounters||(s.politics.quarryEncounters=[]);
+      encounters.push({hour:s.hour,visitorId:p.id,visitorTownId:p.settlementId,
+        ownerTownId:owner.townId,site:{x:t.x,y:t.y},outcome:'guard-warning'});
+      if(encounters.length>100)encounters.shift();
+      return; // guard warns off an actual arrival; no false cargo or forced war
+    }
     trip.resourceKind=t.resourceNode;
     const amount=extract(s,t,t.resourceNode,t.resourceNode==='stone'?1.5:.6,p.settlementId);
     if(amount>0){
@@ -447,5 +472,5 @@ function townContact(s,faith,fromId,toId){
     return false;
   });
 }
-return {BASE,normalize,seedHotspots,extract,regenerate,validate,begin,plan,gather,step,workLocation,record,recentContact,townContact,recoverWound};
+return {BASE,normalize,seedHotspots,extract,regenerate,validate,protectedBy,begin,plan,gather,step,workLocation,record,recentContact,townContact,recoverWound};
 });

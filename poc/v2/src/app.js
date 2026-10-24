@@ -917,10 +917,21 @@
         '">退出協商：剩 '+Math.max(0,Math.ceil((polity.union.exitNotice.deadlineHour-state.hour)/24))+' 日</div>':''):
         polity.lastUnionSeparation?'<div title="'+html(polity.lastUnionSeparation.dissolutionReason)+'">前聯合已'+
           (polity.lastUnionSeparation.dissolutionKind==='breach'?'破約分裂':'和平退出')+'，各村獨立。</div>':'')+
-      (polity.quarryClaims||[]).map(c=>'<div>礦權：'+c.site.x+','+c.site.y+
+      (polity.quarryClaims||[]).map(c=>'<div title="天然礦權長期有再生價值；仍須在世真人守衛，非全圖邊界">礦權：'+c.site.x+','+c.site.y+
         ' · '+(c.status==='protected'?'真人駐守':c.status==='deploying'?'守衛行軍中':'尚未受保護')+
         ' · 儲量 '+format(c.currentAvailable,1)+' / 警戒 '+format(c.threshold,1)+
-        ' · 控制 '+c.protectedDays+' 日</div>').join('')+
+        ' · 控制 '+c.protectedDays+' 日'+
+        (c.accessRequests?.some(q=>q.status==='granted'&&q.untilHour>state.hour&&q.remainingUnits>0)?
+          ' · 有限通行 '+c.accessRequests.filter(q=>q.status==='granted'&&q.untilHour>state.hour&&q.remainingUnits>0)
+            .map(q=>format(q.remainingUnits,1)+'石/'+Math.ceil((q.untilHour-state.hour)/24)+'日').join('、'):'')+
+        '</div>').join('')+
+      (polity.quarryChoices||[]).slice(-2).map(c=>
+        '<div title="'+html(c.reason)+'">外村礦權：'+
+          html(state.settlements.find(t=>t.id===c.ownerTownId)?.name||c.ownerTownId)+
+          ' · '+(c.action==='avoid'?'自主避讓':c.action==='negotiate'?'協商通行中':
+            c.action==='permit'?'持有有限通行權':'嘗試抗議／冒險進入')+
+          (c.alternative?' · 安全替代礦 '+c.alternative.x+','+c.alternative.y:'')+
+          '</div>').join('')+
       diplomaticRelations.slice(diplomacyPage,diplomacyPage+1).map(r=>'<div>外交：'+
         html(state.settlements.find(t=>t.id===r.partnerTownId)?.name||r.partnerTownId)+' · '+
         (r.status==='competition'?'破約後競爭':r.status==='alliance'?'互助同盟':'和平協議')+

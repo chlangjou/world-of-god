@@ -774,8 +774,11 @@ function plan(s,p,purpose='resource'){
       const jitter=(hash(s.seed+'|hotspot|'+p.id+'|'+Math.floor(day(s)/14)+'|'+idx)%1000)/1000*.65;
       const newChoice=s.politics?.mineralRights?.choicesEnabled;
       const cutoff=newChoice?.4:0;
-      const stoneNeeded=newChoice&&s.settlements.some(v=>v.id===p.settlementId&&
-        v.storage.stone<(s.politics.mineralRights.safetyStone*1.5));
+      // Do not change early-world ore behavior before a real guard is in place.
+      // P1.5 only redirects an existing human mining decision when rights matter.
+      const stoneNeeded=newChoice&&(s.politics.quarryClaims||[]).some(q=>q.status==='protected')&&
+        s.settlements.some(v=>v.id===p.settlementId&&
+          v.storage.stone<(s.politics.mineralRights.safetyStone*1.5));
       const nodeWeight=p.occupation==='gatherer'&&!mission?
         (t.resourceNode==='stone'&&(!m.finiteMineralsEnabled||t.stone>=cutoff)?65+(stoneNeeded?16:0):
           t.resourceNode==='gold'&&(!m.finiteMineralsEnabled||t.gold>0)?75:0):0;

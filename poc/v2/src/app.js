@@ -898,6 +898,10 @@
         '">退出協商：剩 '+Math.max(0,Math.ceil((polity.union.exitNotice.deadlineHour-state.hour)/24))+' 日</div>':''):
         polity.lastUnionSeparation?'<div title="'+html(polity.lastUnionSeparation.dissolutionReason)+'">前聯合已'+
           (polity.lastUnionSeparation.dissolutionKind==='breach'?'破約分裂':'和平退出')+'，各村獨立。</div>':'')+
+      (polity.quarryClaims||[]).map(c=>'<div>礦權：'+c.site.x+','+c.site.y+
+        ' · '+(c.status==='protected'?'真人駐守':c.status==='deploying'?'守衛行軍中':'尚未受保護')+
+        ' · 儲量 '+format(c.currentAvailable,1)+' / 警戒 '+format(c.threshold,1)+
+        ' · 控制 '+c.protectedDays+' 日</div>').join('')+
       diplomaticRelations.slice(diplomacyPage,diplomacyPage+1).map(r=>'<div>外交：'+
         html(state.settlements.find(t=>t.id===r.partnerTownId)?.name||r.partnerTownId)+' · '+
         (r.status==='competition'?'破約後競爭':r.status==='alliance'?'互助同盟':'和平協議')+
@@ -1048,15 +1052,22 @@
       if(t.terrain==='forest' && ((t.x*7+t.y*13)%3===0)){c.fillStyle='#2d5242';c.fillRect(t.x*size+size*.27,t.y*size+size*.15,size*.5,size*.63)}
       if(t.terrain==='field' && t.crop>.18){c.strokeStyle=t.crop>.5?'#ead49b':'#af9759';c.lineWidth=.75;c.beginPath();c.moveTo(t.x*size+size*.22,t.y*size+size*.75);c.lineTo(t.x*size+size*.78,t.y*size+size*.20);c.stroke();}
     }
-    // Sparse, perpetual resource sites act as visible shared destinations.
+    // Shared natural mineral sites remain visible while exhausted; actual
+    // guarded rights are represented as small rings, not full-map borders.
     for(const site of state.mobilityHotspots||[]){
       const px=(site.x+.5)*size,py=(site.y+.5)*size,rich=site.kind==='gold';
-      c.save();c.fillStyle=rich?'#d9a43c':'#b8ad99';
+      const mineral=state.tiles[site.y*state.width+site.x]?.mineral;
+      const right=(state.politics?.quarryClaims||[]).find(q=>q.site.x===site.x&&q.site.y===site.y);
+      c.save();c.globalAlpha=mineral&&mineral.available<.1?.4:1;
+      c.fillStyle=rich?'#d9a43c':'#b8ad99';
       c.strokeStyle=rich?'#fff0a7':'#e3dacf';c.lineWidth=1.4;
       c.beginPath();c.arc(px,py,size*.70,0,2*Math.PI);c.fill();c.stroke();
       c.fillStyle=rich?'#44300e':'#343a36';c.textAlign='center';
       c.textBaseline='middle';c.font='bold '+Math.max(8,Math.floor(size*.95))+'px system-ui';
-      c.fillText(rich?'金':'石',px,py);c.restore();
+      c.fillText(rich?'金':'石',px,py);
+      if(right){c.strokeStyle=right.status==='protected'?'#d46552':'#f4d795';
+        c.lineWidth=2;c.beginPath();c.arc(px,py,size*1.12,0,Math.PI*2);c.stroke();}
+      c.restore();
     }
     c.strokeStyle='#c7c7ab80';c.lineWidth=1;
     for(const h of state.households) {

@@ -47,7 +47,14 @@
         "breachAmbition": 0.7,
         "nonAggressionDays": 14,
         "negotiationDays": 30,
-        "reunionDays": 90
+        "reunionDays": 90,
+        "agenda": {
+          "enabled": false,
+          "minPressure": 12,
+          "negotiationDays": 7,
+          "autonomyDays": 30,
+          "repeatCooldownDays": 45
+        }
       }
     }
   },

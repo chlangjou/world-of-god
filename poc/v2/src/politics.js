@@ -63,14 +63,23 @@ function normalize(profile){
     recentContactDays:Math.round(clamp(d.union.recentContactDays??7,1,30)),
     maxReluctance:clamp(d.union.maxReluctance??.8,0,1)};
   const f=d?.union?.fracture;
-  if(out.diplomacy?.union&&f?.enabled===true)out.diplomacy.union.fracture={enabled:true,
-    minUnionDays:Math.round(clamp(f.minUnionDays??21,1,180)),
-    exitPressure:clamp(f.exitPressure??24,2,200),breachPressure:clamp(f.breachPressure??36,2,200),
-    noticeDays:Math.round(clamp(f.noticeDays??7,1,30)),
-    breachAmbition:clamp(f.breachAmbition??.7,0,1),
-    nonAggressionDays:Math.round(clamp(f.nonAggressionDays??14,1,90)),
-    negotiationDays:Math.round(clamp(f.negotiationDays??30,1,180)),
-    reunionDays:Math.round(clamp(f.reunionDays??90,1,360))};
+  if(out.diplomacy?.union&&f?.enabled===true){
+    out.diplomacy.union.fracture={enabled:true,
+      minUnionDays:Math.round(clamp(f.minUnionDays??21,1,180)),
+      exitPressure:clamp(f.exitPressure??24,2,200),breachPressure:clamp(f.breachPressure??36,2,200),
+      noticeDays:Math.round(clamp(f.noticeDays??7,1,30)),
+      breachAmbition:clamp(f.breachAmbition??.7,0,1),
+      nonAggressionDays:Math.round(clamp(f.nonAggressionDays??14,1,90)),
+      negotiationDays:Math.round(clamp(f.negotiationDays??30,1,180)),
+      reunionDays:Math.round(clamp(f.reunionDays??90,1,360))};
+    if(f.agenda?.enabled===true)out.diplomacy.union.fracture.agenda={
+      enabled:true,
+      minPressure:clamp(f.agenda.minPressure??12,2,100),
+      negotiationDays:Math.round(clamp(f.agenda.negotiationDays??7,1,30)),
+      autonomyDays:Math.round(clamp(f.agenda.autonomyDays??30,7,180)),
+      repeatCooldownDays:Math.round(clamp(f.agenda.repeatCooldownDays??45,7,180))
+    };
+  }
   return out;
 }
 function init(s,profile){
@@ -581,6 +590,8 @@ function memberInterests(s,u,p,peer){
   });
   if(delayed){reasons.push('本村公共 '+delayed+' 儲備低，盟村有餘裕但近期無到貨或在途支援');inputs.unmetResource=delayed;}
   const burden=['stone','wood'].find(resource=>{
+    const veto=u.exportVeto?.[p.id];
+    if(veto?.resource===resource&&veto.untilHour>s.hour)return false;
     if(own.storage[resource]>=5||other.storage[resource]<=own.storage[resource])return false;
     const recent=shipments.filter(q=>q.resource===resource&&q.delivered&&q.deliveredAtHour>Math.max(u.formedAtHour,s.hour-30*24));
     const given=recent.filter(q=>q.fromTownId===own.id&&q.toTownId===other.id).reduce((n,q)=>n+q.amount,0);
@@ -603,7 +614,7 @@ function dissolveUnion(s,u,p,kind,emit){
   u.dissolvedAtHour=s.hour;u.dissolutionKind=kind;u.dissolutionReason=reason;u.exitByPolityId=p.id;
   u.history.push({type:kind,hour:s.hour,polityId:p.id,personId:p.leaderId,reason,
     evidence:structuredEvidence(u.interests[p.id])});
-  u.leaderId=null;u.vacantUntilHour=null;u.exitNotice=null;
+  u.leaderId=null;u.vacantUntilHour=null;u.exitNotice=null;u.resourceAgenda=null;u.exportVeto=null;
   r.status=kind==='breach'?'competition':'peace';r.changedAtHour=s.hour;
   r.peaceAtHour=kind==='exit'?s.hour:null;r.allianceAtHour=null;
   r.trust=Math.min(r.trust,s.politics.diplomacy.peaceTrust*.5);
@@ -618,6 +629,72 @@ function dissolveUnion(s,u,p,kind,emit){
       cfg.nonAggressionDays+' 日禁止相互攻勢；'+cfg.reunionDays+' 日後才可重新申請聯合']);
 }
 function structuredEvidence(interest){return JSON.parse(JSON.stringify({pressure:interest.pressure,reasons:interest.reasons,inputs:interest.inputs}));}
+// Only one opt-in human political proposal. Not a voter/party/constitution model.
+// A local leader personally contests ongoing unequal *real* resource exports.
+// The central leader can accept an autonomy contract, which actually stops
+// future exports by existing couriers for a finite number of days.
+function exportAgendaDaily(s,u,members,emit){
+  const cfg=s.politics.diplomacy.union.fracture.agenda;
+  if(!cfg?.enabled)return false;
+  const former=u.resourceAgenda;
+  if(former?.status==='open'){
+    const proposer=members.find(p=>p.id===former.polityId);
+    const peer=members.find(p=>p.id!==former.polityId);
+    const still=proposer&&leader(s,proposer)?.id===former.proposerId&&
+      u.interests?.[proposer.id]?.inputs?.exportBurden===former.resource;
+    if(!still){
+      former.status='withdrawn';former.closedAtHour=s.hour;
+      u.history.push({type:'agenda-withdrawn',hour:s.hour,personId:former.proposerId});
+      emit(s,'politics',u.name+' 的資源自治訴求因情勢改變而撤回。',
+        ['原有物資流動與地方領袖意見已改變，未自動分裂']);
+      return true;
+    }
+    if(s.hour<former.deadlineHour)return true;
+    const own=townOf(s,proposer),other=townOf(s,peer);
+    const central=s.people.find(p=>p.id===u.leaderId&&p.alive);
+    const accept=!!central&&central.id!==former.proposerId&&leader(s,peer)?.id===central.id&&
+      other.storage[former.resource]>own.storage[former.resource]&&central.health>=40;
+    former.closedAtHour=s.hour;former.deciderId=central?.id||null;
+    if(accept){
+      u.exportVeto||={};
+      u.exportVeto[proposer.id]={resource:former.resource,
+        untilHour:s.hour+cfg.autonomyDays*24,agreedAtHour:s.hour,deciderId:central.id};
+      former.status='granted';
+      u.interests[proposer.id].pressure=Math.min(u.interests[proposer.id].pressure,
+        s.politics.diplomacy.union.fracture.exitPressure/2);
+      emit(s,'politics',u.name+' 同意 '+townOf(s,proposer).name+' 保留 '+former.resource+' 自治。',
+        [central.name+' 接受地方領袖 '+leader(s,proposer).name+' 的要求',
+          cfg.autonomyDays+' 日內不再派出該村 '+former.resource+' 互助貨物；已出發貨物照常送達']);
+    }else{
+      former.status='rejected';
+      emit(s,'politics',u.name+' 暫不接受 '+townOf(s,proposer).name+' 的資源自治要求。',
+        ['共同領袖未能作出可承擔的讓步；原退出/協商規則繼續適用']);
+    }
+    u.history.push({type:'agenda-'+former.status,hour:s.hour,personId:former.proposerId,
+      deciderId:former.deciderId,resource:former.resource});
+    return true;
+  }
+  if(former?.closedAtHour&&s.hour-former.closedAtHour<cfg.repeatCooldownDays*24)return false;
+  if(u.exitNotice||s.hour-u.formedAtHour<
+    s.politics.diplomacy.union.fracture.minUnionDays*24)return false;
+  const proposer=members.filter(p=>p.leaderId&&p.leaderId!==u.leaderId&&
+    leader(s,p)&&u.interests[p.id]?.pressure>=cfg.minPressure&&
+    u.interests[p.id]?.inputs?.exportBurden).sort((a,b)=>
+      u.interests[b.id].pressure-u.interests[a.id].pressure||a.id.localeCompare(b.id))[0];
+  if(!proposer)return false;
+  const interest=u.interests[proposer.id],resource=interest.inputs.exportBurden;
+  const head=leader(s,proposer);
+  u.resourceAgenda={type:'local-export-autonomy',status:'open',resource,
+    proposerId:head.id,polityId:proposer.id,
+    openedAtHour:s.hour,deadlineHour:s.hour+cfg.negotiationDays*24,
+    reason:interest.reasons.join('；'),evidence:structuredEvidence(interest)};
+  u.history.push({type:'agenda-opened',hour:s.hour,personId:head.id,
+    resource,reason:u.resourceAgenda.reason});
+  emit(s,'politics',townOf(s,proposer).name+' 領袖 '+head.name+' 要求地方資源自治。',
+    [interest.reasons.join('；'),cfg.negotiationDays+' 日後由共同領袖答覆',
+     '議題是已運抵的真實 '+resource+' 與地方儲備；不等於全體居民同意分裂']);
+  return true;
+}
 function unionStabilityDaily(s,u,emit){
   if(u.stabilityHour===s.hour)return;u.stabilityHour=s.hour;
   const cfg=s.politics.diplomacy.union.fracture,members=unionMembers(s,u);u.interests||={};
@@ -625,6 +702,7 @@ function unionStabilityDaily(s,u,emit){
     const observation=memberInterests(s,u,p,members.find(q=>q!==p)),old=u.interests[p.id]?.pressure||0;
     u.interests[p.id]={...observation,pressure:clamp(old+(observation.weight||-2),0,200),hour:s.hour};
   }
+  if(exportAgendaDaily(s,u,members,emit))return;
   if(u.exitNotice){
     const notice=u.exitNotice,p=members.find(p=>p.id===notice.polityId),interest=u.interests[p.id];
     if(interest.pressure<cfg.exitPressure/2){
@@ -760,6 +838,7 @@ function sendAid(s,r,a,b,emit){
   if(s.hour-(r.lastShipmentHour??-1e9)<d.shipmentEveryDays*24)return;
   for(const [donor,receiver]of [[a,b],[b,a]]){
     const from=townOf(s,donor),to=townOf(s,receiver);
+    const restricted=unionOf(s,donor.id)?.exportVeto?.[donor.id];
     if(!leader(s,donor)||!leader(s,receiver))continue;
     const soldiers=new Set(s.politics.polities.flatMap(p=>p.militia.memberIds));
     const offices=new Set([s.religion,s.opponentReligion,...(s.additionalReligions||[])].filter(Boolean)
@@ -769,6 +848,7 @@ function sendAid(s,r,a,b,emit){
     if(!carrier)continue;
     // Food reserve uses real residents' daily needs; materials retain a local buffer.
     for(const resource of ['stone','wood','food']){
+      if(restricted?.resource===resource&&restricted.untilHour>s.hour)continue;
       const reserve=resource==='food'?residents(s,from).length*s.rules.foodNeedAdult*7:5;
       const needed=resource==='food'?residents(s,to).length*s.rules.foodNeedAdult*3:3;
       if(from.storage[resource]<reserve+d.shipmentUnits||to.storage[resource]>=needed)continue;
@@ -884,6 +964,7 @@ function overview(s,townId){
       return {id:u.id,name:u.name,memberTownIds:u.memberTownIds,leaderId:u.leaderId,
         leaderName:head?.name||null,vacantDays:u.vacantUntilHour===null?0:Math.max(0,Math.ceil((u.vacantUntilHour-s.hour)/24)),
         formedAtHour:u.formedAtHour,reason:u.reason,exitNotice:u.exitNotice||null,
+        resourceAgenda:u.resourceAgenda||null,exportVeto:u.exportVeto?.[p.id]||null,
         interest:u.interests?.[p.id]||null};})():null,
     lastUnionSeparation:(s.politics.unions||[]).filter(u=>!unionActive(u)&&u.memberPolityIds.includes(p.id)).at(-1)||null,
     relations:(s.politics.diplomacy?.relations||[]).filter(r=>r.aId===p.id||r.bId===p.id).map(r=>({
@@ -939,6 +1020,15 @@ function validate(s){
       if(u.exitNotice&&(!u.memberPolityIds.includes(u.exitNotice.polityId)||
         !Number.isFinite(u.exitNotice.deadlineHour)||u.exitNotice.deadlineHour<u.exitNotice.hour))errors.push('退出通知不正確');
     }
+    if(u.resourceAgenda){
+      const a=u.resourceAgenda;
+      if(!['open','granted','rejected','withdrawn'].includes(a.status)||!u.memberPolityIds.includes(a.polityId)||
+        !['stone','wood'].includes(a.resource)||!Number.isFinite(a.openedAtHour)||
+        !Number.isFinite(a.deadlineHour)||a.deadlineHour<a.openedAtHour)errors.push('領袖資源自治提案不正確');
+    }
+    for(const [id,contract] of Object.entries(u.exportVeto||{}))
+      if(!u.memberPolityIds.includes(id)||!Number.isFinite(contract.untilHour)||
+        !['stone','wood'].includes(contract.resource))errors.push('地方資源自治契約不正確');
     for(const interest of Object.values(u.interests||{}))if(!Number.isFinite(interest.pressure)||
       interest.pressure<0||interest.pressure>200)errors.push('聯合利益壓力不正確');
     if(!Number.isFinite(u.formedAtHour)||!Array.isArray(u.decisions)||!Array.isArray(u.history))errors.push('政治聯合歷史不完整');

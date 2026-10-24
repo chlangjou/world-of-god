@@ -887,7 +887,14 @@
       ' · 瞭望塔 '+(polity.fort==='built'?'完成':polity.fort==='building'?'施工':'未建')+'</div>'+
       (polity.union?'<div title="'+html(polity.union.reason)+'">政治聯合：'+html(polity.union.name)+
         ' · '+(polity.union.leaderName?'共同領袖 '+html(polity.union.leaderName):'共同指揮空窗 '+polity.union.vacantDays+' 日')+
-        ' · 各村庫存獨立</div>'+(polity.union.exitNotice?'<div title="'+html(polity.union.exitNotice.reason||'地方利益分歧')+
+        ' · 各村庫存獨立</div>'+
+        (polity.union.resourceAgenda?.status==='open'?'<div title="'+html(polity.union.resourceAgenda.reason)+
+          '">地方領袖 '+html(state.people.find(p=>p.id===polity.union.resourceAgenda.proposerId)?.name||'')+
+          ' 提出 '+html(polity.union.resourceAgenda.resource)+' 自治 · '+Math.max(0,Math.ceil((polity.union.resourceAgenda.deadlineHour-state.hour)/24))+' 日內答覆</div>':'')+
+        (polity.union.exportVeto&&polity.union.exportVeto.untilHour>state.hour?
+          '<div>已獲本村 '+html(polity.union.exportVeto.resource)+' 互助自主權 · 剩 '+
+          Math.ceil((polity.union.exportVeto.untilHour-state.hour)/24)+' 日</div>':'')+
+        (polity.union.exitNotice?'<div title="'+html(polity.union.exitNotice.reason||'地方利益分歧')+
         '">退出協商：剩 '+Math.max(0,Math.ceil((polity.union.exitNotice.deadlineHour-state.hour)/24))+' 日</div>':''):
         polity.lastUnionSeparation?'<div title="'+html(polity.lastUnionSeparation.dissolutionReason)+'">前聯合已'+
           (polity.lastUnionSeparation.dissolutionKind==='breach'?'破約分裂':'和平退出')+'，各村獨立。</div>':'')+

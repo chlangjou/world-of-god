@@ -633,7 +633,7 @@ function structuredEvidence(interest){return JSON.parse(JSON.stringify({pressure
 // A local leader personally contests ongoing unequal *real* resource exports.
 // The central leader can accept an autonomy contract, which actually stops
 // future exports by existing couriers for a finite number of days.
-function exportAgendaDaily(s,u,members,emit){
+function exportAgendaDaily(s,u,members,emit,notify){
   const cfg=s.politics.diplomacy.union.fracture.agenda;
   if(!cfg?.enabled)return false;
   const former=u.resourceAgenda;
@@ -693,16 +693,19 @@ function exportAgendaDaily(s,u,members,emit){
   emit(s,'politics',townOf(s,proposer).name+' 領袖 '+head.name+' 要求地方資源自治。',
     [interest.reasons.join('；'),cfg.negotiationDays+' 日後由共同領袖答覆',
      '議題是已運抵的真實 '+resource+' 與地方儲備；不等於全體居民同意分裂']);
+  if(typeof notify==='function')notify(s,'slow','political-agenda',
+    head.name+' 提出 '+resource+' 自治訴求',townOf(s,proposer),
+    {townId:proposer.townId,proposerId:head.id,unionId:u.id});
   return true;
 }
-function unionStabilityDaily(s,u,emit){
+function unionStabilityDaily(s,u,emit,notify){
   if(u.stabilityHour===s.hour)return;u.stabilityHour=s.hour;
   const cfg=s.politics.diplomacy.union.fracture,members=unionMembers(s,u);u.interests||={};
   for(const p of members){
     const observation=memberInterests(s,u,p,members.find(q=>q!==p)),old=u.interests[p.id]?.pressure||0;
     u.interests[p.id]={...observation,pressure:clamp(old+(observation.weight||-2),0,200),hour:s.hour};
   }
-  if(exportAgendaDaily(s,u,members,emit))return;
+  if(exportAgendaDaily(s,u,members,emit,notify))return;
   if(u.exitNotice){
     const notice=u.exitNotice,p=members.find(p=>p.id===notice.polityId),interest=u.interests[p.id];
     if(interest.pressure<cfg.exitPressure/2){
@@ -726,11 +729,11 @@ function unionStabilityDaily(s,u,emit){
   emit(s,'politics',townOf(s,p).name+' 提出退出 '+u.name+' 的通知。',
     [u.interests[p.id].reasons.join('；'),cfg.noticeDays+' 日協商期；實際支援或利益改善可撤回通知']);
 }
-function unionsDaily(s,emit){
+function unionsDaily(s,emit,notify){
   const cfg=s.politics.diplomacy?.union;if(!cfg?.enabled)return;
   for(const u of s.politics.unions){
     if(!unionActive(u))continue;
-    if(cfg.fracture)unionStabilityDaily(s,u,emit);
+    if(cfg.fracture)unionStabilityDaily(s,u,emit,notify);
     if(!unionActive(u))continue;
     if(!u.leaderId&&s.hour>=u.vacantUntilHour){
       const elected=electUnionLeader(s,unionMembers(s,u));
@@ -940,7 +943,7 @@ function daily(s,emit,die,notify){
     advanceUnit(s,polity.militia);
   }
   diplomacyDaily(s,emit);
-  unionsDaily(s,emit);
+  unionsDaily(s,emit,notify);
   processMobilizations(s,emit);
   resolveDisputes(s,emit,die,notify);
   if(day(s)>0&&day(s)%cfg.disputeEveryDays===0)startDispute(s,emit);

@@ -1539,6 +1539,14 @@
     if(!note)return false;
     selectSpeed(note.type==='battle'||note.type==='battle-wounded'?0.1:1);
     attentionFocus=note;
+    if(note.type==='political-agenda'){
+      selectSpeed(0.1);
+      paused=false;
+      selectedTownId=note.townId;
+      showInspector('town');
+      say('地方領袖提出資源自治要求，已切到 0.1×；可觀察當地需求並透過神蹟間接介入。');
+      render();return true;
+    }
     if(note.type==='battle'||note.type==='battle-wounded'){
       selectedDisputeId=note.disputeId;
       // First contact auto-pauses before damage. Resuming defaults to 0.1×,
@@ -1583,9 +1591,9 @@
             lastAttentionSeq=state.attention?.seq||lastAttentionSeq;
             // Ordinary prayer slowdown stays a fast-forward feature.
             // Actual combat, however, must pause even at 1×.
-            if(items.some(n=>n.type==='battle'||n.type==='battle-wounded')&&
+            if(items.some(n=>['battle','battle-wounded','political-agenda'].includes(n.type))&&
               receiveFastForwardNotice(items.filter(n=>
-                n.type==='battle'||n.type==='battle-wounded')))break;
+                ['battle','battle-wounded','political-agenda'].includes(n.type))))break;
           }
         }else{
           // Check each simulation tick, not the end of a fast-forward batch:

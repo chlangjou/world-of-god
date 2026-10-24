@@ -4,8 +4,9 @@ const W=require('../src/sim.js'),Politics=require('../src/politics.js');
 const R=require('../tools/political-agenda-experiment.cjs');
 test('without Agenda the current natural world retains exact old trajectory',()=>{
  const src=R.source(),a=W.restore(src.snapshot),b=W.restore(src.snapshot);
- b.politics.diplomacy.union.fracture.agenda=undefined;
+ b.politics.diplomacy.union.fracture.agenda={enabled:false};
  for(let k=0;k<9;k++){W.advanceTicks(a,3);W.advanceTicks(b,3);}
+ delete b.politics.diplomacy.union.fracture.agenda;
  assert.deepEqual(a,b);assert.deepEqual(W.validate(a).errors,[]);
 });
 test('real political leader proposes actual unequal export and central grants enforceable veto',()=>{

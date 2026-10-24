@@ -2,7 +2,7 @@
   "profileId": "mobility-contact-v0.1",
   "status": "experimental-runtime-profile",
   "loadedByRuntime": true,
-  "description": "Limited natural ore sites, slow renewal and physically shared deposits when explicitly enabled; opt-out retains perpetual deposits.",
+  "description": "Resource hotspots, 5-cell simultaneous physical contact, rare perpetual quarries/gold deposits, guarded camping injuries and actual long-distance Priest missions.",
   "enabled": true,
   "contactRadius": 5,
   "contactWindowDays": 7,
@@ -16,11 +16,11 @@
   "fordSpacing": 16,
   "maxContacts": 6000,
   "semantics": {
-    "travel": "Adults walk to real shared finite resource nodes. Extraction debits on-site; real cargo returns to the home. Exhausted nodes stay mapped and renew slowly.",
+    "travel": "Adults may walk to actual fixed scarce resource nodes or nearby gathering sites. Each trip uses real path steps, scarce resources have infinite deposits and long on-site camping, missionary Priests travel to populated foreign settlements.",
     "contact": "Simultaneous sampled positions within 5 tiles, with real participant IDs, beliefs and encounter coordinates. Same pair counted at most once per day; observations persist for 7 days.",
     "camping": "On special-resource camps roll once per trip, with at least 45 days between injuries and no additional wound before recovery. Damage is nonlethal, Heal repairs normal health, UI highlights wounded citizens.",
     "preaching": "Priests may travel without divine orders, but active spread Oracle greatly increases departures and actual local recruiting opportunities. No direct 40+ conversion from ordinary speech.",
-    "persistence": "Legacy saves and opt-out retain perpetual nodes; opt-in worlds store capacity, available, extracted, regeneration, by-town consumption, without reseeding upon restore."
+    "persistence": "Existing saves without mobility stay disabled; already saved v0.1 maps are not silently reseeded with rare resources. New worlds use resource hotspots."
   },
   "specialOnsiteTicks": 6,
   "quarryCount": 6,
@@ -32,10 +32,5 @@
   "missionBaseChancePerDay": 0.1,
   "missionSpreadChancePerDay": 0.65,
   "missionStayTicks": 9,
-  "missionMaxTripCells": 96,
-  "finiteMineralsEnabled": true,
-  "naturalStoneCapacity": 38,
-  "naturalStoneRegenPerDay": 0.16,
-  "naturalGoldCapacity": 18,
-  "naturalGoldRegenPerDay": 0.08
+  "missionMaxTripCells": 96
 }

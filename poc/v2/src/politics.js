@@ -74,7 +74,8 @@ function normalize(profile){
       responseDays:Math.round(clamp(rights.responseDays??2,1,14)),
       escalationChance:clamp(rights.escalationChance??.45,0,1),
       truceDays:Math.round(clamp(rights.truceDays??30,7,180)),
-      maxDisputeDays:Math.round(clamp(rights.maxDisputeDays??45,7,90))
+      maxDisputeDays:Math.round(clamp(rights.maxDisputeDays??45,7,90)),
+      transferDays:Math.round(clamp(rights.transferDays??60,7,180))
     });
   // An opt-in readiness model; default worlds retain their existing full guard.
   const reserve=profile?.peaceMilitia;
@@ -591,9 +592,11 @@ function finishQuarryDispute(s,c,emit){
   if(tookControl){
     const winner=cfg.polities.find(p=>p.id===c.aId);
     if(!winner||!leader(s,winner))return;
+    claim.previousPolityId=claim.polityId;claim.previousTownId=claim.townId;
     releaseQuarryGuard(s,claim);
     claim.polityId=winner.id;claim.townId=winner.townId;claim.leaderId=winner.leaderId;
     claim.transferredAtHour=s.hour;
+    claim.transferExpiresAtHour=s.hour+opts.transferDays*24;
     claim.safetyStone=opts.safetyStone+residents(s,townOf(s,winner)).length*opts.stonePerResident;
     claim.threshold=opts.warningMultiplier*claim.safetyStone;
     cfg.quarryChoices=cfg.quarryChoices.filter(q=>q.claimId!==claim.id);
@@ -604,6 +607,7 @@ function finishQuarryDispute(s,c,emit){
     s.counts.quarryRightsTransferred=(s.counts.quarryRightsTransferred||0)+1;
     emit(s,'conflict',townOf(s,winner).name+' 在有限交戰後取得礦權主張。',
       ['原守衛沿道路撤回；新主張需真人重新駐守才有排他效力',
+       '僅暫時取得 '+opts.transferDays+' 日礦權，到期將結束占有',
        '沒有直接創造礦產、居民或神明指令']);
   }else{
     const kind=c.status==='withdrawn'?'quarryCeasefires':'quarryDefenses';
@@ -613,10 +617,49 @@ function finishQuarryDispute(s,c,emit){
        '停戰期 '+opts.truceDays+' 日，避免無限反覆交戰']);
   }
 }
+function expireQuarryTransfers(s,emit){
+  const cfg=s.politics,opts=cfg.mineralRights;
+  for(const claim of cfg.quarryClaims){
+    if(!Number.isFinite(claim.transferExpiresAtHour)||
+      s.hour<claim.transferExpiresAtHour)continue;
+    // A new physical conflict may already be in motion: allow its bounded
+    // resolution before the lease reverts, never change ownership mid-battle.
+    if(cfg.disputes.some(c=>c.quarryClaimId===claim.id&&
+      ['marching','clashing'].includes(c.status)))continue;
+    const holder=claim.townId,previous=cfg.polities.find(p=>p.id===claim.previousPolityId);
+    if(claim.guardId)releaseQuarryGuard(s,claim);
+    else{claim.guard=null;claim.status='declared';}
+    // Old access agreements of either occupier cannot survive the expiry.
+    cfg.quarryChoices=cfg.quarryChoices.filter(q=>q.claimId!==claim.id);
+    for(const q of cfg.quarryNegotiations.filter(q=>q.claimId===claim.id)){
+      if(q.status==='pending'){q.status='rejected';q.resolvedAtHour=s.hour;}
+      if(q.status==='granted'){q.remainingUnits=0;q.untilHour=s.hour;}
+    }
+    if(previous){
+      claim.polityId=previous.id;claim.townId=previous.townId;
+      claim.leaderId=previous.leaderId;
+      claim.safetyStone=opts.safetyStone+
+        residents(s,townOf(s,previous)).length*opts.stonePerResident;
+      claim.threshold=opts.warningMultiplier*claim.safetyStone;
+    }
+    // If prior polity no longer exists, the former occupation is no longer
+    // physically enforced either: declared only, no invisible border.
+    claim.lastOutcome={kind:'expired',hour:s.hour,
+      disputeId:claim.lastQuarryDisputeId,fromTownId:holder,toTownId:claim.townId};
+    claim.truceUntilHour=s.hour+opts.truceDays*24;
+    delete claim.transferExpiresAtHour;
+    delete claim.previousPolityId;delete claim.previousTownId;
+    s.counts.quarryLeaseExpiries=(s.counts.quarryLeaseExpiries||0)+1;
+    emit(s,'politics','期限屆滿，暫時礦權宣告結束。',
+      ['原有真人守衛沿路撤回；不會自動獲得新守衛',
+       '先前礦權主張重新生效，但仍須在世居民駐礦才具排他效力']);
+  }
+}
 function quarryConflictDaily(s,emit){
   const cfg=s.politics,opts=cfg.mineralRights;
   if(!opts?.territorialEnabled||!s.mobility?.finiteMineralsEnabled)return;
   for(const c of cfg.disputes)finishQuarryDispute(s,c,emit);
+  expireQuarryTransfers(s,emit);
   for(const claim of cfg.quarryClaims.filter(c=>c.status==='protected'&&c.guardId&&
     s.people.some(p=>p.id===c.guardId&&p.alive)&&s.hour>=(c.truceUntilHour||0))){
     if(cfg.disputes.some(c=>c.quarryClaimId===claim.id&&
@@ -1353,7 +1396,8 @@ function overview(s,townId){
       site:c.site,status:c.status,guardId:c.guardId,threshold:c.threshold,
       currentAvailable:s.tiles[c.site.y*s.width+c.site.x]?.mineral?.available,
       protectedDays:c.protectedDays,
-      truceUntilHour:c.truceUntilHour||0,lastOutcome:c.lastOutcome||null,
+      truceUntilHour:c.truceUntilHour||0,
+      transferExpiresAtHour:c.transferExpiresAtHour||0,lastOutcome:c.lastOutcome||null,
       accessRequests:(s.politics.quarryNegotiations||[]).filter(q=>q.claimId===c.id)
         .map(q=>({visitorTownId:q.visitorTownId,status:q.status,
           untilHour:q.untilHour||null,remainingUnits:q.remainingUnits||0}))})),
@@ -1420,8 +1464,13 @@ function validate(s){
     }else if(c.status!=='declared')errors.push('排他礦權沒有真人守衛');
     if(c.truceUntilHour!==undefined&&(!Number.isFinite(c.truceUntilHour)||
       c.truceUntilHour<0))errors.push('礦權停戰期限無效');
-    if(c.lastOutcome&&!['transferred','ceasefire','defended'].includes(c.lastOutcome.kind))
+    if(c.lastOutcome&&!['transferred','ceasefire','defended','expired'].includes(c.lastOutcome.kind))
       errors.push('礦權結果無效');
+    if(c.transferExpiresAtHour!==undefined&&
+      (!Number.isFinite(c.transferExpiresAtHour)||!cfg.mineralRights?.territorialEnabled||
+       !cfg.polities.some(p=>p.id===c.previousPolityId)||
+       c.transferExpiresAtHour<=(c.transferredAtHour||0)))
+      errors.push('臨時礦權缺少合法期限與前權利人');
   }
   for(const q of cfg.quarryNegotiations||[]){
     if(!cfg.quarryClaims?.some(c=>c.id===q.claimId)||q.visitorTownId===q.ownerTownId||

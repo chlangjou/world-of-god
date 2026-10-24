@@ -937,8 +937,11 @@
         ' · 儲量 '+format(c.currentAvailable,1)+' / 警戒 '+format(c.threshold,1)+
         ' · 控制 '+c.protectedDays+' 日'+
         (c.truceUntilHour>state.hour?' · 停戰 '+Math.ceil((c.truceUntilHour-state.hour)/24)+' 日':'')+
+        (c.transferExpiresAtHour>state.hour?' · 暫管剩 '+
+          Math.ceil((c.transferExpiresAtHour-state.hour)/24)+' 日':'')+
         (c.lastOutcome?' · 前次 '+(c.lastOutcome.kind==='transferred'?'礦權移轉':
-          c.lastOutcome.kind==='defended'?'守衛成功':'雙方撤軍'):'')+
+          c.lastOutcome.kind==='defended'?'守衛成功':
+          c.lastOutcome.kind==='expired'?'移轉期滿':'雙方撤軍'):'')+
         (c.accessRequests?.some(q=>q.status==='granted'&&q.untilHour>state.hour&&q.remainingUnits>0)?
           ' · 有限通行 '+c.accessRequests.filter(q=>q.status==='granted'&&q.untilHour>state.hour&&q.remainingUnits>0)
             .map(q=>format(q.remainingUnits,1)+'石/'+Math.ceil((q.untilHour-state.hour)/24)+'日').join('、'):'')+

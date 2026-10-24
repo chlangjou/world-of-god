@@ -169,3 +169,40 @@ test('CONTROLLED: a real treaty stops marching, with no prize or transfer',()=>{
   assert.equal(c.quarryOutcomeApplied,true);
   assert.equal(s.politics.claims.filter(x=>x.site.x===claim.site.x&&x.site.y===claim.site.y).length,0);
 });
+
+test('CONTROLLED: real troops can win a 7-day transfer lease; rights revert without teleporting ore',()=>{
+  const {s,c,claim,before}=startControlledP2();
+  const challenger=s.politics.polities.find(p=>p.id===c.aId);
+  const defender=s.politics.polities.find(p=>p.id===c.bId);
+  // Bounded decisive-combat fixture: all combatants existed at genesis and
+  // marched for real. Only force strength is controlled here, not in natural A/B.
+  assert.ok(challenger.militia.memberIds.length>0&&defender.militia.memberIds.length>0);
+  s.politics.commandDefense=0;s.politics.watchtowerDefense=0;
+  defender.militia.memberIds=defender.militia.memberIds.slice(0,1);
+  for(const id of defender.militia.memberIds)
+    s.people.find(p=>p.id===id).health=70;
+  for(const id of challenger.militia.memberIds)
+    s.people.find(p=>p.id===id).health=100;
+  s.politics.mineralRights.transferDays=7;
+  for(let d=0;d<45&&['marching','clashing'].includes(c.status);d++){
+    days(s,1);good(s);
+  }
+  assert.equal(c.status,'resolved','combat must finish, not silently time out');
+  assert.equal(c.winnerId,challenger.id,'existing challenger militia has greater combat strength');
+  assert.equal(claim.townId,challenger.townId);
+  assert.ok(claim.transferExpiresAtHour>s.hour,'new owner has a finite lease');
+  const expiry=claim.transferExpiresAtHour,stoneAtWin=
+    s.tiles[claim.site.y*s.width+claim.site.x].mineral.extracted;
+  assert.equal(s.counts.quarryRightsTransferred,1);
+  assert.equal(claim.status,'declared','no invisible control before guard arrives');
+  while(s.hour<=expiry){days(s,1);good(s);}
+  assert.equal(claim.townId,c.priorOwnerTownId,'previous title reverts when temporary lease expires');
+  assert.equal(claim.transferExpiresAtHour,undefined);
+  assert.equal(claim.lastOutcome.kind,'expired');
+  assert.equal(s.counts.quarryLeaseExpiries,1);
+  assert.ok(s.tiles[claim.site.y*s.width+claim.site.x].mineral.extracted>=stoneAtWin,
+    'no rollback or minting of physical ore at expiration');
+  const saved=JSON.stringify(s),restored=W.restore(saved);
+  assert.equal(JSON.stringify(restored),saved);
+  days(restored,1);days(s,1);assert.deepEqual(restored,s);
+});

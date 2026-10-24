@@ -101,6 +101,13 @@ test('map and inspector show diplomatic identity and actual transport',async()=>
   const {boot}=require('./browser-harness.cjs');const ui=await boot({politicsProfile:options('valley-spring-01',true).politicsProfile});
   const s=ui.world();W.advanceTicks(s,6);const [a,b]=s.politics.polities;
   const r=P.relation(s,a.id,b.id);assert.ok(r);r.status='alliance';r.reason='controlled-visible-reason';r.delivered=1.5;
-  ui.render();const drawn=ui.draw();assert.ok(drawn.some(x=>x.kind==='fillText'&&String(x.args[0]).includes('互助同盟')));
+  ui.render();
+  assert.ok(!ui.draw().some(x=>x.kind==='fillText'&&String(x.args[0]).includes('互助同盟')),
+    'ordinary world view avoids drawing a full diplomacy network');
+  ui.el('mapPresetPolitical').onclick();
+  ui.el('settlementSelect').onchange({target:{value:a.townId}});
+  const drawn=ui.draw();
+  assert.ok(drawn.some(x=>x.kind==='fillText'&&String(x.args[0]).includes('互助同盟')),
+    'diplomacy view renders the actual alliance label');
   assert.match(ui.el('townPanel').innerHTML,/互助同盟|controlled-visible-reason/);
 });

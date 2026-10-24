@@ -42,6 +42,16 @@ function normalize(profile){
   for(const k of ['quarryCount','goldCount','resourceSpacingCells','specialOnsiteTicks',
     'missionStayTicks','missionMaxTripCells','campInjuryCooldownDays'])
     m[k]=Math.round(bound(m[k],1,k==='missionMaxTripCells'?256:90));
+  // An absent flag retains the v0.1 perpetual-mineral contract.
+  if(profile?.finiteMineralsEnabled===true){
+    m.finiteMineralsEnabled=true;
+    for(const [key,fallback,low,high] of [
+      ['naturalStoneCapacity',38,1,10000],['naturalGoldCapacity',18,1,10000],
+      ['naturalStoneRegenPerDay',.16,.001,100],
+      ['naturalGoldRegenPerDay',.08,.001,100]]){
+      m[key]=bound(Number.isFinite(profile[key])?profile[key]:fallback,low,high);
+    }
+  }
   m.quarryCount=bound(m.quarryCount,2,12);
   m.goldCount=bound(m.goldCount,1,6);
   m.campInjuryChance=bound(m.campInjuryChance,0,.5);
@@ -88,7 +98,13 @@ function seedHotspots(s){
       }
       if(!best)continue;
       best.resourceNode=kind;
-      if(kind==='stone')best.stone=1000;
+      if(m.finiteMineralsEnabled){
+        const capacity=kind==='stone'?m.naturalStoneCapacity:m.naturalGoldCapacity;
+        const regenPerDay=kind==='stone'?m.naturalStoneRegenPerDay:m.naturalGoldRegenPerDay;
+        best.mineral={kind,origin:'natural',capacity,available:capacity,
+          regenPerDay,extracted:0,regenerated:0,byTown:{}};
+        best[kind]=capacity;
+      }else if(kind==='stone')best.stone=1000;
       else best.gold=1000;
       chosen.push({x:best.x,y:best.y,kind});
       areas.push({kind,x:best.x,y:best.y});
@@ -100,6 +116,53 @@ function seedHotspots(s){
   choose('stone',m.quarryCount);
   choose('gold',m.goldCount);
   s.mobilityHotspots=areas;
+}
+// Extraction commits atomically at the real work site. tile.stone / tile.gold
+// mirror mineral.available for older rendering and resource-selection code.
+function extract(s,t,kind,want,townId=null,battle=false){
+  if(!t||!Number.isFinite(want)||want<=0)return 0;
+  const deposit=s.mobility?.finiteMineralsEnabled&&t.mineral?.kind===kind?t.mineral:null;
+  if(deposit){
+    const amount=Math.min(want,Math.max(0,deposit.available));
+    deposit.available=Math.max(0,deposit.available-amount);
+    t[kind]=deposit.available;
+    deposit.extracted+=amount;
+    if(townId)deposit.byTown[townId]=(deposit.byTown[townId]||0)+amount;
+    return amount;
+  }
+  // Pre-feature mineral sites remain perpetual for worker visits. Existing
+  // legacy battle spoils still debit the numeric stock, as before.
+  if(t.resourceNode===kind&&!battle)return want;
+  const amount=Math.min(want,Math.max(0,t[kind]||0));
+  t[kind]=Math.max(0,(t[kind]||0)-amount);
+  return amount;
+}
+function regenerate(s){
+  if(!s.mobility?.finiteMineralsEnabled)return;
+  for(const site of s.mobilityHotspots||[]){
+    const t=cell(s,site.x,site.y),d=t?.mineral;
+    if(!d||d.origin!=='natural'||d.regenPerDay<=0)continue;
+    const recovered=Math.min(d.regenPerDay,Math.max(0,d.capacity-d.available));
+    d.available+=recovered;d.regenerated+=recovered;t[d.kind]=d.available;
+  }
+}
+function validate(s){
+  if(!s.mobility?.finiteMineralsEnabled)return [];
+  const errors=[];
+  for(const site of s.mobilityHotspots||[]){
+    const t=cell(s,site.x,site.y),d=t?.mineral;
+    if(!d)continue; // pre-feature saves may retain perpetual sites
+    if((d.origin==='natural'&&!(d.regenPerDay>0))||
+        !Number.isFinite(d.capacity)||d.capacity<=0||
+        !Number.isFinite(d.available)||d.available< -1e-7||
+        d.available>d.capacity+1e-7||
+        !Number.isFinite(d.extracted)||d.extracted<0||
+        !Number.isFinite(d.regenerated)||d.regenerated<0||
+        Math.abs((t[d.kind]||0)-d.available)>1e-7||
+        Math.abs(d.capacity+d.regenerated-d.extracted-d.available)>1e-6)
+      errors.push('天然礦藏守恆或儲量錯誤 '+site.x+','+site.y);
+  }
+  return errors;
 }
 function activeSpread(s,p){
   const faith=[s.religion,s.opponentReligion,...(s.additionalReligions||[])].find(f=>f&&f.id===p.religionId);
@@ -162,7 +225,8 @@ function plan(s,p,purpose='resource'){
       }
       const jitter=(hash(s.seed+'|hotspot|'+p.id+'|'+Math.floor(day(s)/14)+'|'+idx)%1000)/1000*.65;
       const nodeWeight=p.occupation==='gatherer'&&!mission?
-        (t.resourceNode==='stone'?65:t.resourceNode==='gold'?75:0):0;
+        (t.resourceNode==='stone'&&(!m.finiteMineralsEnabled||t.stone>0)?65:
+          t.resourceNode==='gold'&&(!m.finiteMineralsEnabled||t.gold>0)?75:0):0;
       const score=strength+nodeWeight-length*(mission?.14:.025)+jitter;
       if((mission?strength>0:strength+nodeWeight>=2)&&score>quality){
         quality=score;best=idx;
@@ -215,10 +279,13 @@ function gather(s,p,trip){
   const t=s.tiles[trip.path[trip.path.length-1]];
   if(t.resourceNode==='stone'||t.resourceNode==='gold'){
     trip.resourceKind=t.resourceNode;
-    trip.cargo={kind:t.resourceNode,amount:t.resourceNode==='stone'?1.5:.6};
+    const amount=extract(s,t,t.resourceNode,t.resourceNode==='stone'?1.5:.6,p.settlementId);
+    if(amount>0){
+      trip.cargo={kind:t.resourceNode,amount};
+      s.counts.rareResourceGathered=(s.counts.rareResourceGathered||0)+1;
+    }
     p.lastWorkHour=s.hour;
-    s.counts.rareResourceGathered=(s.counts.rareResourceGathered||0)+1;
-    return; // perpetual quarry/vein, without inventing a new deposit on each visit
+    return; // take cargo once at the site; returning cannot re-debit ore
   }
   const opts=[{kind:'food',key:'forage',w:p.occupation==='food_producer'?2:1},
     {kind:'wood',key:'wood',w:p.occupation==='gatherer'?1.5:1},
@@ -380,5 +447,5 @@ function townContact(s,faith,fromId,toId){
     return false;
   });
 }
-return {BASE,normalize,seedHotspots,begin,step,workLocation,record,recentContact,townContact,recoverWound};
+return {BASE,normalize,seedHotspots,extract,regenerate,validate,begin,plan,gather,step,workLocation,record,recentContact,townContact,recoverWound};
 });

@@ -2416,8 +2416,8 @@
     } else if (choice.name === 'stone' && stone) {
       const amt = Math.min(stone.stone,(1.2 + p.proficiency.gather * .6)*
         (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));
-      if(stone.resourceNode!=='stone')stone.stone-=amt;
-      distribute(s,h,'stone',amt);
+      const mined=MOBILITY.extract(s,stone,'stone',amt,p.settlementId);
+      if(mined>0)distribute(s,h,'stone',mined);
     } else if (choice.name === 'fiber' && fiber) {
       const amt = Math.min(fiber.fiber,(1.4 + p.proficiency.gather * .7)*
         (1+s.divinePowers.efficiencyWorkBonus*activeStatus(s,p,'efficiency')));
@@ -3259,6 +3259,7 @@
     }
   }
   function daily(s) {
+    MOBILITY.regenerate(s);
     restoreSettlementAccess(s);
     consumeFood(s);
     updateSettlement(s);
@@ -3701,6 +3702,7 @@
     if(!Array.isArray(s.people)||!Array.isArray(s.households)||!Array.isArray(s.settlements)) errors.push('人口資料不完整');
     errors.push(...TEMPLE.validate(s));
     errors.push(...POLITICS.validate(s));
+    errors.push(...MOBILITY.validate(s));
     if(!s.god || !Number.isFinite(s.god.dp)||s.god.dp<0||s.god.dp>s.rules.maxDp+.001) errors.push('神力不正確');
     if(s.opponent?.enabled){
       if(!s.opponentGod||!s.opponentReligion||s.opponentReligion.id===s.religion.id||

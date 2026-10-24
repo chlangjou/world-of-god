@@ -1,0 +1,371 @@
+{
+  "issue": 14,
+  "stage": "P1.5",
+  "date": "2026-10-24",
+  "source": "paired natural worlds using exact UMD world core in V8; Node24 CI fast contracts independent",
+  "baseline": "finite-rights",
+  "treatment": "finite-rights-p1-5",
+  "snapshots": [
+    30,
+    60,
+    120,
+    180
+  ],
+  "worlds": [
+    {
+      "seed": "valley-spring-01",
+      "initialHash": "7ef71182",
+      "elapsedMs": 30832,
+      "baselineSnapshots": [
+        {
+          "day": 30,
+          "claimed": 1,
+          "guarded": 0,
+          "publicStone": 24.9929,
+          "extracted": 53.9911,
+          "conflicts": 0
+        },
+        {
+          "day": 60,
+          "claimed": 1,
+          "guarded": 1,
+          "publicStone": 28.3929,
+          "extracted": 62.9911,
+          "conflicts": 0
+        },
+        {
+          "day": 120,
+          "claimed": 1,
+          "guarded": 1,
+          "publicStone": 46.1929,
+          "extracted": 91.4911,
+          "conflicts": 0
+        },
+        {
+          "day": 180,
+          "claimed": 1,
+          "guarded": 1,
+          "publicStone": 58.1929,
+          "extracted": 109.4911,
+          "conflicts": 0
+        }
+      ],
+      "p15Snapshots": [
+        {
+          "day": 30,
+          "claims": 1,
+          "guards": 0,
+          "guardDays": 0,
+          "publicStone": 24.9929,
+          "extracted": 53.9911,
+          "alternativeTripsDelivered": 0,
+          "alternativeUnitsDelivered": 0,
+          "requests": 0,
+          "grants": 0,
+          "rejections": 0,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        },
+        {
+          "day": 60,
+          "claims": 1,
+          "guards": 1,
+          "guardDays": 29,
+          "publicStone": 39.1091,
+          "extracted": 76.3864,
+          "alternativeTripsDelivered": 1,
+          "alternativeUnitsDelivered": 1.5,
+          "requests": 2,
+          "grants": 1,
+          "rejections": 1,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        },
+        {
+          "day": 120,
+          "claims": 1,
+          "guards": 1,
+          "guardDays": 89,
+          "publicStone": 71.1366,
+          "extracted": 121.4207,
+          "alternativeTripsDelivered": 1,
+          "alternativeUnitsDelivered": 1.5,
+          "requests": 4,
+          "grants": 3,
+          "rejections": 1,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        },
+        {
+          "day": 180,
+          "claims": 1,
+          "guards": 1,
+          "guardDays": 149,
+          "publicStone": 92.9366,
+          "extracted": 152.9207,
+          "alternativeTripsDelivered": 9,
+          "alternativeUnitsDelivered": 13.5,
+          "requests": 6,
+          "grants": 5,
+          "rejections": 1,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        }
+      ],
+      "delta": {
+        "stoneInPublicStore": 34.7437,
+        "stoneExtracted": 43.4296,
+        "guardPersonDays": 0
+      },
+      "permitDeliveredMinUnitsFromRetainedReceipts": 0
+    },
+    {
+      "seed": "dry-stress",
+      "initialHash": "d65c0fb3",
+      "elapsedMs": 28903,
+      "baselineSnapshots": [
+        {
+          "day": 30,
+          "claimed": 0,
+          "guarded": 0,
+          "publicStone": 15.3119,
+          "extracted": 34.6399,
+          "conflicts": 0
+        },
+        {
+          "day": 60,
+          "claimed": 0,
+          "guarded": 0,
+          "publicStone": 24.5119,
+          "extracted": 49.6399,
+          "conflicts": 0
+        },
+        {
+          "day": 120,
+          "claimed": 0,
+          "guarded": 0,
+          "publicStone": 30.8119,
+          "extracted": 63.1399,
+          "conflicts": 0
+        },
+        {
+          "day": 180,
+          "claimed": 1,
+          "guarded": 0,
+          "publicStone": 62.3119,
+          "extracted": 112.6399,
+          "conflicts": 0
+        }
+      ],
+      "p15Snapshots": [
+        {
+          "day": 30,
+          "claims": 0,
+          "guards": 0,
+          "guardDays": 0,
+          "publicStone": 15.3119,
+          "extracted": 34.6399,
+          "alternativeTripsDelivered": 0,
+          "alternativeUnitsDelivered": 0,
+          "requests": 0,
+          "grants": 0,
+          "rejections": 0,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        },
+        {
+          "day": 60,
+          "claims": 0,
+          "guards": 0,
+          "guardDays": 0,
+          "publicStone": 24.5119,
+          "extracted": 49.6399,
+          "alternativeTripsDelivered": 0,
+          "alternativeUnitsDelivered": 0,
+          "requests": 0,
+          "grants": 0,
+          "rejections": 0,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        },
+        {
+          "day": 120,
+          "claims": 0,
+          "guards": 0,
+          "guardDays": 0,
+          "publicStone": 30.8119,
+          "extracted": 63.1399,
+          "alternativeTripsDelivered": 0,
+          "alternativeUnitsDelivered": 0,
+          "requests": 0,
+          "grants": 0,
+          "rejections": 0,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        },
+        {
+          "day": 180,
+          "claims": 1,
+          "guards": 0,
+          "guardDays": 0,
+          "publicStone": 62.3119,
+          "extracted": 112.6399,
+          "alternativeTripsDelivered": 0,
+          "alternativeUnitsDelivered": 0,
+          "requests": 0,
+          "grants": 0,
+          "rejections": 0,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        }
+      ],
+      "delta": {
+        "stoneInPublicStore": 0,
+        "stoneExtracted": 0,
+        "guardPersonDays": 0
+      },
+      "permitDeliveredMinUnitsFromRetainedReceipts": 0
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "initialHash": "6522d4f5",
+      "elapsedMs": 31879,
+      "baselineSnapshots": [
+        {
+          "day": 30,
+          "claimed": 0,
+          "guarded": 0,
+          "publicStone": 16.2653,
+          "extracted": 40.5817,
+          "conflicts": 0
+        },
+        {
+          "day": 60,
+          "claimed": 1,
+          "guarded": 1,
+          "publicStone": 35.8216,
+          "extracted": 67.527,
+          "conflicts": 0
+        },
+        {
+          "day": 120,
+          "claimed": 1,
+          "guarded": 1,
+          "publicStone": 37.9216,
+          "extracted": 79.527,
+          "conflicts": 0
+        },
+        {
+          "day": 180,
+          "claimed": 1,
+          "guarded": 1,
+          "publicStone": 52.6216,
+          "extracted": 96.027,
+          "conflicts": 0
+        }
+      ],
+      "p15Snapshots": [
+        {
+          "day": 30,
+          "claims": 0,
+          "guards": 0,
+          "guardDays": 0,
+          "publicStone": 16.2653,
+          "extracted": 40.5817,
+          "alternativeTripsDelivered": 0,
+          "alternativeUnitsDelivered": 0,
+          "requests": 0,
+          "grants": 0,
+          "rejections": 0,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        },
+        {
+          "day": 60,
+          "claims": 1,
+          "guards": 1,
+          "guardDays": 13,
+          "publicStone": 36.0216,
+          "extracted": 69.027,
+          "alternativeTripsDelivered": 0,
+          "alternativeUnitsDelivered": 0,
+          "requests": 2,
+          "grants": 0,
+          "rejections": 1,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        },
+        {
+          "day": 120,
+          "claims": 2,
+          "guards": 2,
+          "guardDays": 80,
+          "publicStone": 49.8216,
+          "extracted": 99.027,
+          "alternativeTripsDelivered": 0,
+          "alternativeUnitsDelivered": 0,
+          "requests": 7,
+          "grants": 2,
+          "rejections": 2,
+          "permitsUsedUnits": 0,
+          "actualChallenges": 0,
+          "conflicts": 0
+        },
+        {
+          "day": 180,
+          "claims": 2,
+          "guards": 2,
+          "guardDays": 200,
+          "publicStone": 71.4216,
+          "extracted": 124.527,
+          "alternativeTripsDelivered": 3,
+          "alternativeUnitsDelivered": 4.5,
+          "requests": 15,
+          "grants": 11,
+          "rejections": 3,
+          "permitsUsedUnits": 12,
+          "actualChallenges": 0,
+          "conflicts": 0
+        }
+      ],
+      "delta": {
+        "stoneInPublicStore": 18.8,
+        "stoneExtracted": 28.5,
+        "guardPersonDays": 67
+      },
+      "permitDeliveredMinUnitsFromRetainedReceipts": 7.5
+    }
+  ],
+  "totals": {
+    "naturalPairs": 3,
+    "simulatedDaysEach": 180,
+    "claims": 4,
+    "guarded": 3,
+    "alternativeOreTripsDelivered": 12,
+    "alternativeOreUnitsDelivered": 18,
+    "requests": 21,
+    "granted": 16,
+    "rejected": 4,
+    "permitsUsedUnits": 12,
+    "permitDeliveredMinUnitsFromRetainedReceipts": 7.5,
+    "actualChallenges": 0,
+    "conflicts": 0
+  },
+  "limits": [
+    "No unbounded sweeps or CI long run",
+    "Same genesis but changing decisions may diverge subsequent RNG; do not assign all store change to policy",
+    "Permitted extracted ore is not by itself evidence of delivery; the retained delivery receipts prove only a minimum amount",
+    "No natural challenge or territorial war under these three seeds; controlled travel/resistance contracts are not natural rates",
+    "Natural mine regeneration long-term value is a world-generation guarantee, not an ROI decision"
+  ]
+}

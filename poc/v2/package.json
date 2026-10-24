@@ -38,7 +38,9 @@
     "test:political-agenda": "node --test tests/political-agenda.test.cjs",
     "evaluate:political-agenda": "node tools/political-agenda-experiment.cjs",
     "test:mineral-rights": "node --test tests/mineral-rights.test.cjs",
-    "evaluate:mineral-rights": "node tools/mineral-natural-experiment.cjs --days=180"
+    "evaluate:mineral-rights": "node tools/mineral-natural-experiment.cjs --days=180",
+    "test:quarry-p1-5": "node --test tests/mineral-rights.test.cjs tests/quarry-human-choices.test.cjs",
+    "evaluate:quarry-p1-5": "node tools/quarry-p1-5-experiment.cjs --days=180"
   },
   "engines": {
     "node": ">=22"

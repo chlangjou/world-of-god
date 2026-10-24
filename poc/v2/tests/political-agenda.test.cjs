@@ -23,6 +23,8 @@ test('real political leader proposes actual unequal export and central grants en
  assert.ok(enhanced.events.some(e=>e.type==='granted'));
  assert.ok(baseline.summary.realSourceToRecipientShipments.some(q=>q.delivered));
  assert.ok(enhanced.summary.realSourceToRecipientShipments.some(q=>q.delivered));
+ assert.equal(baseline.summary.cargoDeliveryAfterFirstShock,1,'baseline really sends one more stone courier');
+ assert.equal(enhanced.summary.cargoDeliveryAfterFirstShock,0,'autonomy actually blocks that outbound courier');
  assert.equal(enhanced.summary.unionSurvived,true);
  assert.equal(enhanced.snapshots.at(-1).escrow.donor,0);
  assert.equal(enhanced.snapshots.at(-1).escrow.receiver,0);

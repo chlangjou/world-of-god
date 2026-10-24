@@ -1,0 +1,349 @@
+{
+  "issue": 14,
+  "category": "natural 180d, no God actions, no resource injection",
+  "runtime": "isolated V8",
+  "result": {
+    "seed": "valley-spring-01",
+    "mode": "legacy",
+    "days": 180,
+    "commonGenesisHash": "7ef71182",
+    "metrics": {
+      "guardPersonDays": 0,
+      "sharedUnprotectedMineDays": 0,
+      "firstDeclarationDay": null,
+      "firstGuardedDay": null,
+      "firstDetourDay": null
+    },
+    "snapshots": [
+      {
+        "day": 30,
+        "population": 51,
+        "settlements": 5,
+        "publicStone": 26.4929,
+        "stoneMined": null,
+        "stoneRegenerated": null,
+        "stoneAvailable": 5998.5,
+        "sharedMines": 0,
+        "temporarilyExhaustedMines": 0,
+        "declarations": 0,
+        "guardedClaims": 0,
+        "guardPersonDays": 0,
+        "sharedUnprotectedMineDays": 0,
+        "firstDeclarationDay": null,
+        "firstGuardedDay": null,
+        "firstDetourDay": null,
+        "protectedDays": 0,
+        "quarryDetours": 0,
+        "protectedArrivals": 0,
+        "quarryNegotiations": 0,
+        "conflicts": 1,
+        "resourceVisits": 54,
+        "crossTownMeetings": 920,
+        "foodFromLabor": 555.4525,
+        "mines": [
+          {
+            "x": 38,
+            "y": 32,
+            "capacity": null,
+            "available": 998.5,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 20,
+            "y": 9,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 10,
+            "y": 13,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 51,
+            "y": 48,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 16,
+            "y": 50,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 48,
+            "y": 14,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          }
+        ]
+      },
+      {
+        "day": 60,
+        "population": 51,
+        "settlements": 5,
+        "publicStone": 37.7091,
+        "stoneMined": null,
+        "stoneRegenerated": null,
+        "stoneAvailable": 5998.5,
+        "sharedMines": 0,
+        "temporarilyExhaustedMines": 0,
+        "declarations": 0,
+        "guardedClaims": 0,
+        "guardPersonDays": 0,
+        "sharedUnprotectedMineDays": 0,
+        "firstDeclarationDay": null,
+        "firstGuardedDay": null,
+        "firstDetourDay": null,
+        "protectedDays": 0,
+        "quarryDetours": 0,
+        "protectedArrivals": 0,
+        "quarryNegotiations": 0,
+        "conflicts": 1,
+        "resourceVisits": 96,
+        "crossTownMeetings": 1862,
+        "foodFromLabor": 1582.7294,
+        "mines": [
+          {
+            "x": 38,
+            "y": 32,
+            "capacity": null,
+            "available": 998.5,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 20,
+            "y": 9,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 10,
+            "y": 13,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 51,
+            "y": 48,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 16,
+            "y": 50,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 48,
+            "y": 14,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          }
+        ]
+      },
+      {
+        "day": 120,
+        "population": 51,
+        "settlements": 5,
+        "publicStone": 81.216,
+        "stoneMined": null,
+        "stoneRegenerated": null,
+        "stoneAvailable": 5998.5,
+        "sharedMines": 0,
+        "temporarilyExhaustedMines": 0,
+        "declarations": 0,
+        "guardedClaims": 0,
+        "guardPersonDays": 0,
+        "sharedUnprotectedMineDays": 0,
+        "firstDeclarationDay": null,
+        "firstGuardedDay": null,
+        "firstDetourDay": null,
+        "protectedDays": 0,
+        "quarryDetours": 0,
+        "protectedArrivals": 0,
+        "quarryNegotiations": 0,
+        "conflicts": 1,
+        "resourceVisits": 204,
+        "crossTownMeetings": 4200,
+        "foodFromLabor": 3850.7237,
+        "mines": [
+          {
+            "x": 38,
+            "y": 32,
+            "capacity": null,
+            "available": 998.5,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 20,
+            "y": 9,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 10,
+            "y": 13,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 51,
+            "y": 48,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 16,
+            "y": 50,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 48,
+            "y": 14,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          }
+        ]
+      },
+      {
+        "day": 180,
+        "population": 51,
+        "settlements": 5,
+        "publicStone": 105.216,
+        "stoneMined": null,
+        "stoneRegenerated": null,
+        "stoneAvailable": 5998.5,
+        "sharedMines": 0,
+        "temporarilyExhaustedMines": 0,
+        "declarations": 0,
+        "guardedClaims": 0,
+        "guardPersonDays": 0,
+        "sharedUnprotectedMineDays": 0,
+        "firstDeclarationDay": null,
+        "firstGuardedDay": null,
+        "firstDetourDay": null,
+        "protectedDays": 0,
+        "quarryDetours": 0,
+        "protectedArrivals": 0,
+        "quarryNegotiations": 0,
+        "conflicts": 1,
+        "resourceVisits": 296,
+        "crossTownMeetings": 5800,
+        "foodFromLabor": 4574.5819,
+        "mines": [
+          {
+            "x": 38,
+            "y": 32,
+            "capacity": null,
+            "available": 998.5,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 20,
+            "y": 9,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 10,
+            "y": 13,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 51,
+            "y": 48,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 16,
+            "y": 50,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          },
+          {
+            "x": 48,
+            "y": 14,
+            "capacity": null,
+            "available": 1000,
+            "extracted": null,
+            "regenerated": null,
+            "byTown": null
+          }
+        ]
+      }
+    ],
+    "validation": "validated daily; restore identity; deterministic extra 24h"
+  }
+}

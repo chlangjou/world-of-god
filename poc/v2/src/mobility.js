@@ -164,13 +164,49 @@ function validate(s){
   }
   return errors;
 }
-// Local ownership applies only around a mine with a real, living on-site guard.
-function protectedBy(s,t,p){
+// Guard control remains a physical local fact. A time- and quantity-limited
+// human access agreement permits mining, but never creates material directly.
+function accessPass(s,claim,p){
+  if(!s.politics?.mineralRights?.choicesEnabled||!claim||!p)return null;
+  return (s.politics.quarryNegotiations||[]).find(q=>q.claimId===claim.id&&
+    q.visitorTownId===p.settlementId&&q.status==='granted'&&
+    q.untilHour>s.hour&&q.remainingUnits>1e-9)||null;
+}
+function guardedClaim(s,t,p){
   if(!s.politics?.mineralRights?.enabled||!t||!p)return null;
   return (s.politics.quarryClaims||[]).find(c=>c.status==='protected'&&
     c.townId!==p.settlementId&&c.guardId&&
     s.people.some(q=>q.id===c.guardId&&q.alive)&&
     Math.hypot(t.x-c.site.x,t.y-c.site.y)<=2)||null;
+}
+function protectedBy(s,t,p){
+  const claim=guardedClaim(s,t,p);
+  return claim&&!accessPass(s,claim,p)?claim:null;
+}
+function challengeChoice(s,claim,p){
+  if(!s.politics?.mineralRights?.choicesEnabled||!claim)return false;
+  const decision=(s.politics.quarryChoices||[]).find(q=>
+    q.claimId===claim.id&&q.visitorTownId===p.settlementId);
+  return decision?.action==='challenge'&&s.hour-decision.decidedAtHour<=
+    s.politics.mineralRights.reviewDays*24+24;
+}
+function recordOreArrival(s,p,trip,h,distribute){
+  const cargo=trip.cargo;
+  if(cargo)distribute(s,h,cargo.kind,cargo.amount);
+  if(!s.politics?.mineralRights?.choicesEnabled||!trip.sourceSite||!cargo||cargo.amount<=0)return;
+  const counts=s.counts;
+  counts.quarryOreTripsDelivered=(counts.quarryOreTripsDelivered||0)+1;
+  counts.quarryOreUnitsDelivered=(counts.quarryOreUnitsDelivered||0)+cargo.amount;
+  if(trip.avoidedClaimId&&cargo.kind==='stone'){
+    counts.quarryAlternativeTripsDelivered=(counts.quarryAlternativeTripsDelivered||0)+1;
+    counts.quarryAlternativeUnitsDelivered=(counts.quarryAlternativeUnitsDelivered||0)+cargo.amount;
+  }
+  const receipts=s.politics.quarryDeliveries||(s.politics.quarryDeliveries=[]);
+  receipts.push({hour:s.hour,personId:p.id,townId:p.settlementId,
+    site:trip.sourceSite,kind:cargo.kind,amount:cargo.amount,
+    avoidedClaimId:trip.avoidedClaimId||null,
+    permitId:trip.permitId||null});
+  if(receipts.length>96)receipts.splice(0,receipts.length-96);
 }
 function activeSpread(s,p){
   const faith=[s.religion,s.opponentReligion,...(s.additionalReligions||[])].find(f=>f&&f.id===p.religionId);
@@ -220,13 +256,17 @@ function plan(s,p,purpose='resource'){
   const start=sy*s.width+sx,prev=new Int32Array(s.tiles.length),
     steps=new Int16Array(s.tiles.length),queue=[start];
   prev.fill(-1);steps.fill(-1);steps[start]=0;
-  let best=-1,quality=-Infinity,blockedSteps=Infinity;
+  let best=-1,quality=-Infinity,blockedSteps=Infinity,blockedClaimId=null;
   for(let cursor=0;cursor<queue.length;cursor++){
     const idx=queue[cursor],length=steps[idx],x=idx%s.width,y=Math.floor(idx/s.width);
     if(length>=m.minTripCells&&cell(s,x,y).terrain!=='river'){
       const t=cell(s,x,y);
-      if(!mission&&protectedBy(s,t,p)){
-        blockedSteps=Math.min(blockedSteps,length);
+      const protectedMine=!mission&&protectedBy(s,t,p);
+      const mayChallenge=protectedMine&&challengeChoice(s,protectedMine,p);
+      if(protectedMine&&!mayChallenge){
+        if(t.resourceNode==='stone'&&t.stone>0&&length<blockedSteps){
+          blockedSteps=length;blockedClaimId=protectedMine.id;
+        }
       }else{
       let strength=mission?(possible.some(q=>distance(t,q)<=2)?40:0):available(t,p);
       for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0]]){
@@ -235,8 +275,12 @@ function plan(s,p,purpose='resource'){
           strength+=.45*available(cell(s,nx,ny),p);
       }
       const jitter=(hash(s.seed+'|hotspot|'+p.id+'|'+Math.floor(day(s)/14)+'|'+idx)%1000)/1000*.65;
+      const newChoice=s.politics?.mineralRights?.choicesEnabled;
+      const cutoff=newChoice?.4:0;
+      const stoneNeeded=newChoice&&s.settlements.some(v=>v.id===p.settlementId&&
+        v.storage.stone<(s.politics.mineralRights.safetyStone*1.5));
       const nodeWeight=p.occupation==='gatherer'&&!mission?
-        (t.resourceNode==='stone'&&(!m.finiteMineralsEnabled||t.stone>0)?65:
+        (t.resourceNode==='stone'&&(!m.finiteMineralsEnabled||t.stone>=cutoff)?65+(stoneNeeded?16:0):
           t.resourceNode==='gold'&&(!m.finiteMineralsEnabled||t.gold>0)?75:0):0;
       const score=strength+nodeWeight-length*(mission?.14:.025)+jitter;
       if((mission?strength>0:strength+nodeWeight>=2)&&score>quality){
@@ -260,11 +304,16 @@ function plan(s,p,purpose='resource'){
   const site=s.tiles[best];
   const availableNode=site.resourceNode&&
     (!m.finiteMineralsEnabled||(site[site.resourceNode]||0)>0);
-  if(!mission&&availableNode&&blockedSteps<path.length-1)
+  const newChoice=s.politics?.mineralRights?.choicesEnabled;
+  const realAlternate=!mission&&site.resourceNode==='stone'&&availableNode&&
+    blockedClaimId&&blockedSteps<path.length-1;
+  if(!newChoice&&!mission&&availableNode&&blockedSteps<path.length-1)
     s.counts.quarryDetours=(s.counts.quarryDetours||0)+1;
-  return {path,index:0,phase:'out',siteTicks:0,purpose,
+  const trip={path,index:0,phase:'out',siteTicks:0,purpose,
     resourceKind:mission?null:availableNode?site.resourceNode:null,
     origin:{x:h.x,y:h.y},cargo:null,startedAtHour:s.hour};
+  if(realAlternate&&newChoice)trip.avoidedClaimId=blockedClaimId;
+  return trip;
 }
 function begin(s,p){
   const m=s.mobility;
@@ -284,6 +333,7 @@ function begin(s,p){
   }
   if(!trip)return false;
   if(trip.purpose==='mission'&&spread)trip.spreadOracleId=spread.id;
+  if(trip.avoidedClaimId)s.counts.quarryDetours=(s.counts.quarryDetours||0)+1;
   p.mobilityTrip=trip;p.lastVisitStartHour=s.hour;
   if(trip.purpose==='mission')
     s.counts.missionTripsStarted=(s.counts.missionTripsStarted||0)+1;
@@ -296,17 +346,25 @@ function gather(s,p,trip){
   if(t.resourceNode==='stone'||t.resourceNode==='gold'){
     const owner=protectedBy(s,t,p);
     if(owner){
+      const contested=challengeChoice(s,owner,p);
       s.counts.quarryBlockedArrivals=(s.counts.quarryBlockedArrivals||0)+1;
+      if(contested)s.counts.quarryActualChallenges=(s.counts.quarryActualChallenges||0)+1;
       const encounters=s.politics.quarryEncounters||(s.politics.quarryEncounters=[]);
       encounters.push({hour:s.hour,visitorId:p.id,visitorTownId:p.settlementId,
-        ownerTownId:owner.townId,site:{x:t.x,y:t.y},outcome:'guard-warning'});
+        ownerTownId:owner.townId,site:{x:t.x,y:t.y},claimId:owner.id,
+        guardId:owner.guardId,outcome:contested?'challenge-resisted':'guard-warning'});
       if(encounters.length>100)encounters.shift();
-      return; // guard warns off an actual arrival; no false cargo or forced war
+      return; // human guard opposes this real arrival; no automatic army battle
     }
     trip.resourceKind=t.resourceNode;
-    const amount=extract(s,t,t.resourceNode,t.resourceNode==='stone'?1.5:.6,p.settlementId);
+    const claim=guardedClaim(s,t,p),pass=accessPass(s,claim,p);
+    const want=t.resourceNode==='stone'?1.5:.6;
+    const amount=extract(s,t,t.resourceNode,pass?Math.min(want,pass.remainingUnits):want,p.settlementId);
     if(amount>0){
       trip.cargo={kind:t.resourceNode,amount};
+      if(pass){pass.remainingUnits=Math.max(0,pass.remainingUnits-amount);
+        trip.permitId=pass.id;s.counts.quarryPermittedUnits=(s.counts.quarryPermittedUnits||0)+amount;}
+      if(t.mineral)trip.sourceSite={x:t.x,y:t.y};
       s.counts.rareResourceGathered=(s.counts.rareResourceGathered||0)+1;
     }
     p.lastWorkHour=s.hour;
@@ -330,7 +388,7 @@ function step(s,p,distribute){
   const trace=[{x:p.x,y:p.y}];
   if(h.x!==trip.origin.x||h.y!==trip.origin.y){
     p.x=h.x;p.y=h.y;
-    if(trip.cargo)distribute(s,h,trip.cargo.kind,trip.cargo.amount);
+    recordOreArrival(s,p,trip,h,distribute);
     delete p.mobilityTrip;p.mobilityTrace=[{x:p.x,y:p.y}];return true;
   }
   if(trip.phase==='site'){
@@ -371,7 +429,7 @@ function step(s,p,distribute){
     p.activity='visit';p.activityReason='步行抵達資源熱點並實際採集';
   }else if(trip.phase==='back'&&trip.index===0){
     p.x=h.x;p.y=h.y;
-    if(trip.cargo)distribute(s,h,trip.cargo.kind,trip.cargo.amount);
+    recordOreArrival(s,p,trip,h,distribute);
     delete p.mobilityTrip;
     const metric=trip.purpose==='mission'?'missionTripsCompleted':'resourceVisitsCompleted';
     s.counts[metric]=(s.counts[metric]||0)+1;
@@ -472,5 +530,5 @@ function townContact(s,faith,fromId,toId){
     return false;
   });
 }
-return {BASE,normalize,seedHotspots,extract,regenerate,validate,protectedBy,begin,plan,gather,step,workLocation,record,recentContact,townContact,recoverWound};
+return {BASE,normalize,seedHotspots,extract,regenerate,validate,protectedBy,accessPass,guardedClaim,begin,plan,gather,step,workLocation,record,recentContact,townContact,recoverWound};
 });

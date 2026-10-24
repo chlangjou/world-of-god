@@ -1,0 +1,313 @@
+{
+  "issue": 14,
+  "observed": "2026-10-24",
+  "baseCommit": "df1a4ea11ea67699049a7b13213d3cfa96c8eff6",
+  "category": "real existing-world paired A/B; no artificial people/religion/materials, no God casts",
+  "execution": "full sim.js/politics.js in isolated JS/V8; Node24 GitHub CI tests independently passed; not Node24 long-run",
+  "windowDays": 120,
+  "seeds": [
+    {
+      "seed": "valley-spring-01",
+      "sourceSha256": "bfb9f351e6cf5450a7523a2c536bc126381c6a6c7b13503b10dd3ce6ecd11ad4",
+      "matchedInitialSha256": true,
+      "checkpointResults": [
+        {
+          "day": 30,
+          "baseline": {
+            "guardWorkShifts": 196,
+            "ordinaryWorkShifts": 625,
+            "foodFromLabor": 555.4525144855954,
+            "conflicts": 1,
+            "alliances": 0,
+            "publicFood": 245.13887547938162
+          },
+          "reserve": {
+            "guardWorkShifts": 182,
+            "ordinaryWorkShifts": 636,
+            "foodFromLabor": 562.3893641449656,
+            "conflicts": 1,
+            "alliances": 0,
+            "publicFood": 251.2802544566313
+          }
+        },
+        {
+          "day": 60,
+          "baseline": {
+            "guardWorkShifts": 496,
+            "ordinaryWorkShifts": 1249,
+            "foodFromLabor": 1582.729379779604,
+            "conflicts": 1,
+            "alliances": 4,
+            "publicFood": 778.9932947976074
+          },
+          "reserve": {
+            "guardWorkShifts": 334,
+            "ordinaryWorkShifts": 1383,
+            "foodFromLabor": 1651.9803485397215,
+            "conflicts": 1,
+            "alliances": 5,
+            "publicFood": 843.8989714176132
+          }
+        },
+        {
+          "day": 90,
+          "baseline": {
+            "guardWorkShifts": 796,
+            "ordinaryWorkShifts": 1842,
+            "foodFromLabor": 2744.4226695332827,
+            "conflicts": 1,
+            "alliances": 6,
+            "publicFood": 1396.8402438727965
+          },
+          "reserve": {
+            "guardWorkShifts": 484,
+            "ordinaryWorkShifts": 2099,
+            "foodFromLabor": 2911.9184378154637,
+            "conflicts": 1,
+            "alliances": 6,
+            "publicFood": 1539.9826608855083
+          }
+        },
+        {
+          "day": 120,
+          "baseline": {
+            "guardWorkShifts": 1096,
+            "ordinaryWorkShifts": 2462,
+            "foodFromLabor": 3850.7237180057673,
+            "conflicts": 1,
+            "alliances": 6,
+            "publicFood": 1997.2345776427742
+          },
+          "reserve": {
+            "guardWorkShifts": 634,
+            "ordinaryWorkShifts": 2847,
+            "foodFromLabor": 3891.9159740983428,
+            "conflicts": 1,
+            "alliances": 6,
+            "publicFood": 2012.3235346493284
+          }
+        }
+      ],
+      "delta120": {
+        "guardShifts": -462,
+        "ordinaryWorkShifts": 385,
+        "foodFromLabor": 41.19225609257546,
+        "conflicts": 0,
+        "mobilizations": 0
+      },
+      "mobilizationHistory": [],
+      "validation": "daily W.validate; deterministic restore and extra-day replay"
+    },
+    {
+      "seed": "dry-stress",
+      "sourceSha256": "57567d483d5259850a98006eaa4d2f043ffcda4827f5d03074f9cc73e6b18682",
+      "matchedInitialSha256": true,
+      "checkpointResults": [
+        {
+          "day": 30,
+          "baseline": {
+            "guardWorkShifts": 196,
+            "ordinaryWorkShifts": 633,
+            "foodFromLabor": 585.5034977489672,
+            "conflicts": 1,
+            "alliances": 0,
+            "publicFood": 276.90175596030207
+          },
+          "reserve": {
+            "guardWorkShifts": 185,
+            "ordinaryWorkShifts": 643,
+            "foodFromLabor": 591.4423927647005,
+            "conflicts": 1,
+            "alliances": 0,
+            "publicFood": 282.43420632680227
+          }
+        },
+        {
+          "day": 60,
+          "baseline": {
+            "guardWorkShifts": 484,
+            "ordinaryWorkShifts": 1251,
+            "foodFromLabor": 1590.6282586447462,
+            "conflicts": 1,
+            "alliances": 4,
+            "publicFood": 775.8920065084594
+          },
+          "reserve": {
+            "guardWorkShifts": 331,
+            "ordinaryWorkShifts": 1383,
+            "foodFromLabor": 1627.70857247822,
+            "conflicts": 1,
+            "alliances": 5,
+            "publicFood": 813.2419282003395
+          }
+        },
+        {
+          "day": 90,
+          "baseline": {
+            "guardWorkShifts": 784,
+            "ordinaryWorkShifts": 1883,
+            "foodFromLabor": 2737.9323069153834,
+            "conflicts": 1,
+            "alliances": 7,
+            "publicFood": 1385.1609803307806
+          },
+          "reserve": {
+            "guardWorkShifts": 481,
+            "ordinaryWorkShifts": 2143,
+            "foodFromLabor": 2690.8956616146247,
+            "conflicts": 1,
+            "alliances": 7,
+            "publicFood": 1342.653891650048
+          }
+        },
+        {
+          "day": 120,
+          "baseline": {
+            "guardWorkShifts": 1084,
+            "ordinaryWorkShifts": 2493,
+            "foodFromLabor": 3691.4844372573757,
+            "conflicts": 1,
+            "alliances": 8,
+            "publicFood": 1844.2561273151505
+          },
+          "reserve": {
+            "guardWorkShifts": 631,
+            "ordinaryWorkShifts": 2905,
+            "foodFromLabor": 3983.528798967657,
+            "conflicts": 1,
+            "alliances": 8,
+            "publicFood": 2118.926865605753
+          }
+        }
+      ],
+      "delta120": {
+        "guardShifts": -453,
+        "ordinaryWorkShifts": 412,
+        "foodFromLabor": 292.04436171028146,
+        "conflicts": 0,
+        "mobilizations": 0
+      },
+      "mobilizationHistory": [],
+      "validation": "daily W.validate; deterministic restore and extra-day replay"
+    },
+    {
+      "seed": "opponent-competition-replay",
+      "sourceSha256": "1a9842927180a328a540c4d439fefb4327f320e8efa90e13c16f811405697157",
+      "matchedInitialSha256": true,
+      "checkpointResults": [
+        {
+          "day": 30,
+          "baseline": {
+            "guardWorkShifts": 179,
+            "ordinaryWorkShifts": 617,
+            "foodFromLabor": 509.38712033777773,
+            "conflicts": 2,
+            "alliances": 0,
+            "publicFood": 218.86435384729003
+          },
+          "reserve": {
+            "guardWorkShifts": 178,
+            "ordinaryWorkShifts": 618,
+            "foodFromLabor": 509.35705495347867,
+            "conflicts": 2,
+            "alliances": 0,
+            "publicFood": 218.83428846299097
+          }
+        },
+        {
+          "day": 60,
+          "baseline": {
+            "guardWorkShifts": 373,
+            "ordinaryWorkShifts": 1227,
+            "foodFromLabor": 1496.9886551491024,
+            "conflicts": 4,
+            "alliances": 2,
+            "publicFood": 703.9189463297332
+          },
+          "reserve": {
+            "guardWorkShifts": 332,
+            "ordinaryWorkShifts": 1266,
+            "foodFromLabor": 1596.4464932573778,
+            "conflicts": 4,
+            "alliances": 2,
+            "publicFood": 802.5486828558801
+          }
+        },
+        {
+          "day": 90,
+          "baseline": {
+            "guardWorkShifts": 641,
+            "ordinaryWorkShifts": 1854,
+            "foodFromLabor": 2578.103864002088,
+            "conflicts": 4,
+            "alliances": 2,
+            "publicFood": 1258.4298301485599
+          },
+          "reserve": {
+            "guardWorkShifts": 480,
+            "ordinaryWorkShifts": 1981,
+            "foodFromLabor": 2717.6815401378967,
+            "conflicts": 4,
+            "alliances": 2,
+            "publicFood": 1400.2852937739967
+          }
+        },
+        {
+          "day": 120,
+          "baseline": {
+            "guardWorkShifts": 941,
+            "ordinaryWorkShifts": 2481,
+            "foodFromLabor": 3548.2125641388307,
+            "conflicts": 4,
+            "alliances": 4,
+            "publicFood": 1721.834047130325
+          },
+          "reserve": {
+            "guardWorkShifts": 630,
+            "ordinaryWorkShifts": 2704,
+            "foodFromLabor": 3693.4557531022065,
+            "conflicts": 4,
+            "alliances": 6,
+            "publicFood": 1874.8050368543136
+          }
+        }
+      ],
+      "delta120": {
+        "guardShifts": -311,
+        "ordinaryWorkShifts": 223,
+        "foodFromLabor": 145.24318896337581,
+        "conflicts": 0,
+        "mobilizations": 2
+      },
+      "mobilizationHistory": [
+        {
+          "status": "launched",
+          "startDay": 42,
+          "readyDay": 45,
+          "resolvedDay": 45,
+          "ids": [
+            "polity-n2",
+            "polity-s2"
+          ]
+        },
+        {
+          "status": "launched",
+          "startDay": 56,
+          "readyDay": 59,
+          "resolvedDay": 59,
+          "ids": [
+            "polity-n3",
+            "polity-s2"
+          ]
+        }
+      ],
+      "validation": "daily W.validate; deterministic restore and extra-day replay"
+    }
+  ],
+  "warnings": [
+    "Food outcomes depend on window; e.g. dry-stress 90d negative but 120d positive.",
+    "No surprise raids: current skirmishes require both polities to mobilize; defense vulnerability unverified.",
+    "Matched initial world hashes do not imply identical future RNG paths after changes.",
+    "Policy defaults off; not a balance recommendation."
+  ]
+}

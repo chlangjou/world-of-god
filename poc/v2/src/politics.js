@@ -55,6 +55,18 @@ function normalize(profile){
     maxClaimsPerPolity:Math.round(clamp(rights.maxClaimsPerPolity??1,1,6)),
     maxGuardRoute:Math.round(clamp(rights.maxGuardRoute??90,5,200))
   };
+  if(out.mineralRights&&rights.choicesEnabled===true)Object.assign(out.mineralRights,{
+    choicesEnabled:true,
+    reviewDays:Math.round(clamp(rights.reviewDays??7,1,30)),
+    contactWindowDays:Math.round(clamp(rights.contactWindowDays??30,1,120)),
+    negotiationDays:Math.round(clamp(rights.negotiationDays??7,1,30)),
+    trustForAccess:clamp(rights.trustForAccess??18,0,100),
+    permitDays:Math.round(clamp(rights.permitDays??20,1,90)),
+    permitUnits:clamp(rights.permitUnits??3,.2,20),
+    minViableOre:clamp(rights.minViableOre??.4,.1,5),
+    maxExtraTravelCells:Math.round(clamp(rights.maxExtraTravelCells??14,1,60)),
+    challengeChance:clamp(rights.challengeChance??.45,0,1)
+  });
   // An opt-in readiness model; default worlds retain their existing full guard.
   const reserve=profile?.peaceMilitia;
   if(reserve?.enabled===true)out.peaceMilitia={
@@ -103,6 +115,10 @@ function init(s,profile){
   if(cfg.diplomacy?.union){s.politics.unions=[];s.politics.nextUnionId=1;}
   if(cfg.peaceMilitia?.enabled){s.politics.mobilizations=[];s.politics.nextMobilizationId=1;}
   if(cfg.mineralRights?.enabled){s.politics.quarryClaims=[];s.politics.nextQuarryClaimId=1;s.politics.quarryEncounters=[];}
+  if(cfg.mineralRights?.choicesEnabled){
+    s.politics.quarryChoices=[];s.politics.quarryNegotiations=[];
+    s.politics.nextQuarryNegotiationId=1;s.politics.quarryDeliveries=[];
+  }
 }
 const active=s=>!!s.politics?.enabled;
 const townOf=(s,p)=>s.settlements.find(t=>t.id===p.townId);
@@ -405,6 +421,111 @@ function mineralRightsDaily(s,emit){
       break;
     }
   }
+}
+// P1.5: leaders react to real local guards with a bounded, evidence-backed
+// choice. This does NOT begin a territory war or directly transfer ore.
+function quarryChoicesDaily(s,emit){
+  const cfg=s.politics,opts=cfg.mineralRights;
+  if(!opts?.choicesEnabled||!s.mobility?.finiteMineralsEnabled)return;
+  const negotiations=cfg.quarryNegotiations;
+  for(const q of negotiations.filter(q=>q.status==='pending'&&s.hour>=q.dueAtHour)){
+    const claim=cfg.quarryClaims.find(c=>c.id===q.claimId);
+    const a=cfg.polities.find(p=>p.townId===q.visitorTownId);
+    const b=cfg.polities.find(p=>p.townId===q.ownerTownId);
+    const owner=claim&&s.tiles[claim.site.y*s.width+claim.site.x]?.mineral;
+    const rel=a&&b&&relation(s,a.id,b.id);
+    // Consent requires a standing guard, two real leaders, real previous contact,
+    // credible relationship and enough remaining ore for a limited shared quota.
+    const consent=!!claim&&claim.status==='protected'&&!!leader(s,a)&&!!leader(s,b)&&
+      !!rel&&rel.trust>=opts.trustForAccess&&rel.grievance<12&&
+      owner?.available>=Math.min(opts.permitUnits,1.5);
+    q.status=consent?'granted':'rejected';q.resolvedAtHour=s.hour;
+    if(consent){q.remainingUnits=Math.min(opts.permitUnits,owner.available);
+      q.untilHour=s.hour+opts.permitDays*24;
+      cfg.quarryChoices.find(c=>c.claimId===q.claimId&&c.visitorTownId===q.visitorTownId).action='permit';
+    }
+    s.counts[consent?'quarryAccessGranted':'quarryAccessRejected']=
+      (s.counts[consent?'quarryAccessGranted':'quarryAccessRejected']||0)+1;
+    emit(s,'politics',(townOf(s,b)?.name||q.ownerTownId)+(consent?' 同意限量礦場通行。':' 拒絕有限採礦通行請求。'),
+      [consent?'通行須由真人到場並從原礦扣 '+q.remainingUnits+' 額度；'+opts.permitDays+' 日有效':
+        '沒有實際物資移交；外村可另尋替代礦或在將來再次協商',
+       '判斷使用在世領袖、先前居民實際接觸、互信與剩餘石材']);
+  }
+  const today=day(s);
+  if(today===0||today%opts.reviewDays!==0)return;
+  for(const claim of cfg.quarryClaims.filter(c=>c.status==='protected'&&c.guardId)){
+    const owner=cfg.polities.find(p=>p.id===claim.polityId);
+    if(!owner||!leader(s,owner))continue;
+    for(const outsider of cfg.polities){
+      if(outsider.id===owner.id||!leader(s,outsider))continue;
+      const visitor=townOf(s,outsider),mine=s.tiles[claim.site.y*s.width+claim.site.x];
+      if(!visitor||mine.mineral?.available<opts.minViableOre)continue;
+      const toClaim=route(s,visitor,claim.site);
+      if(!toClaim||toClaim.length-1>s.mobility.maxTripCells)continue;
+      const safety=opts.safetyStone+residents(s,visitor).length*opts.stonePerResident;
+      // Secure towns do not start a political quarrel merely because a mine exists.
+      if(visitor.storage.stone>safety*opts.warningMultiplier)continue;
+      const rel=relation(s,outsider.id,owner.id);
+      const contacted=(s.contactLog||[]).some(e=>e.hour>=s.hour-opts.contactWindowDays*24&&
+        ((e.aTownId===visitor.id&&e.bTownId===claim.townId)||
+         (e.bTownId===visitor.id&&e.aTownId===claim.townId)));
+      const alternatives=(s.mobilityHotspots||[]).filter(site=>site.kind==='stone'&&
+        (site.x!==claim.site.x||site.y!==claim.site.y)&&
+        s.tiles[site.y*s.width+site.x]?.stone>=opts.minViableOre&&
+        !(cfg.quarryClaims||[]).some(c=>c.status==='protected'&&c.townId!==visitor.id&&
+          distance(site,c.site)<=2))
+        .map(site=>({site,walk:route(s,visitor,site)}))
+        .filter(v=>v.walk&&v.walk.length-1<=s.mobility.maxTripCells)
+        .sort((a,b)=>a.walk.length-b.walk.length||a.site.x-b.site.x||a.site.y-b.site.y);
+      const alternative=alternatives[0]||null,reasonable=alternative&&
+        alternative.walk.length-toClaim.length<=opts.maxExtraTravelCells;
+      const existing=cfg.quarryChoices.find(q=>q.claimId===claim.id&&q.visitorTownId===visitor.id);
+      const activeRequest=negotiations.find(q=>q.claimId===claim.id&&q.visitorTownId===visitor.id&&
+        (q.status==='pending'||q.status==='granted'&&q.untilHour>s.hour&&q.remainingUnits>1e-9));
+      const chance=hash(s.seed+'|quarry-choice|'+claim.id+'|'+outsider.leaderId+'|'+today)/4294967296;
+      const canChallenge=!reasonable&&visitor.storage.stone<safety*.6&&
+        outsider.militia.memberIds.length>0&&
+        !(rel&&(['peace','alliance'].includes(rel.status)||s.hour<(rel.nonAggressionUntilHour||0)))&&
+        chance<opts.challengeChance;
+      const action=activeRequest?(activeRequest.status==='granted'?'permit':'negotiate'):
+        reasonable?'avoid':contacted?'negotiate':canChallenge?'challenge':'avoid';
+      const reason=reasonable?'有真實可達的較安全天然石礦':
+        action==='negotiate'?'已有跨村居民實際接觸，嘗試有限通行協議':
+        action==='challenge'?'替代礦不可行；真人領袖在缺石與兵力壓力下選擇抗議／進入':
+        '沒有可行安全替代礦或足夠接觸；暫時不主動衝突';
+      if(!existing){
+        cfg.quarryChoices.push({claimId:claim.id,ownerTownId:claim.townId,visitorTownId:visitor.id,
+          leaderId:outsider.leaderId,decidedAtHour:s.hour,action,reason,
+          alternative:reasonable?{x:alternative.site.x,y:alternative.site.y,
+            routeCells:alternative.walk.length-1}:null,
+          contactEvidence:contacted,safetyStone:safety,publicStone:visitor.storage.stone});
+      }else Object.assign(existing,{leaderId:outsider.leaderId,decidedAtHour:s.hour,action,reason,
+        alternative:reasonable?{x:alternative.site.x,y:alternative.site.y,
+          routeCells:alternative.walk.length-1}:null,
+        contactEvidence:contacted,safetyStone:safety,publicStone:visitor.storage.stone});
+      if(activeRequest)continue;
+      if(action==='negotiate'){
+        const q={id:'quarry-access-'+cfg.nextQuarryNegotiationId++,claimId:claim.id,
+          visitorTownId:visitor.id,ownerTownId:claim.townId,
+          visitorLeaderId:outsider.leaderId,ownerLeaderId:owner.leaderId,
+          openedAtHour:s.hour,dueAtHour:s.hour+opts.negotiationDays*24,
+          status:'pending',contactEvidence:true,trustAtRequest:rel?.trust||0};
+        negotiations.push(q);s.counts.quarryAccessRequested=(s.counts.quarryAccessRequested||0)+1;
+        emit(s,'politics',visitor.name+' 領袖向 '+townOf(s,owner).name+' 請求礦場有限通行。',
+          ['有真實居民跨村接觸，協商需 '+opts.negotiationDays+' 日；尚無許可或資源移動']);
+      }else if(action==='challenge'){
+        s.counts.quarryChallengeDecisions=(s.counts.quarryChallengeDecisions||0)+1;
+        emit(s,'politics',visitor.name+' 領袖決定派出居民冒險進入受保護礦區。',
+          [reason,'只有居民實際走到礦點遇守衛才算侵犯；尚未開始戰爭']);
+      }else if(action==='avoid'&&reasonable){
+        s.counts.quarrySafeChoices=(s.counts.quarrySafeChoices||0)+1;
+      }
+    }
+  }
+  // Bound completed histories; preserve all active passes and requests.
+  if(negotiations.length>100)cfg.quarryNegotiations=negotiations.filter(q=>q.status==='pending'||
+    q.status==='granted'&&q.untilHour>s.hour&&q.remainingUnits>0||
+    s.hour-q.resolvedAtHour<180*24).slice(-100);
 }
 function launchDispute(s,a,b,site,emit){
   const cfg=s.politics,ta=townOf(s,a),tb=townOf(s,b);
@@ -943,8 +1064,10 @@ function sendAid(s,r,a,b,emit){
     const soldiers=new Set(s.politics.polities.flatMap(p=>p.militia.memberIds));
     const offices=new Set([s.religion,s.opponentReligion,...(s.additionalReligions||[])].filter(Boolean)
       .flatMap(f=>[...(f.priests||[]),...(f.saints||[])]));
+    const mineGuards=new Set((s.politics.quarryClaims||[]).map(c=>c.guardId).filter(Boolean));
     const carrier=eligible(s,from).filter(p=>p.id!==donor.leaderId&&!soldiers.has(p.id)&&
-      !offices.has(p.id)&&!p.mobilityTrip&&!courier(s,p.id)).sort((x,y)=>x.id.localeCompare(y.id))[0];
+      !offices.has(p.id)&&!mineGuards.has(p.id)&&!p.mobilityTrip&&!courier(s,p.id))
+      .sort((x,y)=>x.id.localeCompare(y.id))[0];
     if(!carrier)continue;
     // Food reserve uses real residents' daily needs; materials retain a local buffer.
     for(const resource of ['stone','wood','food']){
@@ -1042,6 +1165,7 @@ function daily(s,emit,die,notify){
   diplomacyDaily(s,emit);
   unionsDaily(s,emit,notify);
   mineralRightsDaily(s,emit);
+  quarryChoicesDaily(s,emit);
   processMobilizations(s,emit);
   resolveDisputes(s,emit,die,notify);
   if(day(s)>0&&day(s)%cfg.disputeEveryDays===0)startDispute(s,emit);
@@ -1061,7 +1185,13 @@ function overview(s,townId){
     quarryClaims:(s.politics.quarryClaims||[]).filter(c=>c.polityId===p.id).map(c=>({
       site:c.site,status:c.status,guardId:c.guardId,threshold:c.threshold,
       currentAvailable:s.tiles[c.site.y*s.width+c.site.x]?.mineral?.available,
-      protectedDays:c.protectedDays})),
+      protectedDays:c.protectedDays,
+      accessRequests:(s.politics.quarryNegotiations||[]).filter(q=>q.claimId===c.id)
+        .map(q=>({visitorTownId:q.visitorTownId,status:q.status,
+          untilHour:q.untilHour||null,remainingUnits:q.remainingUnits||0}))})),
+    quarryChoices:(s.politics.quarryChoices||[]).filter(c=>c.visitorTownId===p.townId)
+      .map(c=>({claimId:c.claimId,ownerTownId:c.ownerTownId,action:c.action,
+        reason:c.reason,alternative:c.alternative,decidedAtHour:c.decidedAtHour})),
     fortProgress:p.watchtower.progress,
     commandFactor:head?1:s.politics.vacantCommandFactor,
     defense:defense(s,p,townOf(s,p)),
@@ -1087,6 +1217,10 @@ function reconcile(s){
   if(cfg.diplomacy?.union){s.politics.unions ||= [];s.politics.nextUnionId ||= 1;}
   if(cfg.peaceMilitia?.enabled){s.politics.mobilizations ||= [];s.politics.nextMobilizationId ||= 1;}
   if(cfg.mineralRights?.enabled){s.politics.quarryClaims ||= [];s.politics.nextQuarryClaimId ||= 1;s.politics.quarryEncounters ||= [];}
+  if(cfg.mineralRights?.choicesEnabled){
+    s.politics.quarryChoices ||= [];s.politics.quarryNegotiations ||= [];
+    s.politics.nextQuarryNegotiationId ||= 1;s.politics.quarryDeliveries ||= [];
+  }
 }
 function validate(s){
   if(!active(s))return [];
@@ -1111,6 +1245,21 @@ function validate(s){
       if(c.status==='protected'&&(!c.guard||distance(c.guard,c.site)>1e-6))
         errors.push('不在礦區的守衛不能宣稱排他控制');
     }else if(c.status!=='declared')errors.push('排他礦權沒有真人守衛');
+  }
+  for(const q of cfg.quarryNegotiations||[]){
+    if(!cfg.quarryClaims?.some(c=>c.id===q.claimId)||q.visitorTownId===q.ownerTownId||
+       !['pending','granted','rejected'].includes(q.status)||
+       !Number.isFinite(q.openedAtHour)||!Number.isFinite(q.dueAtHour)||
+       q.dueAtHour<q.openedAtHour)errors.push('礦區通行協商不正確');
+    if(q.status==='granted'&&(!Number.isFinite(q.untilHour)||q.untilHour<q.dueAtHour||
+       !Number.isFinite(q.remainingUnits)||q.remainingUnits< -1e-7||
+       q.remainingUnits>cfg.mineralRights.permitUnits+1e-7))
+      errors.push('礦場許可額度或期限不正確');
+  }
+  for(const q of cfg.quarryChoices||[]){
+    if(!cfg.quarryClaims?.some(c=>c.id===q.claimId)||q.ownerTownId===q.visitorTownId||
+       !['avoid','negotiate','permit','challenge'].includes(q.action)||
+       !Number.isFinite(q.decidedAtHour))errors.push('礦場自主選擇缺少實際來源');
   }
   for(const m of cfg.mobilizations||[]){
     if(!['forming','launched','cancelled'].includes(m.status))errors.push('民兵動員狀態不正確');
@@ -1196,5 +1345,5 @@ function validate(s){
   }
   return errors;
 }
-return {BASE,normalize,init,daily,onDeath,personDuty,construct,overview,validate,reconcile,defense,coreFaith,identityFaith,relation,syncMembership,unionOf,offensePolicy,mineralRightsDaily};
+return {BASE,normalize,init,daily,onDeath,personDuty,construct,overview,validate,reconcile,defense,coreFaith,identityFaith,relation,syncMembership,unionOf,offensePolicy,mineralRightsDaily,quarryChoicesDaily};
 });

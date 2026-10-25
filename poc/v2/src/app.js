@@ -505,9 +505,15 @@
   }
   function nearVisibleInjured(at){
     if(!at)return null;
-    const candidates=visibleInjured.filter(v=>Math.hypot(v.x-at.x,v.y-at.y)<=2.5);
-    candidates.sort((a,b)=>Math.hypot(a.x-at.x,a.y-at.y)-
-      Math.hypot(b.x-at.x,b.y-at.y)||a.id.localeCompare(b.id));
+    // Hit a *visible* patient's animated position; Heal remains cast at the
+    // authoritative current position inside healAimAt().
+    const candidates=visibleInjured.map(v=>{
+      const person=state.people.find(p=>p.id===v.id&&p.alive);
+      const display=person&&camera.zoom>1?L.position(motions.get(v.id),person,animationClock):v;
+      return {...v,screenX:display.x,screenY:display.y};
+    }).filter(v=>Math.hypot(v.screenX-at.x,v.screenY-at.y)<=2.5);
+    candidates.sort((a,b)=>Math.hypot(a.screenX-at.x,a.screenY-at.y)-
+      Math.hypot(b.screenX-at.x,b.screenY-at.y)||a.id.localeCompare(b.id));
     return candidates[0]||null;
   }
   function healAimAt(at){
@@ -1573,7 +1579,8 @@
       const priest=state.people.find(p=>p.id===id&&p.alive);
       if(!priest)continue;
       const petitions=S.priestPetitions(state,id);if(!petitions.length)continue;
-      const b=priestBubblePosition(priest,size);
+      const onScreen=camera.zoom>1?L.position(motions.get(id),priest,animationClock):priest;
+      const b=priestBubblePosition(onScreen,size);
       c.save();c.fillStyle='#f6e2ae';c.strokeStyle='#624e88';c.lineWidth=1.7;
       c.beginPath();c.arc(b.x,b.y,b.radius,0,Math.PI*2);c.fill();c.stroke();
       c.fillStyle='#4b3863';c.font=`bold ${Math.round(b.radius*1.05)}px system-ui`;c.textAlign='center';
@@ -1801,7 +1808,8 @@
     for(const id of (layerOn('religion')?state.religion.priests:[])){
       const priest=state.people.find(p=>p.id===id&&p.alive);
       if(!priest||!S.priestPetitions(state,id).length)continue;
-      const b=priestBubblePosition(priest,canvas.width/state.width);
+      const onScreen=camera.zoom>1?L.position(motions.get(id),priest,animationClock):priest;
+      const b=priestBubblePosition(onScreen,canvas.width/state.width);
       const at=L.toScreen(camera,b.x/(canvas.width/state.width),
         b.y/(canvas.width/state.width),canvas.width,canvas.height);
       const d=Math.hypot(mx-at.x,my-at.y);

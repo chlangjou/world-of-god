@@ -73,6 +73,7 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   const source=original.replace(/\}\)\(\);\s*$/,'window.__getWorld=()=>state;window.__render=render;window.__draw=draw;'+
     'window.__frame=animate;window.__setSpeed=x=>{speed=x};window.__camera=()=>({...camera});'+
     'window.__position=id=>{const p=state.people.find(x=>x.id===id);return p&&L.position(motions.get(id),p,animationClock)};'+
+    'window.__setVisualMotion=(id,r)=>motions.set(id,r);'+
     'window.__runtime=()=>({paused,speed,lastAttentionSeq});})();');
   assert.notEqual(original,source,'test instrumentation must attach to actual browser code');
   new Function('window','document','performance','requestAnimationFrame','setTimeout',
@@ -84,7 +85,8 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   return {
     el:get,canvas,render:()=>win.__render(),draw:()=>{drawing.length=0;win.__draw();return drawing;},world:()=>win.__getWorld(),
     frame:t=>win.__frame(t),runtime:()=>win.__runtime(),camera:()=>win.__camera(),
-    position:id=>win.__position(id),setSpeed:x=>win.__setSpeed(x),
+    position:id=>win.__position(id),setMotion:(id,r)=>win.__setVisualMotion(id,r),
+    setSpeed:x=>win.__setSpeed(x),
     speedButton:x=>speedButtons.find(b=>Number(b.dataset.speed)===x),
     choose:id=>{get('divinePowerSelect').value=id;get('divinePowerSelect').onchange();},
     set:(id,value)=>{get(id).value=String(value);get(id).listeners.input();},

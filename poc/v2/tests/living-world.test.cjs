@@ -136,3 +136,23 @@ test('HTML loads Living World before app and offline build declares the same mod
   assert.match(html,/id="zoomResetBtn"/);
   assert.match(html,/id="followStatus"/);
 });
+
+test('Heal targets the authoritative patient when their animated avatar trails the 8-hour tick',async()=>{
+  const ui=await boot(),s=ui.world(),p=s.people.find(p=>p.alive);
+  s.god.dp=s.god.cap;p.health=40;
+  ui.el('zoomInBtn').onclick();ui.el('zoomInBtn').onclick();
+  ui.el('followPersonBtn').onclick();
+  const oldX=p.x>8?p.x-4:p.x+4;
+  ui.setMotion(p.id,{from:{x:oldX,y:p.y},to:{x:p.x,y:p.y},
+    path:[{x:oldX,y:p.y},{x:p.x,y:p.y}],startedAt:0,duration:1000});
+  ui.render();
+  const shown=ui.position(p.id);
+  assert.ok(Math.abs(shown.x-p.x)>=3,'the avatar has a real visible interpolation gap');
+  const screen=Living.toScreen(ui.camera(),shown.x+.5,shown.y+.5,768,768);
+  ui.choose('heal');
+  const hour=s.hour,originalHealth=p.health;
+  ui.canvas.listeners.click({clientX:screen.x,clientY:screen.y});
+  assert.ok(p.health>originalHealth,'clicking visual avatar must heal their current world coordinates');
+  assert.equal(s.hour,hour);
+  assert.equal(ui.camera().followId,p.id);
+});

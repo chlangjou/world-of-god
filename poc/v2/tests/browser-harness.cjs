@@ -17,12 +17,23 @@ class Element {
       intensity:{min:'30',max:'120',value:'85'},
       duration:{min:'1',max:'30',value:'10'}}[id];
     this.min=slider?.min||'1';this.max=slider?.max||'30';this.value=slider?.value||'';
-    this._html='';this.title='';this.textContent='';this.scrollTop=0;this.children=[];
+    this._html='';this._buttons=[];this.title='';this.textContent='';this.scrollTop=0;this.children=[];
     this.listeners={};this.classList={toggle(){},add(){},remove(){}};
   }
   get innerHTML(){return this._html;}
   set innerHTML(value){
     this._html=value;
+    this._buttons=[];
+    if(this.id==='crowdPanel'){
+      for(const found of value.matchAll(/<button\b([^>]*)>/g)){
+        const data={};
+        for(const attr of found[1].matchAll(/data-([a-z-]+)="([^"]*)"/g)){
+          const name=attr[1].replace(/-([a-z])/g,(_,c)=>c.toUpperCase());
+          data[name]=attr[2];
+        }
+        this._buttons.push({dataset:data,disabled:/\sdisabled\b/.test(found[1]),onclick:null});
+      }
+    }
     if(['divinePowerSelect','saintSelect','residentSelect','settlementSelect'].includes(this.id))
       this.value=/<option value="([^"]+)"/.exec(value)?.[1]||'';
   }
@@ -31,7 +42,11 @@ class Element {
   setAttribute(){}
   addEventListener(kind,fn){this.listeners[kind]=fn;}
   getBoundingClientRect(){return {left:0,top:0,width:768,height:768};}
-  querySelectorAll(){return [];}
+  querySelectorAll(selector){
+    const attribute=/^\[data-([a-z-]+)\]$/.exec(selector)?.[1];
+    const key=attribute?.replace(/-([a-z])/g,(_,c)=>c.toUpperCase());
+    return key?this._buttons.filter(b=>Object.hasOwn(b.dataset,key)):[];
+  }
 }
 
 async function boot({sim=W,politicsProfile={...require('../config/polity-command-v0.1.json'),enabled:false}}={}){
@@ -73,6 +88,7 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   const source=original.replace(/\}\)\(\);\s*$/,'window.__getWorld=()=>state;window.__render=render;window.__draw=draw;'+
     'window.__frame=animate;window.__setSpeed=x=>{speed=x};window.__camera=()=>({...camera});'+
     'window.__position=id=>{const p=state.people.find(x=>x.id===id);return p&&L.position(motions.get(id),p,animationClock)};'+
+    'window.__crowds=()=>crowdLayout;window.__chosen=()=>chosen;'+
     'window.__setVisualMotion=(id,r)=>motions.set(id,r);'+
     'window.__runtime=()=>({paused,speed,lastAttentionSeq});})();');
   assert.notEqual(original,source,'test instrumentation must attach to actual browser code');
@@ -85,7 +101,8 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   return {
     el:get,canvas,render:()=>win.__render(),draw:()=>{drawing.length=0;win.__draw();return drawing;},world:()=>win.__getWorld(),
     frame:t=>win.__frame(t),runtime:()=>win.__runtime(),camera:()=>win.__camera(),
-    position:id=>win.__position(id),setMotion:(id,r)=>win.__setVisualMotion(id,r),
+    position:id=>win.__position(id),crowds:()=>win.__crowds(),chosen:()=>win.__chosen(),
+    setMotion:(id,r)=>win.__setVisualMotion(id,r),
     setSpeed:x=>win.__setSpeed(x),
     speedButton:x=>speedButtons.find(b=>Number(b.dataset.speed)===x),
     choose:id=>{get('divinePowerSelect').value=id;get('divinePowerSelect').onchange();},

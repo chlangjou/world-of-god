@@ -381,6 +381,42 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
   .camera-controls #followPersonBtn{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
 
+/* Gameplay-first: click the count to choose any real resident in a busy cell.
+   No new scroll on the page. Five entries per page, keyboard-friendly buttons. */
+.crowd-panel{position:absolute;z-index:6;top:49px;right:10px;width:min(245px,58%);
+  max-height:calc(100% - 72px);overflow:hidden;border:1px solid #9cb6a0;border-radius:9px;
+  background:#142c2beb;color:#e5e4d2;box-shadow:0 4px 15px #061619cc;
+  font-size:11px;padding:7px}
+.crowd-panel[hidden]{display:none}
+.crowd-heading{display:flex;justify-content:space-between;align-items:center;gap:4px}
+.crowd-heading strong{color:#f2d89d;font-size:12px}
+.crowd-heading button{font-size:16px;width:25px;min-height:24px}
+.crowd-note{display:block;color:#a5c6b5;font-size:10px;margin:3px 0 7px}
+.crowd-rows{display:grid;grid-template-columns:1fr;gap:4px}
+.crowd-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px}
+.crowd-row button,.crowd-pager button,.crowd-heading button{
+  background:#29413b;color:#dcebdc;border:1px solid #63857a;
+  border-radius:5px;cursor:pointer;font:inherit}
+.crowd-row button:first-child{min-width:0;padding:5px;text-align:left}
+.crowd-row button:first-child strong,.crowd-row button:first-child small{
+  display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crowd-row button:first-child strong{color:#f5e4b9}
+.crowd-row button:first-child small{font-size:10px;color:#adc3b8}
+.crowd-row button:last-child{font-size:10px;padding:4px 7px}
+.crowd-row button:hover,.crowd-row button:focus-visible,
+.crowd-pager button:hover,.crowd-heading button:hover{
+  background:#43615a;outline-color:#eddda2}
+.crowd-pager{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:6px}
+.crowd-pager button{padding:2px 11px}
+.crowd-pager button:disabled{opacity:.45;cursor:default}
+@media(max-height:660px){
+  .crowd-panel{top:44px;padding:4px 6px}
+  .crowd-note{margin:2px 0 4px}
+  .crowd-rows{gap:2px}
+  .crowd-row button:first-child{padding:3px 5px}
+}
+@media(max-width:630px){.crowd-panel{right:5px;width:min(225px,62%)}}
+
 </style>
   <style>
 /* Compact persistent file menu retains Save/Load even on narrow screens. */
@@ -468,6 +504,7 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
             <button id="followPersonBtn" type="button" aria-pressed="false" title="追蹤居民選單目前選取的真人">追蹤居民</button>
           </div>
           <div id="followStatus" class="follow-status" hidden aria-live="off"></div>
+          <div id="crowdPanel" class="crowd-panel" hidden aria-label="同位置居民清單"></div>
           <button id="battleFocusBtn" type="button" class="battle-focus" hidden aria-live="polite" title="定位正在發生的人類戰事"></button>
           <div class="map-layers" aria-label="地圖資訊圖層">
             <button type="button" id="mapLayersButton" class="map-layers-toggle" aria-controls="mapLayersPanel" aria-expanded="false" title="調整地圖資訊顯示（不影響世界模擬）">圖層 · 一般</button>
@@ -7380,8 +7417,106 @@ function drawActing(c,p,x,y,cell,time,options={}){
   }
   c.restore();
 }
+
+// Crowd layout is exclusively visual. Every person retains their real position;
+// God casts, meetings, trips and saves continue using the simulation state.
+const CROWD_SLOTS=Object.freeze([
+  [-.34,-.34],[.34,-.34],[0,.36],[-.34,.36],[.34,.36],
+  [0,-.60],[-.34,-.76],[.34,-.76]
+]);
+function crowdLimit(zoom){
+  return zoom<1.5?1:zoom<3?3:zoom<6?5:8;
+}
+function arrangeCrowds(people,pose,zoom,slotMemory=new Map(),selectedId=null){
+  const byCell=new Map(),sprites=new Map(),groups=[];
+  for(const p of people||[]){
+    if(!p.alive||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
+    const tileX=Math.floor(p.x),tileY=Math.floor(p.y);
+    const key=tileX+':'+tileY;
+    if(!byCell.has(key))byCell.set(key,{key,tileX,tileY,members:[]});
+    byCell.get(key).members.push(p);
+  }
+  const limit=crowdLimit(zoom);
+  for(const group of byCell.values()){
+    const members=group.members.sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true}));
+    const count=members.length;
+    const groupId=group.key;
+    const visible=members.slice(0,limit);
+    // Selecting a previously collapsed resident must reveal their own avatar.
+    const chosen=members.find(p=>p.id===selectedId);
+    if(chosen&&!visible.includes(chosen)&&visible.length)visible[visible.length-1]=chosen;
+    const shown=new Set(visible.map(p=>p.id));
+    const assigned=new Map(),occupied=new Set();
+    // Reserve retained unique slots first; Zoom changes or new selected people
+    // can otherwise accidentally assign two avatars to one slot.
+    for(const p of visible){
+      const saved=slotMemory.get(p.id);
+      if(count>1&&saved?.key===groupId&&saved.slot<limit&&!occupied.has(saved.slot)){
+        assigned.set(p.id,saved.slot);occupied.add(saved.slot);
+      }
+    }
+    for(const p of visible){
+      if(!assigned.has(p.id)){
+        let slot=0;
+        while(occupied.has(slot)&&slot<limit)slot++;
+        assigned.set(p.id,slot);occupied.add(slot);
+      }
+    }
+    const scale=count===1||zoom<1.5?1:
+      count<=2?.55:count<=5?.37:.28;
+    const shownIds=visible.map(p=>p.id);
+    for(const p of members){
+      const presentation=pose?.get(p.id)||p;
+      const shownHere=shown.has(p.id);
+      const slot=shownHere?(assigned.get(p.id)??0):null;
+      if(shownHere&&count>1)slotMemory.set(p.id,{key:groupId,slot});
+      const offset=count>1&&zoom>=1.5&&shownHere?CROWD_SLOTS[slot]||[0,0]:[0,0];
+      const x=count>1&&zoom>=1.5?
+        group.tileX+.5+offset[0]+(presentation.x-p.x):presentation.x;
+      const y=count>1&&zoom>=1.5?
+        group.tileY+.5+offset[1]+(presentation.y-p.y):presentation.y;
+      sprites.set(p.id,{id:p.id,key:groupId,x,y,scale,visible:shownHere,
+        size:count,moving:!!presentation.moving,slot,
+        realX:p.x,realY:p.y});
+    }
+    if(count>1)groups.push({key:groupId,count,ids:members.map(p=>p.id),
+      visibleIds:shownIds,hidden:count-shown.size,
+      x:group.tileX+.5,y:group.tileY+.5});
+  }
+  return {sprites,groups};
+}
+function crowdBadge(camera,group,w,h){
+  const p=toScreen(camera,group.x,group.y,w,h);
+  const tile=Math.min(w/camera.width,h/camera.height)*camera.zoom;
+  return {x:p.x+Math.max(9,Math.min(26,tile*.43)),
+    y:p.y-Math.max(10,Math.min(30,tile*.58)),
+    radius:group.count>=100?15:12};
+}
+function hitCrowd(groups,camera,px,py,w,h){
+  let closest=null,dist=Infinity;
+  for(const g of groups||[]){
+    const marker=crowdBadge(camera,g,w,h),d=distance({x:px,y:py},marker);
+    if(d<=marker.radius+3&&d<dist){closest=g;dist=d;}
+  }
+  return closest;
+}
+function hitCharacter(sprites,camera,px,py,w,h){
+  const tile=Math.min(w/camera.width,h/camera.height)*camera.zoom;
+  let closest=null,dist=Infinity;
+  for(const item of sprites?.values()||[]){
+    if(!item.visible)continue;
+    const screen=toScreen(camera,item.x+.5,item.y+.5,w,h);
+    const d=distance(screen,{x:px,y:py});
+    // The hit disk matches the displayed scaled head. Never use real position.
+    const radius=Math.max(6,Math.min(24,tile*item.scale*.49));
+    if(d<=radius&&d<dist){closest=item;dist=d;}
+  }
+  return closest;
+}
+
 const API={createCamera,transform,toWorld,toScreen,focus,setZoom,pan,bounds,
-  snapshot,transitions,position,drawActing};
+  snapshot,transitions,position,drawActing,
+  arrangeCrowds,crowdBadge,hitCrowd,hitCharacter};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 if(root)root.WOG_LIVING_WORLD=API;
 })(typeof window!=='undefined'?window:null);
@@ -7398,6 +7533,9 @@ if(root)root.WOG_LIVING_WORLD=API;
   // Camera, motion and expressions are presentation-only. Never serialized.
   let camera=L.createCamera(state.width,state.height),motions=new Map(),healedUntil=new Map();
   let animationClock=0,lastVisualDraw=0,dragPan=null,ignoreMapClick=false;
+  // Display-only character formations, hit areas and cluster selection.
+  let crowdSlots=new Map(),crowdLayout={sprites:new Map(),groups:[]};
+  let activeCrowdKey=null,crowdPage=0,lastCrowdMarkup=null;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let lastMiraclePreview=null, lastCastVisual=null, lastIntervention=null;
   let visibleInjured=[],healLock=null; // UI-only snapshots, never stored in the world
@@ -7475,6 +7613,9 @@ if(root)root.WOG_LIVING_WORLD=API;
   function resetVisualWorld(){
     camera=L.createCamera(state.width,state.height);
     motions.clear();healedUntil.clear();animationClock=0;dragPan=null;ignoreMapClick=false;
+    crowdSlots.clear();crowdLayout={sprites:new Map(),groups:[]};
+    activeCrowdKey=null;crowdPage=0;lastCrowdMarkup=null;
+    $('crowdPanel').hidden=true;
     syncCameraControls();
   }
   function syncCameraControls(){
@@ -7516,6 +7657,79 @@ if(root)root.WOG_LIVING_WORLD=API;
       showInspector('person');
     }
     syncCameraControls();render();
+  }
+  function arrangeCurrentCrowd(){
+    const poses=new Map();
+    for(const p of state.people)if(p.alive)
+      poses.set(p.id,camera.zoom>1?L.position(motions.get(p.id),p,animationClock):p);
+    return L.arrangeCrowds(state.people,poses,camera.zoom,crowdSlots,chosen);
+  }
+  function visibleCrowdGroup(){
+    const group=crowdLayout.groups.find(g=>g.key===activeCrowdKey);
+    return group&&group.count>1?group:null;
+  }
+  function selectCrowdResident(id,follow=false){
+    const person=state.people.find(p=>p.id===id&&p.alive);
+    if(!person)return;
+    chosen=person.id;
+    if(follow){
+      camera.zoom=Math.max(4,camera.zoom);
+      camera.followId=person.id;
+      updateCameraFollow();
+    }else if(camera.followId)camera.followId=person.id;
+    activeCrowdKey=null;
+    $('crowdPanel').hidden=true;lastCrowdMarkup=null;
+    showInspector('person');
+    say('已選擇 '+person.name+' · '+(taskName[person.activity]||person.activity)+
+      (follow?'，鏡頭正跟隨此人。':'，可再按「追蹤居民」。'));
+  }
+  function renderCrowdPanel(){
+    const panel=$('crowdPanel'),group=visibleCrowdGroup();
+    panel.hidden=!group;
+    if(!group){lastCrowdMarkup=null;return;}
+    const people=group.ids.map(id=>state.people.find(p=>p.id===id&&p.alive)).filter(Boolean);
+    const pages=Math.max(1,Math.ceil(people.length/5));
+    crowdPage=Math.max(0,Math.min(pages-1,crowdPage));
+    const residents=people.slice(crowdPage*5,(crowdPage+1)*5).map(p=>
+      '<div class="crowd-row">'+
+      '<button type="button" data-crowd-person="'+html(p.id)+'" aria-label="觀察 '+html(p.name)+'">'+
+      '<strong>'+html(p.name)+'</strong><small>'+html(taskName[p.activity]||p.activity)+
+      ' · 健康 '+format(p.health)+' / 100</small></button>'+
+      '<button type="button" data-crowd-follow="'+html(p.id)+'" title="追蹤這位真人">跟隨</button></div>').join('');
+    const markup='<div class="crowd-heading"><strong>此處 '+people.length+' 位居民</strong>'+
+      '<button type="button" data-crowd-close="1" aria-label="關閉居民清單">×</button></div>'+
+      '<small class="crowd-note">人物只在畫面中錯開，實際位置不變</small>'+
+      '<div class="crowd-rows">'+residents+'</div>'+
+      (pages>1?'<div class="crowd-pager">'+
+        '<button type="button" data-crowd-page="-1" '+(crowdPage===0?'disabled':'')+'>‹</button>'+
+        '<span>'+(crowdPage+1)+' / '+pages+'</span>'+
+        '<button type="button" data-crowd-page="1" '+(crowdPage>=pages-1?'disabled':'')+'>›</button></div>':'');
+    if(lastCrowdMarkup!==markup){
+      lastCrowdMarkup=markup;panel.innerHTML=markup;
+      panel.querySelectorAll('[data-crowd-person]').forEach(b=>
+        b.onclick=()=>selectCrowdResident(b.dataset.crowdPerson));
+      panel.querySelectorAll('[data-crowd-follow]').forEach(b=>
+        b.onclick=()=>selectCrowdResident(b.dataset.crowdFollow,true));
+      panel.querySelectorAll('[data-crowd-page]').forEach(b=>b.onclick=()=>{
+        crowdPage+=Number(b.dataset.crowdPage);renderCrowdPanel();
+      });
+      panel.querySelectorAll('[data-crowd-close]').forEach(b=>b.onclick=()=>{
+        activeCrowdKey=null;renderCrowdPanel();draw();
+      });
+    }
+  }
+  function openCrowd(key){
+    if(!crowdLayout.groups.some(g=>g.key===key))return false;
+    activeCrowdKey=key;crowdPage=0;lastCrowdMarkup=null;
+    renderCrowdPanel();draw();return true;
+  }
+  function handleCrowdClick(px,py){
+    const badge=L.hitCrowd(crowdLayout.groups,camera,px,py,canvas.width,canvas.height);
+    if(badge)return openCrowd(badge.key);
+    const sprite=L.hitCharacter(crowdLayout.sprites,camera,px,py,canvas.width,canvas.height);
+    if(!sprite)return false;
+    if(camera.zoom<1.5&&sprite.size>1)return openCrowd(sprite.key);
+    selectCrowdResident(sprite.id);return true;
   }
   function selectSpeed(value){
     if(!SPEED_PRESETS.includes(value))return false;
@@ -7703,6 +7917,11 @@ if(root)root.WOG_LIVING_WORLD=API;
   function priestBubblePosition(p,size){
     // Keep the rendered prayer bubble at least 20 CSS px wide for mouse/touch.
     const canvasScale=canvas.width/Math.max(1,canvas.getBoundingClientRect().width);
+    if(camera.zoom>1){
+      const radius=Math.max(size*.1,10*canvasScale/camera.zoom);
+      return {x:(p.x+.5)*size+radius*1.6,
+        y:(p.y+.5)*size-radius*1.85,radius};
+    }
     const radius=Math.max(size*.62,10*canvasScale);
     return {x:(p.x+.5)*size+Math.max(size*.82,radius*.72),
       y:(p.y+.5)*size-Math.max(size*1.10,radius*1.7),radius};
@@ -7897,16 +8116,18 @@ if(root)root.WOG_LIVING_WORLD=API;
     // Hit a *visible* patient's animated position; Heal remains cast at the
     // authoritative current position inside healAimAt().
     const candidates=visibleInjured.map(v=>{
-      const person=state.people.find(p=>p.id===v.id&&p.alive);
-      const display=person&&camera.zoom>1?L.position(motions.get(v.id),person,animationClock):v;
+      const pose=crowdLayout.sprites.get(v.id);
+      const display=pose?.visible?pose:v;
       return {...v,screenX:display.x,screenY:display.y};
     }).filter(v=>Math.hypot(v.screenX-at.x,v.screenY-at.y)<=2.5);
     candidates.sort((a,b)=>Math.hypot(a.screenX-at.x,a.screenY-at.y)-
       Math.hypot(b.screenX-at.x,b.screenY-at.y)||a.id.localeCompare(b.id));
     return candidates[0]||null;
   }
-  function healAimAt(at){
+  function healAimAt(at,screenHitId=null){
     if(!at||armedMiracle!=='heal')return at;
+    const clicked=screenHitId&&state.people.find(p=>p.id===screenHitId&&p.alive&&p.health<100);
+    if(clicked)return {x:clicked.x,y:clicked.y,personId:clicked.id,personName:clicked.name};
     const near=nearVisibleInjured(at);
     const locked=healLock&&Math.hypot(at.x-healLock.anchor.x,at.y-healLock.anchor.y)<=2.6?
       healLock:near?{id:near.id,anchor:at}:null;
@@ -8674,13 +8895,14 @@ if(root)root.WOG_LIVING_WORLD=API;
       feed.dataset.count=String(state.events.length);
       lastEventId=state.eventSeq;
     }
-    draw();
+    draw();renderCrowdPanel();
   }
   function draw() {
     updateCameraFollow();
     const size=canvas.width/state.width;
     const c=ctx;c.clearRect(0,0,canvas.width,canvas.height);
     const time=animationClock/1000;
+    crowdLayout=arrangeCurrentCrowd();
     const t=L.transform(camera,canvas.width,canvas.height);
     c.save();c.translate(t.tx,t.ty);
     c.scale(t.scaleX/size,t.scaleY/(canvas.height/state.height));
@@ -8889,13 +9111,22 @@ if(root)root.WOG_LIVING_WORLD=API;
       .map(p=>({id:p.id,x:p.x,y:p.y}));
     const allFaithForMap=allDisplayedFaiths();
     for(const p of state.people){if(!p.alive)continue;
+      const visual=crowdLayout.sprites.get(p.id);
+      if(!visual?.visible)continue; // full roster remains accessible through badge
+      if(camera.zoom>1&&(visual.x<visible.minX-2||visual.x>visible.maxX+2||
+          visual.y<visible.minY-2||visual.y>visible.maxY+2))continue;
       const soldierOf=(state.politics?.polities||[]).find(polity=>
         polity.militia.memberIds.includes(p.id));
       const ranks=soldierOf?.militia.memberIds||[];
-      const visualOffset=soldierOf?(ranks.indexOf(p.id)-(ranks.length-1)/2)*size*.88:0;
-      const visual=camera.zoom>1?L.position(motions.get(p.id),p,animationClock):
-        {x:p.x,y:p.y,moving:false};
+      const visualOffset=camera.zoom===1&&soldierOf?
+        (ranks.indexOf(p.id)-(ranks.length-1)/2)*size*.88:0;
       const px=(visual.x+.5)*size+visualOffset,py=(visual.y+.5)*size;
+      c.save();
+      // Pictograms stay readable when the world is crowded. The visual-only
+      // miniatures never change the position used by the simulation kernel.
+      if(visual.scale!==1){
+        c.translate(px,py);c.scale(visual.scale,visual.scale);c.translate(-px,-py);
+      }
       const isLeader=(state.politics?.polities||[]).some(polity=>polity.leaderId===p.id);
       const faction=allFaithForMap.find(f=>f.id===p.religionId);
       const saint=!!faction?.saints.includes(p.id),priest=!!faction?.priests.includes(p.id);
@@ -8962,13 +9193,15 @@ if(root)root.WOG_LIVING_WORLD=API;
       L.drawActing(c,p,px,py,size,time,{zoom:camera.zoom,moving:visual.moving,
         healed:(healedUntil.get(p.id)||0)>animationClock,coat});
       if(p.id===chosen){c.strokeStyle='#faf5c7';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.84,0,Math.PI*2);c.stroke();}
+      c.restore();
     }
     // A speech bubble belongs only to a Priest who has collected real open petitions.
     if(layerOn('religion'))for(const id of state.religion.priests){
       const priest=state.people.find(p=>p.id===id&&p.alive);
       if(!priest)continue;
       const petitions=S.priestPetitions(state,id);if(!petitions.length)continue;
-      const onScreen=camera.zoom>1?L.position(motions.get(id),priest,animationClock):priest;
+      const onScreen=crowdLayout.sprites.get(id);
+      if(!onScreen?.visible)continue;
       const b=priestBubblePosition(onScreen,size);
       c.save();c.fillStyle='#f6e2ae';c.strokeStyle='#624e88';c.lineWidth=1.7;
       c.beginPath();c.arc(b.x,b.y,b.radius,0,Math.PI*2);c.fill();c.stroke();
@@ -9095,7 +9328,19 @@ if(root)root.WOG_LIVING_WORLD=API;
       }
       c.restore();
     }
-    c.restore(); // screen-fixed battle inset must not scale with the map camera
+    c.restore(); // screen-fixed crowd counts and battle inset
+    for(const group of crowdLayout.groups){
+      const badge=L.crowdBadge(camera,group,canvas.width,canvas.height);
+      if(badge.x<0||badge.y<0||badge.x>canvas.width||badge.y>canvas.height)continue;
+      c.save();
+      c.fillStyle=group.key===activeCrowdKey?'#6d5e34':'#163430';
+      c.strokeStyle=group.ids.includes(chosen)?'#ffe7aa':'#a0cfbe';
+      c.lineWidth=2;c.beginPath();c.arc(badge.x,badge.y,badge.radius,0,Math.PI*2);
+      c.fill();c.stroke();
+      c.fillStyle='#fff1cf';c.textAlign='center';c.textBaseline='middle';
+      c.font='bold 11px system-ui';c.fillText(String(group.count),badge.x,badge.y);
+      c.restore();
+    }
     // A local 4× battle close-up solves the 64×64-map readability limit.
     // This is presentation only: every health bar belongs to a real citizen;
     // battle resolution remains in the deterministic human polity kernel.
@@ -9161,7 +9406,9 @@ if(root)root.WOG_LIVING_WORLD=API;
       if(oracle){focusOpponentOracle(oracle.id);return;}
     }
     if(armedMiracle){
-      const aim=healAimAt({x,y});
+      const hit=armedMiracle==='heal'?
+        L.hitCharacter(crowdLayout.sprites,camera,point.px,point.py,canvas.width,canvas.height):null;
+      const aim=healAimAt({x,y},hit?.id);
       const id=armedMiracle;
       const previousDevotion=new Map(state.people.filter(p=>p.alive).map(p=>[p.id,p.devotion]));
       const beforeHealing=id==='heal'?new Map(state.people.filter(p=>p.alive)
@@ -9197,7 +9444,8 @@ if(root)root.WOG_LIVING_WORLD=API;
     for(const id of (layerOn('religion')?state.religion.priests:[])){
       const priest=state.people.find(p=>p.id===id&&p.alive);
       if(!priest||!S.priestPetitions(state,id).length)continue;
-      const onScreen=camera.zoom>1?L.position(motions.get(id),priest,animationClock):priest;
+      const onScreen=crowdLayout.sprites.get(id);
+      if(!onScreen?.visible)continue;
       const b=priestBubblePosition(onScreen,canvas.width/state.width);
       const at=L.toScreen(camera,b.x/(canvas.width/state.width),
         b.y/(canvas.width/state.width),canvas.width,canvas.height);
@@ -9212,6 +9460,9 @@ if(root)root.WOG_LIVING_WORLD=API;
       say(`查看 ${marked.name} 彙整的信徒祈求與來源位置。`);
       return;
     }
+    // In a close-up, a visible individual or crowd count takes precedence over
+    // overlapping world overlays. At overview scale retain previous map priority.
+    if(camera.zoom>=2&&handleCrowdClick(mx,my))return;
     const marker=currentNeed();
     if(marker?.location&&Math.hypot(x-marker.location.center.x,y-marker.location.center.y)<=1.6){
       showInspector('needs');return;
@@ -9233,17 +9484,8 @@ if(root)root.WOG_LIVING_WORLD=API;
         '；查看所在聚落的活動與建造進度。');
       return;
     }
-    let selected=null,dd=Infinity;for(const p of state.people){
-      if(!p.alive)continue;
-      const at=camera.zoom>1?L.position(motions.get(p.id),p,animationClock):p;
-      const d=Math.hypot(at.x-x,at.y-y);
-      if(d<dd){selected=p;dd=d;}
-    }
-    if(selected&&dd<(camera.zoom>1?1.25:3.2)){
-      chosen=selected.id;
-      if(camera.followId)camera.followId=chosen;
-      showInspector('person');say(`正在觀察 ${selected.name} 的生活與工作選擇`);
-    }else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
+    if(handleCrowdClick(mx,my))return;
+    say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
   }
   function receiveFastForwardNotice(notes){
     const note=notes.find(v=>v.type==='battle'||v.type==='battle-wounded')||

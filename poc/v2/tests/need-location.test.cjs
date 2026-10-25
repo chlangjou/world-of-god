@@ -62,8 +62,18 @@ async function boot(){
   canvas.getContext=()=>context;
   const document={getElementById:element,querySelectorAll:()=>[],addEventListener(){},
     activeElement:{tagName:'BODY'}};
+  // Mirror actual native-playable dependencies instead of booting an intentionally
+  // broken browser. UI contracts should exercise a loaded, ordinary world.
   const window={WoG2:W,WOG_AGRICULTURE_PROFILE:agriculture,
-    WOG_RELIGION_PROFILE:religion,WOG_DIVINE_PROFILE:divine};
+    WOG_RELIGION_PROFILE:religion,WOG_DIVINE_PROFILE:divine,
+    WOG_OPPONENT_PROFILE:require('../config/opponent-v0.2.json'),
+    WOG_ORACLE_STRATEGY_PROFILE:require('../config/oracle-specialization-v0.1.json'),
+    WOG_PLAYTEST:require('../src/playtest.js'),
+    WOG_PLAYTEST_PROFILE:{...require('../config/playable-evidence-v0.1.json'),defaultScenario:'native'},
+    WOG_SHRINE_PROFILE:require('../config/shrine-temple-v0.1.json'),
+    WOG_MOBILITY_PROFILE:require('../config/mobility-contact-v0.1.json'),
+    WOG_VICTORY_PROFILE:require('../config/victory-dominance-v0.1.json'),
+    WOG_POLITY_PROFILE:{...require('../config/polity-command-v0.1.json'),enabled:false}};
   const source=read('src/app.js').replace(/\}\)\(\);\s*$/,
     'window.__needTest={state:()=>state,render,currentNeed,locateNeed,intervention:()=>lastIntervention};})();');
   assert.ok(source.includes('window.__needTest'),'test harness must attach to the actual browser source');

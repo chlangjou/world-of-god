@@ -1,0 +1,40 @@
+name: Issue 15 character size stability fast
+on:
+  push:
+    branches:
+      - codex/issue-15-character-size-stability-v0
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-15-size-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-15-size-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  size:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Syntax and stable size/selection regression
+        working-directory: poc/v2
+        run: |
+          node --check src/living-world.js
+          node --check src/app.js
+          timeout 55s node --test tests/crowd-selection.test.cjs tests/living-world.test.cjs tests/miracle-parameters.test.cjs tests/need-location.test.cjs
+      - name: Original layers/layout/combat contract
+        working-directory: poc/v2
+        run: timeout 50s node --test tests/map-layers.test.cjs tests/layout.test.cjs tests/polity-intervention-ui.test.cjs
+      - name: Smoke + offline parity
+        working-directory: poc/v2
+        run: |
+          timeout 20s npm run smoke
+          timeout 20s npm run check:playable

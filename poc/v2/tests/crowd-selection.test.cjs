@@ -170,3 +170,54 @@ test('4× Heal selection tracks the separated avatar but casts at real simulatio
   assert.equal(s.hour,hour);
   assert.equal(s.lastCrowdState,undefined,'no visual layout enters the save');
 });
+
+test('adult scale does not jump when people enter or leave the same cell',()=>{
+  const all=residents(10),positions=new Map(all.map(p=>[p.id,p]));
+  for(const zoom of [1,2,4,8]){
+    const observed=[];
+    for(const n of [1,2,3,5,6,8,10,2,1]){
+      const layout=L.arrangeCrowds(all.slice(0,n),positions,zoom,new Map());
+      const person=layout.sprites.get('p1');
+      assert.ok(person.visible);
+      observed.push(person.scale);
+    }
+    for(const v of observed)near(v,observed[0]);
+    near(observed[0],L.characterScale(all[0],zoom));
+    assert.ok(observed[0]>0);
+  }
+});
+
+test('a nine-year-old is consistently smaller than an adult regardless of same-cell crowd count',()=>{
+  const adult={id:'p1',x:22.2,y:19.4,age:35,stage:'adult',alive:true};
+  const child={id:'p2',x:22.2,y:19.4,age:9,stage:'child',alive:true};
+  const extras=residents(8).map((p,i)=>({...p,id:'p'+(i+3)}));
+  const all=[adult,child,...extras],positions=new Map(all.map(p=>[p.id,p]));
+  for(const zoom of [1,4,8]){
+    const solo=L.arrangeCrowds([child],positions,zoom).sprites.get(child.id);
+    let scale=null;
+    for(const n of [2,3,5,10]){
+      const current=L.arrangeCrowds(all.slice(0,n),positions,zoom,new Map());
+      const value=current.sprites.get(child.id).scale;
+      if(scale===null)scale=value;
+      near(value,solo.scale);
+      assert.ok(value<current.sprites.get(adult.id).scale);
+    }
+    const olderChild={...child,age:17},older=L.characterScale(olderChild,zoom);
+    assert.ok(older>solo.scale&&older<L.characterScale(adult,zoom),
+      'character growth should be gradual, with near-adult size at 17');
+  }
+});
+
+test('individual hits still match the visual scale and position after group size changes',()=>{
+  const all=residents(10),c=L.createCamera(64,64);
+  c.zoom=8;L.focus(c,22.5,19.5);
+  const slots=new Map(),poses=new Map(all.map(p=>[p.id,p]));
+  for(const n of [2,5,10,2,1]){
+    const layout=L.arrangeCrowds(all.slice(0,n),poses,c.zoom,slots);
+    const visible=[...layout.sprites.values()].filter(p=>p.visible);
+    for(const item of visible){
+      const center=L.toScreen(c,item.x+.5,item.y+.5,768,768);
+      assert.equal(L.hitCharacter(layout.sprites,c,center.x,center.y,768,768)?.id,item.id);
+    }
+  }
+});

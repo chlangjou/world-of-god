@@ -184,6 +184,13 @@ test('Rain report distinguishes successful casting, unverified benefits and a co
   assert.ok(state.god.dp<beforeDP);
   assert.equal(element('interventionPanel').hidden,false);
   assert.match(element('interventionPanel').innerHTML,/祈求尚待水分改善與實際產糧/);
+  assert.equal(element('needsPanel').querySelectorAll('[data-need-locate]').length,2,
+    'outcome occupies room without overflowing the fixed inspector');
+  const next=element('needsPanel').querySelectorAll('[data-needs-page]')
+    .find(b=>b.dataset.needsPage==='1');
+  assert.ok(next,'third petition remains accessible via paging');
+  next.onclick();
+  assert.equal(element('needsPanel').querySelectorAll('[data-need-locate]').length,1);
   const prayer=state.religion.prayers.find(p=>p.id===result.prayerId);
   prayer.status='answered';prayer.castId='other-rain-effect';app.render();
   assert.doesNotMatch(element('interventionPanel').innerHTML,/已核實：本次雨雲/);

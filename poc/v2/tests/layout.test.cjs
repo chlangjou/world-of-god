@@ -105,8 +105,10 @@ test('need-location controls keep three readable entries, exact map centers, and
   const css=fs.readFileSync(path.join(root,'assets/viewport.css'),'utf8');
   const sim=fs.readFileSync(path.join(root,'src/sim.js'),'utf8');
   assert.ok(html.includes('需求定位')&&html.includes('評估範圍'));
-  assert.ok(app.includes('prayers.slice(needPage*3,(needPage+1)*3)'),
-    'all needs must stay navigable, not just the newest two');
+  assert.ok(app.includes('const perPage=lastIntervention?2:3')&&
+    app.includes('prayers.slice(needPage*perPage,(needPage+1)*perPage)')&&
+    app.includes('Math.ceil(prayers.length/perPage)'),
+    'three requests remain paged normally; the recent-intervention panel may show two with paging');
   assert.ok(app.includes('data-need-locate')&&app.includes('data-needs-page'));
   assert.ok(app.includes('needsMarkup!==lastNeedsMarkup'),
     'a frequent render must not replace a need button while the player is clicking or focusing it');

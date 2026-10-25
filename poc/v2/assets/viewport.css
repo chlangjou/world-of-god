@@ -367,3 +367,39 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
 @media(max-width:600px){
   .camera-controls #followPersonBtn{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
+
+/* Gameplay-first: click the count to choose any real resident in a busy cell.
+   No new scroll on the page. Five entries per page, keyboard-friendly buttons. */
+.crowd-panel{position:absolute;z-index:6;top:49px;right:10px;width:min(245px,58%);
+  max-height:calc(100% - 72px);overflow:hidden;border:1px solid #9cb6a0;border-radius:9px;
+  background:#142c2beb;color:#e5e4d2;box-shadow:0 4px 15px #061619cc;
+  font-size:11px;padding:7px}
+.crowd-panel[hidden]{display:none}
+.crowd-heading{display:flex;justify-content:space-between;align-items:center;gap:4px}
+.crowd-heading strong{color:#f2d89d;font-size:12px}
+.crowd-heading button{font-size:16px;width:25px;min-height:24px}
+.crowd-note{display:block;color:#a5c6b5;font-size:10px;margin:3px 0 7px}
+.crowd-rows{display:grid;grid-template-columns:1fr;gap:4px}
+.crowd-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px}
+.crowd-row button,.crowd-pager button,.crowd-heading button{
+  background:#29413b;color:#dcebdc;border:1px solid #63857a;
+  border-radius:5px;cursor:pointer;font:inherit}
+.crowd-row button:first-child{min-width:0;padding:5px;text-align:left}
+.crowd-row button:first-child strong,.crowd-row button:first-child small{
+  display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crowd-row button:first-child strong{color:#f5e4b9}
+.crowd-row button:first-child small{font-size:10px;color:#adc3b8}
+.crowd-row button:last-child{font-size:10px;padding:4px 7px}
+.crowd-row button:hover,.crowd-row button:focus-visible,
+.crowd-pager button:hover,.crowd-heading button:hover{
+  background:#43615a;outline-color:#eddda2}
+.crowd-pager{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:6px}
+.crowd-pager button{padding:2px 11px}
+.crowd-pager button:disabled{opacity:.45;cursor:default}
+@media(max-height:660px){
+  .crowd-panel{top:44px;padding:4px 6px}
+  .crowd-note{margin:2px 0 4px}
+  .crowd-rows{gap:2px}
+  .crowd-row button:first-child{padding:3px 5px}
+}
+@media(max-width:630px){.crowd-panel{right:5px;width:min(225px,62%)}}

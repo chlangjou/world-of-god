@@ -164,8 +164,106 @@ function drawActing(c,p,x,y,cell,time,options={}){
   }
   c.restore();
 }
+
+// Crowd layout is exclusively visual. Every person retains their real position;
+// God casts, meetings, trips and saves continue using the simulation state.
+const CROWD_SLOTS=Object.freeze([
+  [-.34,-.34],[.34,-.34],[0,.36],[-.34,.36],[.34,.36],
+  [0,-.60],[-.34,-.76],[.34,-.76]
+]);
+function crowdLimit(zoom){
+  return zoom<1.5?1:zoom<3?3:zoom<6?5:8;
+}
+function arrangeCrowds(people,pose,zoom,slotMemory=new Map(),selectedId=null){
+  const byCell=new Map(),sprites=new Map(),groups=[];
+  for(const p of people||[]){
+    if(!p.alive||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
+    const tileX=Math.floor(p.x),tileY=Math.floor(p.y);
+    const key=tileX+':'+tileY;
+    if(!byCell.has(key))byCell.set(key,{key,tileX,tileY,members:[]});
+    byCell.get(key).members.push(p);
+  }
+  const limit=crowdLimit(zoom);
+  for(const group of byCell.values()){
+    const members=group.members.sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true}));
+    const count=members.length;
+    const groupId=group.key;
+    const visible=members.slice(0,limit);
+    // Selecting a previously collapsed resident must reveal their own avatar.
+    const chosen=members.find(p=>p.id===selectedId);
+    if(chosen&&!visible.includes(chosen)&&visible.length)visible[visible.length-1]=chosen;
+    const shown=new Set(visible.map(p=>p.id));
+    const assigned=new Map(),occupied=new Set();
+    // Reserve retained unique slots first; Zoom changes or new selected people
+    // can otherwise accidentally assign two avatars to one slot.
+    for(const p of visible){
+      const saved=slotMemory.get(p.id);
+      if(count>1&&saved?.key===groupId&&saved.slot<limit&&!occupied.has(saved.slot)){
+        assigned.set(p.id,saved.slot);occupied.add(saved.slot);
+      }
+    }
+    for(const p of visible){
+      if(!assigned.has(p.id)){
+        let slot=0;
+        while(occupied.has(slot)&&slot<limit)slot++;
+        assigned.set(p.id,slot);occupied.add(slot);
+      }
+    }
+    const scale=count===1||zoom<1.5?1:
+      count<=2?.55:count<=5?.37:.28;
+    const shownIds=visible.map(p=>p.id);
+    for(const p of members){
+      const presentation=pose?.get(p.id)||p;
+      const shownHere=shown.has(p.id);
+      const slot=shownHere?(assigned.get(p.id)??0):null;
+      if(shownHere&&count>1)slotMemory.set(p.id,{key:groupId,slot});
+      const offset=count>1&&zoom>=1.5&&shownHere?CROWD_SLOTS[slot]||[0,0]:[0,0];
+      const x=count>1&&zoom>=1.5?
+        group.tileX+.5+offset[0]+(presentation.x-p.x):presentation.x;
+      const y=count>1&&zoom>=1.5?
+        group.tileY+.5+offset[1]+(presentation.y-p.y):presentation.y;
+      sprites.set(p.id,{id:p.id,key:groupId,x,y,scale,visible:shownHere,
+        size:count,moving:!!presentation.moving,slot,
+        realX:p.x,realY:p.y});
+    }
+    if(count>1)groups.push({key:groupId,count,ids:members.map(p=>p.id),
+      visibleIds:shownIds,hidden:count-shown.size,
+      x:group.tileX+.5,y:group.tileY+.5});
+  }
+  return {sprites,groups};
+}
+function crowdBadge(camera,group,w,h){
+  const p=toScreen(camera,group.x,group.y,w,h);
+  const tile=Math.min(w/camera.width,h/camera.height)*camera.zoom;
+  return {x:p.x+Math.max(9,Math.min(26,tile*.43)),
+    y:p.y-Math.max(10,Math.min(30,tile*.58)),
+    radius:group.count>=100?15:12};
+}
+function hitCrowd(groups,camera,px,py,w,h){
+  let closest=null,dist=Infinity;
+  for(const g of groups||[]){
+    const marker=crowdBadge(camera,g,w,h),d=distance({x:px,y:py},marker);
+    if(d<=marker.radius+3&&d<dist){closest=g;dist=d;}
+  }
+  return closest;
+}
+function hitCharacter(sprites,camera,px,py,w,h){
+  const tile=Math.min(w/camera.width,h/camera.height)*camera.zoom;
+  let closest=null,dist=Infinity;
+  for(const item of sprites?.values()||[]){
+    if(!item.visible)continue;
+    const screen=toScreen(camera,item.x+.5,item.y+.5,w,h);
+    const d=distance(screen,{x:px,y:py});
+    // The hit disk matches the displayed scaled head. Never use real position.
+    const radius=Math.max(6,Math.min(24,tile*item.scale*.49));
+    if(d<=radius&&d<dist){closest=item;dist=d;}
+  }
+  return closest;
+}
+
 const API={createCamera,transform,toWorld,toScreen,focus,setZoom,pan,bounds,
-  snapshot,transitions,position,drawActing};
+  snapshot,transitions,position,drawActing,
+  arrangeCrowds,crowdBadge,hitCrowd,hitCharacter};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 if(root)root.WOG_LIVING_WORLD=API;
 })(typeof window!=='undefined'?window:null);

@@ -1,0 +1,41 @@
+name: Issue 15 Crowd selection fast
+on:
+  push:
+    branches:
+      - codex/issue-15-crowd-selection-v0
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-15-crowd-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-15-crowd-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  crowd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Syntax and visible-citizen selection contracts
+        working-directory: poc/v2
+        run: |
+          node --check src/living-world.js
+          node --check src/app.js
+          node --check tests/crowd-selection.test.cjs
+          timeout 60s node --test tests/crowd-selection.test.cjs tests/living-world.test.cjs tests/miracle-parameters.test.cjs tests/need-location.test.cjs
+      - name: Map overlays, layout and battle regressions
+        working-directory: poc/v2
+        run: timeout 50s node --test tests/map-layers.test.cjs tests/layout.test.cjs tests/polity-intervention-ui.test.cjs
+      - name: Smoke and synced offline playable
+        working-directory: poc/v2
+        run: |
+          timeout 20s npm run smoke
+          timeout 20s npm run check:playable

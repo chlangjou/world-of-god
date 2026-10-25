@@ -340,3 +340,30 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
 .map-layer-help{font:400 10px/1.4 system-ui;color:#b5c8c1;margin-top:6px}
 @media(max-height:650px){.map-layers{top:5px;right:5px}.map-layers-toggle{padding:5px 7px}
  .map-layers-panel{padding:7px;max-height:calc(100cqh - 42px)}}
+
+/* Issue #15 Living World: Camera is display-only and keeps the whole page fixed. */
+.map-wrap canvas{touch-action:none;cursor:crosshair}
+.map-wrap canvas:active{cursor:grabbing}
+.camera-controls{position:absolute;z-index:4;left:12px;top:9px;display:flex;align-items:center;gap:4px;
+  padding:4px 5px;border:1px solid #60756e;border-radius:8px;background:#172c2bdf;
+  box-shadow:0 2px 8px #08171588;max-width:calc(100% - 268px)}
+.camera-controls button{font:inherit;min-width:28px;min-height:27px;font-size:11px;
+  color:#f1dfb5;background:#31483e;border:1px solid #668073;border-radius:5px;padding:4px 6px;cursor:pointer}
+.camera-controls button:disabled{opacity:.38;cursor:default}
+.camera-controls #zoomResetBtn{min-width:70px}
+.camera-controls #followPersonBtn[aria-pressed="true"]{background:#4d6655;color:#fff4c6;border-color:#e2bb6e}
+.follow-status{position:absolute;z-index:3;top:52px;left:12px;max-width:65%;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;padding:5px 8px;background:#142f2be8;color:#e7dbb9;border:1px solid #5b796d;
+  border-radius:5px;font-size:10px}
+.follow-status[hidden]{display:none}
+.map-tip{top:83px;max-width:220px}
+@media(max-width:1000px){
+  .camera-controls{max-width:calc(100% - 120px);top:6px;left:6px}
+  .camera-controls button{padding:3px 5px;font-size:10px;min-width:24px}
+  .camera-controls #zoomResetBtn{min-width:59px}
+  .follow-status{left:6px;top:45px}
+  .map-tip{top:76px}
+}
+@media(max-width:600px){
+  .camera-controls #followPersonBtn{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}

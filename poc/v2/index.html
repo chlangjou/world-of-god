@@ -73,7 +73,14 @@
           </div>
         </div>
         <div class="map-wrap">
-          <canvas id="world" width="768" height="768" aria-label="世界地圖，可點選居民或施展神蹟" tabindex="0"></canvas>
+          <canvas id="world" width="768" height="768" aria-label="世界地圖，滾輪縮放、拖曳平移，點選居民或施展神蹟" tabindex="0"></canvas>
+          <div class="camera-controls" role="group" aria-label="世界視角控制">
+            <button id="zoomOutBtn" type="button" aria-label="縮小世界地圖" title="縮小一級">−</button>
+            <button id="zoomResetBtn" type="button" title="恢復全地圖">1× · 全圖</button>
+            <button id="zoomInBtn" type="button" aria-label="放大世界地圖" title="放大一級">＋</button>
+            <button id="followPersonBtn" type="button" aria-pressed="false" title="追蹤居民選單目前選取的真人">追蹤居民</button>
+          </div>
+          <div id="followStatus" class="follow-status" hidden aria-live="off"></div>
           <button id="battleFocusBtn" type="button" class="battle-focus" hidden aria-live="polite" title="定位正在發生的人類戰事"></button>
           <div class="map-layers" aria-label="地圖資訊圖層">
             <button type="button" id="mapLayersButton" class="map-layers-toggle" aria-controls="mapLayersPanel" aria-expanded="false" title="調整地圖資訊顯示（不影響世界模擬）">圖層 · 一般</button>
@@ -195,6 +202,6 @@
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <input id="importFile" type="file" accept="application/json,.json" hidden>
-  <script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/victory.js"></script><script src="src/politics.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/app.js"></script>
+  <script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/victory.js"></script><script src="src/politics.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/living-world.js"></script><script src="src/app.js"></script>
 </body>
 </html>

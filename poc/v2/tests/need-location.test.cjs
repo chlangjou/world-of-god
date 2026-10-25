@@ -73,7 +73,8 @@ async function boot(){
     WOG_SHRINE_PROFILE:require('../config/shrine-temple-v0.1.json'),
     WOG_MOBILITY_PROFILE:require('../config/mobility-contact-v0.1.json'),
     WOG_VICTORY_PROFILE:require('../config/victory-dominance-v0.1.json'),
-    WOG_POLITY_PROFILE:{...require('../config/polity-command-v0.1.json'),enabled:false}};
+    WOG_POLITY_PROFILE:{...require('../config/polity-command-v0.1.json'),enabled:false},
+    WOG_LIVING_WORLD:require('../src/living-world.js')};
   const source=read('src/app.js').replace(/\}\)\(\);\s*$/,
     'window.__needTest={state:()=>state,render,currentNeed,locateNeed,intervention:()=>lastIntervention};})();');
   assert.ok(source.includes('window.__needTest'),'test harness must attach to the actual browser source');

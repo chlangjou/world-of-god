@@ -65,7 +65,7 @@ async function boot(){
   const window={WoG2:W,WOG_AGRICULTURE_PROFILE:agriculture,
     WOG_RELIGION_PROFILE:religion,WOG_DIVINE_PROFILE:divine};
   const source=read('src/app.js').replace(/\}\)\(\);\s*$/,
-    'window.__needTest={state:()=>state,render,currentNeed,locateNeed};})();');
+    'window.__needTest={state:()=>state,render,currentNeed,locateNeed,intervention:()=>lastIntervention};})();');
   assert.ok(source.includes('window.__needTest'),'test harness must attach to the actual browser source');
   new Function('window','document','performance','requestAnimationFrame','setTimeout',
     'clearTimeout','confirm','localStorage','URL','Blob','fetch',source)(
@@ -150,4 +150,44 @@ test('clicking the Priest prayer bubble selects its source; paging chooses a dif
   assert.notEqual(app.currentNeed()?.prayer.id,original,
     'Priest navigator must update the map target too');
   assert.ok(element('needsPanel').querySelectorAll('[data-need-locate]').length);
+});
+
+test('a real petition offers optional Miracle targeting without changing DP, events or simulation time',async()=>{
+  const {app,element}=await boot(),state=app.state();
+  threeNeeds(state);app.render();
+  assert.match(element('needsPanel').innerHTML,/已等待/);
+  const actions=element('needsPanel').querySelectorAll('[data-need-plan]');
+  assert.equal(actions.length,3);
+  const beforeDP=state.god.dp,beforeEffects=state.effects.length,beforeHour=state.hour;
+  actions[0].onclick();
+  assert.equal(app.currentNeed()?.prayer.id,'need-location-2');
+  assert.equal(element('divinePowerSelect').value,'rain');
+  assert.equal(state.god.dp,beforeDP);
+  assert.equal(state.effects.length,beforeEffects);
+  assert.equal(state.hour,beforeHour);
+  assert.equal(app.intervention(),null);
+});
+
+test('Rain report distinguishes successful casting, unverified benefits and a correctly linked answered prayer',async()=>{
+  const {app,element,canvas}=await boot(),state=app.state();
+  threeNeeds(state);app.render();
+  element('needsPanel').querySelectorAll('[data-need-plan]')[0].onclick();
+  const center=app.currentNeed().location.center;
+  const beforeDP=state.god.dp;
+  const unit=canvas.width/state.width;
+  canvas.listeners.click({clientX:(center.x+.5)*unit,clientY:(center.y+.5)*unit});
+  const result=app.intervention();
+  assert.ok(result,'cast feedback remains after toast expires');
+  assert.equal(result.type,'rain');
+  assert.equal(result.prayerId,'need-location-2');
+  assert.ok(result.effectId);
+  assert.ok(state.god.dp<beforeDP);
+  assert.equal(element('interventionPanel').hidden,false);
+  assert.match(element('interventionPanel').innerHTML,/祈求尚待水分改善與實際產糧/);
+  const prayer=state.religion.prayers.find(p=>p.id===result.prayerId);
+  prayer.status='answered';prayer.castId='other-rain-effect';app.render();
+  assert.doesNotMatch(element('interventionPanel').innerHTML,/已核實：本次雨雲/);
+  prayer.castId=result.effectId;app.render();
+  assert.match(element('interventionPanel').innerHTML,/已核實：本次雨雲/);
+  assert.equal(state.lastIntervention,undefined,'UI observation stays outside deterministic save');
 });

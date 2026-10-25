@@ -1609,7 +1609,8 @@
       const rivalSaint=saint&&faction.id!==state.religion.id;
       const rivalPriest=priest&&faction.id!==state.religion.id;
       const rival=faction&&faction.id!==state.religion.id;
-      c.beginPath();c.arc(px,py,p.stage==='child'?size*.23:size*.32,0,Math.PI*2);
+      // The whole avatar (not only the head) is scaled by age in Living World.
+      c.beginPath();c.arc(px,py,size*.32,0,Math.PI*2);
       c.fillStyle=rivalSaint?'#ff8ca7':rivalPriest?'#ffd69e':
         saint?'#80e4eb':priest?'#c4a2fa':
         faction?factionColor(faction.id):p.devotion>=20?'#e1e6c2':'#bcd9d2';

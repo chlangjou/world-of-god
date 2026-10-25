@@ -7357,7 +7357,7 @@ function drawActing(c,p,x,y,cell,time,options={}){
   const work=['farm','forage','wood','stone','fiber','build','build_granary','build_ritual','visit'].includes(p.activity);
   const prayer=['pray','worship','preach'].includes(p.activity);
   const resting=p.activity==='rest'||p.activity==='family'||p.activity==='care';
-  const small=p.stage==='child',headR=cell*(small?.23:.32);
+  const headR=cell*.32; // all ages keep consistent head/body proportions; size comes from characterScale
   const beat=Math.sin(time*(travel?11:work?6:3)+(p.id.charCodeAt(p.id.length-1)||0));
   c.save();
   // Eyes and eyebrows on actual faction-coloured head.
@@ -7424,6 +7424,16 @@ const CROWD_SLOTS=Object.freeze([
   [-.34,-.34],[.34,-.34],[0,.36],[-.34,.36],[.34,.36],
   [0,-.60],[-.34,-.76],[.34,-.76]
 ]);
+// Stable size: camera zoom and the resident's age determine visible size.
+ // Number of people in the same world cell never changes an individual's size.
+function characterScale(person,zoom){
+  const level=clamp((zoom-1)/3,0,1);
+  const cameraSize=1-.48*level; // 1× overview: 1; close-up ≥4×: .52
+  const youth=person.stage==='child'?
+    clamp(.58+.42*(Number.isFinite(person.age)?person.age:9)/18,.58,.98):1;
+  const elder=person.stage==='elder'?.95:1;
+  return cameraSize*youth*elder;
+}
 function crowdLimit(zoom){
   return zoom<1.5?1:zoom<3?3:zoom<6?5:8;
 }
@@ -7462,8 +7472,6 @@ function arrangeCrowds(people,pose,zoom,slotMemory=new Map(),selectedId=null){
         assigned.set(p.id,slot);occupied.add(slot);
       }
     }
-    const scale=count===1||zoom<1.5?1:
-      count<=2?.55:count<=5?.37:.28;
     const shownIds=visible.map(p=>p.id);
     for(const p of members){
       const presentation=pose?.get(p.id)||p;
@@ -7475,7 +7483,8 @@ function arrangeCrowds(people,pose,zoom,slotMemory=new Map(),selectedId=null){
         group.tileX+.5+offset[0]+(presentation.x-p.x):presentation.x;
       const y=count>1&&zoom>=1.5?
         group.tileY+.5+offset[1]+(presentation.y-p.y):presentation.y;
-      sprites.set(p.id,{id:p.id,key:groupId,x,y,scale,visible:shownHere,
+      sprites.set(p.id,{id:p.id,key:groupId,x,y,
+        scale:characterScale(p,zoom),visible:shownHere,
         size:count,moving:!!presentation.moving,slot,
         realX:p.x,realY:p.y});
     }
@@ -7515,7 +7524,7 @@ function hitCharacter(sprites,camera,px,py,w,h){
 }
 
 const API={createCamera,transform,toWorld,toScreen,focus,setZoom,pan,bounds,
-  snapshot,transitions,position,drawActing,
+  snapshot,transitions,position,drawActing,characterScale,
   arrangeCrowds,crowdBadge,hitCrowd,hitCharacter};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 if(root)root.WOG_LIVING_WORLD=API;
@@ -9133,7 +9142,8 @@ if(root)root.WOG_LIVING_WORLD=API;
       const rivalSaint=saint&&faction.id!==state.religion.id;
       const rivalPriest=priest&&faction.id!==state.religion.id;
       const rival=faction&&faction.id!==state.religion.id;
-      c.beginPath();c.arc(px,py,p.stage==='child'?size*.23:size*.32,0,Math.PI*2);
+      // The whole avatar (not only the head) is scaled by age in Living World.
+      c.beginPath();c.arc(px,py,size*.32,0,Math.PI*2);
       c.fillStyle=rivalSaint?'#ff8ca7':rivalPriest?'#ffd69e':
         saint?'#80e4eb':priest?'#c4a2fa':
         faction?factionColor(faction.id):p.devotion>=20?'#e1e6c2':'#bcd9d2';

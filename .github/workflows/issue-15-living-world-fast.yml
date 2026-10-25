@@ -1,0 +1,41 @@
+name: Issue 15 Living World fast
+on:
+  push:
+    branches:
+      - codex/issue-15-living-world-v0
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-15-living-world-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: living-world-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  living-world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Syntax / camera / original interaction contract
+        working-directory: poc/v2
+        run: |
+          node --check src/living-world.js
+          node --check src/app.js
+          node --check tests/living-world.test.cjs
+          timeout 65s node --test tests/living-world.test.cjs tests/need-location.test.cjs tests/miracle-parameters.test.cjs
+      - name: Previously accepted layers / layout / battle / focus
+        working-directory: poc/v2
+        run: timeout 55s node --test tests/map-layers.test.cjs tests/layout.test.cjs tests/polity-intervention-ui.test.cjs
+      - name: Smoke and offline playable parity
+        working-directory: poc/v2
+        run: |
+          timeout 20s npm run smoke
+          timeout 20s npm run check:playable

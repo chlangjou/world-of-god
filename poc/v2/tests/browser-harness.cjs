@@ -62,7 +62,7 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   const win={WoG2:sim,WOG_AGRICULTURE_PROFILE:ag,
     WOG_RELIGION_PROFILE:religion,WOG_DIVINE_PROFILE:divine,
     WOG_OPPONENT_PROFILE:opponent,WOG_ORACLE_STRATEGY_PROFILE:strategy,
-    WOG_PLAYTEST:playtest,
+    WOG_PLAYTEST:playtest,WOG_LIVING_WORLD:require('../src/living-world.js'),
     WOG_PLAYTEST_PROFILE:{...playtestConfig,defaultScenario:'native'},
     WOG_MOBILITY_PROFILE:require('../config/mobility-contact-v0.1.json'),WOG_VICTORY_PROFILE:require('../config/victory-dominance-v0.1.json'),WOG_SHRINE_PROFILE:require('../config/shrine-temple-v0.1.json'),WOG_POLITY_PROFILE:politicsProfile};
   const memory=new Map(),storage={
@@ -71,7 +71,10 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   };
   const original=fs.readFileSync(path.join(__dirname,'../src/app.js'),'utf8');
   const source=original.replace(/\}\)\(\);\s*$/,'window.__getWorld=()=>state;window.__render=render;window.__draw=draw;'+
-    'window.__frame=animate;window.__setSpeed=x=>{speed=x};window.__runtime=()=>({paused,speed,lastAttentionSeq});})();');
+    'window.__frame=animate;window.__setSpeed=x=>{speed=x};window.__camera=()=>({...camera});'+
+    'window.__position=id=>{const p=state.people.find(x=>x.id===id);return p&&L.position(motions.get(id),p,animationClock)};'+
+    'window.__setVisualMotion=(id,r)=>motions.set(id,r);'+
+    'window.__runtime=()=>({paused,speed,lastAttentionSeq});})();');
   assert.notEqual(original,source,'test instrumentation must attach to actual browser code');
   new Function('window','document','performance','requestAnimationFrame','setTimeout',
     'clearTimeout','confirm','localStorage','URL','Blob','fetch',source)(
@@ -81,7 +84,9 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   await new Promise(resolve=>setImmediate(resolve));
   return {
     el:get,canvas,render:()=>win.__render(),draw:()=>{drawing.length=0;win.__draw();return drawing;},world:()=>win.__getWorld(),
-    frame:t=>win.__frame(t),runtime:()=>win.__runtime(),setSpeed:x=>win.__setSpeed(x),
+    frame:t=>win.__frame(t),runtime:()=>win.__runtime(),camera:()=>win.__camera(),
+    position:id=>win.__position(id),setMotion:(id,r)=>win.__setVisualMotion(id,r),
+    setSpeed:x=>win.__setSpeed(x),
     speedButton:x=>speedButtons.find(b=>Number(b.dataset.speed)===x),
     choose:id=>{get('divinePowerSelect').value=id;get('divinePowerSelect').onchange();},
     set:(id,value)=>{get(id).value=String(value);get(id).listeners.input();},

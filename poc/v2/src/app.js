@@ -1,10 +1,14 @@
 /* Browser-only view/input adapter. All authoritative simulation resides in sim.js. */
 (() => { 'use strict';
-  const S = window.WoG2, Playtest = window.WOG_PLAYTEST;
+  const S = window.WoG2, Playtest = window.WOG_PLAYTEST, L = window.WOG_LIVING_WORLD;
+  if(!L)throw Error('Living World renderer module is missing');
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
   let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeMineralExperimentProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, activePolityProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
+  // Camera, motion and expressions are presentation-only. Never serialized.
+  let camera=L.createCamera(state.width,state.height),motions=new Map(),healedUntil=new Map();
+  let animationClock=0,lastVisualDraw=0,dragPan=null,ignoreMapClick=false;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
   let lastMiraclePreview=null, lastCastVisual=null, lastIntervention=null;
   let visibleInjured=[],healLock=null; // UI-only snapshots, never stored in the world
@@ -70,6 +74,60 @@
     $('mapLayersButton').setAttribute('aria-expanded','false');
   }
 
+  function canvasPointer(e){
+    const r=canvas.getBoundingClientRect();
+    return {x:(e.clientX-r.left)*canvas.width/r.width,
+      y:(e.clientY-r.top)*canvas.height/r.height};
+  }
+  function worldPointer(e){
+    const px=canvasPointer(e),world=L.toWorld(camera,px.x,px.y,canvas.width,canvas.height);
+    return {x:Math.floor(world.x),y:Math.floor(world.y),px:px.x,py:px.y};
+  }
+  function resetVisualWorld(){
+    camera=L.createCamera(state.width,state.height);
+    motions.clear();healedUntil.clear();animationClock=0;dragPan=null;ignoreMapClick=false;
+    syncCameraControls();
+  }
+  function syncCameraControls(){
+    $('zoomInBtn').disabled=camera.zoom>=8;
+    $('zoomOutBtn').disabled=camera.zoom<=1;
+    $('zoomResetBtn').textContent=Number(camera.zoom.toFixed(1))+'× · 全圖';
+    $('zoomResetBtn').title='重設成 1× 全世界地圖';
+    const tracked=state.people.find(p=>p.id===camera.followId&&p.alive);
+    $('followPersonBtn').textContent=tracked?'跟隨：'+tracked.name:'追蹤居民';
+    $('followPersonBtn').setAttribute('aria-pressed',String(!!tracked));
+  }
+  function zoomMap(next,anchorX=canvas.width/2,anchorY=canvas.height/2){
+    camera.followId=null;
+    L.setZoom(camera,next,anchorX,anchorY,canvas.width,canvas.height);
+    syncCameraControls();draw();
+  }
+  function focusCamera(point){
+    if(point&&camera.zoom>1&&!camera.followId){
+      L.focus(camera,point.x+.5,point.y+.5);
+      syncCameraControls();
+    }
+  }
+  function updateCameraFollow(){
+    if(!camera.followId||camera.zoom<=1)return;
+    const person=state.people.find(p=>p.id===camera.followId&&p.alive);
+    if(!person){camera.followId=null;syncCameraControls();return;}
+    const at=L.position(motions.get(person.id),person,animationClock);
+    L.focus(camera,at.x+.5,at.y+.5);
+  }
+  function followSelected(){
+    if(camera.followId){
+      camera.followId=null;
+    }else{
+      const p=state.people.find(v=>v.id===chosen&&v.alive);
+      if(!p){say('目前沒有可以追蹤的在世居民。');return;}
+      camera.zoom=Math.max(4,camera.zoom);
+      camera.followId=p.id;
+      updateCameraFollow();
+      showInspector('person');
+    }
+    syncCameraControls();render();
+  }
   function selectSpeed(value){
     if(!SPEED_PRESETS.includes(value))return false;
     speed=value;acc=0;
@@ -302,7 +360,7 @@
     const prayer=state.religion.prayers.find(p=>p.id===id&&p.status==='open');
     const location=prayer&&S.prayerLocation(state,prayer.id);
     if(!location){selectedNeedId=null;render();say('需求已結束，或缺少可確認的來源位置。');return;}
-    selectedNeedId=prayer.id;cursor=null;render();
+    selectedNeedId=prayer.id;cursor=null;focusCamera(location.center);render();
     say(`已定位 ${needTitles[prayer.type]||'祈求'}：${location.locationName} ${format(location.center.x)}, ${format(location.center.y)}`);
   }
   function prepareNeedMiracle(id){
@@ -310,7 +368,7 @@
     const location=prayer&&S.prayerLocation(state,prayer.id);
     const advice=needActions[prayer?.type];
     if(!location||!advice){say('此祈求沒有可定位的建議施法位置。');return;}
-    selectedNeedId=prayer.id;cursor={...location.center};
+    selectedNeedId=prayer.id;focusCamera(location.center);cursor={...location.center};
     selectMiracleByHotkey(advice.id); // Just prepare; never auto-cast.
     const preview=S.evaluateMiracle(state,advice.id,
       {x:location.center.x,y:location.center.y,...opts()});
@@ -413,6 +471,7 @@
       b.listenerCount-a.listenerCount||a.id.localeCompare(b.id));
     const target=markers[0];
     focusedOracleId=oracleId;
+    focusCamera({x:target.x,y:target.y});
     cursor={x:target.x,y:target.y};
     if(target.townId)selectedTownId=target.townId;
     const pairing=target.miracle;
@@ -446,9 +505,15 @@
   }
   function nearVisibleInjured(at){
     if(!at)return null;
-    const candidates=visibleInjured.filter(v=>Math.hypot(v.x-at.x,v.y-at.y)<=2.5);
-    candidates.sort((a,b)=>Math.hypot(a.x-at.x,a.y-at.y)-
-      Math.hypot(b.x-at.x,b.y-at.y)||a.id.localeCompare(b.id));
+    // Hit a *visible* patient's animated position; Heal remains cast at the
+    // authoritative current position inside healAimAt().
+    const candidates=visibleInjured.map(v=>{
+      const person=state.people.find(p=>p.id===v.id&&p.alive);
+      const display=person&&camera.zoom>1?L.position(motions.get(v.id),person,animationClock):v;
+      return {...v,screenX:display.x,screenY:display.y};
+    }).filter(v=>Math.hypot(v.screenX-at.x,v.screenY-at.y)<=2.5);
+    candidates.sort((a,b)=>Math.hypot(a.screenX-at.x,a.screenY-at.y)-
+      Math.hypot(b.screenX-at.x,b.screenY-at.y)||a.id.localeCompare(b.id));
     return candidates[0]||null;
   }
   function healAimAt(at){
@@ -636,7 +701,7 @@
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
     focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;lastIntervention=null;healLock=null;visibleInjured=[];paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;selectedDisputeId=null;lastBattleMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
-    render();
+    resetVisualWorld();render();
   }
   $('playtestScenario').addEventListener('change',e=>{
     if(profileLoading)return;
@@ -696,7 +761,7 @@
     $('opponentMode').disabled=scenarioId()!=='native';
     $('aiDifficulty').value=state.opponent?.difficulty||'standard';
     $('aiDifficulty').disabled=scenarioId()==='duel';
-    focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;lastIntervention=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;selectedDisputeId=null;lastBattleMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();announceVictoryIfNeeded();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+    focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;lastIntervention=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;selectedDisputeId=null;lastBattleMarkup=null;$('events').scrollTop=0;resetVisualWorld();if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();announceVictoryIfNeeded();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
@@ -783,6 +848,14 @@
     const st=S.stats(state), frontier=S.frontierStatus(state), current=state.people.find(p=>p.id===chosen);
     const battle=visibleConflict();
     renderBattleStatus();
+    syncCameraControls();
+    const observed=state.people.find(p=>p.id===camera.followId&&p.alive);
+    $('followStatus').hidden=!observed;
+    if(observed)$('followStatus').textContent=
+      observed.name+' · '+(taskName[observed.activity]||observed.activity)+
+      ' · 健康 '+format(observed.health)+' / 100'+
+      (observed.hunger>.75?' · 糧食壓力':'')+
+      ((healedUntil.get(observed.id)||0)>animationClock?' · 剛受到真實治療':'');
     $('day').textContent=`第 ${st.day} 日`;
     $('weather').textContent=st.phase==='dry'?'乾旱期':st.phase==='rainy'?'雨季':'和暖時節';
     $('peopleMetric').textContent=st.people;
@@ -1215,10 +1288,19 @@
     draw();
   }
   function draw() {
+    updateCameraFollow();
     const size=canvas.width/state.width;
     const c=ctx;c.clearRect(0,0,canvas.width,canvas.height);
-    const time=performance.now()/1000;
-    for(const t of state.tiles) {
+    const time=animationClock/1000;
+    const t=L.transform(camera,canvas.width,canvas.height);
+    c.save();c.translate(t.tx,t.ty);
+    c.scale(t.scaleX/size,t.scaleY/(canvas.height/state.height));
+    const visible=L.bounds(camera,canvas.width,canvas.height);
+    for(const tile of state.tiles) {
+      const a=tile;
+      if(camera.zoom>1&&(a.x<visible.minX-2||a.x>visible.maxX+2||
+          a.y<visible.minY-2||a.y>visible.maxY+2))continue;
+      const t=a;
       let color;
       if(t.terrain==='river') color='#478597';
       else if(t.terrain==='forest') color=t.moisture<.3?'#5c6750':'#3d6851';
@@ -1422,7 +1504,9 @@
         polity.militia.memberIds.includes(p.id));
       const ranks=soldierOf?.militia.memberIds||[];
       const visualOffset=soldierOf?(ranks.indexOf(p.id)-(ranks.length-1)/2)*size*.88:0;
-      const px=(p.x+.5)*size+visualOffset,py=(p.y+.5)*size;
+      const visual=camera.zoom>1?L.position(motions.get(p.id),p,animationClock):
+        {x:p.x,y:p.y,moving:false};
+      const px=(visual.x+.5)*size+visualOffset,py=(visual.y+.5)*size;
       const isLeader=(state.politics?.polities||[]).some(polity=>polity.leaderId===p.id);
       const faction=allFaithForMap.find(f=>f.id===p.religionId);
       const saint=!!faction?.saints.includes(p.id),priest=!!faction?.priests.includes(p.id);
@@ -1436,7 +1520,8 @@
       c.fill();c.strokeStyle='#21342fcc';c.lineWidth=1.4;c.stroke();
       // Readable human pictogram at 12px/map-cell. Head remains existing
       // religion/Priest/Saint color; arms, body, legs add human identity.
-      const coat=c.fillStyle,step=['march','retreat','travel','fight'].includes(p.activity)?
+      const coat=c.fillStyle,step=(visual.moving||
+        ['march','retreat','travel','fight'].includes(p.activity))?
         Math.sin(time*9+(p.x+p.y))*.12*size:0;
       c.strokeStyle='#1b312f';c.lineWidth=Math.max(1,size*.16);
       c.beginPath();
@@ -1485,6 +1570,8 @@
           c.beginPath();c.arc(px,py,size*(.55+idx*.11),0,Math.PI*2);c.stroke();
         }
       }
+      L.drawActing(c,p,px,py,size,time,{zoom:camera.zoom,moving:visual.moving,
+        healed:(healedUntil.get(p.id)||0)>animationClock,coat});
       if(p.id===chosen){c.strokeStyle='#faf5c7';c.lineWidth=2;c.beginPath();c.arc(px,py,size*.84,0,Math.PI*2);c.stroke();}
     }
     // A speech bubble belongs only to a Priest who has collected real open petitions.
@@ -1492,7 +1579,8 @@
       const priest=state.people.find(p=>p.id===id&&p.alive);
       if(!priest)continue;
       const petitions=S.priestPetitions(state,id);if(!petitions.length)continue;
-      const b=priestBubblePosition(priest,size);
+      const onScreen=camera.zoom>1?L.position(motions.get(id),priest,animationClock):priest;
+      const b=priestBubblePosition(onScreen,size);
       c.save();c.fillStyle='#f6e2ae';c.strokeStyle='#624e88';c.lineWidth=1.7;
       c.beginPath();c.arc(b.x,b.y,b.radius,0,Math.PI*2);c.fill();c.stroke();
       c.fillStyle='#4b3863';c.font=`bold ${Math.round(b.radius*1.05)}px system-ui`;c.textAlign='center';
@@ -1618,6 +1706,7 @@
       }
       c.restore();
     }
+    c.restore(); // screen-fixed battle inset must not scale with the map camera
     // A local 4× battle close-up solves the 64×64-map readability limit.
     // This is presentation only: every health bar belongs to a real citizen;
     // battle resolution remains in the deterministic human polity kernel.
@@ -1675,7 +1764,8 @@
     }
   }
   function onMap(e) {
-    const rect=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-rect.left)*state.width/rect.width), y=Math.floor((e.clientY-rect.top)*state.height/rect.height);
+    if(ignoreMapClick){ignoreMapClick=false;return;}
+    const point=worldPointer(e),x=point.x,y=point.y;
     if(x<0||y<0||x>=state.width||y>=state.height)return;
     if(!armedMiracle&&layerOn('religion')){
       const oracle=oracleMarkerAt({x,y});
@@ -1685,6 +1775,8 @@
       const aim=healAimAt({x,y});
       const id=armedMiracle;
       const previousDevotion=new Map(state.people.filter(p=>p.alive).map(p=>[p.id,p.devotion]));
+      const beforeHealing=id==='heal'?new Map(state.people.filter(p=>p.alive)
+        .map(p=>[p.id,p.health])):null;
       const linked=currentNeed();
       const r=S.castMiracle(state,id,{x:aim.x,y:aim.y,...opts()});
       const effectTime=r.instant?'瞬間（0 日）':format(r.durationDays,0)+' 日';
@@ -1692,6 +1784,9 @@
         ` 已${r.overcast?'強制':''}施展（${r.costMultiplier}×），消耗 ${r.cost} DP；`+
         `半徑 ${r.radius} 格，作用時間 ${effectTime}；結果見需求分頁。`:r.reason);
       if(r.ok){
+        if(beforeHealing)for(const patient of state.people)
+          if(patient.alive&&patient.health>(beforeHealing.get(patient.id)??patient.health))
+            healedUntil.set(patient.id,animationClock+1800);
         const changed=state.people.filter(p=>previousDevotion.has(p.id)&&
           p.devotion!==previousDevotion.get(p.id)&&
           p.lastFaithEvidence?.hour===state.hour&&p.lastFaithEvidence?.godId===state.god.id);
@@ -1708,15 +1803,17 @@
       }
       render();return;
     }
-    const mx=(e.clientX-rect.left)*canvas.width/rect.width;
-    const my=(e.clientY-rect.top)*canvas.height/rect.height;
+    const mx=point.px,my=point.py;
     let marked=null,hit=Infinity;
     for(const id of (layerOn('religion')?state.religion.priests:[])){
       const priest=state.people.find(p=>p.id===id&&p.alive);
       if(!priest||!S.priestPetitions(state,id).length)continue;
-      const b=priestBubblePosition(priest,canvas.width/state.width);
-      const d=Math.hypot(mx-b.x,my-b.y);
-      if(d<=b.radius+5&&d<hit){marked=priest;hit=d;}
+      const onScreen=camera.zoom>1?L.position(motions.get(id),priest,animationClock):priest;
+      const b=priestBubblePosition(onScreen,canvas.width/state.width);
+      const at=L.toScreen(camera,b.x/(canvas.width/state.width),
+        b.y/(canvas.width/state.width),canvas.width,canvas.height);
+      const d=Math.hypot(mx-at.x,my-at.y);
+      if(d<=b.radius*camera.zoom+5&&d<hit){marked=priest;hit=d;}
     }
     if(marked){
       if(activePriestId!==marked.id)priestPetitionIndex=0;
@@ -1747,13 +1844,23 @@
         '；查看所在聚落的活動與建造進度。');
       return;
     }
-    let selected=null,dd=Infinity;for(const p of state.people){if(!p.alive)continue;const d=Math.hypot(p.x-x,p.y-y);if(d<dd){selected=p;dd=d;}}
-    if(selected && dd<3.2){chosen=selected.id;showInspector('person');say(`正在觀察 ${selected.name} 的生活與工作選擇`);}else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
+    let selected=null,dd=Infinity;for(const p of state.people){
+      if(!p.alive)continue;
+      const at=camera.zoom>1?L.position(motions.get(p.id),p,animationClock):p;
+      const d=Math.hypot(at.x-x,at.y-y);
+      if(d<dd){selected=p;dd=d;}
+    }
+    if(selected&&dd<(camera.zoom>1?1.25:3.2)){
+      chosen=selected.id;
+      if(camera.followId)camera.followId=chosen;
+      showInspector('person');say(`正在觀察 ${selected.name} 的生活與工作選擇`);
+    }else say(`土地 (${x}, ${y})：點選居民標記可查看個人的行動原因。`);
   }
   function receiveFastForwardNotice(notes){
     const note=notes.find(v=>v.type==='battle'||v.type==='battle-wounded')||
       notes.find(v=>v.level==='pause')||notes.find(v=>v.level==='slow');
     if(!note)return false;
+    focusCamera(note.center);
     selectSpeed(note.type==='battle'||note.type==='battle-wounded'?0.1:1);
     attentionFocus=note;
     if(note.type==='political-agenda'){
@@ -1770,6 +1877,7 @@
       // giving 20 real seconds per simulation day; users can still change it.
       // No real-time reaction deadline, even when prior speed was 16×.
       paused=true;
+      motions.clear(); // urgent auto-pause shows the real snapshot, never a deferred visual position
       attentionFocus={...note,level:'pause'};
       say(note.type==='battle'?
         '民兵接戰，模擬已自動暫停（尚未造成戰鬥傷害）。已切至 0.1×；按繼續後慢速交戰，仍可施放神蹟。':
@@ -1794,15 +1902,19 @@
     return true;
   }
   function animate(t) {
-    const dt=Math.min(250,t-(previous||t));previous=t;
+    const dt=Math.max(0,Math.min(250,t-(previous||t)));previous=t;
     if(!paused){
+      animationClock+=dt;
       acc+=dt/1000*ticksPerRealSecond*speed;
       const count=Math.min(Math.floor(acc),200);
       if(count>0){
         acc-=count;
         if(speed<=1){
           for(let i=0;i<count;i++){
+            const before=(camera.zoom>1&&speed<=4)?L.snapshot(state):null;
             S.advanceTicks(state,1);
+            motions=before?L.transitions(before,state,animationClock,
+              1000/(ticksPerRealSecond*speed)):new Map();
             if(announceVictoryIfNeeded())break;
             const items=(state.attention?.items||[]).filter(n=>n.seq>lastAttentionSeq);
             lastAttentionSeq=state.attention?.seq||lastAttentionSeq;
@@ -1816,7 +1928,10 @@
           // Check each simulation tick, not the end of a fast-forward batch:
           // otherwise an urgent event could be skipped by many simulated days.
           for(let i=0;i<count;i++){
+            const before=(camera.zoom>1&&speed<=4)?L.snapshot(state):null;
             S.advanceTicks(state,1);
+            motions=before?L.transitions(before,state,animationClock,
+              1000/(ticksPerRealSecond*speed)):new Map();
             if(announceVictoryIfNeeded())break;
             const items=(state.attention?.items||[]).filter(n=>n.seq>lastAttentionSeq);
             if(items.length){
@@ -1827,7 +1942,10 @@
         }
       }
     }
-    if(t-lastDraw>145){lastDraw=t;render();}
+    if(t-lastDraw>145){lastDraw=t;lastVisualDraw=t;render();}
+    else if(!paused&&camera.zoom>1&&t-lastVisualDraw>=33){
+      lastVisualDraw=t;draw(); // character animation without replacing inspector DOM
+    }
     requestAnimationFrame(animate);
   }
   // Keep the layer chooser outside the simulation kernel and outside saves.
@@ -1851,6 +1969,7 @@
     selectedDisputeId=battle.id;
     const info=conflictSummary(battle);
     attentionFocus={level:'battle',center:battle.site};
+    focusCamera(battle.site);
     say('戰場座標 ('+battle.site.x+', '+battle.site.y+')：'+info.sideA+
       ' 對 '+info.sideB+'；'+info.status);
     render();
@@ -1871,11 +1990,42 @@
     render();
   };
   $('concludeBtn').onclick=()=>{const o=state.religion.oracles.find(v=>v.status==='active'&&v.saintId===selectedSaintId&&v.intentType===selectedPower());const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
+  $('zoomInBtn').onclick=()=>zoomMap(Math.min(8,camera.zoom*2));
+  $('zoomOutBtn').onclick=()=>zoomMap(Math.max(1,camera.zoom/2));
+  $('zoomResetBtn').onclick=()=>{camera.followId=null;camera.zoom=1;
+    L.focus(camera,state.width/2,state.height/2);syncCameraControls();render();};
+  $('followPersonBtn').onclick=followSelected;
+  canvas.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const p=canvasPointer(e);
+    zoomMap(camera.zoom*(e.deltaY<0?1.25:.8),p.x,p.y);
+  },{passive:false});
+  canvas.addEventListener('pointerdown',e=>{
+    if(e.button!==0||(armedMiracle&&!e.shiftKey))return;
+    dragPan={x:e.clientX,y:e.clientY,moved:false};
+    canvas.setPointerCapture?.(e.pointerId);
+  });
+  canvas.addEventListener('pointermove',e=>{
+    if(!dragPan)return;
+    const dx=e.clientX-dragPan.x,dy=e.clientY-dragPan.y;
+    if(Math.hypot(dx,dy)>3)dragPan.moved=true;
+    if(!dragPan.moved)return;
+    camera.followId=null;
+    const rect=canvas.getBoundingClientRect();
+    L.pan(camera,dx*canvas.width/rect.width,dy*canvas.height/rect.height,
+      canvas.width,canvas.height);
+    dragPan.x=e.clientX;dragPan.y=e.clientY;
+    syncCameraControls();draw();
+  });
+  canvas.addEventListener('pointerup',()=>{
+    if(dragPan?.moved)ignoreMapClick=true;
+    dragPan=null;
+  });
+  canvas.addEventListener('pointercancel',()=>{dragPan=null;});
   canvas.addEventListener('click',onMap);
   canvas.addEventListener('mousemove',e=>{
-    const rect=canvas.getBoundingClientRect();
-    cursor={x:Math.floor((e.clientX-rect.left)*state.width/rect.width),
-      y:Math.floor((e.clientY-rect.top)*state.height/rect.height)};
+    const at=worldPointer(e);
+    cursor={x:at.x,y:at.y};
     if(armedMiracle==='heal'){
       const nearby=nearVisibleInjured(cursor);
       if(nearby)healLock={id:nearby.id,anchor:{...cursor}};
@@ -1884,7 +2034,7 @@
     }
   });
   canvas.addEventListener('mouseleave',()=>{cursor=null;healLock=null;});
-  $('residentSelect').onchange=e=>{chosen=e.target.value;render();};
+  $('residentSelect').onchange=e=>{chosen=e.target.value;if(camera.followId)camera.followId=chosen;render();};
   $('saintSelect').onchange=e=>{selectedSaintId=e.target.value;render();};
   $('settlementSelect').onchange=e=>{selectedTownId=e.target.value;housePage=0;render();};
   $('housePrev').onclick=()=>{housePage=Math.max(0,housePage-1);render();};

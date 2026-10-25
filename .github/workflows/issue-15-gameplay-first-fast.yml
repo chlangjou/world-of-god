@@ -1,0 +1,41 @@
+name: Issue 15 Gameplay-First fast
+on:
+  push:
+    branches:
+      - codex/issue-15-gameplay-first-v0
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-15-gameplay-first-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-15-gameplay-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  gameplay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: P0 targeting and P1 honest outcome contracts
+        working-directory: poc/v2
+        run: |
+          node --check src/app.js
+          node --check tests/need-location.test.cjs
+          timeout 50s node --test tests/need-location.test.cjs tests/miracle-parameters.test.cjs
+      - name: Existing map layers, combat focus, layout regression
+        working-directory: poc/v2
+        run: timeout 50s node --test tests/map-layers.test.cjs tests/layout.test.cjs tests/polity-intervention-ui.test.cjs
+      - name: Smoke
+        working-directory: poc/v2
+        run: timeout 20s npm run smoke
+      - name: Offline release parity
+        working-directory: poc/v2
+        run: timeout 20s npm run check:playable

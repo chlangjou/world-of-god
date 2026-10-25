@@ -6,7 +6,7 @@
   let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeMineralExperimentProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, activePolityProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
   let armedMiracle = null, cursor = null, chosen = 'p1', lastEventId = -1, toastTimeout;
-  let lastMiraclePreview=null, lastCastVisual=null;
+  let lastMiraclePreview=null, lastCastVisual=null, lastIntervention=null;
   let visibleInjured=[],healLock=null; // UI-only snapshots, never stored in the world
   let focusedOracleId=null, selectedTownId = null, lastTownRoster = '', selectedSaintId=null, lastSaintRoster='', activePriestId=null, priestPetitionIndex=0;
   let selectedNeedId=null, needPage=0, lastNeedsMarkup=null;
@@ -262,6 +262,12 @@
   }
   const needTitles={'food-water':'缺雨與作物','food-shortage':'糧食不足',
     healing:'傷病與治療',shelter:'住所與安居'};
+  const needActions={
+    'food-water':{id:'rain',label:'喚雨',caution:'降雨不保證農田收成'},
+    'food-shortage':{id:'harvest',label:'豐收',caution:'只改善已有作物，不直接創造食物'},
+    healing:{id:'heal',label:'治療',caution:'施法瞬間須有受傷者在範圍內'},
+    shelter:{id:'efficiency',label:'效率祝福',caution:'只能影響合格居民，不能直接建房'}
+  };
   const openPrayers=()=>state.religion.prayers.filter(p=>p.status==='open')
     .sort((a,b)=>b.createdAtHour-a.createdAtHour||a.id.localeCompare(b.id));
   function currentNeed(){
@@ -275,13 +281,22 @@
     const coordinates=place?`(${format(place.center.x)}, ${format(place.center.y)})`:'';
     const source=place?.locationName||prayer.settlementName||'位置尚未記錄';
     const supporters=prayer.supporterCount??new Set(prayer.by||[]).size;
-    return `<button type="button" class="need-locate-card${selectedNeedId===prayer.id?' is-located':''}"
+    const created=Number.isFinite(prayer.createdAtHour)?prayer.createdAtHour:state.hour;
+    const waited=Math.max(0,Math.floor((state.hour-created)/24));
+    const window=prayer.type==='food-water'?
+      ' · 回應驗證剩 '+Math.max(0,Math.ceil((created+60*24-state.hour)/24))+' 日':'';
+    const advice=needActions[prayer.type];
+    const locate=`<button type="button" class="need-locate-card${selectedNeedId===prayer.id?' is-located':''}"
       data-need-locate="${html(prayer.id)}"
       aria-label="在地圖定位：${html(title)}，${html(source)} ${html(coordinates)}"
       title="${html(summary)}">
       <span class="need-head"><strong>${html(title)}</strong><span>${html(source)} ${html(coordinates)}</span></span>
-      <span class="need-detail">第 ${Math.floor(prayer.createdAtHour/24)+1} 日 · ${supporters} 位信徒 · ${html(summary)}</span>
+      <span class="need-detail">第 ${Math.floor(created/24)+1} 日 · ${supporters} 位信徒 · ${html(summary)}</span>
+      <span class="need-age">已等待 ${waited} 日${window}</span>
     </button>`;
+    const plan=advice&&place?`<button type="button" class="need-plan" data-need-plan="${html(prayer.id)}"
+      title="${html(advice.caution)}；只定位與預選 Miracle，仍須自己點地圖才會施放">選${html(advice.label)}</button>`:'';
+    return `<div class="need-action-row">${locate}${plan}</div>`;
   }
   function locateNeed(id){
     const prayer=state.religion.prayers.find(p=>p.id===id&&p.status==='open');
@@ -290,14 +305,64 @@
     selectedNeedId=prayer.id;cursor=null;render();
     say(`已定位 ${needTitles[prayer.type]||'祈求'}：${location.locationName} ${format(location.center.x)}, ${format(location.center.y)}`);
   }
+  function prepareNeedMiracle(id){
+    const prayer=state.religion.prayers.find(p=>p.id===id&&p.status==='open');
+    const location=prayer&&S.prayerLocation(state,prayer.id);
+    const advice=needActions[prayer?.type];
+    if(!location||!advice){say('此祈求沒有可定位的建議施法位置。');return;}
+    selectedNeedId=prayer.id;cursor={...location.center};
+    selectMiracleByHotkey(advice.id); // Just prepare; never auto-cast.
+    const preview=S.evaluateMiracle(state,advice.id,
+      {x:location.center.x,y:location.center.y,...opts()});
+    render();
+    say((powerMeta('miracle',advice.id)?.label||advice.label)+' 已定位：'+
+      (preview.ok?'預估 '+preview.cost+' DP，請自行點地圖施放。':
+       '此處暫不可施放（'+(preview.reason||'檢查條件')+'）；可調整位置或等待。'));
+  }
+  function interventionMarkup(){
+    const r=lastIntervention;if(!r)return '';
+    const label=powerMeta('miracle',r.type)?.label||r.type;
+    const days=Math.max(0,Math.floor((state.hour-r.hour)/24));
+    const applied=Number.isFinite(r.applied)?r.applied:0;
+    let direct='施法已成功；仍待觀察真正後果。';
+    if(r.type==='heal')direct='當刻治療 '+applied+' 人，健康回復 '+format(r.actual,1)+' 點。';
+    else if(r.type==='harvest')direct='當刻改善 '+applied+' 格現有作物，不是直接增加存糧。';
+    else if(r.type==='rain')direct='雨雲已建立'+
+      (state.effects.some(e=>e.id===r.effectId)?'並仍在作用':'，目前已結束')+
+      '；不保證收成。';
+    else if(['ripening','drought'].includes(r.type))
+      direct='已套用到 '+applied+' 格環境，後續收成或災害尚未核實。';
+    else if(['efficiency','confusion','blindness'].includes(r.type))
+      direct='已影響 '+applied+' 人，後續自主行為尚未核實。';
+    else if(r.type==='lightning')direct='當刻作用於 '+applied+' 個目標（可能含設施）。';
+    let proof='尚無可直接歸因於本次施法的後續成果資料。';
+    if(r.type==='rain'&&r.prayerId){
+      const prayer=state.religion.prayers.find(p=>p.id===r.prayerId);
+      proof=!prayer?'原祈求已離開近期資料，無法核實。':
+        prayer.status==='answered'&&prayer.castId===r.effectId?
+          '已核實：本次雨雲對應的祈求達成水分改善與實際產糧。':
+        prayer.status==='lapsed'?'祈求已過期，沒有通過回應驗證。':
+        prayer.status==='answered'?'祈求已有回應，但不能歸因於本次雨雲。':
+          '祈求尚待水分改善與實際產糧，不能先宣稱成功。';
+    }
+    const faith=r.faithCount?
+      '施放當刻 '+r.faithCount+' 人 Devotion 有可核對變化（合計 '+
+      (r.faithDelta>0?'+':'')+format(r.faithDelta,1)+'）':
+      '施放當刻未測得可歸因 Devotion 變化';
+    return `<div class="intervention-title"><strong>最近介入 · ${html(label)}</strong><small>經過 ${days} 日</small></div>
+      <div>第 ${Math.floor(r.hour/24)+1} 日 · (${format(r.x)}, ${format(r.y)}) · 消耗 ${format(r.cost)} DP</div>
+      <div>${html(direct)}</div><div class="intervention-proof">${html(proof)}</div>
+      <small>${html(faith)}；後續請查閱個人和歷史紀錄</small>`;
+  }
   function bindNeedControls(){
     $('needsPanel').querySelectorAll('[data-need-locate]').forEach(button=>
       button.onclick=()=>locateNeed(button.dataset.needLocate));
     $('needsPanel').querySelectorAll('[data-needs-page]').forEach(button=>button.onclick=()=>{
-      const max=Math.max(0,Math.ceil(openPrayers().length/3)-1);
+      const max=Math.max(0,Math.ceil(openPrayers().length/(lastIntervention?2:3))-1);
       needPage=Math.max(0,Math.min(max,needPage+Number(button.dataset.needsPage)));
       selectedNeedId=null;cursor=null;render();
     });
+    $('needsPanel').querySelectorAll('[data-need-plan]').forEach(button=>button.onclick=()=>prepareNeedMiracle(button.dataset.needPlan));
     $('needsPanel').querySelectorAll('[data-need-clear]').forEach(button=>button.onclick=()=>{
       selectedNeedId=null;render();
     });
@@ -569,7 +634,7 @@
     $('opponentMode').disabled=scenario!=='native';
     $('aiDifficulty').disabled=scenario==='duel';
     if(state.opponent)$('aiDifficulty').value=state.opponent.difficulty||'standard';
-    focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;healLock=null;visibleInjured=[];paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;selectedDisputeId=null;lastBattleMarkup=null;$('events').scrollTop=0;
+    focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;lastIntervention=null;healLock=null;visibleInjured=[];paused=true;speed=1;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;chosen='p1';lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;armedMiracle=null;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;selectedDisputeId=null;lastBattleMarkup=null;$('events').scrollTop=0;
     document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',+b.dataset.speed===1));
     render();
   }
@@ -631,7 +696,7 @@
     $('opponentMode').disabled=scenarioId()!=='native';
     $('aiDifficulty').value=state.opponent?.difficulty||'standard';
     $('aiDifficulty').disabled=scenarioId()==='duel';
-    focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;selectedDisputeId=null;lastBattleMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();announceVictoryIfNeeded();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
+    focusedOracleId=null;presentedVictoryHour=null;lastCastVisual=null;lastIntervention=null;healLock=null;visibleInjured=[];armedMiracle=null;chosen=state.people.find(p=>p.alive)?.id||null;paused=true;acc=0;lastAttentionSeq=state.attention?.seq||0;attentionFocus=null;lastEventId=-1;lastRoster='';lastTownRoster='';selectedTownId=null;selectedSaintId=null;lastSaintRoster='';activePriestId=null;priestPetitionIndex=0;housePage=0;selectedNeedId=null;needPage=0;lastNeedsMarkup=null;selectedDisputeId=null;lastBattleMarkup=null;$('events').scrollTop=0;if(divineKind==='miracle')configureMiracle(selectedPower());else showDivineKind('oracle');render();announceVictoryIfNeeded();say(state.agriculture&&!state.agriculture.workDemand?'舊版 Agriculture 存檔保留舊參數；請重新創世以套用新糧食平衡。':converted?'舊版存檔已升級；既有死亡不會倒轉。':'世界已讀取，並處於暫停狀態。');}catch(e){say('讀取失敗：'+e.message);} }
   function exportSave() { const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`world-of-god-mvp0-day-${S.days(state)+1}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   function updateCost(){
     if(divineKind!=='miracle')return;
@@ -843,6 +908,9 @@
     $('concludeBtn').hidden=!active||intent==='life.balance'||!!state.oracleStrategy;
     $('concludeBtn').disabled=!active||!quota||quota.quota<=-1;
     const prayers=openPrayers();
+    const perPage=lastIntervention?2:3;
+    $('interventionPanel').hidden=!lastIntervention;
+    if(lastIntervention)$('interventionPanel').innerHTML=interventionMarkup();
     const answered=state.religion.prayers.filter(p=>p.status==='answered').slice(-1);
     const focusedPriest=state.people.find(p=>p.id===activePriestId&&p.alive&&state.religion.priests.includes(p.id));
     const gathered=focusedPriest?S.priestPetitions(state,focusedPriest.id):[];
@@ -859,12 +927,12 @@
       </div>`:'';
       needsMarkup=`<div class="priest-summary"><b>${html(focusedPriest.name)} · Priest</b><small>彙整 ${gathered.length} 類未完成祈求；信徒仍可直接向 God 祈禱。</small></div>`+card+nav;
     }else{
-      const pages=Math.ceil(prayers.length/3);
+      const pages=Math.ceil(prayers.length/perPage);
       needPage=Math.max(0,Math.min(needPage,Math.max(0,pages-1)));
-      const cards=prayers.slice(needPage*3,(needPage+1)*3).map(needCard).join('');
+      const cards=prayers.slice(needPage*perPage,(needPage+1)*perPage).map(needCard).join('');
       const pager=pages>1?`<div class="need-pager">
         <button type="button" data-needs-page="-1" aria-label="上一頁需求" ${needPage===0?'disabled':''}>‹</button>
-        <small>需求 ${needPage*3+1}–${Math.min((needPage+1)*3,prayers.length)} / ${prayers.length}</small>
+        <small>需求 ${needPage*perPage+1}–${Math.min((needPage+1)*perPage,prayers.length)} / ${prayers.length}</small>
         <button type="button" data-needs-page="1" aria-label="下一頁需求" ${needPage>=pages-1?'disabled':''}>›</button>
       </div>`:'';
       needsMarkup=prayers.length?`<div class="need-list">${cards}</div>${pager}`:
@@ -1615,12 +1683,26 @@
     }
     if(armedMiracle){
       const aim=healAimAt({x,y});
-      const id=armedMiracle,r=S.castMiracle(state,id,{x:aim.x,y:aim.y,...opts()});
+      const id=armedMiracle;
+      const previousDevotion=new Map(state.people.filter(p=>p.alive).map(p=>[p.id,p.devotion]));
+      const linked=currentNeed();
+      const r=S.castMiracle(state,id,{x:aim.x,y:aim.y,...opts()});
       const effectTime=r.instant?'瞬間（0 日）':format(r.durationDays,0)+' 日';
       say(r.ok?(powerMeta('miracle',id)?.label||id)+
         ` 已${r.overcast?'強制':''}施展（${r.costMultiplier}×），消耗 ${r.cost} DP；`+
-        `半徑 ${r.radius} 格，作用時間 ${effectTime}。`:r.reason);
+        `半徑 ${r.radius} 格，作用時間 ${effectTime}；結果見需求分頁。`:r.reason);
       if(r.ok){
+        const changed=state.people.filter(p=>previousDevotion.has(p.id)&&
+          p.devotion!==previousDevotion.get(p.id)&&
+          p.lastFaithEvidence?.hour===state.hour&&p.lastFaithEvidence?.godId===state.god.id);
+        const watching=id==='rain'&&linked?.location&&
+          Math.hypot(aim.x-linked.location.center.x,aim.y-linked.location.center.y)<=r.radius+6;
+        lastIntervention={type:id,hour:state.hour,x:aim.x,y:aim.y,
+          cost:r.cost,radius:r.radius,durationDays:r.durationDays,
+          applied:r.applied,actual:r.actual,effectId:r.effectId||null,
+          prayerId:watching?linked.prayer.id:null,
+          faithCount:changed.length,
+          faithDelta:changed.reduce((sum,p)=>sum+p.devotion-previousDevotion.get(p.id),0)};
         lastCastVisual=r.instant?{x:aim.x,y:aim.y,radius:r.radius,untilMs:performance.now()+2400}:null;
         healLock=null;armedMiracle=null;
       }

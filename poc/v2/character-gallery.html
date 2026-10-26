@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>World of God · Character Readability Gallery v0</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,"Noto Sans TC",sans-serif;background:#112326;color:#e6e4d4}
+*{box-sizing:border-box}
+body{max-width:1160px;margin:0 auto;padding:17px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:20px;margin:0 0 5px;color:#f5d9a3}p{font-size:13px;color:#c5d0c6;line-height:1.5;margin:6px 0}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0}
+.controls label{font-size:12px}
+select,button{font:inherit;font-size:13px;color:#f4e1b7;background:#27443f;border:1px solid #799387;border-radius:6px;padding:6px 10px}
+button{cursor:pointer}
+button:hover,button:focus-visible{background:#43655b}
+.board{border:1px solid #46645c;border-radius:14px;background:#1b3030;padding:10px}
+canvas{width:100%;height:auto;display:block;image-rendering:auto}
+footer{border-top:1px solid #456057;margin-top:15px;padding-top:12px;font-size:12px;color:#b1c6ba}
+a{color:#d1eadb}
+</style>
+</head>
+<body>
+<header><div><h1>Character Readability / Empathy v0</h1>
+<p>六類可辨識角色：成人外套、成人披肩、兒童、長者、祭司、民兵。下方使用與遊戲相同的程式化繪製模組。</p></div></header>
+<div class="controls">
+  <label for="activity">活動／真實狀態</label>
+  <select id="activity">
+    <option value="rest">休息／待機</option>
+    <option value="travel">行走</option>
+    <option value="farm">耕作／勞動</option>
+    <option value="pray">祈禱／傳教</option>
+    <option value="injured">受傷</option>
+    <option value="healed">治療改善後</option>
+  </select>
+  <button id="stop" type="button">暫停動畫</button>
+</div>
+<div class="board"><canvas id="gallery" width="960" height="600" aria-label="六種不同外型的角色表現原型"></canvas></div>
+<footer>
+此頁是靜態資料的<strong>美術原型檢視器</strong>，不是新的遊戲劇情或真人試玩證據。近景會根據現有真人 ID 與狀態決定角色外型；沒有新增人物性格、情緒數值或性別認定。遊戲仍由原本 World Kernel 決定工作、神蹟、受傷與信仰。
+</footer>
+<script src="src/character-art.js"></script>
+<script>
+'use strict';
+const Art=window.WOG_CHARACTER_ART,canvas=document.getElementById('gallery'),ctx=canvas.getContext('2d');
+const roles=[
+  {label:'成人 · 外套 / 短髮',kind:'adult-a',age:29,stage:'adult',flags:{}},
+  {label:'成人 · 披肩 / 不同髮型',kind:'adult-b',age:32,stage:'adult',flags:{}},
+  {label:'兒童 · 小比例 / 背袋',kind:'child',age:9,stage:'child',flags:{}},
+  {label:'長者 · 杖 / 彎腰',kind:'elder',age:71,stage:'elder',flags:{}},
+  {label:'祭司 · 長袍 / 法杖',kind:'priest',age:41,stage:'adult',flags:{priest:true}},
+  {label:'民兵 · 甲冑 / 盾',kind:'soldier',age:26,stage:'adult',flags:{soldier:true}}
+];
+const sample=(role,i)=>{
+  let id='gallery-'+i;
+  if(role.kind==='adult-a'||role.kind==='adult-b'){
+    for(let attempt=0;attempt<200;attempt++){
+      const candidate='gallery-'+i+'-'+attempt;
+      const style=Art.identity({id:candidate});
+      if((role.kind==='adult-a')===(style.clothing===0)){id=candidate;break;}
+    }
+  }
+  return {id,name:role.label,stage:role.stage,age:role.age,
+    health:100,hunger:0,alive:true,activity:'rest'};
+};
+const residents=roles.map((r,i)=>sample(r,i));
+let t=0,playing=true,last=0,activity='rest';
+const update=()=>{activity=document.getElementById('activity').value;};
+document.getElementById('activity').addEventListener('change',update);
+document.getElementById('stop').onclick=()=>{
+  playing=!playing;document.getElementById('stop').textContent=playing?'暫停動畫':'繼續動畫';
+};
+function frame(ts){
+  const dt=Math.max(0,Math.min(70,ts-(last||ts)));last=ts;
+  if(playing)t+=dt/1000;
+  ctx.clearRect(0,0,960,600);
+  for(let i=0;i<residents.length;i++){
+    const row=Math.floor(i/3),column=i%3,x=column*320+160,y=row*290+156;
+    const role=roles[i],base=residents[i];
+    const who={...base,health:activity==='injured'?49:100,activity:activity==='healed'?'rest':activity==='injured'?'rest':activity};
+    const opts={...role.flags,faithColor:i%2?'#efc27e':'#93c0c9',
+      moving:activity==='travel',healed:activity==='healed'};
+    ctx.fillStyle='#254236';ctx.fillRect(column*320+6,row*290+5,308,278);
+    ctx.fillStyle='#3d6051';ctx.fillRect(column*320+11,row*290+10,298,263);
+    ctx.fillStyle='#38594a';
+    for(let j=0;j<7;j++)ctx.fillRect(column*320+22+j*42,row*290+223,31,18);
+    ctx.fillStyle='#193a38';ctx.fillRect(column*320+6,row*290+240,308,43);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='#f6e0af';ctx.font='bold 18px system-ui';ctx.fillText(role.label,x,row*290+32);
+    ctx.fillStyle='#d2e2d4';ctx.font='12px system-ui';
+    ctx.fillText('原型近景',x-52,row*290+60);
+    const scale=role.kind==='child'?.8:1;
+    ctx.save();ctx.translate(x-48,y+16);ctx.scale(scale,scale);
+    const drawn=Art.draw(ctx,who,0,0,82,t,opts);
+    ctx.restore();
+    ctx.fillStyle='#d2e2d4';ctx.fillText('8× 遊戲參考大小',x+85,row*290+60);
+    ctx.save();ctx.translate(x+86,y+16);
+    ctx.scale(role.kind==='child'?.8:1,role.kind==='child'?.8:1);
+    Art.draw(ctx,who,0,0,44,t,opts);
+    ctx.restore();
+    ctx.fillStyle='#b4cbbe';ctx.font='11px system-ui';
+    ctx.fillText('身份：'+drawn.type+' · 髮型 #'+(drawn.hairStyle+1),x,row*290+258);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

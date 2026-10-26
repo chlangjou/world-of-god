@@ -1,0 +1,43 @@
+name: Issue 15 Character Empathy fast
+on:
+  push:
+    branches:
+      - codex/issue-15-character-empathy-v0
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-15-character-empathy-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-15-character-empathy-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  character-art:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Character art and application syntax
+        working-directory: poc/v2
+        run: |
+          node --check src/character-art.js
+          node --check src/app.js
+          node --check tests/character-art.test.cjs
+      - name: Character art, crowd/camera, targeting and true-state feedback
+        working-directory: poc/v2
+        run: timeout 65s node --test tests/character-art.test.cjs tests/crowd-selection.test.cjs tests/living-world.test.cjs tests/need-location.test.cjs tests/miracle-parameters.test.cjs
+      - name: Existing layers, layout and battlefield contracts
+        working-directory: poc/v2
+        run: timeout 50s node --test tests/map-layers.test.cjs tests/layout.test.cjs tests/polity-intervention-ui.test.cjs
+      - name: Smoke and offline playable parity
+        working-directory: poc/v2
+        run: |
+          timeout 20s npm run smoke
+          timeout 20s npm run check:playable

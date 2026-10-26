@@ -1,7 +1,8 @@
 /* Browser-only view/input adapter. All authoritative simulation resides in sim.js. */
 (() => { 'use strict';
   const S = window.WoG2, Playtest = window.WOG_PLAYTEST, L = window.WOG_LIVING_WORLD;
-  if(!L)throw Error('Living World renderer module is missing');
+  const Art = window.WOG_CHARACTER_ART;
+  if(!L||!Art)throw Error('Living World camera or character art module is missing');
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
   let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeMineralExperimentProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, activePolityProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
@@ -1609,6 +1610,31 @@
       const rivalSaint=saint&&faction.id!==state.religion.id;
       const rivalPriest=priest&&faction.id!==state.religion.id;
       const rival=faction&&faction.id!==state.religion.id;
+      // Distinct 3/4-view character archetypes at close zoom. Keep existing
+      // simple faction pictograms at 1–2× so the strategic map stays readable.
+      // All art is a pure presentation of the actual resident's saved state.
+      if(camera.zoom>=3.5){
+        Art.draw(c,p,px,py,size,time,{
+          zoom:camera.zoom,moving:visual.moving,priest,saint,
+          soldier:!!soldierOf,leader:isLeader,
+          faithColor:faction?factionColor(faction.id):'#b8a78c',
+          healed:(healedUntil.get(p.id)||0)>animationClock
+        });
+        if(layerOn('effects')){
+          const statuses=Object.entries(p.divineStatuses||{}).filter(([,v])=>v.endsAtHour>state.hour);
+          const colors={efficiency:'#77ecb2',confusion:'#e6a0d8',blindness:'#8799aa'};
+          statuses.forEach(([kind],i)=>{
+            c.strokeStyle=colors[kind]||'#ffffff';c.lineWidth=1.5;
+            c.beginPath();c.arc(px,py,size*(.36+i*.08),0,Math.PI*2);c.stroke();
+          });
+        }
+        if(p.id===chosen){
+          c.strokeStyle='#fff3b7';c.lineWidth=Math.max(1.8,size*.11);
+          c.beginPath();c.ellipse(px,py+size*.42,size*.38,size*.17,0,0,Math.PI*2);c.stroke();
+        }
+        c.restore();
+        continue;
+      }
       // The whole avatar (not only the head) is scaled by age in Living World.
       c.beginPath();c.arc(px,py,size*.32,0,Math.PI*2);
       c.fillStyle=rivalSaint?'#ff8ca7':rivalPriest?'#ffd69e':

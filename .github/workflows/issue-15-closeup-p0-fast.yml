@@ -1,0 +1,41 @@
+name: Issue 15 Close-up P0 fast
+on:
+  push:
+    branches:
+      - codex/issue-15-closeup-p0
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-15-closeup-p0-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-15-closeup-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  closeup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Syntax and close-up control contracts
+        working-directory: poc/v2
+        run: |
+          node --check src/closeup-observation.js
+          node --check src/app.js
+          node --check tests/closeup-p0.test.cjs
+          timeout 55s node --test tests/closeup-p0.test.cjs tests/living-world.test.cjs tests/miracle-parameters.test.cjs tests/need-location.test.cjs
+      - name: Existing crowded citizens / layers / battle / layout
+        working-directory: poc/v2
+        run: timeout 55s node --test tests/crowd-selection.test.cjs tests/map-layers.test.cjs tests/layout.test.cjs tests/polity-intervention-ui.test.cjs
+      - name: Smoke and offline playable parity
+        working-directory: poc/v2
+        run: |
+          timeout 20s npm run smoke
+          timeout 20s npm run check:playable

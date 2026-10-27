@@ -79,6 +79,7 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
     WOG_OPPONENT_PROFILE:opponent,WOG_ORACLE_STRATEGY_PROFILE:strategy,
     WOG_PLAYTEST:playtest,WOG_LIVING_WORLD:require('../src/living-world.js'),
     WOG_CHARACTER_ART:require('../src/character-art.js'),
+    WOG_CLOSEUP:require('../src/closeup-observation.js'),
     WOG_PLAYTEST_PROFILE:{...playtestConfig,defaultScenario:'native'},
     WOG_MOBILITY_PROFILE:require('../config/mobility-contact-v0.1.json'),WOG_VICTORY_PROFILE:require('../config/victory-dominance-v0.1.json'),WOG_SHRINE_PROFILE:require('../config/shrine-temple-v0.1.json'),WOG_POLITY_PROFILE:politicsProfile};
   const memory=new Map(),storage={
@@ -91,7 +92,8 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
     'window.__position=id=>{const p=state.people.find(x=>x.id===id);return p&&L.position(motions.get(id),p,animationClock)};'+
     'window.__crowds=()=>crowdLayout;window.__chosen=()=>chosen;'+
     'window.__setVisualMotion=(id,r)=>motions.set(id,r);'+
-    'window.__runtime=()=>({paused,speed,lastAttentionSeq});})();');
+    'window.__runtime=()=>({paused,speed,lastAttentionSeq,observation:{...observation},'+
+    'aimHold:{...aimHold},armedMiracle,animationClock});})();');
   assert.notEqual(original,source,'test instrumentation must attach to actual browser code');
   new Function('window','document','performance','requestAnimationFrame','setTimeout',
     'clearTimeout','confirm','localStorage','URL','Blob','fetch',source)(

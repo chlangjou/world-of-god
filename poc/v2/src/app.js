@@ -1,8 +1,8 @@
 /* Browser-only view/input adapter. All authoritative simulation resides in sim.js. */
 (() => { 'use strict';
   const S = window.WoG2, Playtest = window.WOG_PLAYTEST, L = window.WOG_LIVING_WORLD;
-  const Art = window.WOG_CHARACTER_ART;
-  if(!L||!Art)throw Error('Living World camera or character art module is missing');
+  const Art = window.WOG_CHARACTER_ART, Observe = window.WOG_CLOSEUP;
+  if(!L||!Art||!Observe)throw Error('Living World camera, art or observation module is missing');
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
   let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeMineralExperimentProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, activePolityProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
@@ -10,6 +10,8 @@
   // Camera, motion and expressions are presentation-only. Never serialized.
   let camera=L.createCamera(state.width,state.height),motions=new Map(),healedUntil=new Map();
   let animationClock=0,lastVisualDraw=0,dragPan=null,ignoreMapClick=false;
+  let observation=Observe.create(),aimHold={active:false,owned:false};
+  let cameraFrameMs=33,transitionNoticeUntil=0;
   // Display-only character formations, hit areas and cluster selection.
   let crowdSlots=new Map(),crowdLayout={sprites:new Map(),groups:[]};
   let activeCrowdKey=null,crowdPage=0,lastCrowdMarkup=null;
@@ -90,6 +92,8 @@
   function resetVisualWorld(){
     camera=L.createCamera(state.width,state.height);
     motions.clear();healedUntil.clear();animationClock=0;dragPan=null;ignoreMapClick=false;
+    observation=Observe.create();aimHold={active:false,owned:false};
+    cameraFrameMs=33;transitionNoticeUntil=0;
     crowdSlots.clear();crowdLayout={sprites:new Map(),groups:[]};
     activeCrowdKey=null;crowdPage=0;lastCrowdMarkup=null;
     $('crowdPanel').hidden=true;
@@ -103,10 +107,40 @@
     const tracked=state.people.find(p=>p.id===camera.followId&&p.alive);
     $('followPersonBtn').textContent=tracked?'跟隨：'+tracked.name:'追蹤居民';
     $('followPersonBtn').setAttribute('aria-pressed',String(!!tracked));
+    syncObservationControls();
+  }
+  function syncObservationControls(){
+    const btn=$('observeBtn');
+    btn.hidden=camera.zoom<4&&!observation.active;
+    btn.setAttribute('aria-pressed',String(observation.active));
+    btn.textContent=observation.active?'觀察中 · '+speed+'×':'開啟觀察';
+    btn.title=observation.active?
+      '全世界以目前 '+speed+'× 推進；可改成 1×，選 4×／16× 會退出觀察':
+      '4× 以上可啟動 0.1× 真實世界慢速觀察';
+    const aim=$('closeAimStatus');
+    aim.hidden=!aimHold.active||!armedMiracle;
+    if(!aim.hidden){
+      const where=healAimAt(cursor||currentNeed()?.location?.center||state.camp);
+      aim.textContent='瞄準暫停 · 第 '+(Math.floor(state.hour/24)+1)+
+        ' 日 · 真實施法中心 ('+format(where.x,1)+', '+format(where.y,1)+')'+
+        (where.personName?' · '+where.personName:'')+' · 點圖施放 / Esc 取消';
+    }
+    const notice=$('transitionNotice');
+    notice.hidden=!(transitionNoticeUntil>animationClock);
+    if(!notice.hidden)notice.textContent='居民已重新定位 · 未將遠距遷移畫成沿路行走';
+  }
+  function reconcileObservationZoom(){
+    const next=Observe.zoom(observation,camera.zoom,speed);
+    if(next!==null)selectSpeed(next);
+    if(camera.zoom<=3&&aimHold.active){
+      armedMiracle=null;releaseAimHold();
+    }
+    syncObservationControls();
   }
   function zoomMap(next,anchorX=canvas.width/2,anchorY=canvas.height/2){
-    camera.followId=null;
+    // Wheel zoom must never discard an explicitly chosen follow target.
     L.setZoom(camera,next,anchorX,anchorY,canvas.width,canvas.height);
+    reconcileObservationZoom();
     syncCameraControls();draw();
   }
   function focusCamera(point){
@@ -120,7 +154,9 @@
     const person=state.people.find(p=>p.id===camera.followId&&p.alive);
     if(!person){camera.followId=null;syncCameraControls();return;}
     const at=L.position(motions.get(person.id),person,animationClock);
-    L.focus(camera,at.x+.5,at.y+.5);
+    const result=Observe.deadZoneFollow(camera,{x:at.x+.5,y:at.y+.5},
+      cameraFrameMs);
+    if(result.jump)transitionNoticeUntil=animationClock+1700;
   }
   function followSelected(){
     if(camera.followId){
@@ -130,7 +166,9 @@
       if(!p){say('目前沒有可以追蹤的在世居民。');return;}
       camera.zoom=Math.max(4,camera.zoom);
       camera.followId=p.id;
-      updateCameraFollow();
+      const visual=L.position(motions.get(p.id),p,animationClock);
+      L.focus(camera,visual.x+.5,visual.y+.5);
+      reconcileObservationZoom();updateCameraFollow();
       showInspector('person');
     }
     syncCameraControls();render();
@@ -152,7 +190,9 @@
     if(follow){
       camera.zoom=Math.max(4,camera.zoom);
       camera.followId=person.id;
-      updateCameraFollow();
+      const visual=L.position(motions.get(person.id),person,animationClock);
+      L.focus(camera,visual.x+.5,visual.y+.5);
+      reconcileObservationZoom();updateCameraFollow();
     }else if(camera.followId)camera.followId=person.id;
     activeCrowdKey=null;
     $('crowdPanel').hidden=true;lastCrowdMarkup=null;
@@ -207,6 +247,49 @@
     if(!sprite)return false;
     if(camera.zoom<1.5&&sprite.size>1)return openCrowd(sprite.key);
     selectCrowdResident(sprite.id);return true;
+  }
+  function beginAimHold(){
+    if(!armedMiracle||!observation.active||camera.zoom<4||aimHold.active)return;
+    const owned=!paused;
+    aimHold={active:true,owned};
+    // A close-up aims at a specific authoritative snapshot, not a stale
+    // interpolated avatar with a world position already hours ahead.
+    paused=true;acc=0;motions.clear();healLock=null;cursor=null;
+    syncObservationControls();
+  }
+  function releaseAimHold(){
+    if(!aimHold.active)return;
+    const owned=aimHold.owned;
+    aimHold={active:false,owned:false};
+    // Only an aim-originated pause is ours to resume; manual pause, first
+    // contact, wounded combat and victory all take priority.
+    if(owned&&!state.victory?.winner&&!(
+        attentionFocus?.level==='pause'||attentionFocus?.type==='battle'||
+        attentionFocus?.type==='battle-wounded')){
+      paused=false;acc=0;
+    }
+    syncObservationControls();
+  }
+  function toggleSimulationPause(){
+    if(paused&&state.victory?.winner&&!state.victory.continued){
+      showVictoryDialog();return;
+    }
+    if(aimHold.active){
+      if(aimHold.owned){
+        aimHold.owned=false;
+        say('已保留為手動暫停；施法／取消後不會自動繼續。');
+      }else say('瞄準期間世界保持暫停；請先施法或 Esc 取消。');
+    }else{
+      paused=!paused;
+      if(paused){acc=0;motions.clear();}
+    }
+    render();
+  }
+  function choosePlayerSpeed(value){
+    if(!SPEED_PRESETS.includes(value))return;
+    if(value>=4&&aimHold.active){armedMiracle=null;releaseAimHold();}
+    Observe.speedChosen(observation,value);
+    selectSpeed(value);syncObservationControls();render();
   }
   function selectSpeed(value){
     if(!SPEED_PRESETS.includes(value))return false;
@@ -513,7 +596,8 @@
   function showDivineKind(kind){
     if(divineKind==='miracle')rememberMiracleSettings();
     else rememberedPower.oracle=selectedPower();
-    divineKind=kind;if(kind!=='miracle')armedMiracle=null;
+    divineKind=kind;
+    if(kind!=='miracle'){armedMiracle=null;releaseAimHold();}
     $('miraclePanel').hidden=kind!=='miracle';$('oraclePanel').hidden=kind!=='oracle';
     for(const [id,category] of [['miracleTab','miracle'],['oracleTab','oracle']]){
       $(id).classList.toggle('active',category===kind);
@@ -619,11 +703,11 @@
     // limitations (such as needing an injured recipient) remain checked at
     // the actual clicked point, not only at the preview position.
     if(state.god.dp+1e-8<(result.cost??Infinity)){
-      armedMiracle=null;render();
+      armedMiracle=null;releaseAimHold();render();
       say(result.reason||'目前 Divine Power 不足');
       return false;
     }
-    armedMiracle=id;render();
+    armedMiracle=id;beginAimHold();render();
     say((result.overcast?'冷卻中強制施放（'+result.costMultiplier+'× DP）：':'選擇了 ')+
       (powerMeta('miracle',id)?.label||id)+'；點擊地圖施放，Esc 取消。');
     return true;
@@ -631,7 +715,7 @@
   function toggleMiracleTarget(){
     if(profileLoading)return;
     if(divineKind!=='miracle')showDivineKind('miracle');
-    if(armedMiracle){armedMiracle=null;render();return;}
+    if(armedMiracle){armedMiracle=null;releaseAimHold();render();return;}
     armMiracleTarget();
   }
   function selectMiracleByHotkey(id){
@@ -991,7 +1075,8 @@
       oracleSummary.map(f=>f.name+'：'+f.oracle).join('｜');
     $('powerMetric').textContent=format(state.god.dp,1);$('powerRate').textContent=`+${format(st.dpRateDay,2)} DP / 模擬日`;
     $('powerFill').style.width=Math.min(100,state.god.dp/state.god.cap*100)+'%';
-    $('pauseBtn').textContent=paused?'▶ 開始 / 繼續':'Ⅱ 暫停';
+    $('pauseBtn').textContent=aimHold.active&&armedMiracle?
+      'Ⅱ 瞄準暫停':paused?'▶ 開始 / 繼續':'Ⅱ 暫停';
     $('pauseBtn').disabled=profileLoading;
     $('balanceProfile').value=state.agriculture?'agriculture':'original';
     $('opponentMode').value=state.opponent?.enabled?'ai':'off';
@@ -1938,7 +2023,7 @@
           faithCount:changed.length,
           faithDelta:changed.reduce((sum,p)=>sum+p.devotion-previousDevotion.get(p.id),0)};
         lastCastVisual=r.instant?{x:aim.x,y:aim.y,radius:r.radius,untilMs:performance.now()+2400}:null;
-        healLock=null;armedMiracle=null;
+        healLock=null;armedMiracle=null;releaseAimHold();
       }
       render();return;
     }
@@ -1995,6 +2080,7 @@
       notes.find(v=>v.level==='pause')||notes.find(v=>v.level==='slow');
     if(!note)return false;
     focusCamera(note.center);
+    Observe.urgentSpeed(observation);
     selectSpeed(note.type==='battle'||note.type==='battle-wounded'?0.1:1);
     attentionFocus=note;
     if(note.type==='political-agenda'){
@@ -2037,6 +2123,7 @@
   }
   function animate(t) {
     const dt=Math.max(0,Math.min(250,t-(previous||t)));previous=t;
+    cameraFrameMs=dt>0?dt:33;
     if(!paused){
       animationClock+=dt;
       acc+=dt/1000*ticksPerRealSecond*speed;
@@ -2108,10 +2195,9 @@
       ' 對 '+info.sideB+'；'+info.status);
     render();
   };
-  $('pauseBtn').onclick=()=>{if(paused&&state.victory?.winner&&!state.victory.continued){showVictoryDialog();return;}paused=!paused;render();};
-  document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>{
-    selectSpeed(Number(btn.dataset.speed));render();
-  });
+  $('pauseBtn').onclick=toggleSimulationPause;
+  document.querySelectorAll('[data-speed]').forEach(btn=>btn.onclick=()=>
+    choosePlayerSpeed(Number(btn.dataset.speed)));
   ['radius','intensity','duration'].forEach(id=>$(id).addEventListener('input',()=>{
     rememberMiracleSettings();updateCost();draw();
   }));
@@ -2126,8 +2212,20 @@
   $('concludeBtn').onclick=()=>{const o=state.religion.oracles.find(v=>v.status==='active'&&v.saintId===selectedSaintId&&v.intentType===selectedPower());const r=S.concludeOracle(state,o?.id);say(r.ok?'神已宣告此指派完成。':r.reason);render();};
   $('zoomInBtn').onclick=()=>zoomMap(Math.min(8,camera.zoom*2));
   $('zoomOutBtn').onclick=()=>zoomMap(Math.max(1,camera.zoom/2));
-  $('zoomResetBtn').onclick=()=>{camera.followId=null;camera.zoom=1;
-    L.focus(camera,state.width/2,state.height/2);syncCameraControls();render();};
+  $('zoomResetBtn').onclick=()=>{
+    camera.followId=null;camera.zoom=1;
+    L.focus(camera,state.width/2,state.height/2);
+    reconcileObservationZoom();syncCameraControls();render();
+  };
+  $('observeBtn').onclick=()=>{
+    if(aimHold.active){armedMiracle=null;releaseAimHold();}
+    const next=Observe.toggle(observation,camera.zoom,speed);
+    if(next!==null)selectSpeed(next);
+    if(observation.active&&armedMiracle)beginAimHold();
+    syncObservationControls();render();
+    say(observation.active?'近景觀察已開啟：真實世界 '+speed+'×。':
+      '已退出近景慢速觀察，保留相機位置與目前暫停狀態。');
+  };
   $('followPersonBtn').onclick=followSelected;
   canvas.addEventListener('wheel',e=>{
     e.preventDefault();
@@ -2160,6 +2258,9 @@
   canvas.addEventListener('mousemove',e=>{
     const at=worldPointer(e);
     cursor={x:at.x,y:at.y};
+    if(armedMiracle){
+      updateCost();syncObservationControls();draw();
+    }
     if(armedMiracle==='heal'){
       const nearby=nearVisibleInjured(cursor);
       if(nearby)healLock={id:nearby.id,anchor:{...cursor}};
@@ -2193,7 +2294,7 @@
       closeMapLayers();e.preventDefault();return;
     }
     if(e.key==='Escape'&&armedMiracle){
-      armedMiracle=null;render();
+      armedMiracle=null;releaseAimHold();render();
     }else if(e.key==='Escape'&&selectedNeedId){
       selectedNeedId=null;render();
     }else if(e.key==='Escape'&&attentionFocus){
@@ -2202,7 +2303,7 @@
     else if(!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName)&&
       !document.activeElement?.isContentEditable){
       if(e.code==='Space'){
-        e.preventDefault();if(paused&&state.victory?.winner&&!state.victory.continued){showVictoryDialog();return;}paused=!paused;render();
+        e.preventDefault();toggleSimulationPause();
       }else if(!e.repeat&&/^[1-9]$/.test(e.key)){
         e.preventDefault();
         selectMiracleByHotkey(availablePowers.miracle[Number(e.key)-1].id);

@@ -403,3 +403,22 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
   .crowd-row button:first-child{padding:3px 5px}
 }
 @media(max-width:630px){.crowd-panel{right:5px;width:min(225px,62%)}}
+
+/* Issue #15 P0: explicit observation and true-world aim pause indicators. */
+.camera-controls #observeBtn{min-width:92px;white-space:nowrap}
+.camera-controls #observeBtn[aria-pressed="true"]{background:#5b704e;border-color:#edda9b;color:#fff0cc}
+.camera-controls button[hidden]{display:none}
+.close-aim-status,.close-transition-notice{
+  position:absolute;z-index:5;top:85px;left:10px;
+  max-width:min(385px,75%);padding:7px 10px;
+  border:1px solid #dfbe82;border-radius:7px;
+  color:#fff1ce;background:#173633ed;
+  font-size:11px;line-height:1.45;pointer-events:none
+}
+.close-aim-status[hidden],.close-transition-notice[hidden]{display:none}
+.close-transition-notice{top:77px;border-color:#91b8a4;color:#dce8d8}
+.map-wrap:has(.close-aim-status:not([hidden])) .map-tip{display:none}
+@media(max-width:900px){
+ .camera-controls #observeBtn{min-width:70px;font-size:10px}
+ .close-aim-status{left:6px;top:83px;max-width:78%}
+}

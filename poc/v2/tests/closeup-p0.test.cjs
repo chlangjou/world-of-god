@@ -126,7 +126,8 @@ test('aiming pauses real time, snaps stale interpolated patients, and only relea
   assert.equal(ui.runtime().paused,true);
   assert.equal(ui.runtime().aimHold.active,true);
   assert.equal(ui.runtime().aimHold.owned,true);
-  approx(ui.position(p.id).x,p.x,'the displayed patient snaps to the authoritative position before clicking');
+  approx(ui.position(p.id).x,p.x);
+  assert.equal(ui.position(p.id).x,p.x,'the displayed patient snaps to the authoritative position before clicking');
   assert.equal(ui.el('closeAimStatus').hidden,false);
   const tick=s.tick;for(let i=1;i<=30;i++)ui.frame(i*250);
   assert.equal(s.tick,tick,'while aiming, no world tick or enemy action is silently taken');

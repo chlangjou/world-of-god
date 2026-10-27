@@ -79,7 +79,10 @@
             <button id="zoomResetBtn" type="button" title="恢復全地圖">1× · 全圖</button>
             <button id="zoomInBtn" type="button" aria-label="放大世界地圖" title="放大一級">＋</button>
             <button id="followPersonBtn" type="button" aria-pressed="false" title="追蹤居民選單目前選取的真人">追蹤居民</button>
+            <button id="observeBtn" type="button" aria-pressed="false" hidden title="放大到 4× 可啟動真實時間慢速觀察">開啟觀察</button>
           </div>
+          <div id="closeAimStatus" class="close-aim-status" hidden aria-live="polite"></div>
+          <div id="transitionNotice" class="close-transition-notice" hidden aria-live="off"></div>
           <div id="followStatus" class="follow-status" hidden aria-live="off"></div>
           <div id="crowdPanel" class="crowd-panel" hidden aria-label="同位置居民清單"></div>
           <button id="battleFocusBtn" type="button" class="battle-focus" hidden aria-live="polite" title="定位正在發生的人類戰事"></button>
@@ -203,6 +206,6 @@
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <input id="importFile" type="file" accept="application/json,.json" hidden>
-  <script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/victory.js"></script><script src="src/politics.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/living-world.js"></script><script src="src/character-art.js"></script><script src="src/app.js"></script>
+  <script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/victory.js"></script><script src="src/politics.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/living-world.js"></script><script src="src/character-art.js"></script><script src="src/closeup-observation.js"></script><script src="src/app.js"></script>
 </body>
 </html>

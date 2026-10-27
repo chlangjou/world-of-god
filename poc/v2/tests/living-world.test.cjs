@@ -147,9 +147,15 @@ test('Heal targets the authoritative patient when their animated avatar trails t
     path:[{x:oldX,y:p.y},{x:p.x,y:p.y}],startedAt:0,duration:1000});
   ui.render();
   const shown=ui.position(p.id);
-  assert.ok(Math.abs(shown.x-p.x)>=3,'the avatar has a real visible interpolation gap');
-  const screen=Living.toScreen(ui.camera(),shown.x+.5,shown.y+.5,768,768);
+  assert.ok(Math.abs(shown.x-p.x)>=3,'a playing avatar may trail its already-advanced tick');
   ui.choose('heal');
+  // A visible close-up aim pause must snap that trail to the real world first,
+  // rather than secretly moving the Miracle after the user clicks.
+  const actual=ui.position(p.id);
+  near(actual.x,p.x);near(actual.y,p.y);
+  assert.equal(ui.runtime().paused,true);
+  assert.equal(ui.runtime().aimHold.active,true);
+  const screen=Living.toScreen(ui.camera(),actual.x+.5,actual.y+.5,768,768);
   const hour=s.hour,originalHealth=p.health;
   ui.canvas.listeners.click({clientX:screen.x,clientY:screen.y});
   assert.ok(p.health>originalHealth,'clicking visual avatar must heal their current world coordinates');

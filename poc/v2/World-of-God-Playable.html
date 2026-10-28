@@ -436,6 +436,18 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
  .close-aim-status{left:6px;top:83px;max-width:78%}
 }
 
+/* P1a+P2a atlas sprites are hidden DOM resources and never a second page area.
+   Canvas drawImage uses nearest-pixel sampling; strategic UI text stays crisp. */
+.map-wrap img[hidden]{display:none!important}
+.camera-controls #villageArtBtn{min-width:78px;font-weight:650;color:#e5d9ac}
+@media(max-width:930px){
+  .camera-controls{max-width:calc(100% - 125px)}
+  .camera-controls #villageArtBtn{min-width:65px;font-size:10px}
+}
+@media(max-width:610px){
+  .camera-controls #villageArtBtn{min-width:48px;max-width:65px;white-space:normal;line-height:1.1}
+}
+
 </style>
   <style>
 /* Compact persistent file menu retains Save/Load even on narrow screens. */
@@ -516,12 +528,16 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
         </div>
         <div class="map-wrap">
           <canvas id="world" width="768" height="768" aria-label="世界地圖，滾輪縮放、拖曳平移，點選居民或施展神蹟" tabindex="0"></canvas>
+          <img id="pixelVillagers" alt="" hidden decoding="async" src="data:image/png;base64,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">
+          <img id="pixelGround" alt="" hidden decoding="async" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABgCAMAAABL/ICqAAABIFBMVEWqmnBMjp0/d1trmG2QlopxW0ebe1u6wap+qndsinPJto2flG+2pHZbhV+Ot4S/r4OIi4Sg0tCutKLHvXpYh2WkytA3bFRwusE4fJHTx6nz2KEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC52Ic8AAAAYHRSTlP///////////////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASk9/lAAACwUlEQVR42uWV2XbjIAyGleDUBq+tlyzv/6CjBYTAzeRiLkcnp0bo06+Fi4J7jZ0z1nXOe+ODGxGYJo12XWcA74E9AaapExtHNwkVgenlPV1OpMHASwA8gygzUBkiGcDkcUyFYg/eU8OguACvCDD0SgDV9TodF4vOyymgcyqT9sDjmTXhb1RgmhDwtCpO5XsGnAVwbpcBiaeSTgBfvMVYA+khosxUrGyCFMC1REAfjlUAfZ6CAGdnRGDCP5Cs76Ew8YehuJhndee+H0qAHAKi0jxLLER+xkAIooSREMp6CMwYD6KogNVHCbwMw9DTfRQgoK+ZnsGgc5QAG0dlplhDO4p9ZyBOJEBqkZqlUn0qItNnnV4ICwyz3SMBOEfa/MCEAiHMpIU3fc9I0MXMsZ38GlyTO5Mthnq9FsCKYTjtP9pVbJOPu65XY3hLwLZxSO0wnwMOk7A6xEhizQmosG4qS4CLh00QWN1GCcy4zRkyKuRjxNxmiroIkKLhrIFou9XMSl/K22KT13IV+DlWBA4pDpvOvaXZnG0UTOVDTxg7mFu5B1ckSvKhU6iWtLAeaZBVN1mnb1sxJr+Inf1AFVe8hS7PmadUXbgYe1xq2y9gHftJRzglVTLwq3IFvDNK3OHBpe508Y0WY3q8Q9XjrvUiQ8B9P41yiaJ/78ECpnzWoMvYwy6SdzzcK+r3EndtdQfT3eP0EKzA5blcrcMRyPBe7/HxtgerBY3Ys3lj0HywDPw0ja+jPgF4+EHz3udqC16jMUCHDMT40i4J8AK0BmgxjlYotGwx3qoHVBLzFhPWeGumWPh2WWQgCbOXx0QfC3McTSSrRXFjEv9p2hPw1CQGmgp4pu7ozJ20DZ/LtxCAmsGQSEAVbyn+JKC1wPMXhYjD7YPhv5Rb+Tv58FX+av/rg33uoap4q/1zxbqJf+/h/9jDH3jZOvhmJmEmAAAAAElFTkSuQmCC">
+          <img id="pixelObjects" alt="" hidden decoding="async" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAADACAMAAACDB5U0AAABIFBMVEUAAABVhk8jOS+XcEdBb0ffw5m9wKqcqqM2cUvQxKrXr2hVQzcyZ0VEfEt9YU3Bi1OLak+qeFFGOzXt8NZ2pGVmSj1rVj5km1yat3VmfHeCiYJPbXB7iYG9lmQ9TDnOuYycnXIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAbfTkbAAAAYHRSTlMA/2n///////////////////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADrfg0AAAD+ElEQVR42u2YD3OiMBDFBW1FCrV3UAH1bL//pzySTcIm2fwhcaZzN7yposj78XaDsWG32/T/aw/K9ScTmLXOIHB/nU4Q/mSCtKcSkD+JoPyJVSz+tD6o+PvVnTxj//4MtrMiRACYVHx4B5s6ugg4oQwNKer6LPbE17/XtOwL+mvKj1sZ6AHYz5oX3kVVIfpVi+5JAOqlnwA5RcPtFOozl99Vfmwfgv4AgYhvbzwEUaPWL2JTO6fJvZoBnafXOuucgKNF++PObgMc1wy58fxYvIHO+saZwgkISsa2/O+zXkJ6f3N+Exhg5n/NjwzA7fZ1u9GAT6ZowG8sAbjdbs8AuAkM8AVigE+pVQCUIB/wC7QSIIcxAaBfRxQAhtFJCALEhRQA/AE9EfDy4wkIgIPwJEDMKNCAcg2gLEvDXYJ/BUBjlAD4/viY/1z6Vk8SUJqA94840RESAGlzOsh0o1JiFPxXL9m4SergU64/hpALOBzyCIdDJiEXcDhkErIBzSx06DAsz8sHvgAI0PcagH8wjgECDsoA6B0HhwCNXmshpXCcMgwuPwQWZyl0AdIPaBCgsIWiVaEBaBpu6XsMQMNTVX5A4QAUXkCjANg1CJZeRkURFKCwAONo9dImzO5hYASWe37g+AjACdUawDDYY1FxEQWwGszBmwF6LwMA1HIlHVAI/wqAeUFVFKGBHhQxigaIFFYYJwCX4AcMAwloW3lsj0eeqIEGtG2r+i4B6uxaDLKEtkWAwhqMpkGDSY6jBCynMsqQAIZy+X0ALYsNaFu6BAJAl8Dt5vfGljjCBsD5B//gzW3QAZVVgQkwvkVqdJ0AswkCsHDhVRUNEAgzmA9ghaYa6wSMowXAM5p8WfkArcPNqkAANqlS42h2QQegAgCwIwH8cpLHWxXhAshreQ1gt3MQPFeSO4AC9D0iNBZg9o0j6ReIngHEzDaO5HQqANTvuwiwAIj+O/IbdcyviB/WsF2XkZ7tWmNneij35ZGycHlcLuy244Xp5wFJhBwAX+fqgNh1L1oom4Dw8tlYaT8uSI+INbi5VH9oCq/iyzXKJay87bDqPkT+3Q83ZrutsWnTpk2bNv3zut8z7a+v9zx7BgDsgtB10zSl2YHQdcfjcQKttXNCNx2VgpCu0+0zgAdACgFeTZkAP8EKsBJABHjFLQgSYip4AsBDiGmBD+BswfV6jSIQgCvX6XS6JgC6jltBURGMFnTdCSkighXg5ATQBD8gIoIOMP0RBL0F6wGBCnTCRM8FaDIh/IgweeYjrgBgCq737ncSAATPrLasEWk/B0xRa2eqhVzgpxGE/4okyi8jAWBSOyapZ90ASF+8RyzDn7P+3/1D6/+/gnCy0grtx/MAAAAASUVORK5CYII=">
           <div class="camera-controls" role="group" aria-label="世界視角控制">
             <button id="zoomOutBtn" type="button" aria-label="縮小世界地圖" title="縮小一級">−</button>
             <button id="zoomResetBtn" type="button" title="恢復全地圖">1× · 全圖</button>
             <button id="zoomInBtn" type="button" aria-label="放大世界地圖" title="放大一級">＋</button>
             <button id="followPersonBtn" type="button" aria-pressed="false" title="追蹤居民選單目前選取的真人">追蹤居民</button>
             <button id="observeBtn" type="button" aria-pressed="false" hidden title="放大到 4× 可啟動真實時間慢速觀察">開啟觀察</button>
+            <button id="villageArtBtn" type="button" title="前往當前世界裡確實存在住屋的村落，以 8× 看角色與環境整體風格">村落近景</button>
           </div>
           <div id="closeAimStatus" class="close-aim-status" hidden aria-live="polite"></div>
           <div id="transitionNotice" class="close-transition-notice" hidden aria-live="off"></div>
@@ -7908,10 +7924,137 @@ if(root)root.WOG_CLOSEUP=API;
 })(typeof window!=='undefined'?window:null);
 
 </script><script>
+/* P1a+P2a: A single coherent close-up village painting layer.
+   Assets are hand-authored original PNG pixel atlases, not resized icons.
+   No simulation state or RNG calls; all locations come from world data. */
+(function(root){
+'use strict';
+const TILE=16,OBJECT=64,CHAR_W=32,CHAR_H=48;
+const TYPES=Object.freeze({meadow:0,dry:1,forest:2,river:3,rock:4,field:5});
+const ROLE_ROW=Object.freeze({'adult-a':0,'adult-b':1,child:2});
+function imageReady(img,w,h){
+  return !!img&&img.complete===true&&img.naturalWidth===w&&img.naturalHeight===h;
+}
+function hash(text){
+  let v=2166136261;
+  for(const c of String(text)){v^=c.charCodeAt(0);v=Math.imul(v,16777619);}
+  return v>>>0;
+}
+function terrainRow(t){
+  if(t.terrain==='river')return TYPES.river;
+  if(t.terrain==='field')return TYPES.field;
+  if(t.terrain==='forest')return TYPES.forest;
+  if(t.terrain==='rock')return TYPES.rock;
+  return (t.moisture||0)<.3?TYPES.dry:TYPES.meadow;
+}
+function getTile(world,x,y){
+  if(x<0||y<0||x>=world.width||y>=world.height)return null;
+  return world.tiles[y*world.width+x]||null;
+}
+function neighbors(world,tile){
+  return {
+    top:getTile(world,tile.x,tile.y-1),
+    right:getTile(world,tile.x+1,tile.y),
+    bottom:getTile(world,tile.x,tile.y+1),
+    left:getTile(world,tile.x-1,tile.y)
+  };
+}
+function drawTile(c,image,t,world,cell){
+  if(!imageReady(image,TILE*2,TILE*6))return false;
+  const row=terrainRow(t),variant=hash(String(world.seed)+'|'+t.x+'|'+t.y+'|terrain')&1;
+  const x=t.x*cell,y=t.y*cell;
+  c.save();c.imageSmoothingEnabled=false;
+  c.drawImage(image,variant*TILE,row*TILE,TILE,TILE,x,y,cell+.06,cell+.06);
+  // Riverbanks are only shown when actual adjacent tiles are a river.
+  // They do not imply a walkable ford, bridge or improved access.
+  const around=neighbors(world,t);
+  const water=t.terrain==='river';
+  for(const [side,n] of Object.entries(around)){
+    if(!n||((n.terrain==='river')===water))continue;
+    c.fillStyle=water?'#bdd7bd':'#bdac7c';
+    const depth=cell*.09;
+    if(side==='top')c.fillRect(x,y,cell,depth);
+    if(side==='bottom')c.fillRect(x,y+cell-depth,cell,depth);
+    if(side==='left')c.fillRect(x,y,depth,cell);
+    if(side==='right')c.fillRect(x+cell-depth,y,depth,cell);
+  }
+  // Real field crop only: no leaves before crop actually exists.
+  if(t.terrain==='field'&&t.crop>.16){
+    const mature=Math.max(0,Math.min(1,t.crop||0));
+    c.strokeStyle=mature>.52?'#e0c46f':'#91ab6f';
+    c.lineWidth=Math.max(.32,cell*.07);
+    for(let col=0;col<3;col++)for(let row=0;row<3;row++){
+      const cx=x+cell*(.17+col*.33),cy=y+cell*(.28+row*.26);
+      const tall=cell*(.06+mature*.12);
+      c.beginPath();c.moveTo(cx,cy);c.lineTo(cx-cell*.04,cy-tall);
+      c.moveTo(cx,cy);c.lineTo(cx+cell*.07,cy-tall*.8);c.stroke();
+    }
+  }
+  c.restore();return true;
+}
+function drawObject(c,img,index,x,y,cell){
+  if(!imageReady(img,64,192))return false;
+  c.save();c.imageSmoothingEnabled=false;
+  const dx=x-cell*.93,dy=y-cell*1.34;
+  c.drawImage(img,0,index*OBJECT,OBJECT,OBJECT,dx,dy,cell*1.86,cell*1.86);
+  c.restore();return true;
+}
+function drawHouse(c,img,house,cell){
+  if(!house.home)return false;
+  return drawObject(c,img,0,(house.x+.5)*cell,(house.y+.5)*cell,cell);
+}
+function drawTerrainObject(c,img,t,cell,seed){
+  const key=hash(String(seed)+'|'+t.x+'|'+t.y+'|dressing');
+  if(t.terrain==='forest'&&key%4===0)
+    return drawObject(c,img,1,(t.x+.5)*cell,(t.y+.5)*cell,cell);
+  if(t.terrain==='rock'&&key%5===0)
+    return drawObject(c,img,2,(t.x+.5)*cell,(t.y+.5)*cell,cell*.72);
+  return false;
+}
+function roleFor(p,roles,Art){
+  const role=Art.archetype(p,roles||{});
+  return Object.hasOwn(ROLE_ROW,role)?role:null;
+}
+function frameFor(p,roles,time,Art){
+  const s=Art.appearance(p,roles||{});
+  if(s.wounded)return 7;
+  if(s.walking)return 1+Math.floor(time*6+s.hash%4)%4;
+  if(s.praying)return 6;
+  if(s.working)return 5;
+  return 0;
+}
+function drawPerson(c,img,p,x,y,cell,time,roles,Art){
+  const role=roleFor(p,roles,Art);
+  if(!role||!imageReady(img,CHAR_W*8,CHAR_H*3))return false;
+  const frame=frameFor(p,roles,time,Art),row=ROLE_ROW[role];
+  // Foot anchoring is shared by all 8 frames so steps don't resize or jump.
+  // The outer app's existing characterScale controls child height and crowd UI.
+  const w=cell*1.06,h=cell*1.59;
+  c.save();c.imageSmoothingEnabled=false;
+  c.drawImage(img,frame*CHAR_W,row*CHAR_H,CHAR_W,CHAR_H,
+    x-w/2,y+cell*.56-h,w,h);
+  // Small identity accent is stable for a real person, never crowd dependent.
+  const identity=Art.identity(p),scarf=identity.fabric;
+  c.fillStyle=scarf;
+  c.fillRect(x-cell*.13,y-cell*.15,cell*.19,Math.max(.45,cell*.08));
+  c.restore();return true;
+}
+const API={TYPES,ROLE_ROW,imageReady,terrainRow,getTile,neighbors,hash,
+  drawTile,drawHouse,drawTerrainObject,roleFor,frameFor,drawPerson};
+if(typeof module!=='undefined'&&module.exports)module.exports=API;
+if(root)root.WOG_VILLAGE_ART=API;
+})(typeof window!=='undefined'?window:null);
+
+</script><script>
 /* Browser-only view/input adapter. All authoritative simulation resides in sim.js. */
 (() => { 'use strict';
   const S = window.WoG2, Playtest = window.WOG_PLAYTEST, L = window.WOG_LIVING_WORLD;
   const Art = window.WOG_CHARACTER_ART, Observe = window.WOG_CLOSEUP;
+  // Optional painted close-up layer. Missing PNGs leave the original painter
+  // functional, without ever changing the underlying world state.
+  const Village = window.WOG_VILLAGE_ART;
+  const pixelPeople=$('pixelVillagers'),pixelGround=$('pixelGround'),
+    pixelObjects=$('pixelObjects');
   if(!L||!Art||!Observe)throw Error('Living World camera, art or observation module is missing');
   const $ = id => document.getElementById(id);
   const canvas = $('world'), ctx = canvas.getContext('2d');
@@ -8067,6 +8210,30 @@ if(root)root.WOG_CLOSEUP=API;
     const result=Observe.deadZoneFollow(camera,{x:at.x+.5,y:at.y+.5},
       cameraFrameMs);
     if(result.jump)transitionNoticeUntil=animationClock+1700;
+  }
+  function focusRealVillage(){
+    // Pick only real existing homes. The art sample never adds a house, crop,
+    // tree, stone node, person, or river to the simulation.
+    const homes=state.households.filter(h=>h.home);
+    if(!homes.length){say('目前尚無已完成的住屋，請觀察現有聚落後再試。');return;}
+    const around=state.tiles||[];
+    const nearCamera=homes.map(h=>{
+      const crops=around.filter(t=>t.terrain==='field'&&
+        Math.hypot(t.x-h.x,t.y-h.y)<=4).length;
+      const forest=around.filter(t=>t.terrain==='forest'&&
+        Math.hypot(t.x-h.x,t.y-h.y)<=4).length;
+      const river=around.filter(t=>t.terrain==='river'&&
+        Math.hypot(t.x-h.x,t.y-h.y)<=4).length;
+      const nearbyHomes=homes.filter(v=>Math.hypot(v.x-h.x,v.y-h.y)<=3).length;
+      return {h,score:crops*2+forest+river+nearbyHomes*2-
+        Math.hypot(camera.x-h.x,camera.y-h.y)*.15};
+    }).sort((a,b)=>b.score-a.score||a.h.id.localeCompare(b.h.id));
+    const h=nearCamera[0].h;
+    camera.followId=null;camera.zoom=8;
+    L.focus(camera,h.x+.5,h.y+.5);
+    reconcileObservationZoom();syncCameraControls();render();
+    say('已前往真實已建住屋 ('+Math.round(h.x)+', '+Math.round(h.y)+
+      ') 的近景樣板：作物、河岸、樹與住屋只在世界原本存在時才會出現。');
   }
   function followSelected(){
     if(camera.followId){
@@ -9379,11 +9546,13 @@ if(root)root.WOG_CLOSEUP=API;
     c.save();c.translate(t.tx,t.ty);
     c.scale(t.scaleX/size,t.scaleY/(canvas.height/state.height));
     const visible=L.bounds(camera,canvas.width,canvas.height);
+    const painted=!!Village&&camera.zoom>=4;
     for(const tile of state.tiles) {
       const a=tile;
       if(camera.zoom>1&&(a.x<visible.minX-2||a.x>visible.maxX+2||
           a.y<visible.minY-2||a.y>visible.maxY+2))continue;
       const t=a;
+      if(painted&&Village.drawTile(c,pixelGround,t,state,size))continue;
       let color;
       if(t.terrain==='river') color='#478597';
       else if(t.terrain==='forest') color=t.moisture<.3?'#5c6750':'#3d6851';
@@ -9393,6 +9562,13 @@ if(root)root.WOG_CLOSEUP=API;
       c.fillStyle=color;c.fillRect(t.x*size,t.y*size,Math.ceil(size+.1),Math.ceil(size+.1));
       if(t.terrain==='forest' && ((t.x*7+t.y*13)%3===0)){c.fillStyle='#2d5242';c.fillRect(t.x*size+size*.27,t.y*size+size*.15,size*.5,size*.63)}
       if(t.terrain==='field' && t.crop>.18){c.strokeStyle=t.crop>.5?'#ead49b':'#af9759';c.lineWidth=.75;c.beginPath();c.moveTo(t.x*size+size*.22,t.y*size+size*.75);c.lineTo(t.x*size+size*.78,t.y*size+size*.20);c.stroke();}
+    }
+    if(painted&&Village.imageReady(pixelObjects,64,192)){
+      for(const tile of state.tiles){
+        if(tile.x<visible.minX-3||tile.x>visible.maxX+3||
+           tile.y<visible.minY-3||tile.y>visible.maxY+3)continue;
+        Village.drawTerrainObject(c,pixelObjects,tile,size,state.seed);
+      }
     }
     // Shared natural mineral sites remain visible while exhausted; actual
     // guarded rights are represented as small rings, not full-map borders.
@@ -9413,6 +9589,7 @@ if(root)root.WOG_CLOSEUP=API;
     }
     c.strokeStyle='#c7c7ab80';c.lineWidth=1;
     for(const h of state.households) {
+      if(painted&&Village.drawHouse(c,pixelObjects,h,size))continue;
       const px=h.x*size+size/2,py=h.y*size+size/2;
       if(h.home){c.fillStyle='#e1cf9d';c.fillRect(px-size*.47,py-size*.20,size*.95,size*.8);c.fillStyle='#7c6654';c.beginPath();c.moveTo(px-size*.72,py-size*.23);c.lineTo(px,py-size*.91);c.lineTo(px+size*.72,py-size*.23);c.closePath();c.fill();}
       else {c.fillStyle='#d6bb947e';c.beginPath();c.moveTo(px-size*.5,py+size*.28);c.lineTo(px,py-size*.47);c.lineTo(px+size*.5,py+size*.28);c.fill();}
@@ -9609,7 +9786,15 @@ if(root)root.WOG_CLOSEUP=API;
       // simple faction pictograms at 1–2× so the strategic map stays readable.
       // All art is a pure presentation of the actual resident's saved state.
       if(camera.zoom>=3.5){
-        Art.draw(c,p,px,py,size,time,{
+        const roleArt={
+          zoom:camera.zoom,moving:visual.moving,priest,saint,
+          soldier:!!soldierOf,leader:isLeader,
+          faithColor:faction?factionColor(faction.id):'#b8a78c',
+          healed:(healedUntil.get(p.id)||0)>animationClock
+        };
+        const pixels=painted&&Village.drawPerson(c,pixelPeople,p,px,py,
+          size,time,roleArt,Art);
+        if(!pixels)Art.draw(c,p,px,py,size,time,{
           zoom:camera.zoom,moving:visual.moving,priest,saint,
           soldier:!!soldierOf,leader:isLeader,
           faithColor:faction?factionColor(faction.id):'#b8a78c',
@@ -10137,6 +10322,7 @@ if(root)root.WOG_CLOSEUP=API;
       '已退出近景慢速觀察，保留相機位置與目前暫停狀態。');
   };
   $('followPersonBtn').onclick=followSelected;
+  $('villageArtBtn').onclick=focusRealVillage;
   canvas.addEventListener('wheel',e=>{
     e.preventDefault();
     const p=canvasPointer(e);

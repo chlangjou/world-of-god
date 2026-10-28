@@ -1,0 +1,40 @@
+name: Issue 15 P1a P2a Village Art Fast
+on:
+  push:
+    branches:
+      - codex/issue-15-village-art-p1a-p2a
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-15-village-art-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-15-village-art-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  pixel-village:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Validate real PNG bytes, renderer and true-world village
+        working-directory: poc/v2
+        run: |
+          node --check src/village-pixel-art.js
+          node --check src/app.js
+          timeout 55s node --test tests/pixel-village-art.test.cjs tests/character-art.test.cjs tests/closeup-p0.test.cjs
+      - name: Regress real crowd, map, aim and combat
+        working-directory: poc/v2
+        run: timeout 55s node --test tests/crowd-selection.test.cjs tests/living-world.test.cjs tests/need-location.test.cjs tests/miracle-parameters.test.cjs tests/map-layers.test.cjs tests/polity-intervention-ui.test.cjs tests/layout.test.cjs
+      - name: Smoke / offline PNG inline parity
+        working-directory: poc/v2
+        run: |
+          timeout 20s npm run smoke
+          timeout 20s npm run check:playable

@@ -46,10 +46,22 @@ const scripts='<script>window.WOG_RELIGION_PROFILE='+religion+';</'+'script>'+
   '<script>\n'+read('src/living-world.js')+'\n</'+'script>'+
   '<script>\n'+read('src/character-art.js')+'\n</'+'script>'+
   '<script>\n'+read('src/closeup-observation.js')+'\n</'+'script>'+
+  '<script>\n'+read('src/village-pixel-art.js')+'\n</'+'script>'+
   '<script>\n'+read('src/app.js')+'\n</'+'script>';
-const marker='<script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/victory.js"></script><script src="src/politics.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/living-world.js"></script><script src="src/character-art.js"></script><script src="src/closeup-observation.js"></script><script src="src/app.js"></script>';
+const marker='<script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/victory.js"></script><script src="src/politics.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/living-world.js"></script><script src="src/character-art.js"></script><script src="src/closeup-observation.js"></script><script src="src/village-pixel-art.js"></script><script src="src/app.js"></script>';
 if(!html.includes(marker))throw Error('Missing JS entrypoints');
 html=html.replace(marker,scripts);
+// The released offline HTML must embed actual binary PNGs (never external
+// requests or stand-in geometric painters) with fully verified dimensions.
+for(const file of ['assets/pixel-villagers-v0.png','assets/pixel-ground-v0.png',
+  'assets/pixel-village-objects-v0.png']){
+  const marker='src="'+file+'"';
+  if(!html.includes(marker))throw Error('Missing pixel atlas reference '+file);
+  const png=fs.readFileSync(path.join(root,file));
+  if(png.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')
+    throw Error('Not a PNG atlas: '+file);
+  html=html.replace(marker,'src="data:image/png;base64,'+png.toString('base64')+'"');
+}
 const release=path.join(root,'World-of-God-Playable.html');
 if(mode.includes('--check')){
  if(!fs.existsSync(release)||read('World-of-God-Playable.html')!==html){

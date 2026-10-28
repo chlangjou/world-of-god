@@ -422,3 +422,15 @@ dialog{max-height:min(85dvh,630px);overflow:hidden;padding:17px}
  .camera-controls #observeBtn{min-width:70px;font-size:10px}
  .close-aim-status{left:6px;top:83px;max-width:78%}
 }
+
+/* P1a+P2a atlas sprites are hidden DOM resources and never a second page area.
+   Canvas drawImage uses nearest-pixel sampling; strategic UI text stays crisp. */
+.map-wrap img[hidden]{display:none!important}
+.camera-controls #villageArtBtn{min-width:78px;font-weight:650;color:#e5d9ac}
+@media(max-width:930px){
+  .camera-controls{max-width:calc(100% - 125px)}
+  .camera-controls #villageArtBtn{min-width:65px;font-size:10px}
+}
+@media(max-width:610px){
+  .camera-controls #villageArtBtn{min-width:48px;max-width:65px;white-space:normal;line-height:1.1}
+}

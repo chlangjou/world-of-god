@@ -58,7 +58,7 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
   const drawing=[];let lastArc=null;
   const ctx=new Proxy({},{
     set(object,key,value){object[key]=value;return true;},
-    get(object,key){return key in object?object[key]:(...args)=>{if(key==='arc')lastArc=args;if(['fill','stroke','fillText'].includes(key))drawing.push({kind:key,args,arc:lastArc,fill:object.fillStyle,stroke:object.strokeStyle});};}
+    get(object,key){return key in object?object[key]:(...args)=>{if(key==='arc')lastArc=args;if(['fill','stroke','fillText','drawImage'].includes(key))drawing.push({kind:key,args,arc:lastArc,fill:object.fillStyle,stroke:object.strokeStyle});};}
   });
   canvas.getContext=()=>ctx;
   const documentListeners={};
@@ -80,6 +80,7 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
     WOG_PLAYTEST:playtest,WOG_LIVING_WORLD:require('../src/living-world.js'),
     WOG_CHARACTER_ART:require('../src/character-art.js'),
     WOG_CLOSEUP:require('../src/closeup-observation.js'),
+    WOG_VILLAGE_ART:require('../src/village-pixel-art.js'),
     WOG_PLAYTEST_PROFILE:{...playtestConfig,defaultScenario:'native'},
     WOG_MOBILITY_PROFILE:require('../config/mobility-contact-v0.1.json'),WOG_VICTORY_PROFILE:require('../config/victory-dominance-v0.1.json'),WOG_SHRINE_PROFILE:require('../config/shrine-temple-v0.1.json'),WOG_POLITY_PROFILE:politicsProfile};
   const memory=new Map(),storage={

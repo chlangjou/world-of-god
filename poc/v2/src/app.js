@@ -2,8 +2,13 @@
 (() => { 'use strict';
   const S = window.WoG2, Playtest = window.WOG_PLAYTEST, L = window.WOG_LIVING_WORLD;
   const Art = window.WOG_CHARACTER_ART, Observe = window.WOG_CLOSEUP;
+  // Optional painted close-up layer. Missing PNGs leave the original painter
+  // functional, without ever changing the underlying world state.
+  const Village = window.WOG_VILLAGE_ART;
   if(!L||!Art||!Observe)throw Error('Living World camera, art or observation module is missing');
   const $ = id => document.getElementById(id);
+  const pixelPeople=$('pixelVillagers'),pixelGround=$('pixelGround'),
+    pixelObjects=$('pixelObjects');
   const canvas = $('world'), ctx = canvas.getContext('2d');
   let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeMineralExperimentProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, activePolityProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
@@ -157,6 +162,30 @@
     const result=Observe.deadZoneFollow(camera,{x:at.x+.5,y:at.y+.5},
       cameraFrameMs);
     if(result.jump)transitionNoticeUntil=animationClock+1700;
+  }
+  function focusRealVillage(){
+    // Pick only real existing homes. The art sample never adds a house, crop,
+    // tree, stone node, person, or river to the simulation.
+    const homes=state.households.filter(h=>h.home);
+    if(!homes.length){say('目前尚無已完成的住屋，請觀察現有聚落後再試。');return;}
+    const around=state.tiles||[];
+    const nearCamera=homes.map(h=>{
+      const crops=around.filter(t=>t.terrain==='field'&&
+        Math.hypot(t.x-h.x,t.y-h.y)<=4).length;
+      const forest=around.filter(t=>t.terrain==='forest'&&
+        Math.hypot(t.x-h.x,t.y-h.y)<=4).length;
+      const river=around.filter(t=>t.terrain==='river'&&
+        Math.hypot(t.x-h.x,t.y-h.y)<=4).length;
+      const nearbyHomes=homes.filter(v=>Math.hypot(v.x-h.x,v.y-h.y)<=3).length;
+      return {h,score:crops*2+forest+river+nearbyHomes*2-
+        Math.hypot(camera.x-h.x,camera.y-h.y)*.15};
+    }).sort((a,b)=>b.score-a.score||a.h.id.localeCompare(b.h.id));
+    const h=nearCamera[0].h;
+    camera.followId=null;camera.zoom=8;
+    L.focus(camera,h.x+.5,h.y+.5);
+    reconcileObservationZoom();syncCameraControls();render();
+    say('已前往真實已建住屋 ('+Math.round(h.x)+', '+Math.round(h.y)+
+      ') 的近景樣板：作物、河岸、樹與住屋只在世界原本存在時才會出現。');
   }
   function followSelected(){
     if(camera.followId){
@@ -1469,11 +1498,13 @@
     c.save();c.translate(t.tx,t.ty);
     c.scale(t.scaleX/size,t.scaleY/(canvas.height/state.height));
     const visible=L.bounds(camera,canvas.width,canvas.height);
+    const painted=!!Village&&camera.zoom>=4;
     for(const tile of state.tiles) {
       const a=tile;
       if(camera.zoom>1&&(a.x<visible.minX-2||a.x>visible.maxX+2||
           a.y<visible.minY-2||a.y>visible.maxY+2))continue;
       const t=a;
+      if(painted&&Village.drawTile(c,pixelGround,t,state,size))continue;
       let color;
       if(t.terrain==='river') color='#478597';
       else if(t.terrain==='forest') color=t.moisture<.3?'#5c6750':'#3d6851';
@@ -1483,6 +1514,13 @@
       c.fillStyle=color;c.fillRect(t.x*size,t.y*size,Math.ceil(size+.1),Math.ceil(size+.1));
       if(t.terrain==='forest' && ((t.x*7+t.y*13)%3===0)){c.fillStyle='#2d5242';c.fillRect(t.x*size+size*.27,t.y*size+size*.15,size*.5,size*.63)}
       if(t.terrain==='field' && t.crop>.18){c.strokeStyle=t.crop>.5?'#ead49b':'#af9759';c.lineWidth=.75;c.beginPath();c.moveTo(t.x*size+size*.22,t.y*size+size*.75);c.lineTo(t.x*size+size*.78,t.y*size+size*.20);c.stroke();}
+    }
+    if(painted&&Village.imageReady(pixelObjects,64,192)){
+      for(const tile of state.tiles){
+        if(tile.x<visible.minX-3||tile.x>visible.maxX+3||
+           tile.y<visible.minY-3||tile.y>visible.maxY+3)continue;
+        Village.drawTerrainObject(c,pixelObjects,tile,size,state.seed);
+      }
     }
     // Shared natural mineral sites remain visible while exhausted; actual
     // guarded rights are represented as small rings, not full-map borders.
@@ -1503,6 +1541,7 @@
     }
     c.strokeStyle='#c7c7ab80';c.lineWidth=1;
     for(const h of state.households) {
+      if(painted&&Village.drawHouse(c,pixelObjects,h,size))continue;
       const px=h.x*size+size/2,py=h.y*size+size/2;
       if(h.home){c.fillStyle='#e1cf9d';c.fillRect(px-size*.47,py-size*.20,size*.95,size*.8);c.fillStyle='#7c6654';c.beginPath();c.moveTo(px-size*.72,py-size*.23);c.lineTo(px,py-size*.91);c.lineTo(px+size*.72,py-size*.23);c.closePath();c.fill();}
       else {c.fillStyle='#d6bb947e';c.beginPath();c.moveTo(px-size*.5,py+size*.28);c.lineTo(px,py-size*.47);c.lineTo(px+size*.5,py+size*.28);c.fill();}
@@ -1699,7 +1738,15 @@
       // simple faction pictograms at 1–2× so the strategic map stays readable.
       // All art is a pure presentation of the actual resident's saved state.
       if(camera.zoom>=3.5){
-        Art.draw(c,p,px,py,size,time,{
+        const roleArt={
+          zoom:camera.zoom,moving:visual.moving,priest,saint,
+          soldier:!!soldierOf,leader:isLeader,
+          faithColor:faction?factionColor(faction.id):'#b8a78c',
+          healed:(healedUntil.get(p.id)||0)>animationClock
+        };
+        const pixels=painted&&Village.drawPerson(c,pixelPeople,p,px,py,
+          size,time,roleArt,Art);
+        if(!pixels)Art.draw(c,p,px,py,size,time,{
           zoom:camera.zoom,moving:visual.moving,priest,saint,
           soldier:!!soldierOf,leader:isLeader,
           faithColor:faction?factionColor(faction.id):'#b8a78c',
@@ -2227,6 +2274,7 @@
       '已退出近景慢速觀察，保留相機位置與目前暫停狀態。');
   };
   $('followPersonBtn').onclick=followSelected;
+  $('villageArtBtn').onclick=focusRealVillage;
   canvas.addEventListener('wheel',e=>{
     e.preventDefault();
     const p=canvasPointer(e);

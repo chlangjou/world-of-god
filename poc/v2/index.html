@@ -74,12 +74,16 @@
         </div>
         <div class="map-wrap">
           <canvas id="world" width="768" height="768" aria-label="世界地圖，滾輪縮放、拖曳平移，點選居民或施展神蹟" tabindex="0"></canvas>
+          <img id="pixelVillagers" alt="" hidden decoding="async" src="assets/pixel-villagers-v0.png">
+          <img id="pixelGround" alt="" hidden decoding="async" src="assets/pixel-ground-v0.png">
+          <img id="pixelObjects" alt="" hidden decoding="async" src="assets/pixel-village-objects-v0.png">
           <div class="camera-controls" role="group" aria-label="世界視角控制">
             <button id="zoomOutBtn" type="button" aria-label="縮小世界地圖" title="縮小一級">−</button>
             <button id="zoomResetBtn" type="button" title="恢復全地圖">1× · 全圖</button>
             <button id="zoomInBtn" type="button" aria-label="放大世界地圖" title="放大一級">＋</button>
             <button id="followPersonBtn" type="button" aria-pressed="false" title="追蹤居民選單目前選取的真人">追蹤居民</button>
             <button id="observeBtn" type="button" aria-pressed="false" hidden title="放大到 4× 可啟動真實時間慢速觀察">開啟觀察</button>
+            <button id="villageArtBtn" type="button" title="前往當前世界裡確實存在住屋的村落，以 8× 看角色與環境整體風格">村落近景</button>
           </div>
           <div id="closeAimStatus" class="close-aim-status" hidden aria-live="polite"></div>
           <div id="transitionNotice" class="close-transition-notice" hidden aria-live="off"></div>
@@ -206,6 +210,6 @@
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <input id="importFile" type="file" accept="application/json,.json" hidden>
-  <script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/victory.js"></script><script src="src/politics.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/living-world.js"></script><script src="src/character-art.js"></script><script src="src/closeup-observation.js"></script><script src="src/app.js"></script>
+  <script src="src/mobility.js"></script><script src="src/shrine-temple.js"></script><script src="src/victory.js"></script><script src="src/politics.js"></script><script src="src/sim.js"></script><script src="src/playtest.js"></script><script src="src/living-world.js"></script><script src="src/character-art.js"></script><script src="src/closeup-observation.js"></script><script src="src/village-pixel-art.js"></script><script src="src/app.js"></script>
 </body>
 </html>

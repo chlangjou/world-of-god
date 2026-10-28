@@ -1,0 +1,74 @@
+name: Issue 15 Art Direction Exploration Fast
+on:
+  push:
+    branches:
+      - codex/issue-15-art-style-exploration-v0
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-15-art-direction-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-15-art-direction-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  same-scene-art:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Check separated art and P0 gameplay contracts
+        working-directory: poc/v2
+        run: |
+          node --check src/art-exploration.js
+          node --check src/app.js
+          node --check tools/serve.cjs
+          timeout 65s node --test tests/art-direction.test.cjs tests/closeup-p0.test.cjs tests/living-world.test.cjs tests/character-art.test.cjs tests/miracle-parameters.test.cjs
+      - name: Smoke original modular web
+        working-directory: poc/v2
+        run: timeout 20s npm run smoke
+      - name: Native Chromium screenshots and served SVGZ verification
+        working-directory: poc/v2
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          node tools/serve.cjs >/tmp/wog-art-serve.log 2>&1 &
+          SERVER=$!
+          trap 'kill "$SERVER" 2>/dev/null || true' EXIT
+          for i in {1..35}; do
+            if curl -fsS http://127.0.0.1:8000/art-exploration.html >/dev/null; then break; fi
+            sleep .2
+          done
+          curl -fsS http://127.0.0.1:8000/index.html >/dev/null
+          curl -fsSI http://127.0.0.1:8000/assets/styles/style-A.svgz | grep -qi 'content-encoding: gzip'
+          for kind in A B C; do
+            curl -fsS "http://127.0.0.1:8000/assets/styles/style-${kind}.svgz" >/dev/null
+          done
+          CHROME="$(command -v google-chrome || command -v chromium || true)"
+          if [ -z "$CHROME" ]; then
+            echo "Missing real Chromium: browser screenshot contract cannot pass"
+            exit 1
+          fi
+          timeout 25s "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --virtual-time-budget=3500 --dump-dom \
+            'http://127.0.0.1:8000/art-exploration.html?zoom=4x' >reports/gallery-dom.html
+          grep -q 'data-art-ready="true"' reports/gallery-dom.html
+          for view in full 4x 8x; do
+            timeout 25s "$CHROME" --headless --no-sandbox --disable-gpu \
+              --disable-dev-shm-usage --hide-scrollbars --window-size=1550,940 \
+              --virtual-time-budget=3500 --screenshot="reports/art-gallery-${view}.png" \
+              "http://127.0.0.1:8000/art-exploration.html?zoom=${view}"
+          done
+          node -e "const f=require('fs');for(const v of ['full','4x','8x']){let b=f.readFileSync('reports/art-gallery-'+v+'.png');if(b.toString('hex',0,8)!=='89504e470d0a1a0a'||b.readUInt32BE(16)<1000)process.exit(1);console.log(v,b.length+' bytes',b.readUInt32BE(16)+'x'+b.readUInt32BE(20))}"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: issue-15-art-a-b-c-gallery
+          path: poc/v2/reports/art-gallery-*.png
+          retention-days: 14

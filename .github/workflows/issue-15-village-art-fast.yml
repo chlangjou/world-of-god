@@ -38,3 +38,31 @@ jobs:
         run: |
           timeout 20s npm run smoke
           timeout 20s npm run check:playable
+      - name: Capture the genuine native-world 8x village screenshot
+        working-directory: poc/v2
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          node tools/serve.cjs >/tmp/wog-local.log 2>&1 &
+          SERVER=$!
+          trap 'kill "$SERVER" 2>/dev/null || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:8000/village-review.html >/dev/null; then break; fi
+            sleep .2
+          done
+          CHROME="$(command -v google-chrome || command -v chromium || true)"
+          if [ -z "$CHROME" ]; then
+            echo 'No Chromium browser installed; cannot assert an actual-browser screenshot'
+            exit 1
+          fi
+          timeout 35s "$CHROME" --headless --no-sandbox --disable-gpu \
+            --disable-dev-shm-usage --hide-scrollbars --window-size=1550,940 \
+            --virtual-time-budget=8000 --screenshot="reports/native-village-8x.png" \
+            http://127.0.0.1:8000/village-review.html
+          test -s reports/native-village-8x.png
+          node -e "const fs=require('fs');const b=fs.readFileSync('reports/native-village-8x.png');if(b.toString('hex',0,8)!=='89504e470d0a1a0a'||b.readUInt32BE(16)<1000)process.exit(1);console.log('Chromium screenshot: '+b.length+' bytes, '+b.readUInt32BE(16)+'x'+b.readUInt32BE(20))"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: issue-15-native-village-8x
+          path: poc/v2/reports/native-village-8x.png
+          retention-days: 14

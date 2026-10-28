@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>World of God · Art Direction Exploration v0</title>
+<link rel="stylesheet" href="assets/styles/art-exploration.css">
+<script defer src="src/art-exploration.js"></script>
+</head><body>
+<header class="top"><div><p class="eyebrow">WORLD OF GOD · ISSUE #15</p>
+<h1>Art Direction / 美術風格比較</h1>
+<p>三組獨立原創向量樣板 · 同一構圖 · 相同居民尺度與腳底位置</p></div>
+<a class="game" href="village-review.html">開啟真正的遊戲畫面</a></header>
+<main><div class="bar"><div class="modes" aria-label="比較視角">
+<button type="button" data-view="full">完整村落</button>
+<button type="button" data-view="4x">4× 對照</button>
+<button type="button" data-view="8x">8× 對照</button>
+</div><p id="view-note">完整村落構圖。靜態藝術樣板，不是真實世界的渲染截圖。</p></div>
+<section class="gallery" aria-label="三種美術樣板">
+<article class="style"><div class="info"><span class="tag">A</span><div><h2>柔和手繪／繪本</h2><p>暖色紙感、柔和邊緣、自然筆觸</p></div></div>
+<div class="viewport" data-style="A"><img alt="A 風格：同一村落的繪本感原創向量視覺樣板" src="assets/styles/style-A.svgz" width="960" height="620"></div>
+<p class="note">視覺樣板 · 非遊戲 Screenshot · 非 Sprite Sheet</p></article>
+<article class="style"><div class="info"><span class="tag">B</span><div><h2>乾淨 2D 卡通</h2><p>線條可讀、乾淨色塊、輪廓優先</p></div></div>
+<div class="viewport" data-style="B"><img alt="B 風格：同一村落的乾淨卡通原創向量視覺樣板" src="assets/styles/style-B.svgz" width="960" height="620"></div>
+<p class="note">視覺樣板 · 非遊戲 Screenshot · 非 Sprite Sheet</p></article>
+<article class="style"><div class="info"><span class="tag">C</span><div><h2>柔和 2.5D／玩具感</h2><p>圓潤立體光影、簡潔表面、材質統一</p></div></div>
+<div class="viewport" data-style="C"><img alt="C 風格：同一村落的柔和 2.5D 玩具模型原創向量視覺樣板" src="assets/styles/style-C.svgz" width="960" height="620"></div>
+<p class="note">視覺樣板 · 非遊戲 Screenshot · 非 Sprite Sheet</p></article>
+</section>
+<section class="legend"><h2>固定比較條件</h2>
+<p>同一住宅、農田、樹木、河岸、草地、石塊；同一位農作者 Marin、持籃步行者 Toma、兒童 Lili。視角只是對同一張樣板裁切與放大，不會重新繪製人物或加入事件。</p>
+<p><strong>比例定義：</strong>4× 與 8× 視角的裁切寬高比例為 2:1（4× viewbox 720×540；8× viewbox 360×270）。這是相同視口條件的設計稿比較，尚未接入自然世界的 Camera、人物狀態或模擬；請勿當成真遊戲的 4×／8× 截圖。實際遊戲對照請開啟上方連結。</p></section>
+<p id="render-status" class="status" aria-live="polite">正在載入三組樣板…</p>
+</main></body></html>

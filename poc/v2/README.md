@@ -1,5 +1,26 @@
 # World of God — Web PoC v2
 
+## 2026-10-29 — Art Direction Exploration v0：Node.js 24 多檔案啟動（最新）
+
+- **目前功能分支**：`codex/issue-15-art-style-exploration-v0`，以第一版 Pixel-art 可回退分支 `codex/issue-15-village-art-p1a-p2a` 的已核實 HEAD `d58036c5044020f357989604f56f5f5f631c01dd` 起始。**`main` 不動，不合併 PR。**
+- **驗收狀態**：P1a＋P2a 工程成功，人工美術驗收未通過；Pixel-art 停止局部修補。現在只比較三種風格，不製作完整職業 Sprite Sheet，也不修改模擬。
+- **運行環境**：Node.js **24**（無額外 npm 依賴）。在專案根目錄執行：
+```sh
+cd poc/v2
+npm start
+```
+- **完整遊戲（獨立 CSS／JS／PNG／JSON）**：http://localhost:8000/
+- **同場景 A/B/C 美術樣板（獨立 SVGZ／CSS／JS）**：http://localhost:8000/art-exploration.html
+  - 可選完整村落、4×、8×；例如 http://localhost:8000/art-exploration.html?zoom=8x 。
+  - **這是靜態原創向量畫面，不是正式 Sprite Sheet 或真實遊戲截圖。** 4× 和 8× 使用同一幅 960×620 畫布，視窗從 720×540 變為 360×270（實際放大 2 倍），同一構圖、同一人物腳底位置。
+- **真實世界原有畫面入口**：http://localhost:8000/village-review.html ，仍是舊 Pixel-art baseline，用於觀察 Camera、8 小時 tick 與人物實際活動，**不等於三款新風格已接入遊戲**。
+- **本輪不再產生／同步** `World-of-God-Playable.html`；原單檔和建置 script 均保留作為過去成果，不是本分支的 CI 必要產物。外部素材透過 `tools/serve.cjs` 提供 HTTP；伺服器沿用既有實作，僅補 SVGZ gzip 與 PNG MIME。
+- **快速驗證**：`npm run test:art`、`node --test tests/closeup-p0.test.cjs tests/living-world.test.cjs`；CI 指定 Node24、每 Job ≤3 分鐘，不跑離線 parity 或長期平衡。
+- **風格決策與限制**：[Art Direction Exploration v0](docs/ISSUE_15_ART_DIRECTION_EXPLORATION_V0.md)。尚待玩家選擇，不宣稱美術驗收成功。
+
+---
+
+
 ## 測試規則對齊與修復（2026-10-23）
 
 以目前採用的 5 格接觸、2 戶成村、標準 AI 第 36 日首輪決策，以及獨立的

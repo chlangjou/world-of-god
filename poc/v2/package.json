@@ -42,9 +42,10 @@
     "test:quarry-p1-5": "node --test tests/mineral-rights.test.cjs tests/quarry-human-choices.test.cjs",
     "evaluate:quarry-p1-5": "node tools/quarry-p1-5-experiment.cjs --days=180",
     "test:quarry-p2": "node --test tests/mineral-rights.test.cjs tests/quarry-human-choices.test.cjs tests/quarry-p2.test.cjs",
-    "evaluate:quarry-p2": "node tools/quarry-p2-experiment.cjs --days=180"
+    "evaluate:quarry-p2": "node tools/quarry-p2-experiment.cjs --days=180",
+    "test:art": "node --test tests/art-direction.test.cjs"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24 <25"
   }
 }

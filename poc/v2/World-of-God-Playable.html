@@ -8053,10 +8053,10 @@ if(root)root.WOG_VILLAGE_ART=API;
   // Optional painted close-up layer. Missing PNGs leave the original painter
   // functional, without ever changing the underlying world state.
   const Village = window.WOG_VILLAGE_ART;
-  const pixelPeople=$('pixelVillagers'),pixelGround=$('pixelGround'),
-    pixelObjects=$('pixelObjects');
   if(!L||!Art||!Observe)throw Error('Living World camera, art or observation module is missing');
   const $ = id => document.getElementById(id);
+  const pixelPeople=$('pixelVillagers'),pixelGround=$('pixelGround'),
+    pixelObjects=$('pixelObjects');
   const canvas = $('world'), ctx = canvas.getContext('2d');
   let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeMineralExperimentProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, activePolityProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;

@@ -61,7 +61,7 @@ jobs:
             http://127.0.0.1:8000/village-review.html
           test -s reports/native-village-8x.png
           node -e "const fs=require('fs');const b=fs.readFileSync('reports/native-village-8x.png');if(b.toString('hex',0,8)!=='89504e470d0a1a0a'||b.readUInt32BE(16)<1000)process.exit(1);console.log('Chromium screenshot: '+b.length+' bytes, '+b.readUInt32BE(16)+'x'+b.readUInt32BE(20))"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: issue-15-native-village-8x
           path: poc/v2/reports/native-village-8x.png

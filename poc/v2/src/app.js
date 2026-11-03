@@ -4,11 +4,19 @@
   const Art = window.WOG_CHARACTER_ART, Observe = window.WOG_CLOSEUP;
   // Optional painted close-up layer. Missing PNGs leave the original painter
   // functional, without ever changing the underlying world state.
-  const Village = window.WOG_VILLAGE_ART;
+  const Village = window.WOG_VILLAGE_ART, Cartoon = window.WOG_CARTOON_ART;
   if(!L||!Art||!Observe)throw Error('Living World camera, art or observation module is missing');
   const $ = id => document.getElementById(id);
   const pixelPeople=$('pixelVillagers'),pixelGround=$('pixelGround'),
     pixelObjects=$('pixelObjects');
+  const cartoonPeople=$('cartoonVillagers'),cartoonGround=$('cartoonGround'),
+    cartoonObjects=$('cartoonObjects');
+  let cartoonEnabled=true; // View-only toggle; never saved into the world.
+  function cartoonAssetsReady(){
+    return !!Cartoon&&Cartoon.imageReady(cartoonPeople,512,288)&&
+      Cartoon.imageReady(cartoonGround,128,384)&&
+      Cartoon.imageReady(cartoonObjects,128,384);
+  }
   const canvas = $('world'), ctx = canvas.getContext('2d');
   let activeProfile = null, activeReligionProfile = null, activeMobilityProfile = null, activeMineralExperimentProfile = null, activeDivineProfile = null, activeOpponentProfile = null, activeOracleStrategyProfile = null, activePlaytestProfile = null, activeShrineProfile = null, activeVictoryProfile = null, activePolityProfile = null, profileLoading = true, divineKind = 'miracle', activeInspector = 'needs', housePage = 0, lastRoster = '';
   let state = S.create(), paused = true, speed = 1, acc = 0, previous = 0, lastDraw = 0;
@@ -1499,12 +1507,18 @@
     c.scale(t.scaleX/size,t.scaleY/(canvas.height/state.height));
     const visible=L.bounds(camera,canvas.width,canvas.height);
     const painted=!!Village&&camera.zoom>=4;
+    // Only switch once ALL THREE B-style assets are decoded, preventing a
+    // half-cartoon/half-pixel world. Missing assets fall back to old PNGs.
+    const styleB=camera.zoom>=4&&cartoonEnabled&&cartoonAssetsReady();
+    const painter=styleB?Cartoon:(painted?Village:null);
+    const terrainImage=styleB?cartoonGround:pixelGround;
+    const objectImage=styleB?cartoonObjects:pixelObjects;
     for(const tile of state.tiles) {
       const a=tile;
       if(camera.zoom>1&&(a.x<visible.minX-2||a.x>visible.maxX+2||
           a.y<visible.minY-2||a.y>visible.maxY+2))continue;
       const t=a;
-      if(painted&&Village.drawTile(c,pixelGround,t,state,size))continue;
+      if(painter&&painter.drawTile(c,terrainImage,t,state,size))continue;
       let color;
       if(t.terrain==='river') color='#478597';
       else if(t.terrain==='forest') color=t.moisture<.3?'#5c6750':'#3d6851';
@@ -1515,11 +1529,11 @@
       if(t.terrain==='forest' && ((t.x*7+t.y*13)%3===0)){c.fillStyle='#2d5242';c.fillRect(t.x*size+size*.27,t.y*size+size*.15,size*.5,size*.63)}
       if(t.terrain==='field' && t.crop>.18){c.strokeStyle=t.crop>.5?'#ead49b':'#af9759';c.lineWidth=.75;c.beginPath();c.moveTo(t.x*size+size*.22,t.y*size+size*.75);c.lineTo(t.x*size+size*.78,t.y*size+size*.20);c.stroke();}
     }
-    if(painted&&Village.imageReady(pixelObjects,64,192)){
+    if(painter&&painter.imageReady(objectImage,styleB?128:64,styleB?384:192)){
       for(const tile of state.tiles){
         if(tile.x<visible.minX-3||tile.x>visible.maxX+3||
            tile.y<visible.minY-3||tile.y>visible.maxY+3)continue;
-        Village.drawTerrainObject(c,pixelObjects,tile,size,state.seed);
+        painter.drawTerrainObject(c,objectImage,tile,size,state.seed);
       }
     }
     // Shared natural mineral sites remain visible while exhausted; actual
@@ -1541,7 +1555,7 @@
     }
     c.strokeStyle='#c7c7ab80';c.lineWidth=1;
     for(const h of state.households) {
-      if(painted&&Village.drawHouse(c,pixelObjects,h,size))continue;
+      if(painter&&painter.drawHouse(c,objectImage,h,size))continue;
       const px=h.x*size+size/2,py=h.y*size+size/2;
       if(h.home){c.fillStyle='#e1cf9d';c.fillRect(px-size*.47,py-size*.20,size*.95,size*.8);c.fillStyle='#7c6654';c.beginPath();c.moveTo(px-size*.72,py-size*.23);c.lineTo(px,py-size*.91);c.lineTo(px+size*.72,py-size*.23);c.closePath();c.fill();}
       else {c.fillStyle='#d6bb947e';c.beginPath();c.moveTo(px-size*.5,py+size*.28);c.lineTo(px,py-size*.47);c.lineTo(px+size*.5,py+size*.28);c.fill();}
@@ -1744,8 +1758,8 @@
           faithColor:faction?factionColor(faction.id):'#b8a78c',
           healed:(healedUntil.get(p.id)||0)>animationClock
         };
-        const pixels=painted&&Village.drawPerson(c,pixelPeople,p,px,py,
-          size,time,roleArt,Art);
+        const pixels=painter&&painter.drawPerson(c,styleB?cartoonPeople:pixelPeople,
+          p,px,py,size,time,roleArt,Art);
         if(!pixels)Art.draw(c,p,px,py,size,time,{
           zoom:camera.zoom,moving:visual.moving,priest,saint,
           soldier:!!soldierOf,leader:isLeader,
@@ -2275,6 +2289,22 @@
   };
   $('followPersonBtn').onclick=followSelected;
   $('villageArtBtn').onclick=focusRealVillage;
+  const cartoonStyleBtn=$('cartoonStyleBtn');
+  function syncCartoonButton(){
+    if(!cartoonStyleBtn)return;
+    cartoonStyleBtn.textContent=cartoonEnabled?'畫風 B · 卡通':'畫風 · 舊 Pixel';
+    cartoonStyleBtn.setAttribute('aria-pressed',String(cartoonEnabled));
+    cartoonStyleBtn.title='僅切換 4×/8× 繪圖，不改模擬、存檔或鏡頭位置';
+  }
+  if(cartoonStyleBtn)cartoonStyleBtn.onclick=()=>{
+    cartoonEnabled=!cartoonEnabled;syncCartoonButton();draw();
+  };
+  syncCartoonButton();
+  for(const img of [cartoonPeople,cartoonGround,cartoonObjects]){
+    if(!img)continue;
+    img.addEventListener('load',()=>{if(cartoonEnabled)draw();});
+    img.addEventListener('error',()=>{if(cartoonEnabled)draw();});
+  }
   canvas.addEventListener('wheel',e=>{
     e.preventDefault();
     const p=canvasPointer(e);

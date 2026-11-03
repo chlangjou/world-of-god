@@ -81,6 +81,7 @@ async function boot({sim=W,politicsProfile={...require('../config/polity-command
     WOG_CHARACTER_ART:require('../src/character-art.js'),
     WOG_CLOSEUP:require('../src/closeup-observation.js'),
     WOG_VILLAGE_ART:require('../src/village-pixel-art.js'),
+    WOG_CARTOON_ART:require('../src/village-cartoon-art.js'),
     WOG_PLAYTEST_PROFILE:{...playtestConfig,defaultScenario:'native'},
     WOG_MOBILITY_PROFILE:require('../config/mobility-contact-v0.1.json'),WOG_VICTORY_PROFILE:require('../config/victory-dominance-v0.1.json'),WOG_SHRINE_PROFILE:require('../config/shrine-temple-v0.1.json'),WOG_POLITY_PROFILE:politicsProfile};
   const memory=new Map(),storage={

@@ -59,7 +59,7 @@ jobs:
               --virtual-time-budget=12000 --dump-dom \
               "http://127.0.0.1:8000/cartoon-review.html?zoom=${zoom}" > "reports/native-b-${zoom}x-dom.html"
             grep -q 'data-review-ready="true"' "reports/native-b-${zoom}x-dom.html"
-            grep -q "data-review-zoom=\"\${zoom}\"" "reports/native-b-${zoom}x-dom.html"
+            grep -q "data-review-zoom=\"${zoom}\"" "reports/native-b-${zoom}x-dom.html"
             timeout 35s "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
               --hide-scrollbars --window-size=1550,940 --virtual-time-budget=12000 \
               --screenshot="reports/native-b-${zoom}x.png" \

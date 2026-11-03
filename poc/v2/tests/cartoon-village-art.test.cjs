@@ -66,8 +66,8 @@ test('SVG sheet uses fixed foot anchors, actual adult and child rows, state-driv
  assert.equal(draws[1][2],192,'children use their own sprite row');
  assert.equal(draws[1][1],6*64,'child prayer has real pose frame');
  const adult=draws[0],child=draws[1];
- assert.equal(adult[5],100-12*1.10/2);
- assert.equal(child[6],130+12*.56-12*1.66);
+ assert.equal(adult[5],100-12*1.22/2);
+ assert.equal(child[6],130+12*.56-12*1.83);
  assert.equal(Cartoon.frameFor({...a,activity:'farm'},{},1,Art),5);
  assert.equal(Cartoon.frameFor({...a,activity:'travel'},{moving:true},1,Art)>=1,true);
  assert.equal(Cartoon.frameFor({...a,health:50},{},1,Art),7);

@@ -65,9 +65,16 @@ jobs:
               --screenshot="reports/native-b-${zoom}x.png" \
               "http://127.0.0.1:8000/cartoon-review.html?zoom=${zoom}"
           done
+          # Old pixel baseline uses the same native seed/focus and remains independently playable.
+          timeout 35s "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --hide-scrollbars --window-size=1550,940 --virtual-time-budget=12000 \
+            --screenshot="reports/native-pixel-8x.png" \
+            "http://127.0.0.1:8000/village-review.html"
           node -e "const f=require('fs');for(const z of [4,8]){const b=f.readFileSync('reports/native-b-'+z+'x.png');if(b.toString('hex',0,8)!=='89504e470d0a1a0a'||b.readUInt32BE(16)<1000||b.length<30000)process.exit(1);console.log('Native B '+z+'x Chromium screenshot: '+b.length+' bytes '+b.readUInt32BE(16)+'x'+b.readUInt32BE(20))}"
       - uses: actions/upload-artifact@v6
         with:
           name: issue-15-b-native-world-4x-8x
-          path: poc/v2/reports/native-b-*.png
+          path: |
+            poc/v2/reports/native-b-*.png
+            poc/v2/reports/native-pixel-8x.png
           retention-days: 14

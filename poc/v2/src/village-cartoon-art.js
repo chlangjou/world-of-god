@@ -51,8 +51,9 @@ function drawTile(c,img,t,world,cell){
   // Crop is not painted unless the existing world actually has a crop.
   if(t.terrain==='field'&&(t.crop||0)>.16){
     const maturity=Math.max(0,Math.min(1,t.crop));
-    for(let col=0;col<3;col++)for(let row=0;row<3;row++){
-      const cx=x+cell*(.19+col*.32),cy=y+cell*(.26+row*.25);
+    const jitter=(hash(world.seed+'|'+t.x+'|'+t.y+'|cartoon-plants')%9-4)*.009;
+    for(let col=0;col<2;col++)for(let row=0;row<2;row++){
+      const cx=x+cell*(.26+col*.47+jitter),cy=y+cell*(.27+row*.45);
       const h=cell*(.07+.10*maturity),w=cell*(.055+.024*maturity);
       c.strokeStyle='#4a8d65';c.lineWidth=cell*.023;c.lineCap='round';
       c.beginPath();c.moveTo(cx,cy);c.lineTo(cx,cy-h);c.stroke();
@@ -98,7 +99,7 @@ function drawPerson(c,img,p,x,y,cell,time,roles,Art){
   const role=roleFor(p,roles,Art);
   if(!role||!imageReady(img,CHAR_W*8,CHAR_H*3))return false;
   const index=frameFor(p,roles,time,Art),row=ROLE_ROW[role];
-  const w=cell*1.10,h=cell*1.66;
+  const w=cell*1.22,h=cell*1.83;
   c.save();c.imageSmoothingEnabled=true;
   c.drawImage(img,index*CHAR_W,row*CHAR_H,CHAR_W,CHAR_H,
     x-w*.5,y+cell*.56-h,w,h);

@@ -1,5 +1,16 @@
 # World of God — Web PoC v2
 
+## 2026-11-03 — 已選 B 乾淨 2D 卡通：真正遊戲的 4×／8× 驗證
+
+目前 Draft PR #23 分支：`codex/issue-15-art-style-exploration-v0`，`main` 未動。
+請使用 **Node.js 24**，執行 `cd poc/v2 && npm start`。可玩多檔案入口：http://localhost:8000/ 。
+同一自然河谷的真實渲染驗證：http://localhost:8000/cartoon-review.html?zoom=4 與 `?zoom=8`。
+在遊戲地圖中用「畫風 B · 卡通」可切回舊 Pixel，同一 Seed／相機／tick 比較；歷史單檔不再是交付必要產物。
+三份獨立 SVG atlas（人物／地表／建築）只做成人兩款和兒童，無新增模擬規則。P0、Devotion40、Presence、原 Simulation Tick 和存檔保持。
+詳細規格及限制見 [Cartoon B 真實世界渲染驗證](docs/ISSUE_15_CARTOON_B_NATIVE_V0.md)。**玩家尚未驗收畫面；CI 綠燈不代表美術認可。**
+
+---
+
 ## 2026-10-29 — Art Direction Exploration v0：Node.js 24 多檔案啟動（最新）
 
 - **目前功能分支**：`codex/issue-15-art-style-exploration-v0`，以第一版 Pixel-art 可回退分支 `codex/issue-15-village-art-p1a-p2a` 的已核實 HEAD `d58036c5044020f357989604f56f5f5f631c01dd` 起始。**`main` 不動，不合併 PR。**

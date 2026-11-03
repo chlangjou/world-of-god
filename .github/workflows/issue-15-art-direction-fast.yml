@@ -1,0 +1,80 @@
+name: Issue 15 B Cartoon Native-World Fast
+on:
+  push:
+    branches:
+      - codex/issue-15-art-style-exploration-v0
+    paths:
+      - 'poc/v2/**'
+      - '.github/workflows/issue-15-art-direction-fast.yml'
+  workflow_dispatch:
+concurrency:
+  group: issue-15-art-direction-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  native-cartoon-b:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Fast renderer, real-world Camera / Miracle and rollback tests
+        working-directory: poc/v2
+        run: |
+          node --check src/village-cartoon-art.js
+          node --check src/village-pixel-art.js
+          node --check src/app.js
+          node --check tools/serve.cjs
+          timeout 70s node --test tests/cartoon-village-art.test.cjs tests/art-direction.test.cjs tests/closeup-p0.test.cjs tests/living-world.test.cjs tests/character-art.test.cjs tests/miracle-parameters.test.cjs
+      - name: Original deterministic world Smoke (no long simulation)
+        working-directory: poc/v2
+        run: timeout 20s npm run smoke
+      - name: Real Chromium screenshots of actual native-world B at 4x and 8x
+        working-directory: poc/v2
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          node tools/serve.cjs >/tmp/wog-cartoon-server.log 2>&1 &
+          SERVER=$!
+          trap 'kill "$SERVER" 2>/dev/null || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:8000/cartoon-review.html?zoom=8 >/dev/null; then break; fi
+            sleep .2
+          done
+          for asset in characters ground objects; do
+            curl -fsS -o /dev/null "http://127.0.0.1:8000/assets/cartoon-v0/${asset}.svg"
+          done
+          curl -fsS -o /dev/null http://127.0.0.1:8000/index.html
+          curl -fsS -o /dev/null http://127.0.0.1:8000/src/village-cartoon-art.js
+          CHROME="$(command -v google-chrome || command -v chromium || true)"
+          if [ -z "$CHROME" ]; then echo 'No Chromium browser: real screenshot contract not satisfied'; exit 1; fi
+          for zoom in 4 8; do
+            timeout 35s "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+              --virtual-time-budget=12000 --dump-dom \
+              "http://127.0.0.1:8000/cartoon-review.html?zoom=${zoom}" > "reports/native-b-${zoom}x-dom.html"
+            grep -q 'data-review-ready="true"' "reports/native-b-${zoom}x-dom.html"
+            grep -q "data-review-zoom=\"${zoom}\"" "reports/native-b-${zoom}x-dom.html"
+            timeout 35s "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+              --hide-scrollbars --window-size=1550,940 --virtual-time-budget=12000 \
+              --screenshot="reports/native-b-${zoom}x.png" \
+              "http://127.0.0.1:8000/cartoon-review.html?zoom=${zoom}"
+          done
+          # Old pixel baseline uses the same native seed/focus and remains independently playable.
+          timeout 35s "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --hide-scrollbars --window-size=1550,940 --virtual-time-budget=12000 \
+            --screenshot="reports/native-pixel-8x.png" \
+            "http://127.0.0.1:8000/village-review.html"
+          node -e "const f=require('fs');for(const z of [4,8]){const b=f.readFileSync('reports/native-b-'+z+'x.png');if(b.toString('hex',0,8)!=='89504e470d0a1a0a'||b.readUInt32BE(16)<1000||b.length<30000)process.exit(1);console.log('Native B '+z+'x Chromium screenshot: '+b.length+' bytes '+b.readUInt32BE(16)+'x'+b.readUInt32BE(20))}"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: issue-15-b-native-world-4x-8x
+          path: |
+            poc/v2/reports/native-b-*.png
+            poc/v2/reports/native-pixel-8x.png
+          retention-days: 14

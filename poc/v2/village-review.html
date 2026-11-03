@@ -38,8 +38,10 @@ const monitor=setInterval(()=>{
     if(stage===1){
       const button=d.getElementById('villageArtBtn');
       if(!button||button.disabled)return;
+      const toggle=d.getElementById('cartoonStyleBtn');
+      if(toggle&&toggle.getAttribute('aria-pressed')==='true')toggle.click();
       button.click();stage=2;
-      status.textContent='自然世界 · 真實已建住屋 · 8× 近景';
+      status.textContent='舊 Pixel 基準 · 自然世界 · 8× 近景';
       d.body.dataset.villageReview='ready';
       clearInterval(monitor);
     }

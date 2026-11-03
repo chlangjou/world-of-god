@@ -1,0 +1,28 @@
+:root{font-family:system-ui,-apple-system,'Noto Sans TC',sans-serif;color:#253b35;background:#f5f5ee}
+*{box-sizing:border-box}body{margin:0}button,a{font:inherit}
+.top{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:22px max(20px,4vw);background:#e7eee0;border-bottom:1px solid #d1d9d0}
+.eyebrow{font-size:.71rem;letter-spacing:.19em;font-weight:700;color:#537368;margin:0 0 7px}
+h1{font-size:clamp(1.4rem,2.6vw,2.05rem);margin:0 0 5px;letter-spacing:-.025em}
+.top p:last-child{margin:0;color:#596d60;font-size:.85rem}
+.game{color:#345f4c;border:1px solid #9cb5a8;border-radius:12px;padding:11px 14px;text-decoration:none;white-space:nowrap}
+main{max-width:1900px;margin:0 auto;padding:18px max(14px,2.5vw) 36px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:16px}
+.bar p{margin:0;font-size:.8rem;color:#536a5d}
+.modes{display:flex;background:#e3eae1;padding:4px;border-radius:12px;gap:3px}
+.modes button{cursor:pointer;border:0;border-radius:9px;color:#486658;background:transparent;padding:9px 15px;white-space:nowrap}
+.modes button[aria-pressed=true]{background:#fff;color:#274b3c;box-shadow:0 1px 8px #28493722;font-weight:700}
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.style{background:#fff;border:1px solid #e2e8db;border-radius:16px;padding:9px;min-width:0;box-shadow:0 4px 22px #354c3b0b}
+.info{display:flex;align-items:center;gap:10px;margin:8px 9px 14px}
+.tag{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;background:#dce9df;color:#355c46;font-weight:800}
+.info h2{font-size:1rem;letter-spacing:-.025em;margin:0 0 4px}.info p{color:#607568;font-size:.77rem;margin:0}
+.viewport{position:relative;overflow:hidden;background:#b8d3a7;aspect-ratio:48/31;border-radius:10px}
+.viewport img{display:block;position:absolute;max-width:none;height:auto;image-rendering:auto;user-select:none;pointer-events:none;width:100%;left:0;top:0}
+body[data-view='4x'] .viewport,body[data-view='8x'] .viewport{aspect-ratio:4/3}
+body[data-view='4x'] .viewport img{width:133.333333%;left:-16.666667%;top:-12.037037%}
+body[data-view='8x'] .viewport img{width:266.666667%;left:-83.333333%;top:-114.814815%}
+.note{font-size:.71rem;color:#758376;margin:10px 7px 6px}
+.legend{margin:20px 2px 0;padding:14px 20px;background:#ebeee7;border-radius:13px;line-height:1.6}
+.legend h2{font-size:.9rem;margin:0 0 4px}.legend p{font-size:.82rem;margin:3px 0 7px;color:#57685c}
+.status{font-size:.8rem;color:#536e60;margin:12px 5px}
+@media(max-width:1000px){.gallery{grid-template-columns:1fr}.style{max-width:760px}.bar{flex-direction:column;align-items:flex-start}.top{align-items:flex-start}}

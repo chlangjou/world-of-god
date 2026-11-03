@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>World of God — 真實世界 B 風格 4×／8× 試玩</title>
+<style>
+body{margin:0;background:#152821;color:#e8eadd;font:13px system-ui}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:8px 14px;min-height:32px;background:#1d342b;border-bottom:1px solid #547c65}
+strong{color:#e5dba8}nav{display:flex;gap:8px}a{color:#e5eadc;text-decoration:none;border:1px solid #668572;border-radius:6px;padding:5px 9px}
+a[aria-current="page"]{background:#41775d;color:white}.status{color:#add5b1}
+iframe{border:0;display:block;width:100%;height:calc(100vh - 52px);min-height:540px}
+</style></head><body>
+<header><div><strong>ART B · 真實自然世界渲染驗證</strong>
+<span>　人物／住所／農田／樹／河岸均取自既有模擬，非概念圖</span></div>
+<nav><a id="view4" href="?zoom=4">4×</a><a id="view8" href="?zoom=8">8×</a><a href="village-review.html">舊 Pixel</a></nav>
+<span class="status" id="status">正在載入正常世界…</span></header>
+<iframe id="game" src="index.html" title="世界本體：可暫停、移動、施法與跟隨居民"></iframe>
+<script>
+'use strict';
+const zoom=new URLSearchParams(location.search).get('zoom')==='4'?4:8;
+document.getElementById('view'+zoom).setAttribute('aria-current','page');
+const frame=document.getElementById('game'),status=document.getElementById('status');
+let stage=0,count=0;
+const ticker=setInterval(()=>{
+  try{
+    count++;
+    const w=frame.contentWindow,d=w.document;
+    const ready=d.getElementById('resetBtn');
+    if(!ready||ready.disabled)return;
+    const selector=d.getElementById('playtestScenario');
+    if(stage===0){
+      if(selector.value!=='native'){
+        w.confirm=()=>true;selector.value='native';
+        selector.dispatchEvent(new w.Event('change',{bubbles:true}));
+      }
+      stage=1;return;
+    }
+    const images=[['cartoonVillagers',512,288],['cartoonGround',128,384],['cartoonObjects',128,384]];
+    if(!w.WOG_CARTOON_ART||!images.every(([id,x,y])=>{
+      const img=d.getElementById(id);
+      return !!img&&img.complete&&img.naturalWidth===x&&img.naturalHeight===y;
+    }))return;
+    if(stage===1){
+      const toggle=d.getElementById('cartoonStyleBtn');
+      const village=d.getElementById('villageArtBtn');
+      if(!toggle||!village||village.disabled)return;
+      if(toggle.getAttribute('aria-pressed')!=='true')toggle.click();
+      village.click();
+      if(zoom===4)d.getElementById('zoomOutBtn').click();
+      stage=2;return;
+    }
+    const zoomLabel=d.getElementById('zoomResetBtn').textContent;
+    if(!zoomLabel.includes(zoom+'×'))throw Error('實際 Camera 未到 '+zoom+'×：'+zoomLabel);
+    if(d.getElementById('cartoonStyleBtn').getAttribute('aria-pressed')!=='true')
+      throw Error('B 畫風未啟用');
+    // The browser has decoded all three independent SVG sheets and the real
+    // index.html is in native-world zoom. No simulated fixtures or fake sprites.
+    d.body.dataset.cartoonNativeReady='true';
+    document.body.dataset.reviewReady='true';
+    document.body.dataset.reviewZoom=String(zoom);
+    status.textContent='B 卡通｜自然河谷｜真實 '+zoom+'×｜圖集 3/3 已載入';
+    clearInterval(ticker);
+  }catch(err){
+    document.body.dataset.reviewReady='false';
+    status.textContent='檢視器錯誤：'+err.message;clearInterval(ticker);
+  }
+  if(count>110){
+    document.body.dataset.reviewReady='false';
+    status.textContent='載入逾時：請直接開啟 index.html，按村落近景';clearInterval(ticker);
+  }
+},120);
+</script></body></html>
